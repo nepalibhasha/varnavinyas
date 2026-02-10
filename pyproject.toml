@@ -1,0 +1,9 @@
+[project]
+name = "varnavinyas"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pypdf>=6.7.0",
+]

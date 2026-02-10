@@ -1,0 +1,20 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# OS/editor noise
+.DS_Store
+
+# Generated artifacts from local PDF extraction
+docs/subdocs/*.txt
+
+# Rust build artifacts
+target/
+**/*.rs.bk
