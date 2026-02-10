@@ -1,0 +1,30 @@
+[workspace]
+resolver = "3"
+members = [
+    "crates/akshar",
+    "crates/lipi",
+]
+
+[workspace.package]
+edition = "2024"
+rust-version = "1.85.0"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/varnavinyas/varnavinyas"
+description = "Nepali language orthography toolkit"
+
+[workspace.dependencies]
+# Core
+unicode-segmentation = "1.12"
+unicode-normalization = "0.1"
+thiserror = "2.0"
+rustc-hash = "2.1"
+
+# Dev
+serde = { version = "1.0", features = ["derive"] }
+toml = "0.8"
+proptest = "1.6"
+criterion = { version = "0.5", features = ["html_reports"] }
+
+# Internal
+varnavinyas-akshar = { path = "crates/akshar" }
+varnavinyas-lipi = { path = "crates/lipi" }

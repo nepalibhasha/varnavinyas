@@ -1,0 +1,23 @@
+[package]
+name = "varnavinyas-lipi"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Devanagari transliteration and legacy font conversion"
+
+[features]
+default = []
+## Enable partial Preeti/Kantipur legacy font → Unicode decoding.
+##
+## WARNING: Mappings are incomplete and one-way only (legacy → Unicode).
+## No reverse path exists. Do not rely on production-grade coverage.
+## Multi-character sequences and positional variants are not handled.
+legacy = []
+
+[dependencies]
+varnavinyas-akshar = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+proptest = { workspace = true }

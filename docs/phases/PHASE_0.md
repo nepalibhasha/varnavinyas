@@ -292,6 +292,12 @@ pub fn normalize(text: &str) -> String;
 | A9 | Returns `None` for non-Devanagari | `classify('A') == None`, `classify('中') == None` |
 | A10 | Zero runtime dependencies beyond workspace | Only `unicode-segmentation`, `thiserror`, `rustc-hash` in `Cargo.toml` |
 
+> **Implementation note (A10):** The implementation adds `unicode-normalization = "0.1"` as
+> a fourth runtime dependency for the `normalize()` function. This is the standard Rust crate
+> for Unicode NFC/NFD normalization and is required for correct handling of Devanagari nukta
+> characters and canonical equivalence. Writing a correct NFC implementation from scratch would
+> be error-prone. This deviation from the original three-dependency spec is intentional.
+
 ---
 
 ## Crate: `varnavinyas-lipi`

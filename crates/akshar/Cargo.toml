@@ -1,0 +1,18 @@
+[package]
+name = "varnavinyas-akshar"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Devanagari character classification and syllable segmentation"
+
+[dependencies]
+unicode-segmentation = { workspace = true }
+unicode-normalization = { workspace = true }
+thiserror = { workspace = true }
+rustc-hash = { workspace = true }
+
+[dev-dependencies]
+proptest = { workspace = true }
+serde = { workspace = true }
+toml = { workspace = true }

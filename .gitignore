@@ -15,6 +15,11 @@ wheels/
 # Generated artifacts from local PDF extraction
 docs/subdocs/*.txt
 
+# Agentic
+.claude/
+.agent/
+.agents/
+
 # Rust build artifacts
 target/
 **/*.rs.bk
