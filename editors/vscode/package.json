@@ -1,0 +1,116 @@
+{
+  "name": "varnavinyas",
+  "displayName": "Varnavinyas — Nepali Spell Checker",
+  "description": "Real-time Nepali orthography checking powered by the Nepal Academy standard",
+  "version": "0.1.0",
+  "publisher": "varnavinyas",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/varnavinyas/varnavinyas"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Linters",
+    "Other"
+  ],
+  "activationEvents": [
+    "onLanguage:nepali",
+    "onLanguage:plaintext"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "nepali",
+        "aliases": [
+          "Nepali",
+          "नेपाली"
+        ],
+        "extensions": [
+          ".np"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "configuration": {
+      "title": "Varnavinyas",
+      "properties": {
+        "varnavinyas.serverPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the varnavinyas-lsp binary. Leave empty to auto-detect from workspace target/release or target/debug."
+        },
+        "varnavinyas.enablePlaintext": {
+          "type": "boolean",
+          "default": false,
+          "description": "Also check plaintext files. When false, only .np (Nepali) files are checked."
+        },
+        "varnavinyas.categories.hrasvaDirgha": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable ह्रस्व/दीर्घ (short/long vowel) checks"
+        },
+        "varnavinyas.categories.chandrabindu": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable चन्द्रबिन्दु checks"
+        },
+        "varnavinyas.categories.shaShaSa": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable श/ष/स checks"
+        },
+        "varnavinyas.categories.riKri": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable ऋ/कृ checks"
+        },
+        "varnavinyas.categories.halanta": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable हलन्त checks"
+        },
+        "varnavinyas.categories.yaE": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable य/ए checks"
+        },
+        "varnavinyas.categories.kshaChhya": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable क्ष/छ्य checks"
+        },
+        "varnavinyas.categories.sandhi": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable सन्धि (sandhi) checks"
+        },
+        "varnavinyas.categories.punctuation": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable चिह्न (punctuation) checks"
+        },
+        "varnavinyas.categories.shuddhaTable": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable शुद्ध-अशुद्ध (correct/incorrect table) checks"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^25.2.3",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.3.0"
+  }
+}

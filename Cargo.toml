@@ -10,6 +10,7 @@ members = [
     "crates/lekhya",
     "crates/parikshak",
     "crates/cli",
+    "crates/lsp",
     "crates/bindings-python",
     "crates/bindings-wasm",
 ]
@@ -24,6 +25,7 @@ default-members = [
     "crates/lekhya",
     "crates/parikshak",
     "crates/cli",
+    "crates/lsp",
 ]
 
 [workspace.package]
@@ -44,6 +46,8 @@ fst = "0.4"
 pyo3 = { version = "0.23", features = ["extension-module", "abi3-py310"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+tower-lsp = { version = "0.20", features = ["proposed"] }
+tokio = { version = "1", features = ["io-std", "rt-multi-thread", "macros"] }
 wasm-bindgen = "0.2"
 
 # Dev

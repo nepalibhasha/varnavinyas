@@ -24,6 +24,10 @@ docs/subdocs/*.txt
 target/
 **/*.rs.bk
 
+# Node
+node_modules/
+editors/vscode/out/
+
 .vscode/
 GEMINI.md
 CLAUDE.md
