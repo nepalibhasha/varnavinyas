@@ -9,6 +9,7 @@ members = [
     "crates/kosha",
     "crates/lekhya",
     "crates/parikshak",
+    "crates/cli",
     "crates/bindings-python",
     "crates/bindings-wasm",
 ]
@@ -22,6 +23,7 @@ default-members = [
     "crates/kosha",
     "crates/lekhya",
     "crates/parikshak",
+    "crates/cli",
 ]
 
 [workspace.package]
@@ -33,6 +35,7 @@ description = "Nepali language orthography toolkit"
 
 [workspace.dependencies]
 # Core
+clap = { version = "4", features = ["derive"] }
 unicode-segmentation = "1.12"
 unicode-normalization = "0.1"
 thiserror = "2.0"
