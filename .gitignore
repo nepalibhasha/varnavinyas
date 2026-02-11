@@ -28,3 +28,5 @@ target/
 GEMINI.md
 CLAUDE.md
 AGENTS.md
+
+# data/ is tracked — required at compile time by kosha (include_str!)

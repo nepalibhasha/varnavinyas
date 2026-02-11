@@ -1,22 +1,19 @@
 [package]
-name = "varnavinyas-python"
+name = "varnavinyas-bindings-wasm"
 version = "0.1.0"
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "Python bindings for varnavinyas"
+description = "WASM bindings for varnavinyas"
 
 [lib]
-name = "varnavinyas"
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = { workspace = true }
+wasm-bindgen = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
 varnavinyas-akshar = { workspace = true }
 varnavinyas-lipi = { workspace = true }
-varnavinyas-shabda = { workspace = true }
-varnavinyas-sandhi = { workspace = true }
 varnavinyas-prakriya = { workspace = true }
-varnavinyas-kosha = { workspace = true }
-varnavinyas-lekhya = { workspace = true }
 varnavinyas-parikshak = { workspace = true }
