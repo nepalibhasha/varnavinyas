@@ -1,8 +1,11 @@
 /**
  * Deriver module — educational word derivation with step trace.
  */
-import { deriveWord } from './wasm-bridge.js';
-import { debounce, escapeHtml } from './utils.js';
+import { deriveWord, analyzeWord } from './wasm-bridge.js';
+import { debounce, escapeHtml, ORIGIN_LABELS } from './utils.js';
+
+/** Feature flag for word analysis in deriver. Set to true to enable. */
+const FEATURE_ANALYSIS = true;
 
 const inputEl = document.getElementById('deriver-input');
 const resultEl = document.getElementById('deriver-result');
@@ -69,5 +72,48 @@ function runDerive() {
       .join('');
   } else {
     stepsContainer.hidden = true;
+  }
+
+  // Feature-flagged: word analysis with origin and rule notes
+  if (FEATURE_ANALYSIS) {
+    renderDeriverAnalysis(word);
+  }
+}
+
+function renderDeriverAnalysis(word) {
+  let panel = document.getElementById('deriver-analysis');
+  if (!panel) {
+    panel = document.createElement('div');
+    panel.id = 'deriver-analysis';
+    panel.className = 'deriver-analysis';
+    resultEl.appendChild(panel);
+  }
+
+  try {
+    const analysis = analyzeWord(word);
+    const originLabel = ORIGIN_LABELS[analysis.origin] || analysis.origin;
+    const originClass = `origin-${analysis.origin}`;
+
+    let html = `
+      <div class="analysis-header">
+        <span class="origin-badge ${originClass}">${escapeHtml(originLabel)}</span>
+      </div>`;
+
+    if (analysis.rule_notes && analysis.rule_notes.length > 0) {
+      html += '<div class="analysis-notes">';
+      for (const note of analysis.rule_notes) {
+        html += `
+        <div class="analysis-note">
+          <span class="analysis-note-rule">${escapeHtml(note.rule)}</span>
+          <span class="analysis-note-text">${escapeHtml(note.explanation)}</span>
+        </div>`;
+      }
+      html += '</div>';
+    }
+
+    panel.innerHTML = html;
+    panel.hidden = false;
+  } catch {
+    panel.hidden = true;
   }
 }

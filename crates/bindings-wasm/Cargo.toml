@@ -16,4 +16,5 @@ serde_json = { workspace = true }
 varnavinyas-akshar = { workspace = true }
 varnavinyas-lipi = { workspace = true }
 varnavinyas-prakriya = { workspace = true }
+varnavinyas-shabda = { workspace = true }
 varnavinyas-parikshak = { workspace = true }

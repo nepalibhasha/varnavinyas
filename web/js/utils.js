@@ -35,6 +35,16 @@ export const CATEGORY_COLORS = {
 };
 
 /**
+ * Human-readable origin labels keyed by origin code.
+ */
+export const ORIGIN_LABELS = {
+  tatsam: 'तत्सम',
+  tadbhav: 'तद्भव',
+  deshaj: 'देशज',
+  aagantuk: 'आगन्तुक',
+};
+
+/**
  * Human-readable category labels keyed by category_code.
  */
 export const CATEGORY_LABELS = {

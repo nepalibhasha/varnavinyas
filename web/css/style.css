@@ -432,6 +432,86 @@ body {
 
 .diag-card.active .diag-fix { display: inline-flex; }
 
+/* === Word Analysis Panel === */
+.analysis-panel,
+.deriver-analysis {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  animation: fadeIn 0.2s ease;
+}
+
+.analysis-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.analysis-word {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.origin-badge {
+  font-family: var(--font-devanagari);
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: white;
+}
+
+.origin-tatsam { background: #7c3aed; }
+.origin-tadbhav { background: #0891b2; }
+.origin-deshaj { background: #059669; }
+.origin-aagantuk { background: #c2410c; }
+
+.analysis-status {
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-left: auto;
+}
+
+.analysis-status.correct { color: var(--color-success); }
+.analysis-status.incorrect { color: var(--color-error); }
+
+.analysis-correction {
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+  padding: 0.35rem 0;
+}
+
+.analysis-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.analysis-note {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.35rem 0.5rem;
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+}
+
+.analysis-note-rule {
+  font-family: var(--font-latin);
+  font-size: 0.65rem;
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+.analysis-note-text {
+  color: var(--color-text-secondary);
+}
+
 /* === Transliterator === */
 .translit-layout {
   max-width: 900px;

@@ -43,7 +43,9 @@ unsafe fn cstr_to_str<'a>(ptr: *const c_char) -> Option<&'a str> {
 /// Helper: convert a Rust String to an owned C string pointer.
 /// The caller must free the returned pointer with `varnavinyas_free_string`.
 fn string_to_c(s: String) -> *mut c_char {
-    CString::new(s).map(|c| c.into_raw()).unwrap_or(std::ptr::null_mut())
+    CString::new(s)
+        .map(|c| c.into_raw())
+        .unwrap_or(std::ptr::null_mut())
 }
 
 /// Convert a `c_int` scheme value to the internal `Scheme` type.
@@ -189,8 +191,7 @@ mod tests {
     fn transliterate_works() {
         let input = CString::new("नमस्ते").unwrap();
         unsafe {
-            let result =
-                varnavinyas_transliterate(input.as_ptr(), SCHEME_DEVANAGARI, SCHEME_IAST);
+            let result = varnavinyas_transliterate(input.as_ptr(), SCHEME_DEVANAGARI, SCHEME_IAST);
             assert!(!result.is_null());
             let s = CStr::from_ptr(result).to_str().unwrap();
             assert!(!s.is_empty());

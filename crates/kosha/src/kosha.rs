@@ -3,6 +3,7 @@ use std::sync::LazyLock;
 use fst::Set;
 
 use crate::builder::build_fst_set;
+use crate::origin_tag::{OriginTag, parse_origin_tag};
 
 /// Static word list (one word per line, byte-sorted).
 static WORDS_DATA: &str = include_str!("../../../data/words.txt");
@@ -82,6 +83,16 @@ impl Kosha {
     /// Number of headwords with metadata.
     pub fn headword_count(&self) -> usize {
         self.headwords.len()
+    }
+
+    /// Look up a word's origin from its dictionary metadata tags.
+    ///
+    /// Parses the `[सं.]`, `[फा.]`, `[अङ्.]` etc. tags from the headword's
+    /// POS field using the Nepali Brihat Shabdakosha abbreviation legend.
+    /// Returns `None` if the word is not a headword or has no origin tag.
+    pub fn origin_of(&self, word: &str) -> Option<OriginTag> {
+        let entry = self.lookup(word)?;
+        parse_origin_tag(entry.pos)
     }
 }
 

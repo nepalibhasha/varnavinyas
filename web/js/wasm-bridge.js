@@ -7,6 +7,7 @@ import init, {
   check_word,
   transliterate as wasmTransliterate,
   derive,
+  analyze_word,
 } from '../pkg/varnavinyas_bindings_wasm.js';
 
 let initialized = false;
@@ -84,4 +85,12 @@ export function transliterate(input, from, to) {
  */
 export function deriveWord(word) {
   return JSON.parse(derive(word));
+}
+
+/**
+ * Analyze a word: get origin, correction, and explanatory rule notes.
+ * Returns { word, origin, is_correct, correction, rule_notes: [{rule, explanation}] }
+ */
+export function analyzeWord(word) {
+  return JSON.parse(analyze_word(word));
 }

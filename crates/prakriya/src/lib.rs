@@ -1,3 +1,4 @@
+pub mod analysis;
 mod correction_table;
 mod engine;
 mod hrasva_dirgha;
@@ -7,6 +8,7 @@ pub mod rule;
 pub mod step;
 mod structural;
 
+pub use analysis::{RuleNote, WordAnalysis, analyze};
 pub use engine::derive;
 pub use prakriya::Prakriya;
 pub use rule::Rule;

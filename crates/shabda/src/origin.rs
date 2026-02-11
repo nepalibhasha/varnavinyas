@@ -1,4 +1,5 @@
 use crate::tables;
+use varnavinyas_kosha::OriginTag;
 
 /// Word origin classification.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -13,18 +14,39 @@ pub enum Origin {
     Aagantuk,
 }
 
+impl From<OriginTag> for Origin {
+    fn from(tag: OriginTag) -> Self {
+        match tag {
+            OriginTag::Tatsam => Origin::Tatsam,
+            OriginTag::Tadbhav => Origin::Tadbhav,
+            OriginTag::Deshaj => Origin::Deshaj,
+            OriginTag::Aagantuk => Origin::Aagantuk,
+        }
+    }
+}
+
 /// Classify a Nepali word by its origin.
+///
+/// Three-tier lookup:
+/// 1. Override table (small, for edge cases where dictionary/heuristic fails)
+/// 2. Kosha dictionary lookup (~26K words with origin tags from Brihat Shabdakosha)
+/// 3. Heuristic classification (phonological pattern matching)
 pub fn classify(word: &str) -> Origin {
     if word.is_empty() {
         return Origin::Deshaj;
     }
 
-    // 1. Lookup table first (known words)
+    // 1. Override table (small set of manually verified edge cases)
     if let Some(origin) = tables::lookup_origin(word) {
         return origin;
     }
 
-    // 2. Heuristic classification
+    // 2. Kosha dictionary lookup (~26K words with origin tags)
+    if let Some(tag) = varnavinyas_kosha::kosha().origin_of(word) {
+        return tag.into();
+    }
+
+    // 3. Heuristic classification
     classify_heuristic(word)
 }
 

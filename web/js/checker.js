@@ -4,8 +4,11 @@
  * All category keying uses `d.category_code` (stable Rust enum variant name),
  * while `d.category` is the human-readable Nepali label.
  */
-import { checkText } from './wasm-bridge.js';
-import { debounce, escapeHtml, CATEGORY_COLORS, CATEGORY_LABELS } from './utils.js';
+import { checkText, analyzeWord } from './wasm-bridge.js';
+import { debounce, escapeHtml, CATEGORY_COLORS, CATEGORY_LABELS, ORIGIN_LABELS } from './utils.js';
+
+/** Feature flag for word analysis panel. Set to true to enable. */
+const FEATURE_ANALYSIS = true;
 
 let diagnostics = [];
 let hiddenCategories = new Set();
@@ -216,7 +219,7 @@ function setActiveCard(index) {
 }
 
 /**
- * Handle click in editor — find diagnostic at cursor position.
+ * Handle click in editor — find diagnostic at cursor position, or analyze clicked word.
  */
 function onEditorClick() {
   const pos = editorInput.selectionStart;
@@ -229,6 +232,89 @@ function onEditorClick() {
     // Scroll card into view
     const card = diagnosticsList.querySelector(`[data-index="${idx}"]`);
     if (card) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  // Feature-flagged: analyze word at cursor
+  if (FEATURE_ANALYSIS) {
+    const word = getWordAtCursor(editorInput.value, pos);
+    if (word) {
+      renderAnalysisPanel(word);
+    }
+  }
+}
+
+/**
+ * Extract the Devanagari word at a given cursor position.
+ */
+function getWordAtCursor(text, pos) {
+  if (!text || pos < 0 || pos > text.length) return null;
+  // Walk left and right to find word boundaries.
+  // Includes Devanagari letters, matras, signs (0900-0963) but excludes
+  // danda/double-danda (0964-0965) and digits (0966-096F).
+  const isDevanagariWord = (c) => {
+    if (!c) return false;
+    const cp = c.charCodeAt(0);
+    return cp >= 0x0900 && cp <= 0x0963;
+  };
+  let start = pos;
+  let end = pos;
+  while (start > 0 && isDevanagariWord(text[start - 1])) start--;
+  while (end < text.length && isDevanagariWord(text[end])) end++;
+  if (start === end) return null;
+  return text.slice(start, end);
+}
+
+/**
+ * Render the word analysis panel below the diagnostics.
+ */
+function renderAnalysisPanel(word) {
+  let panel = document.getElementById('analysis-panel');
+  if (!panel) {
+    panel = document.createElement('div');
+    panel.id = 'analysis-panel';
+    panel.className = 'analysis-panel';
+    diagnosticsList.parentElement.appendChild(panel);
+  }
+
+  try {
+    const analysis = analyzeWord(word);
+    const originLabel = ORIGIN_LABELS[analysis.origin] || analysis.origin;
+    const originClass = `origin-${analysis.origin}`;
+    const statusIcon = analysis.is_correct ? 'correct' : 'incorrect';
+    const statusLabel = analysis.is_correct ? 'शुद्ध' : 'अशुद्ध';
+
+    let html = `
+      <div class="analysis-header">
+        <span class="analysis-word">${escapeHtml(analysis.word)}</span>
+        <span class="origin-badge ${originClass}">${escapeHtml(originLabel)}</span>
+        <span class="analysis-status ${statusIcon}">${statusLabel}</span>
+      </div>`;
+
+    if (analysis.correction) {
+      html += `
+      <div class="analysis-correction">
+        <span class="diag-incorrect">${escapeHtml(analysis.word)}</span>
+        <span class="diag-arrow">\u2192</span>
+        <span class="diag-correct">${escapeHtml(analysis.correction)}</span>
+      </div>`;
+    }
+
+    if (analysis.rule_notes && analysis.rule_notes.length > 0) {
+      html += '<div class="analysis-notes">';
+      for (const note of analysis.rule_notes) {
+        html += `
+        <div class="analysis-note">
+          <span class="analysis-note-rule">${escapeHtml(note.rule)}</span>
+          <span class="analysis-note-text">${escapeHtml(note.explanation)}</span>
+        </div>`;
+      }
+      html += '</div>';
+    }
+
+    panel.innerHTML = html;
+    panel.hidden = false;
+  } catch {
+    panel.hidden = true;
   }
 }
 

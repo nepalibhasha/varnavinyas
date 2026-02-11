@@ -109,6 +109,54 @@ pub fn derive(word: &str) -> String {
     serde_json::to_string(&js).unwrap_or_else(|_| "{}".to_string())
 }
 
+/// A word analysis result serialized for JavaScript consumers.
+#[derive(Serialize)]
+struct JsWordAnalysis {
+    word: String,
+    origin: String,
+    is_correct: bool,
+    correction: Option<String>,
+    rule_notes: Vec<JsRuleNote>,
+}
+
+/// A rule note serialized for JavaScript consumers.
+#[derive(Serialize)]
+struct JsRuleNote {
+    rule: String,
+    explanation: String,
+}
+
+/// Analyze a word: get origin classification, correction (if any), and explanatory rule notes.
+/// Returns a JSON object with word, origin, is_correct, correction, and rule_notes.
+#[wasm_bindgen]
+pub fn analyze_word(word: &str) -> String {
+    let analysis = varnavinyas_prakriya::analyze(word);
+    let js = JsWordAnalysis {
+        word: analysis.word,
+        origin: origin_to_string(analysis.origin),
+        is_correct: analysis.is_correct,
+        correction: analysis.correction,
+        rule_notes: analysis
+            .rule_notes
+            .into_iter()
+            .map(|n| JsRuleNote {
+                rule: n.rule.to_string(),
+                explanation: n.explanation,
+            })
+            .collect(),
+    };
+    serde_json::to_string(&js).unwrap_or_else(|_| "{}".to_string())
+}
+
+fn origin_to_string(origin: varnavinyas_shabda::Origin) -> String {
+    match origin {
+        varnavinyas_shabda::Origin::Tatsam => "tatsam".into(),
+        varnavinyas_shabda::Origin::Tadbhav => "tadbhav".into(),
+        varnavinyas_shabda::Origin::Deshaj => "deshaj".into(),
+        varnavinyas_shabda::Origin::Aagantuk => "aagantuk".into(),
+    }
+}
+
 fn parse_scheme(s: &str) -> Result<varnavinyas_lipi::Scheme, JsError> {
     match s {
         "Devanagari" | "devanagari" => Ok(varnavinyas_lipi::Scheme::Devanagari),

@@ -1882,6 +1882,7 @@ dependencies = [
  "varnavinyas-lipi",
  "varnavinyas-parikshak",
  "varnavinyas-prakriya",
+ "varnavinyas-shabda",
  "wasm-bindgen",
 ]
 
@@ -1984,6 +1985,7 @@ dependencies = [
  "thiserror 2.0.18",
  "toml 0.8.23",
  "varnavinyas-akshar",
+ "varnavinyas-kosha",
 ]
 
 [[package]]

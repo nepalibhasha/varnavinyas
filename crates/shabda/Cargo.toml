@@ -8,6 +8,7 @@ description = "Word origin classification and morphological decomposition"
 
 [dependencies]
 varnavinyas-akshar = { workspace = true }
+varnavinyas-kosha = { workspace = true }
 thiserror = { workspace = true }
 
 [dev-dependencies]

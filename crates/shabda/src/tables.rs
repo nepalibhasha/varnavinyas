@@ -1,7 +1,18 @@
 use crate::origin::Origin;
 
-/// Known word → origin mappings.
-/// These are verified against the Academy standard.
+/// Override table for word origins.
+///
+/// This small verified table serves as the first-priority lookup in the
+/// three-tier classification: override table → kosha dictionary → heuristic.
+///
+/// With the kosha integration (~26K dictionary-tagged words), most words no
+/// longer need to be here. This table is only for:
+/// - Inflected/suffixed forms not in the dictionary headwords
+/// - Words where the dictionary tag or heuristic gives wrong results
+/// - Known test fixtures that must classify correctly
+///
+/// New words generally don't need to be added here — they'll be covered
+/// by the kosha dictionary's origin tags from Brihat Shabdakosha.
 pub fn lookup_origin(word: &str) -> Option<Origin> {
     // Binary search on sorted table for efficiency
     ORIGIN_TABLE
@@ -10,7 +21,7 @@ pub fn lookup_origin(word: &str) -> Option<Origin> {
         .map(|i| ORIGIN_TABLE[i].1)
 }
 
-/// Sorted table of known word origins.
+/// Sorted by UTF-8 bytes for binary search.
 static ORIGIN_TABLE: &[(&str, Origin)] = &[
     ("अग्नि", Origin::Tatsam),
     ("अनुभूति", Origin::Tatsam),
@@ -27,6 +38,7 @@ static ORIGIN_TABLE: &[(&str, Origin)] = &[
     ("एकता", Origin::Tatsam),
     ("एशिया", Origin::Aagantuk),
     ("औचित्य", Origin::Tatsam),
+    ("औद्योगिकीकरण", Origin::Tatsam),
     ("कम्प्युटर", Origin::Aagantuk),
     ("कारबाही", Origin::Tadbhav),
     ("कृति", Origin::Tatsam),
@@ -50,10 +62,10 @@ static ORIGIN_TABLE: &[(&str, Origin)] = &[
     ("बगैँचा", Origin::Tadbhav),
     ("बहिनी", Origin::Tadbhav),
     ("बेहोरा", Origin::Tadbhav),
+    ("भएकामा", Origin::Tadbhav),
     ("भाइ", Origin::Tadbhav),
     ("भाउजू", Origin::Tadbhav),
     ("भाका", Origin::Deshaj),
-    ("भएकामा", Origin::Tadbhav),
     ("महत्त्व", Origin::Tatsam),
     ("मिठो", Origin::Tadbhav),
     ("मितिनीले", Origin::Tadbhav),
@@ -71,14 +83,17 @@ static ORIGIN_TABLE: &[(&str, Origin)] = &[
     ("व्यावहारिक", Origin::Tatsam),
     ("शासन", Origin::Tatsam),
     ("शुद्ध", Origin::Tatsam),
-    ("शृङ्गार", Origin::Tatsam),
     ("शृङ्खला", Origin::Tatsam),
+    ("शृङ्गार", Origin::Tatsam),
     ("शेष", Origin::Tatsam),
     ("संवाद", Origin::Tatsam),
     ("संसद्", Origin::Tatsam),
     ("संसारमा", Origin::Tadbhav),
+    ("सङ्घीय", Origin::Tatsam),
     ("सहिद", Origin::Aagantuk),
     ("सामग्री", Origin::Tatsam),
+    ("सामाजिकीकरण", Origin::Tatsam),
+    ("सिंह", Origin::Tatsam),
     ("सुन्दरता", Origin::Tatsam),
     ("सुरुआत", Origin::Tadbhav),
     ("सौन्दर्य", Origin::Tatsam),

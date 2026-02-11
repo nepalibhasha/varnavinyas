@@ -64,8 +64,7 @@ pub fn transliterate(input: String, from: Scheme, to: Scheme) -> Result<String, 
         Scheme::Devanagari => varnavinyas_lipi::Scheme::Devanagari,
         Scheme::Iast => varnavinyas_lipi::Scheme::Iast,
     };
-    varnavinyas_lipi::transliterate(&input, from_scheme, to_scheme)
-        .map_err(|e| e.to_string())
+    varnavinyas_lipi::transliterate(&input, from_scheme, to_scheme).map_err(|e| e.to_string())
 }
 
 /// Classify a word by its origin.
