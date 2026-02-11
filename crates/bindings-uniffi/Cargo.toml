@@ -1,0 +1,22 @@
+[package]
+name = "varnavinyas-bindings-uniffi"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "UniFFI bindings (Kotlin/Swift) for varnavinyas"
+
+[lib]
+crate-type = ["cdylib", "staticlib", "lib"]
+
+[[bin]]
+name = "uniffi-bindgen"
+path = "uniffi-bindgen.rs"
+
+[dependencies]
+uniffi = { workspace = true, features = ["cli"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+varnavinyas-parikshak = { workspace = true }
+varnavinyas-lipi = { workspace = true }
+varnavinyas-shabda = { workspace = true }

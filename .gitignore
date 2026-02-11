@@ -36,4 +36,7 @@ AGENTS.md
 # WASM build output
 web/pkg/
 
+# C bindings generated header
+crates/bindings-c/include/
+
 # data/ is tracked — required at compile time by kosha (include_str!)
