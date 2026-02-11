@@ -1,0 +1,19 @@
+[package]
+name = "varnavinyas-python"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Python bindings for varnavinyas"
+
+[lib]
+name = "varnavinyas"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { workspace = true }
+varnavinyas-akshar = { workspace = true }
+varnavinyas-lipi = { workspace = true }
+varnavinyas-shabda = { workspace = true }
+varnavinyas-sandhi = { workspace = true }
+varnavinyas-prakriya = { workspace = true }

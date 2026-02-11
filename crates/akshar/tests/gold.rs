@@ -25,10 +25,10 @@ struct Entry {
 fn load_gold() -> GoldData {
     let manifest_dir = env!("CARGO_MANIFEST_DIR");
     let path = PathBuf::from(manifest_dir).join("../../docs/tests/gold.toml");
-    
+
     let content = fs::read_to_string(&path)
         .unwrap_or_else(|e| panic!("Failed to read gold.toml from {:?}: {}", path, e));
-    
+
     toml::from_str(&content).expect("Failed to parse gold.toml")
 }
 
@@ -52,12 +52,20 @@ fn check_entries(entries: &[Entry], section_name: &str) {
         // 1. Verify normalization idempotence
         let n_corr = normalize(&entry.correct);
         let n_incorr = normalize(&entry.incorrect);
-        
+
         let n_corr_2 = normalize(&n_corr);
         let n_incorr_2 = normalize(&n_incorr);
-        
-        assert_eq!(n_corr, n_corr_2, "Normalization not idempotent for {} ({})", entry.correct, section_name);
-        assert_eq!(n_incorr, n_incorr_2, "Normalization not idempotent for {} ({})", entry.incorrect, section_name);
+
+        assert_eq!(
+            n_corr, n_corr_2,
+            "Normalization not idempotent for {} ({})",
+            entry.correct, section_name
+        );
+        assert_eq!(
+            n_incorr, n_incorr_2,
+            "Normalization not idempotent for {} ({})",
+            entry.incorrect, section_name
+        );
 
         // 2. Verify segmentation succeeds and reconstructs perfectly
         let aks_corr = split_aksharas(&entry.correct);
@@ -76,6 +84,10 @@ fn check_entries(entries: &[Entry], section_name: &str) {
             "Segmentation failed reconstruction for {} (section {}, entry {})",
             entry.incorrect, section_name, idx
         );
-        assert!(!aks_incorr.is_empty(), "Empty aksharas for {}", entry.incorrect);
+        assert!(
+            !aks_incorr.is_empty(),
+            "Empty aksharas for {}",
+            entry.incorrect
+        );
     }
 }

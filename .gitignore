@@ -23,3 +23,8 @@ docs/subdocs/*.txt
 # Rust build artifacts
 target/
 **/*.rs.bk
+
+.vscode/
+GEMINI.md
+CLAUDE.md
+AGENTS.md
