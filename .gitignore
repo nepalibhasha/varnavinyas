@@ -33,4 +33,7 @@ GEMINI.md
 CLAUDE.md
 AGENTS.md
 
+# WASM build output
+web/pkg/
+
 # data/ is tracked — required at compile time by kosha (include_str!)

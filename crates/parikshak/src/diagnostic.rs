@@ -16,6 +16,23 @@ pub enum DiagnosticCategory {
 }
 
 impl DiagnosticCategory {
+    /// Stable machine-readable code for serialization to JS/JSON consumers.
+    /// This is an explicit API contract — do not rename without updating web/js/utils.js.
+    pub fn as_code(&self) -> &'static str {
+        match self {
+            Self::HrasvaDirgha => "HrasvaDirgha",
+            Self::Chandrabindu => "Chandrabindu",
+            Self::ShaShaS => "ShaShaS",
+            Self::RiKri => "RiKri",
+            Self::Halanta => "Halanta",
+            Self::YaE => "YaE",
+            Self::KshaChhya => "KshaChhya",
+            Self::Sandhi => "Sandhi",
+            Self::Punctuation => "Punctuation",
+            Self::ShuddhaTable => "ShuddhaTable",
+        }
+    }
+
     /// Infer category from a Rule.
     pub fn from_rule(rule: &Rule) -> Self {
         match rule {
