@@ -2,8 +2,10 @@ use varnavinyas_kosha::kosha;
 use varnavinyas_lekhya::check_punctuation;
 use varnavinyas_prakriya::{Rule, derive};
 
+use varnavinyas_prakriya::DiagnosticKind;
+
 use crate::diagnostic::{Diagnostic, DiagnosticCategory};
-use crate::tokenizer::tokenize;
+use crate::tokenizer::tokenize_analyzed;
 
 /// Check a single word and return a diagnostic if it's incorrect.
 ///
@@ -43,6 +45,8 @@ pub fn check_word(word: &str) -> Option<Diagnostic> {
             rule,
             explanation,
             category,
+            kind: DiagnosticKind::Error,
+            confidence: 1.0,
         });
     }
 
@@ -65,11 +69,20 @@ pub fn check_word(word: &str) -> Option<Diagnostic> {
 pub fn check_text(text: &str) -> Vec<Diagnostic> {
     let mut diagnostics = Vec::new();
 
-    // Word-level checks
-    let tokens = tokenize(text);
+    // Word-level checks (suffix-aware: checks stem, spans full token)
+    let tokens = tokenize_analyzed(text);
     for token in &tokens {
-        if let Some(mut diag) = check_word(&token.text) {
+        if let Some(mut diag) = check_word(&token.stem) {
             diag.span = (token.start, token.end);
+            
+            // Fix: If a suffix was detached, reattach it to the diagnostic strings.
+            // The span covers the full token (stem+suffix), so the correction
+            // must also be the full form to avoid data loss on replacement.
+            if let Some(ref sfx) = token.suffix {
+                diag.incorrect.push_str(sfx);
+                diag.correction.push_str(sfx);
+            }
+
             diagnostics.push(diag);
         }
     }
@@ -83,6 +96,8 @@ pub fn check_text(text: &str) -> Vec<Diagnostic> {
             rule: Rule::ChihnaNiyam("Section 5"),
             explanation: lekhya_diag.rule.to_string(),
             category: DiagnosticCategory::Punctuation,
+            kind: DiagnosticKind::Error,
+            confidence: 1.0,
         });
     }
 

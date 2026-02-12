@@ -16,6 +16,8 @@ struct JsonDiagnostic {
     rule: String,
     category: String,
     explanation: String,
+    kind: String,
+    confidence: f32,
 }
 
 pub fn run(input: Option<String>, explain: bool, format: OutputFormat) -> ExitCode {
@@ -120,6 +122,8 @@ fn print_json(diagnostics: &[Diagnostic], text: &str, line_offsets: &[usize]) {
                 rule: diag.rule.to_string(),
                 category: diag.category.to_string(),
                 explanation: diag.explanation.clone(),
+                kind: diag.kind.as_code().to_string(),
+                confidence: diag.confidence,
             }
         })
         .collect();

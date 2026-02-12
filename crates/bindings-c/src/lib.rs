@@ -29,6 +29,8 @@ struct CDiagnostic {
     explanation: String,
     category: String,
     category_code: String,
+    kind: String,
+    confidence: f32,
 }
 
 /// Helper: convert a C string pointer to a Rust &str.
@@ -84,6 +86,8 @@ pub unsafe extern "C" fn varnavinyas_check_text(text: *const c_char) -> *mut c_c
             explanation: d.explanation,
             category: d.category.to_string(),
             category_code: d.category.as_code().to_string(),
+            kind: d.kind.as_code().to_string(),
+            confidence: d.confidence,
         })
         .collect();
     let json = serde_json::to_string(&c_diags).unwrap_or_else(|_| "[]".to_string());

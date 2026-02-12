@@ -16,3 +16,8 @@ thiserror = { workspace = true }
 [dev-dependencies]
 serde = { workspace = true }
 toml = { workspace = true }
+criterion = { workspace = true }
+
+[[bench]]
+name = "checker"
+harness = false

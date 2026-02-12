@@ -14,6 +14,10 @@ struct JsDiagnostic {
     category: String,
     /// Stable machine-readable category code (Rust enum variant name).
     category_code: String,
+    /// Severity kind: "Error", "Variant", or "Ambiguous".
+    kind: String,
+    /// Confidence score (0.0–1.0).
+    confidence: f32,
 }
 
 /// A prakriya step serialized for JavaScript consumers.
@@ -50,6 +54,8 @@ pub fn check_text(text: &str) -> String {
             explanation: d.explanation,
             category: d.category.to_string(),
             category_code: d.category.as_code().to_string(),
+            kind: d.kind.as_code().to_string(),
+            confidence: d.confidence,
         })
         .collect();
     serde_json::to_string(&js_diags).unwrap_or_else(|_| "[]".to_string())
@@ -69,6 +75,8 @@ pub fn check_word(word: &str) -> String {
                 explanation: d.explanation,
                 category: d.category.to_string(),
                 category_code: d.category.as_code().to_string(),
+                kind: d.kind.as_code().to_string(),
+                confidence: d.confidence,
             };
             serde_json::to_string(&js).unwrap_or_else(|_| "null".to_string())
         }

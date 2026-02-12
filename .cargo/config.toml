@@ -1,0 +1,6 @@
+[alias]
+t = "test --workspace"
+c = "clippy --workspace -- -D warnings"
+f = "fmt --all"
+d = "doc --workspace --no-deps --open"
+ta = "test --workspace -- --include-ignored"

@@ -1,37 +1,49 @@
 use crate::prakriya::Prakriya;
 use crate::rule::Rule;
+use crate::rule_spec::{DiagnosticKind, RuleCategory, RuleSpec};
 use crate::step::Step;
 use varnavinyas_shabda::{Origin, classify};
 
-/// Apply orthographic pattern rules (chandrabindu, sibilant, ri/kri, halanta, ya/e, ksha/chhya).
-pub fn apply_orthographic_rules(input: &str) -> Option<Prakriya> {
-    // chandrabindu/shirbindu rules
-    if let Some(p) = rule_chandrabindu_shirbindu(input) {
-        return Some(p);
-    }
+pub const SPEC_CHANDRABINDU: RuleSpec = RuleSpec {
+    id: "ortho-chandrabindu",
+    category: RuleCategory::Chandrabindu,
+    kind: DiagnosticKind::Error,
+    priority: 300,
+    citation: Rule::VarnaVinyasNiyam("3(ख)"),
+    examples: &[("सिँह", "सिंह")],
+};
 
-    // sibilant rules (श/ष/स)
-    if let Some(p) = rule_sibilant(input) {
-        return Some(p);
-    }
+pub const SPEC_SIBILANT: RuleSpec = RuleSpec {
+    id: "ortho-sibilant",
+    category: RuleCategory::ShaShaS,
+    kind: DiagnosticKind::Error,
+    priority: 310,
+    citation: Rule::VarnaVinyasNiyam("3(ग)(अ)"),
+    examples: &[("रजिष्टर", "रजिस्टर")],
+};
 
-    // ऋ/कृ rules
-    if let Some(p) = rule_ri_kri(input) {
-        return Some(p);
-    }
+pub const SPEC_RI_KRI: RuleSpec = RuleSpec {
+    id: "ortho-ri-kri",
+    category: RuleCategory::RiKri,
+    kind: DiagnosticKind::Error,
+    priority: 320,
+    citation: Rule::VarnaVinyasNiyam("3(ग)-ऋ"),
+    examples: &[("रिषि", "ऋषि"), ("क्रिति", "कृति")],
+};
 
-    // halanta rules
-    if let Some(p) = rule_halanta(input) {
-        return Some(p);
-    }
-
-    None
-}
+pub const SPEC_HALANTA: RuleSpec = RuleSpec {
+    id: "ortho-halanta",
+    category: RuleCategory::Halanta,
+    kind: DiagnosticKind::Error,
+    priority: 330,
+    citation: Rule::VarnaVinyasNiyam("3(ङ)"),
+    examples: &[("बुद्धिमान", "बुद्धिमान्"), ("श्रीमान", "श्रीमान्")],
+};
 
 /// Academy 3(ख): chandrabindu vs shirbindu rules based on word origin.
 /// - Tatsam: NEVER chandrabindu (ँ) → use shirbindu (ं)
 /// - Tadbhav/Aagantuk: NEVER shirbindu (ं) → use chandrabindu (ँ) for nasalization
-fn rule_chandrabindu_shirbindu(input: &str) -> Option<Prakriya> {
+pub fn rule_chandrabindu(input: &str) -> Option<Prakriya> {
     let origin = classify(input);
 
     match origin {
@@ -134,7 +146,7 @@ fn rule_chandrabindu_shirbindu(input: &str) -> Option<Prakriya> {
 /// - Aagantuk: ष→स, श→स (only स is used in foreign words)
 /// - Tadbhav: ष→स (retroflex sibilant becomes dental)
 /// - Tatsam: preserve original श/ष/स
-fn rule_sibilant(input: &str) -> Option<Prakriya> {
+pub fn rule_sibilant(input: &str) -> Option<Prakriya> {
     let origin = classify(input);
 
     match origin {
@@ -205,7 +217,7 @@ fn rule_sibilant(input: &str) -> Option<Prakriya> {
     None
 }
 
-fn rule_ri_kri(input: &str) -> Option<Prakriya> {
+pub fn rule_ri_kri(input: &str) -> Option<Prakriya> {
     // Only apply ऋ/कृ rules to words that classify as tatsam.
     // Foreign words like क्रिकेट must not be mutated.
     let origin = classify(input);
@@ -255,40 +267,19 @@ fn rule_ri_kri(input: &str) -> Option<Prakriya> {
 /// - Verb roots (धातु), 2nd person disrespect, 3rd person plural → halanta
 /// - -मान्/-वान्/-वत् suffix words → halanta
 /// - Monosyllabic pronouns/avyaya (म, तँ, र, न) → NO halanta
-fn rule_halanta(input: &str) -> Option<Prakriya> {
+///
+/// Known word-level corrections (महान→महान्, बुद्धिमान→बुद्धिमान्, etc.)
+/// live in the correction table (Phase A). This function handles generalizable
+/// pattern detection for tatsam words not covered by the table.
+pub fn rule_halanta(input: &str) -> Option<Prakriya> {
     let origin = classify(input);
     if !matches!(origin, Origin::Tatsam) {
         return None;
     }
 
-    // Tatsam words ending in specific consonant stems that require halanta
-    // These are words where the final consonant needs explicit halanta marker
-    static HALANTA_REQUIRED: &[(&str, &str)] = &[
-        // -मान् / -वान् / -वत् suffix tatsam words
-        ("बुद्धिमान", "बुद्धिमान्"),
-        ("श्रीमान", "श्रीमान्"),
-        ("भगवान", "भगवान्"),
-        ("महान", "महान्"),
-        ("विद्वान", "विद्वान्"),
-        // Common tatsam avyaya requiring halanta
-        ("प्रायः", "प्रायः"), // This one is already correct with visarga
-        ("पुनः", "पुनः"),
-    ];
-
-    for &(wrong, correct) in HALANTA_REQUIRED {
-        if input == wrong && wrong != correct {
-            return Some(Prakriya::corrected(
-                input,
-                correct,
-                vec![Step::new(
-                    Rule::VarnaVinyasNiyam("3(ङ)"),
-                    "तत्सम शब्दमा हलन्त चिह्न आवश्यक",
-                    input,
-                    correct,
-                )],
-            ));
-        }
-    }
+    // Future: detect tatsam words ending in a bare consonant (no virama)
+    // and suggest adding halanta. Requires careful scoping to avoid
+    // false positives on nativized tatsam forms.
 
     None
 }

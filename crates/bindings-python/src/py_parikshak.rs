@@ -13,6 +13,8 @@ pub struct PyDiagnostic {
     pub rule: PyRule,
     pub explanation: String,
     pub category: String,
+    pub kind: String,
+    pub confidence: f32,
 }
 
 #[pymethods]
@@ -44,6 +46,8 @@ pub fn check_word(word: &str) -> Option<PyDiagnostic> {
         rule: d.rule.into(),
         explanation: d.explanation,
         category: d.category.to_string(),
+        kind: d.kind.as_code().to_string(),
+        confidence: d.confidence,
     })
 }
 
@@ -61,6 +65,8 @@ pub fn check_text(text: &str) -> Vec<PyDiagnostic> {
             rule: d.rule.into(),
             explanation: d.explanation,
             category: d.category.to_string(),
+            kind: d.kind.as_code().to_string(),
+            confidence: d.confidence,
         })
         .collect()
 }

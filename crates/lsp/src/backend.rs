@@ -304,6 +304,8 @@ mod tests {
             rule: varnavinyas_prakriya::Rule::ShuddhaAshuddha("Section 4"),
             explanation: "test".to_string(),
             category: DiagnosticCategory::ShuddhaTable,
+            kind: varnavinyas_prakriya::DiagnosticKind::Error,
+            confidence: 1.0,
         };
 
         // Enabled — should find it

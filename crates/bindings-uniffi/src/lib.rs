@@ -29,6 +29,8 @@ struct FfiDiagnostic {
     explanation: String,
     category: String,
     category_code: String,
+    kind: String,
+    confidence: f32,
 }
 
 /// Check text for spelling and punctuation issues.
@@ -48,6 +50,8 @@ pub fn check_text(text: String) -> String {
             explanation: d.explanation,
             category: d.category.to_string(),
             category_code: d.category.as_code().to_string(),
+            kind: d.kind.as_code().to_string(),
+            confidence: d.confidence,
         })
         .collect();
     serde_json::to_string(&ffi_diags).unwrap_or_else(|_| "[]".to_string())

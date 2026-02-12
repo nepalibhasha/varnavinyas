@@ -1,4 +1,4 @@
-use varnavinyas_prakriya::Rule;
+use varnavinyas_prakriya::{DiagnosticKind, Rule};
 
 /// Category of a diagnostic.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -104,6 +104,10 @@ pub struct Diagnostic {
     pub explanation: String,
     /// Category of the issue.
     pub category: DiagnosticCategory,
+    /// Severity kind (error, variant, ambiguous).
+    pub kind: DiagnosticKind,
+    /// Confidence score (0.0–1.0).
+    pub confidence: f32,
 }
 
 impl std::fmt::Display for Diagnostic {

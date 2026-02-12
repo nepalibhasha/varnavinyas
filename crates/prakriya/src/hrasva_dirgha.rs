@@ -1,51 +1,78 @@
 use crate::prakriya::Prakriya;
 use crate::rule::Rule;
+use crate::rule_spec::{DiagnosticKind, RuleCategory, RuleSpec};
 use crate::step::Step;
 use varnavinyas_shabda::{Origin, classify};
 
-/// Apply hrasva/dirgha pattern rules.
-/// Returns Some(Prakriya) if a rule fired, None otherwise.
-pub fn apply_hrasva_dirgha_rules(input: &str) -> Option<Prakriya> {
-    // Rule: suffix -नु triggers hrasva on root vowel
-    if input.ends_with("नु") || input.ends_with("र्नु") {
-        if let Some(p) = rule_suffix_nu_hrasva(input) {
-            return Some(p);
-        }
+pub const SPEC_SUFFIX_NU: RuleSpec = RuleSpec {
+    id: "hd-suffix-nu",
+    category: RuleCategory::HrasvaDirgha,
+    kind: DiagnosticKind::Error,
+    priority: 200,
+    citation: Rule::VarnaVinyasNiyam("3(क)-suffix-नु"),
+    examples: &[("स्वीकार्नु", "स्विकार्नु")],
+};
+
+pub const SPEC_SUFFIX_ELI: RuleSpec = RuleSpec {
+    id: "hd-suffix-eli",
+    category: RuleCategory::HrasvaDirgha,
+    kind: DiagnosticKind::Error,
+    priority: 210,
+    citation: Rule::VarnaVinyasNiyam("3(क)-suffix-एली"),
+    examples: &[("पूर्वेली", "पुर्वेली")],
+};
+
+pub const SPEC_SUFFIX_PRESERVES: RuleSpec = RuleSpec {
+    id: "hd-suffix-preserves",
+    category: RuleCategory::HrasvaDirgha,
+    kind: DiagnosticKind::Error,
+    priority: 220,
+    citation: Rule::VarnaVinyasNiyam("3(क)(उ)"),
+    examples: &[("पुर्वी", "पूर्वी"), ("पुर्वीय", "पूर्वीय")],
+};
+
+pub const SPEC_TADBHAV: RuleSpec = RuleSpec {
+    id: "hd-tadbhav",
+    category: RuleCategory::HrasvaDirgha,
+    kind: DiagnosticKind::Error,
+    priority: 230,
+    citation: Rule::VarnaVinyasNiyam("3(क)-12"),
+    examples: &[("मीठो", "मिठो")],
+};
+
+pub const SPEC_DIRGHA_ENDINGS: RuleSpec = RuleSpec {
+    id: "hd-dirgha-endings",
+    category: RuleCategory::HrasvaDirgha,
+    kind: DiagnosticKind::Error,
+    priority: 240,
+    citation: Rule::VarnaVinyasNiyam("3(ई)"),
+    examples: &[("भनि", "भनी"), ("गरि", "गरी")],
+};
+
+pub const SPEC_KINSHIP: RuleSpec = RuleSpec {
+    id: "hd-kinship",
+    category: RuleCategory::HrasvaDirgha,
+    kind: DiagnosticKind::Error,
+    priority: 250,
+    citation: Rule::VarnaVinyasNiyam("3(क)(इ)-1"),
+    examples: &[("दाजू", "दाजु"), ("भाउजु", "भाउजू")],
+};
+
+pub const SPEC_KOSHA_BACKED: RuleSpec = RuleSpec {
+    id: "hd-kosha-backed",
+    category: RuleCategory::HrasvaDirgha,
+    kind: DiagnosticKind::Error,
+    priority: 260,
+    citation: Rule::VarnaVinyasNiyam("3(क)(ई)"),
+    examples: &[("नेपालि", "नेपाली")],
+};
+
+pub fn rule_suffix_nu_hrasva(input: &str) -> Option<Prakriya> {
+    // Guard: only applicable to words ending in -नु suffix
+    if !(input.ends_with("नु") || input.ends_with("र्नु")) {
+        return None;
     }
 
-    // Rule: suffix -एली triggers hrasva on root vowel
-    if input.ends_with("एली") || input.ends_with("ेली") {
-        if let Some(p) = rule_suffix_eli_hrasva(input) {
-            return Some(p);
-        }
-    }
-
-    // Rule: suffix -ई preserves dirgha
-    // Rule: suffix -ईय preserves dirgha
-    // (These fix hrasva→dirgha, the reverse direction)
-    if let Some(p) = rule_suffix_preserves_dirgha(input) {
-        return Some(p);
-    }
-
-    // Rule: tadbhav single-meaning word takes hrasva
-    if let Some(p) = rule_tadbhav_hrasva(input) {
-        return Some(p);
-    }
-
-    // Rule: feminine/pronoun/postposition/absolutive takes dirgha
-    if let Some(p) = rule_dirgha_endings(input) {
-        return Some(p);
-    }
-
-    // Rule: kinship tadbhav patterns
-    if let Some(p) = rule_kinship_tadbhav(input) {
-        return Some(p);
-    }
-
-    None
-}
-
-fn rule_suffix_nu_hrasva(input: &str) -> Option<Prakriya> {
     // स्वीकार्नु → स्विकार्नु
     // Only replace the LAST dirgha ई before the suffix, not all occurrences.
     if !input.contains('ी') {
@@ -85,7 +112,12 @@ fn rule_suffix_nu_hrasva(input: &str) -> Option<Prakriya> {
     None
 }
 
-fn rule_suffix_eli_hrasva(input: &str) -> Option<Prakriya> {
+pub fn rule_suffix_eli_hrasva(input: &str) -> Option<Prakriya> {
+    // Guard: only applicable to words ending in -एली suffix
+    if !(input.ends_with("एली") || input.ends_with("ेली")) {
+        return None;
+    }
+
     // पूर्वेली → पुर्वेली
     // Only replace the LAST dirgha ू before the suffix, not all occurrences.
     if !input.contains('ू') {
@@ -126,7 +158,7 @@ fn rule_suffix_eli_hrasva(input: &str) -> Option<Prakriya> {
 
 /// Academy 3(क)(उ) rules 1-2: suffixes -ई/-ईय preserve dirgha in the stem.
 /// Only fires for specific known stem patterns to avoid false positives.
-fn rule_suffix_preserves_dirgha(input: &str) -> Option<Prakriya> {
+pub fn rule_suffix_preserves_dirgha(input: &str) -> Option<Prakriya> {
     // Known incorrect→correct pairs where a dirgha-suffix stem lost its dirgha.
     // We only correct specific known patterns to avoid false positives.
     static KNOWN_CORRECTIONS: &[(&str, &str, &str)] = &[
@@ -159,7 +191,7 @@ fn rule_suffix_preserves_dirgha(input: &str) -> Option<Prakriya> {
 
 /// Academy 3(क) rules 3-12: tadbhav/deshaj/aagantuk words take hrasva.
 /// If a non-tatsam word has dirgha ई/ऊ where hrasva is expected, correct it.
-fn rule_tadbhav_hrasva(input: &str) -> Option<Prakriya> {
+pub fn rule_tadbhav_hrasva(input: &str) -> Option<Prakriya> {
     let origin = classify(input);
 
     // Only apply to non-tatsam words
@@ -222,7 +254,7 @@ fn rule_tadbhav_hrasva(input: &str) -> Option<Prakriya> {
 }
 
 /// Academy 3(क)(ऊ) rules 1-16: feminine nouns, -ई/-वती suffixes, profession/place names → dirgha.
-fn rule_dirgha_endings(input: &str) -> Option<Prakriya> {
+pub fn rule_dirgha_endings(input: &str) -> Option<Prakriya> {
     let origin = classify(input);
 
     // This rule primarily applies to tadbhav/deshaj feminine endings
@@ -307,13 +339,77 @@ fn rule_dirgha_endings(input: &str) -> Option<Prakriya> {
                 ));
             }
         }
+
+        // Dictionary-backed fallback moved to standalone kosha_backed_dirgha_correction rule
     }
 
-    // Check for hrasva उ at word-final where dirgha ऊ is required
+    None
+}
+
+/// Dictionary-backed hrasva→dirgha correction at word-final position.
+///
+/// Standalone rule: checks if a non-tatsam word ends in hrasva (ि/ु)
+/// and the dirgha form exists in the dictionary.
+pub fn kosha_backed_dirgha_correction(input: &str) -> Option<Prakriya> {
+    let origin = classify(input);
+    if matches!(origin, Origin::Tatsam) {
+        return None;
+    }
+
+    let chars: Vec<char> = input.chars().collect();
+    if chars.is_empty() {
+        return None;
+    }
+
+    let last = *chars.last().unwrap();
+
+    if last == 'ि' {
+        return kosha_backed_dirgha_impl(input, &chars, 'ि', 'ी', "ई");
+    }
+
     if last == 'ु' {
-        // Feminine kinship terms ending in ू: handled by rule_kinship_tadbhav
-        // Pronoun हामू → handled elsewhere
-        // Plural suffix हरू: handled by correction table
+        return kosha_backed_dirgha_impl(input, &chars, 'ु', 'ू', "ऊ");
+    }
+
+    None
+}
+
+/// Inner implementation for dictionary-backed hrasva→dirgha correction.
+fn kosha_backed_dirgha_impl(
+    input: &str,
+    chars: &[char],
+    hrasva: char,
+    dirgha: char,
+    vowel_label: &str,
+) -> Option<Prakriya> {
+    debug_assert_eq!(*chars.last().unwrap(), hrasva);
+
+    let kosha = varnavinyas_kosha::kosha();
+    if kosha.contains(input) {
+        // The hrasva form itself is a valid dictionary word — don't flag it
+        return None;
+    }
+
+    let mut dirgha_chars: Vec<char> = chars.to_vec();
+    *dirgha_chars.last_mut().unwrap() = dirgha;
+    let dirgha_form: String = dirgha_chars.into_iter().collect();
+
+    if kosha.contains(&dirgha_form) {
+        let rule_ref = if dirgha == 'ी' {
+            "3(क)(ई)"
+        } else {
+            "3(क)(ऊ)"
+        };
+        return Some(Prakriya::corrected(
+            input,
+            &dirgha_form,
+            vec![Step::new(
+                Rule::VarnaVinyasNiyam(rule_ref),
+                format!("शब्दको अन्त्यमा दीर्घ {} आवश्यक (शब्दकोश प्रमाणित)", vowel_label),
+                input,
+                &dirgha_form,
+            )],
+        ));
     }
 
     None
@@ -321,7 +417,7 @@ fn rule_dirgha_endings(input: &str) -> Option<Prakriya> {
 
 /// Academy 3(क)(इ) rule 1: masculine kinship terms take hrasva at end.
 /// Exceptions: खसी, सम्धी, हात्ती, स्वामी are dirgha.
-fn rule_kinship_tadbhav(input: &str) -> Option<Prakriya> {
+pub fn rule_kinship_tadbhav(input: &str) -> Option<Prakriya> {
     let origin = classify(input);
     if !matches!(origin, Origin::Tadbhav | Origin::Deshaj) {
         return None;

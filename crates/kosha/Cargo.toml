@@ -13,3 +13,8 @@ thiserror = { workspace = true }
 [dev-dependencies]
 serde = { workspace = true }
 toml = { workspace = true }
+criterion = { workspace = true }
+
+[[bench]]
+name = "lookup"
+harness = false

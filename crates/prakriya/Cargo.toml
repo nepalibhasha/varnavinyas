@@ -10,8 +10,14 @@ description = "Derivation engine with step tracing and Academy rule citations"
 varnavinyas-akshar = { workspace = true }
 varnavinyas-shabda = { workspace = true }
 varnavinyas-sandhi = { workspace = true }
+varnavinyas-kosha = { workspace = true }
 thiserror = { workspace = true }
 
 [dev-dependencies]
 serde = { workspace = true }
 toml = { workspace = true }
+criterion = { workspace = true }
+
+[[bench]]
+name = "derive"
+harness = false
