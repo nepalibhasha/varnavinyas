@@ -9,6 +9,7 @@ struct TestCase {
     incorrect: String,
     correct: String,
     #[serde(default)]
+    #[allow(dead_code)]
     description: String,
 }
 

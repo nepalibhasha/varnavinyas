@@ -70,10 +70,10 @@ fn check_nirdeshak(text: &str, diagnostics: &mut Vec<LekhyaDiagnostic>) {
     for (i, c) in text.char_indices() {
         if c == ':' {
             // Check if it's already :-
-            if i + 1 < bytes.len() && bytes[i+1] == b'-' {
+            if i + 1 < bytes.len() && bytes[i + 1] == b'-' {
                 continue;
             }
-            
+
             // Check context
             if has_devanagari_before_pos(text, i) {
                 diagnostics.push(LekhyaDiagnostic {
@@ -88,39 +88,41 @@ fn check_nirdeshak(text: &str, diagnostics: &mut Vec<LekhyaDiagnostic>) {
 }
 
 /// Y6/Y7: Convert straight quotes to smart quotes in Devanagari context.
-/// "..." -> “...” and '...' -> ‘...’
+/// "..." -> \u{201C}...\u{201D} and '...' -> \u{2018}...\u{2019}
 fn check_quotes(text: &str, diagnostics: &mut Vec<LekhyaDiagnostic>) {
     // Basic state machine for quote balancing would be complex to implement stateless.
     // For now, we flag ANY straight quote in Devanagari context as "should be smart quote".
     // We can suggest opening/closing based on whitespace context.
-    
-    for (i, c) in text.char_indices() {
-        if c == '"' || c == '\'' {
-            if has_devanagari_before_pos(text, i) || has_devanagari_after_pos(text, i + 1) {
-                let is_double = c == '"';
-                let found = c.to_string();
-                
-                // Heuristic: if preceded by space/start, it's opening. Otherwise closing.
-                // This is simplistic but works for most prose.
-                let is_opening = i == 0 || text.as_bytes()[i-1].is_ascii_whitespace();
-                
-                let expected = if is_double {
-                    if is_opening { "“" } else { "”" }
-                } else {
-                    if is_opening { "‘" } else { "’" }
-                };
 
-                diagnostics.push(LekhyaDiagnostic {
-                    span: (i, i + 1),
-                    found,
-                    expected: expected.to_string(),
-                    rule: if is_double { 
-                        "Section 5: दोहोरो उद्धरण — use smart quotes “...” instead of straight \"" 
-                    } else { 
-                        "Section 5: एकल उद्धरण — use smart quotes ‘...’ instead of straight '" 
-                    },
-                });
-            }
+    for (i, c) in text.char_indices() {
+        if (c == '"' || c == '\'')
+            && (has_devanagari_before_pos(text, i) || has_devanagari_after_pos(text, i + 1))
+        {
+            let is_double = c == '"';
+            let found = c.to_string();
+
+            // Heuristic: if preceded by space/start, it's opening. Otherwise closing.
+            // This is simplistic but works for most prose.
+            let is_opening = i == 0 || text.as_bytes()[i - 1].is_ascii_whitespace();
+
+            let expected = if is_double {
+                if is_opening { "\u{201C}" } else { "\u{201D}" }
+            } else if is_opening {
+                "\u{2018}"
+            } else {
+                "\u{2019}"
+            };
+
+            diagnostics.push(LekhyaDiagnostic {
+                span: (i, i + c.len_utf8()),
+                found,
+                expected: expected.to_string(),
+                rule: if is_double {
+                    "Section 5: दोहोरो उद्धरण \u{2014} use smart quotes \u{201C}...\u{201D} instead of straight \""
+                } else {
+                    "Section 5: एकल उद्धरण \u{2014} use smart quotes \u{2018}...\u{2019} instead of straight '"
+                },
+            });
         }
     }
 }
@@ -131,18 +133,16 @@ fn check_spacing(text: &str, diagnostics: &mut Vec<LekhyaDiagnostic>) {
     let chars: Vec<(usize, char)> = text.char_indices().collect();
     for idx in 0..chars.len() {
         let (pos, c) = chars[idx];
-        if matches!(c, '?' | '!' | ';' | ',') {
-            if has_devanagari_before_pos(text, pos) {
-                // Check if preceded by space (error)
-                if idx > 0 && chars[idx-1].1.is_whitespace() {
-                    let prev_pos = chars[idx-1].0;
-                    diagnostics.push(LekhyaDiagnostic {
-                        span: (prev_pos, pos + c.len_utf8()),
-                        found: format!(" {}", c),
-                        expected: c.to_string(),
-                        rule: "Section 5: punctuation should attach to the previous word",
-                    });
-                }
+        if matches!(c, '?' | '!' | ';' | ',') && has_devanagari_before_pos(text, pos) {
+            // Check if preceded by space (error)
+            if idx > 0 && chars[idx - 1].1.is_whitespace() {
+                let prev_pos = chars[idx - 1].0;
+                diagnostics.push(LekhyaDiagnostic {
+                    span: (prev_pos, pos + c.len_utf8()),
+                    found: format!(" {}", c),
+                    expected: c.to_string(),
+                    rule: "Section 5: punctuation should attach to the previous word",
+                });
             }
         }
     }
@@ -168,7 +168,7 @@ fn check_period_as_sentence_end(text: &str, diagnostics: &mut Vec<LekhyaDiagnost
                 // Check what follows
                 let is_eof = period_end >= bytes.len();
                 let next_char = if !is_eof { Some(bytes[period_end]) } else { None };
-                
+
                 let is_newline = matches!(next_char, Some(b'\n' | b'\r'));
                 let is_space = matches!(next_char, Some(b' '));
 
@@ -194,7 +194,7 @@ fn check_period_as_sentence_end(text: &str, diagnostics: &mut Vec<LekhyaDiagnost
                 else if is_space {
                     let is_abbreviation = is_likely_abbreviation(text, period_start);
                     if !is_abbreviation {
-                         // Check exclusion for ellipsis
+                        // Check exclusion for ellipsis
                         let is_part_of_ellipsis = (period_start >= 2
                             && bytes[period_start - 1] == b'.'
                             && bytes[period_start - 2] == b'.')
@@ -222,12 +222,17 @@ fn check_period_as_sentence_end(text: &str, diagnostics: &mut Vec<LekhyaDiagnost
 fn is_likely_abbreviation(text: &str, pos: usize) -> bool {
     // Look back to find the start of the word
     let prefix = &text[..pos];
-    let word_start = prefix.rfind(|c: char| c.is_whitespace()).map(|i| i + 1).unwrap_or(0);
+    let word_start = prefix
+        .rfind(|c: char| c.is_whitespace())
+        .map(|i| i + 1)
+        .unwrap_or(0);
     let word = &prefix[word_start..];
-    
+
     // Common sentence-ending verbs that are short but definitely NOT abbreviations.
     // If the word is one of these, it's a full stop error, not an abbreviation.
-    let common_enders = ["हो", "छ", "हुन्", "छन्", "थियो", "थिन्", "भयो", "गर्यो"];
+    let common_enders = [
+        "हो", "छ", "हुन्", "छन्", "थियो", "थिन्", "भयो", "गर्यो",
+    ];
     if common_enders.contains(&word) {
         return false;
     }
@@ -254,8 +259,8 @@ fn check_ellipsis(text: &str, diagnostics: &mut Vec<LekhyaDiagnostic>) {
                 diagnostics.push(LekhyaDiagnostic {
                     span: (start, i),
                     found: text[start..i].to_string(),
-                    expected: "…".to_string(),
-                    rule: "Section 5: ऐजन बिन्दु — use ellipsis character (…) instead of multiple periods",
+                    expected: "\u{2026}".to_string(),
+                    rule: "Section 5: ऐजन बिन्दु \u{2014} use ellipsis character (\u{2026}) instead of multiple periods",
                 });
             }
         } else {
@@ -314,7 +319,7 @@ mod tests {
         let diags = check_punctuation("त्यसपछि... के भयो?");
         assert_eq!(diags.len(), 1);
         assert_eq!(diags[0].found, "...");
-        assert_eq!(diags[0].expected, "…");
+        assert_eq!(diags[0].expected, "\u{2026}");
     }
 
     #[test]
@@ -329,8 +334,8 @@ mod tests {
     fn smart_quotes_detected() {
         let diags = check_punctuation("\"नेपाल\"");
         assert_eq!(diags.len(), 2);
-        assert_eq!(diags[0].expected, "“");
-        assert_eq!(diags[1].expected, "”");
+        assert_eq!(diags[0].expected, "\u{201C}");
+        assert_eq!(diags[1].expected, "\u{201D}");
     }
 
     #[test]

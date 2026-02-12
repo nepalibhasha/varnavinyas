@@ -1,7 +1,7 @@
 /**
  * Deriver module — educational word derivation with step trace.
  */
-import { deriveWord, analyzeWord } from './wasm-bridge.js';
+import { deriveWord, analyzeWord, decomposeWord } from './wasm-bridge.js';
 import { debounce, escapeHtml, ORIGIN_LABELS } from './utils.js';
 import { getTooltipForRule, getCategoryForRule } from './rules-data.js';
 
@@ -115,6 +115,9 @@ function renderDeriverAnalysis(word) {
         <span class="origin-badge ${originClass}">${escapeHtml(originLabel)}</span>
       </div>`;
 
+    // Morphology decomposition
+    html += renderMorphology(word);
+
     if (analysis.rule_notes && analysis.rule_notes.length > 0) {
       html += '<div class="analysis-notes">';
       for (const note of analysis.rule_notes) {
@@ -131,5 +134,49 @@ function renderDeriverAnalysis(word) {
     panel.hidden = false;
   } catch {
     panel.hidden = true;
+  }
+}
+
+/**
+ * Render morphology decomposition (prefixes + root + suffixes).
+ */
+function renderMorphology(word) {
+  try {
+    const m = decomposeWord(word);
+    const hasPrefixes = m.prefixes && m.prefixes.length > 0;
+    const hasSuffixes = m.suffixes && m.suffixes.length > 0;
+
+    // Only show if there's actual decomposition
+    if (!hasPrefixes && !hasSuffixes) return '';
+
+    let parts = '';
+
+    for (const p of (m.prefixes || [])) {
+      parts += `
+        <span class="morpheme morpheme-prefix">
+          ${escapeHtml(p)}
+          <span class="morpheme-label">\u0909\u092A\u0938\u0930\u094D\u0917</span>
+        </span>
+        <span class="morpheme-sep">+</span>`;
+    }
+
+    parts += `
+      <span class="morpheme morpheme-root">
+        ${escapeHtml(m.root)}
+        <span class="morpheme-label">\u092E\u0942\u0932</span>
+      </span>`;
+
+    for (const s of (m.suffixes || [])) {
+      parts += `
+        <span class="morpheme-sep">+</span>
+        <span class="morpheme morpheme-suffix">
+          ${escapeHtml(s)}
+          <span class="morpheme-label">\u092A\u094D\u0930\u0924\u094D\u092F\u092F</span>
+        </span>`;
+    }
+
+    return `<div class="morphology-display">${parts}</div>`;
+  } catch {
+    return '';
   }
 }

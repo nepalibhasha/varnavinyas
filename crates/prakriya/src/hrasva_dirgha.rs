@@ -223,13 +223,23 @@ pub fn rule_tadbhav_hrasva(input: &str) -> Option<Prakriya> {
     for i in 0..chars.len().saturating_sub(1) {
         match chars[i] {
             'ी' => {
-                // Medial ई→इ in non-tatsam words
+                // Medial dirgha matra ई→इ in non-tatsam words
                 output_chars[i] = 'ि';
                 changed = true;
             }
             'ू' => {
-                // Medial ऊ→उ in non-tatsam words
+                // Medial dirgha matra ऊ→उ in non-tatsam words
                 output_chars[i] = 'ु';
+                changed = true;
+            }
+            'ई' => {
+                // Independent vowel ई→इ (e.g. रमाईलो → रमाइलो)
+                output_chars[i] = 'इ';
+                changed = true;
+            }
+            'ऊ' => {
+                // Independent vowel ऊ→उ
+                output_chars[i] = 'उ';
                 changed = true;
             }
             _ => {}

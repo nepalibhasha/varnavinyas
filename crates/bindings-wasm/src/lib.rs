@@ -156,6 +156,29 @@ pub fn analyze_word(word: &str) -> String {
     serde_json::to_string(&js).unwrap_or_else(|_| "{}".to_string())
 }
 
+/// A morpheme decomposition result serialized for JavaScript consumers.
+#[derive(Serialize)]
+struct JsMorpheme {
+    root: String,
+    prefixes: Vec<String>,
+    suffixes: Vec<String>,
+    origin: String,
+}
+
+/// Decompose a word into root, prefixes, suffixes, and origin.
+/// Returns a JSON object with root, prefixes, suffixes, and origin.
+#[wasm_bindgen]
+pub fn decompose_word(word: &str) -> String {
+    let m = varnavinyas_shabda::decompose(word);
+    let js = JsMorpheme {
+        root: m.root,
+        prefixes: m.prefixes,
+        suffixes: m.suffixes,
+        origin: origin_to_string(m.origin),
+    };
+    serde_json::to_string(&js).unwrap_or_else(|_| "{}".to_string())
+}
+
 fn origin_to_string(origin: varnavinyas_shabda::Origin) -> String {
     match origin {
         varnavinyas_shabda::Origin::Tatsam => "tatsam".into(),

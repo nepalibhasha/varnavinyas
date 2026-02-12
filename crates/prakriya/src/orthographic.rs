@@ -31,6 +31,8 @@ pub const SPEC_RI_KRI: RuleSpec = RuleSpec {
     examples: &[("रिषि", "ऋषि"), ("क्रिति", "कृति")],
 };
 
+// Not yet registered in engine — stub for future generalizable halanta detection.
+#[allow(dead_code)]
 pub const SPEC_HALANTA: RuleSpec = RuleSpec {
     id: "ortho-halanta",
     category: RuleCategory::Halanta,
@@ -271,6 +273,7 @@ pub fn rule_ri_kri(input: &str) -> Option<Prakriya> {
 /// Known word-level corrections (महान→महान्, बुद्धिमान→बुद्धिमान्, etc.)
 /// live in the correction table (Phase A). This function handles generalizable
 /// pattern detection for tatsam words not covered by the table.
+#[allow(dead_code)]
 pub fn rule_halanta(input: &str) -> Option<Prakriya> {
     let origin = classify(input);
     if !matches!(origin, Origin::Tatsam) {

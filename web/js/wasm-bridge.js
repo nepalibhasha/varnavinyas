@@ -8,6 +8,7 @@ import init, {
   transliterate as wasmTransliterate,
   derive,
   analyze_word,
+  decompose_word,
 } from '../pkg/varnavinyas_bindings_wasm.js';
 
 let initialized = false;
@@ -93,4 +94,12 @@ export function deriveWord(word) {
  */
 export function analyzeWord(word) {
   return JSON.parse(analyze_word(word));
+}
+
+/**
+ * Decompose a word into morphemes: root, prefixes, suffixes, and origin.
+ * Returns { root, prefixes: string[], suffixes: string[], origin }
+ */
+export function decomposeWord(word) {
+  return JSON.parse(decompose_word(word));
 }

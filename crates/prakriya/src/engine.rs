@@ -27,7 +27,9 @@ static PATTERN_RULES: LazyLock<Vec<PatternRule>> = LazyLock::new(|| {
         PatternRule { spec: orthographic::SPEC_CHANDRABINDU, apply: orthographic::rule_chandrabindu },
         PatternRule { spec: orthographic::SPEC_SIBILANT, apply: orthographic::rule_sibilant },
         PatternRule { spec: orthographic::SPEC_RI_KRI, apply: orthographic::rule_ri_kri },
-        PatternRule { spec: orthographic::SPEC_HALANTA, apply: orthographic::rule_halanta },
+        // ortho-halanta: not registered — currently always returns None.
+        // Known halanta corrections (महान→महान्, etc.) are in the correction table.
+        // Re-register once generalizable pattern detection is implemented.
     ];
     rules.sort_by_key(|r| r.spec.priority);
     rules
@@ -158,7 +160,7 @@ mod tests {
             "ortho-chandrabindu",
             "ortho-sibilant",
             "ortho-ri-kri",
-            "ortho-halanta",
+            // ortho-halanta: not registered (stub — always returns None)
         ];
 
         let registered: Vec<&str> = PATTERN_RULES.iter().map(|r| r.spec.id).collect();

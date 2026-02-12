@@ -145,7 +145,7 @@ function goBack() {
   switchToTab(tab);
   hideBackButton();
   requestAnimationFrame(() => {
-    window.scrollTo({ top: scrollY, behavior: 'instant' });
+    window.scrollTo({ top: scrollY, behavior: 'auto' });
   });
 }
 

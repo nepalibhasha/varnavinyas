@@ -247,3 +247,11 @@ fn o7_ksha_chhya_kshetra() {
     let p = derive("छेत्र");
     assert_eq!(p.output, "क्षेत्र");
 }
+
+#[test]
+fn ramailo_dirgha_corrected() {
+    let p = derive("रमाईलो");
+    assert_eq!(p.output, "रमाइलो");
+    assert!(!p.is_correct);
+}
+

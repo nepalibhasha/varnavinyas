@@ -83,8 +83,7 @@ pub fn split(word: &str) -> Vec<(String, String, SandhiResult)> {
 
         // Strategy 3: Yan Sandhi Reconstruction (इ/ई -> य, उ/ऊ -> व)
         // If left ends in ्य, try replacing with ि/ी and prepending vowel to right.
-        if raw_left.ends_with("्य") {
-            let base = &raw_left[..raw_left.len() - "्य".len()];
+        if let Some(base) = raw_left.strip_suffix("्य") {
             let left_candidates = [format!("{}ि", base), format!("{}ी", base)];
             
             for left in left_candidates {
@@ -105,8 +104,7 @@ pub fn split(word: &str) -> Vec<(String, String, SandhiResult)> {
         }
 
         // If left ends in ्व, try replacing with ु/ू and prepending vowel to right.
-        if raw_left.ends_with("्व") {
-            let base = &raw_left[..raw_left.len() - "्व".len()];
+        if let Some(base) = raw_left.strip_suffix("्व") {
             let left_candidates = [format!("{}ु", base), format!("{}ू", base)];
             
             for left in left_candidates {
@@ -147,9 +145,9 @@ pub fn split(word: &str) -> Vec<(String, String, SandhiResult)> {
         // e.g. "निर्धन" split at "नि" | "र्धन"
         // right starts with 'र्'. Try stripping 'र्'.
         // left: append 'ः'.
-        if raw_right.starts_with("र्") {
+        if let Some(remainder) = raw_right.strip_prefix("र्") {
              let left_candidate = format!("{}ः", raw_left);
-             let right_candidate = raw_right["र्".len()..].to_string(); // Strip 'र्'
+             let right_candidate = remainder.to_string();
              
              if lex.contains(&left_candidate) && lex.contains(&right_candidate) {
                 if let Ok(res) = apply(&left_candidate, &right_candidate) {
