@@ -4,7 +4,10 @@ mod normalize;
 mod syllable;
 mod vowel;
 
-pub use consonant::{Varga, is_panchham, varga};
+pub use consonant::{
+    Varga, is_panchham, is_voiced, is_voiceless, panchham_of, varga, varga_position,
+    voiced_counterpart,
+};
 pub use devanagari::{
     CharType, DevanagariChar, classify, is_halanta, is_matra, is_svar, is_vyanjan,
 };

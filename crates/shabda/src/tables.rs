@@ -106,42 +106,75 @@ static ORIGIN_TABLE: &[(&str, Origin)] = &[
 
 /// Prefix forms: (canonical prefix, sandhi-ed form as it appears in words, root_prefix to restore).
 /// When we strip the sandhi form from a word, we prepend root_prefix to get the original root.
+///
+/// IMPORTANT: Sorted by descending sandhi_form byte length for longest-first matching.
+/// decompose() breaks on first match, so longer forms must precede shorter ones
+/// (e.g., पुनर before पुनः, अभि before अ, निर् before नि).
 pub static PREFIX_FORMS: &[(&str, &str, &str)] = &[
-    // Standard prefixes (no transformation of root initial)
-    ("प्र", "प्र", ""),
-    // Consonant assimilation: उत् + ल → उल्ल (ल is doubled; strip उल् and root starts with ल)
-    ("उत्", "उल्", ""),
-    // उत् + च → उच्च
-    ("उत्", "उच्", ""),
+    // 15 bytes
+    ("प्रति", "प्रति", ""),
+    // 12 bytes
+    ("पुनः", "पुनर", ""),  // पुनः before vowel → पुनर
+    ("पुनः", "पुनः", ""),
+    ("निर्", "निर्", ""),
+    ("निस्", "निस्", ""),
+    ("दुस्", "दुस्", ""),
+    ("दुस्", "दुश्", ""),
+    ("दुर्", "दुर्", ""),
+    // 9 bytes
+    ("अभि", "अभि", ""),
+    ("अधि", "अधि", ""),
+    ("दुर्", "दुः", ""),
+    ("सम्", "सङ्", ""),   // सम् before gutturals → सङ्
+    ("उत्", "उल्", ""),   // उत् + ल → उल्ल
+    ("उत्", "उच्", ""),   // उत् + च → उच्च
     ("उत्", "उत्", ""),
     ("सम्", "सम्", ""),
-    ("सम्", "सं", ""),
-    ("अभि", "अभि", ""),
     ("अनु", "अनु", ""),
     ("परि", "परि", ""),
-    ("वि", "वि", ""),
-    ("निर्", "निर्", ""),
+    ("परा", "परा", ""),
+    ("अति", "अति", ""),
     ("निर्", "निः", ""),
-    ("निस्", "निस्", ""),
     ("निस्", "निः", ""),
-    ("अ", "अ", ""),
-    ("पुनः", "पुनः", ""),
-    ("पुनः", "पुनर", ""), // पुनः before vowel → पुनर
+    ("प्र", "प्र", ""),
+    // 6 bytes
+    ("सम्", "सं", ""),
+    ("अप", "अप", ""),     // medium risk: can over-strip (अपना, अवश्य)
+    ("अव", "अव", ""),     // medium risk: see above
+    ("उप", "उप", ""),
+    ("वि", "वि", ""),
+    // 3 bytes
+    ("आ", "आ", ""),     // short prefix: ≤1 Devanagari char, requires 4+ char root
+    ("अ", "अ", ""),     // short prefix: ≤1 Devanagari char, requires 4+ char root
 ];
 
 /// Known suffixes.
+///
+/// IMPORTANT: Sorted by descending byte length for longest-first matching.
+/// decompose() breaks on first match, so longer suffixes must precede shorter ones
+/// (e.g., ईकरण before ई, इलो before इक).
 pub static SUFFIXES: &[&str] = &[
+    // 12 bytes
     "ईकरण",
-    "ता",
-    "ई",
-    "ईय",
+    // 9 bytes
     "इलो",
-    "नु",
+    "एको",
+    "आलु",
+    "कार",
     "एली",
+    // 6 bytes
+    "ईय",
+    "ाइ",
+    "एर",
+    "पन",
+    "ता",
+    "नु",
     "ने",
     "को",
     "मा",
     "ले",
     "ित",
     "इक",
+    // 3 bytes
+    "ई",
 ];

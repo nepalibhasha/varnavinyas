@@ -35,7 +35,10 @@ pub fn decompose(word: &str) -> Morpheme {
     // We strip "उल्" and the remaining starts with "ल" (the doubled consonant)
     for &(prefix, sandhi_form, _root_prefix) in tables::PREFIX_FORMS.iter() {
         if let Some(rest) = remaining.strip_prefix(sandhi_form) {
-            if !rest.is_empty() {
+            // Short prefixes (≤1 Devanagari char, e.g., अ, आ) require longer roots
+            // to prevent over-decomposition (e.g., आगो → prefix अ + root गो).
+            let min_root = if sandhi_form.chars().count() <= 1 { 4 } else { 2 };
+            if rest.chars().count() >= min_root {
                 prefixes.push(prefix.to_string());
                 remaining = rest.to_string();
                 break; // Only strip one prefix for now

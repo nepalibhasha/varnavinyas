@@ -47,6 +47,54 @@ pub fn is_panchham(c: char) -> bool {
     matches!(c, 'ङ' | 'ञ' | 'ण' | 'न' | 'म')
 }
 
+/// Position within a varga (1-indexed).
+/// 1st=voiceless unaspirated, 2nd=voiceless aspirated,
+/// 3rd=voiced unaspirated, 4th=voiced aspirated, 5th=nasal (panchham).
+pub fn varga_position(c: char) -> Option<u8> {
+    match c {
+        'क' | 'च' | 'ट' | 'त' | 'प' => Some(1),
+        'ख' | 'छ' | 'ठ' | 'थ' | 'फ' => Some(2),
+        'ग' | 'ज' | 'ड' | 'द' | 'ब' => Some(3),
+        'घ' | 'झ' | 'ढ' | 'ध' | 'भ' => Some(4),
+        'ङ' | 'ञ' | 'ण' | 'न' | 'म' => Some(5),
+        _ => None,
+    }
+}
+
+/// Check if a consonant is voiceless (1st or 2nd of its varga, or sibilants).
+pub fn is_voiceless(c: char) -> bool {
+    matches!(varga_position(c), Some(1 | 2)) || matches!(c, 'श' | 'ष' | 'स')
+}
+
+/// Check if a consonant is voiced (3rd, 4th, 5th of its varga, semivowels, or ह).
+pub fn is_voiced(c: char) -> bool {
+    matches!(varga_position(c), Some(3..=5)) || matches!(c, 'य' | 'र' | 'ल' | 'व' | 'ह')
+}
+
+/// Get the panchham (nasal, 5th consonant) of a given varga.
+pub fn panchham_of(v: Varga) -> Option<char> {
+    match v {
+        Varga::KaVarga => Some('ङ'),
+        Varga::ChaVarga => Some('ञ'),
+        Varga::TaVarga => Some('ण'),
+        Varga::TaVarga2 => Some('न'),
+        Varga::PaVarga => Some('म'),
+        _ => None,
+    }
+}
+
+/// Get the voiced counterpart of a voiceless stop (position 1→3, 2→4).
+pub fn voiced_counterpart(c: char) -> Option<char> {
+    match c {
+        'क' => Some('ग'), 'ख' => Some('घ'),
+        'च' => Some('ज'), 'छ' => Some('झ'),
+        'ट' => Some('ड'), 'ठ' => Some('ढ'),
+        'त' => Some('द'), 'थ' => Some('ध'),
+        'प' => Some('ब'), 'फ' => Some('भ'),
+        _ => None,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -132,5 +180,59 @@ mod tests {
         assert!(!is_panchham('श'));
         assert!(!is_panchham('ह'));
         assert!(!is_panchham('A'));
+    }
+
+    #[test]
+    fn test_voiceless() {
+        for c in ['क', 'ख', 'च', 'छ', 'ट', 'ठ', 'त', 'थ', 'प', 'फ', 'श', 'ष', 'स'] {
+            assert!(is_voiceless(c), "expected voiceless for {c}");
+        }
+        for c in ['ग', 'घ', 'ज', 'झ', 'ड', 'ढ', 'द', 'ध', 'ब', 'भ', 'म', 'य', 'र', 'ह'] {
+            assert!(!is_voiceless(c), "unexpected voiceless for {c}");
+        }
+    }
+
+    #[test]
+    fn test_voiced() {
+        for c in ['ग', 'घ', 'ङ', 'ज', 'झ', 'ञ', 'ड', 'ढ', 'ण', 'द', 'ध', 'न', 'ब', 'भ', 'म', 'य', 'र', 'ल', 'व', 'ह'] {
+            assert!(is_voiced(c), "expected voiced for {c}");
+        }
+        for c in ['क', 'ख', 'च', 'छ', 'ट', 'ठ', 'त', 'थ', 'प', 'फ'] {
+            assert!(!is_voiced(c), "unexpected voiced for {c}");
+        }
+    }
+
+    #[test]
+    fn test_panchham_of() {
+        assert_eq!(panchham_of(Varga::KaVarga), Some('ङ'));
+        assert_eq!(panchham_of(Varga::ChaVarga), Some('ञ'));
+        assert_eq!(panchham_of(Varga::TaVarga), Some('ण'));
+        assert_eq!(panchham_of(Varga::TaVarga2), Some('न'));
+        assert_eq!(panchham_of(Varga::PaVarga), Some('म'));
+        assert_eq!(panchham_of(Varga::Antastha), None);
+        assert_eq!(panchham_of(Varga::Ushma), None);
+        assert_eq!(panchham_of(Varga::Other), None);
+    }
+
+    #[test]
+    fn test_voiced_counterpart() {
+        assert_eq!(voiced_counterpart('क'), Some('ग'));
+        assert_eq!(voiced_counterpart('ख'), Some('घ'));
+        assert_eq!(voiced_counterpart('त'), Some('द'));
+        assert_eq!(voiced_counterpart('प'), Some('ब'));
+        assert_eq!(voiced_counterpart('ग'), None); // already voiced
+        assert_eq!(voiced_counterpart('म'), None); // nasal, not a stop
+        assert_eq!(voiced_counterpart('य'), None); // semivowel
+    }
+
+    #[test]
+    fn test_varga_position() {
+        assert_eq!(varga_position('क'), Some(1));
+        assert_eq!(varga_position('ख'), Some(2));
+        assert_eq!(varga_position('ग'), Some(3));
+        assert_eq!(varga_position('घ'), Some(4));
+        assert_eq!(varga_position('ङ'), Some(5));
+        assert_eq!(varga_position('य'), None); // semivowel, no position
+        assert_eq!(varga_position('अ'), None); // vowel
     }
 }

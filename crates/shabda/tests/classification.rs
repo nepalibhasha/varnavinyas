@@ -1,4 +1,4 @@
-use varnavinyas_shabda::{Origin, classify, decompose};
+use varnavinyas_shabda::{Origin, classify, decompose, tables};
 
 // S1: Classifies विज्ञान as Tatsam
 #[test]
@@ -107,4 +107,34 @@ fn decompose_ullikhit_no_over_decompose() {
     // because the root would be too short (3 chars)
     assert_eq!(m.root, "लिखित");
     assert!(m.suffixes.is_empty());
+}
+
+/// PREFIX_FORMS must be sorted by descending sandhi_form byte length.
+#[test]
+fn prefix_forms_sorted_descending_by_byte_length() {
+    let forms = tables::PREFIX_FORMS;
+    for window in forms.windows(2) {
+        let a_len = window[0].1.len();
+        let b_len = window[1].1.len();
+        assert!(
+            a_len >= b_len,
+            "PREFIX_FORMS not sorted: {:?} ({}B) before {:?} ({}B)",
+            window[0].1, a_len, window[1].1, b_len
+        );
+    }
+}
+
+/// SUFFIXES must be sorted by descending byte length.
+#[test]
+fn suffixes_sorted_descending_by_byte_length() {
+    let suffixes = tables::SUFFIXES;
+    for window in suffixes.windows(2) {
+        let a_len = window[0].len();
+        let b_len = window[1].len();
+        assert!(
+            a_len >= b_len,
+            "SUFFIXES not sorted: {:?} ({}B) before {:?} ({}B)",
+            window[0], a_len, window[1], b_len
+        );
+    }
 }
