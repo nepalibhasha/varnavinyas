@@ -6,6 +6,9 @@ rust-version.workspace = true
 license.workspace = true
 description = "Word origin classification and morphological decomposition"
 
+[features]
+iterative-decompose = []
+
 [dependencies]
 varnavinyas-akshar = { workspace = true }
 varnavinyas-kosha = { workspace = true }

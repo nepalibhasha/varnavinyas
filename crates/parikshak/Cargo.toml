@@ -6,6 +6,11 @@ rust-version.workspace = true
 license.workspace = true
 description = "Nepali spell-check pipeline composing kosha, prakriya, and lekhya"
 
+[features]
+oblique-forms = []
+nipat-tokenization = []
+vocative-tokenization = []
+
 [dependencies]
 varnavinyas-akshar = { workspace = true }
 varnavinyas-kosha = { workspace = true }

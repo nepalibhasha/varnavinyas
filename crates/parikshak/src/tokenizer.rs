@@ -30,6 +30,15 @@ const SUFFIXES: &[&str] = &[
     "भित्र", "देखि", "हरू", "हरु", "लाई", "बाट", "सँग", "तिर", "का", "की", "ले", "को", "मा",
 ];
 
+/// Vocative case markers. Only active behind `vocative-tokenization` feature.
+#[cfg(feature = "vocative-tokenization")]
+const VOCATIVE_SUFFIXES: &[&str] = &["ए", "ओ"];
+
+/// Discourse particles (nipats). Only active behind `nipat-tokenization` feature.
+/// Sorted longest-first. Single-char nipats (त, ल, नि) are risky — extra guard applied.
+#[cfg(feature = "nipat-tokenization")]
+const NIPATS: &[&str] = &["क्यारे", "नै", "पो", "रे", "खै", "नि", "ल", "त"];
+
 /// Tokenize text into word tokens with byte offsets.
 ///
 /// Splits on whitespace and strips surrounding punctuation from each token.
@@ -73,11 +82,74 @@ pub fn tokenize_analyzed(text: &str) -> Vec<AnalyzedToken> {
         .map(|tok| {
             for sfx in SUFFIXES {
                 if let Some(stem) = tok.text.strip_suffix(sfx) {
-                    // Accept split if stem is in lexicon OR is a known incorrect form in correction table
                     if !stem.is_empty() && (lex.contains(stem) || is_in_correction_table(stem)) {
                         return AnalyzedToken {
                             stem: stem.to_string(),
                             suffix: Some(sfx.to_string()),
+                            start: tok.start,
+                            end: tok.end,
+                        };
+                    }
+                    // Oblique form: stem ends in ा (oblique) but dictionary has ो form
+                    // e.g., "केटालाई" → stem "केटा", but kosha has "केटो"
+                    #[cfg(feature = "oblique-forms")]
+                    if !stem.is_empty() {
+                        if let Some(base) = stem.strip_suffix('ा') {
+                            let candidate = format!("{base}ो");
+                            if lex.contains(&candidate) {
+                                return AnalyzedToken {
+                                    stem: stem.to_string(),
+                                    suffix: Some(sfx.to_string()),
+                                    start: tok.start,
+                                    end: tok.end,
+                                };
+                            }
+                        }
+                    }
+                }
+            }
+            // Vocative markers: single-char ए/ओ with triple guard
+            #[cfg(feature = "vocative-tokenization")]
+            for voc in VOCATIVE_SUFFIXES {
+                if let Some(stem) = tok.text.strip_suffix(voc) {
+                    // Guard 1: stem exists in kosha
+                    // Guard 2: full word is NOT in kosha (avoid splitting real words)
+                    // Guard 3: stem must end in vowel/matra (vocative attaches to vowel stems)
+                    if !stem.is_empty()
+                        && lex.contains(stem)
+                        && !lex.contains(&tok.text)
+                        && stem.chars().last().is_some_and(|c| {
+                            varnavinyas_akshar::is_svar(c) || varnavinyas_akshar::is_matra(c)
+                        })
+                    {
+                        return AnalyzedToken {
+                            stem: stem.to_string(),
+                            suffix: Some(voc.to_string()),
+                            start: tok.start,
+                            end: tok.end,
+                        };
+                    }
+                }
+            }
+            // Nipat (discourse particle) detachment with triple guard
+            #[cfg(feature = "nipat-tokenization")]
+            for nip in NIPATS {
+                if let Some(stem) = tok.text.strip_suffix(nip) {
+                    // Guard 1: stem exists in kosha
+                    // Guard 2: full word is NOT in kosha
+                    // Guard 3: risky single-char nipats (≤3 bytes) require stem to end in vowel/matra
+                    let is_risky = nip.len() <= 3;
+                    let vowel_ending = stem.chars().last().is_some_and(|c| {
+                        varnavinyas_akshar::is_svar(c) || varnavinyas_akshar::is_matra(c)
+                    });
+                    if !stem.is_empty()
+                        && lex.contains(stem)
+                        && !lex.contains(&tok.text)
+                        && (!is_risky || vowel_ending)
+                    {
+                        return AnalyzedToken {
+                            stem: stem.to_string(),
+                            suffix: Some(nip.to_string()),
                             start: tok.start,
                             end: tok.end,
                         };

@@ -148,6 +148,18 @@ pub static PREFIX_FORMS: &[(&str, &str, &str)] = &[
     ("अ", "अ", ""),     // short prefix: ≤1 Devanagari char, requires 4+ char root
 ];
 
+/// Case markers (postpositions) for iterative decomposition.
+/// Sorted by descending byte length.
+#[cfg(feature = "iterative-decompose")]
+pub static CASE_MARKERS: &[&str] = &[
+    "भित्र", "देखि", "लाई", "बाट", "सँग", "तिर", "का", "की", "ले", "को", "मा",
+];
+
+/// Plural markers for iterative decomposition.
+/// Sorted by descending byte length.
+#[cfg(feature = "iterative-decompose")]
+pub static PLURAL_MARKERS: &[&str] = &["हरू", "हरु"];
+
 /// Known suffixes.
 ///
 /// IMPORTANT: Sorted by descending byte length for longest-first matching.
