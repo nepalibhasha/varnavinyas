@@ -13,7 +13,6 @@ pub fn apply_consonant_sandhi(first: &str, second: &str) -> Option<SandhiResult>
                     rule_citation: citation,
                 });
             }
-            // Also check if second starts with consonant that triggers assimilation
         }
     }
 
@@ -32,6 +31,43 @@ pub fn apply_consonant_sandhi(first: &str, second: &str) -> Option<SandhiResult>
                     sandhi_type: SandhiType::ConsonantSandhi,
                     rule_citation: "व्यञ्जन सन्धि: gemination (same consonant doubling)",
                 });
+            }
+
+            // General nasalization: stop + nasal → panchham of stop's varga + nasal
+            // e.g., वाक् + मय → वाङ्मय, षट् + मास → षण्मास
+            // Must precede voicing rule: म is both voiced and nasal.
+            if !second_chars.is_empty() && varnavinyas_akshar::is_panchham(second_chars[0]) {
+                if let Some(v) = varnavinyas_akshar::varga(base_consonant) {
+                    if let Some(nasal) = varnavinyas_akshar::panchham_of(v) {
+                        let prefix: String =
+                            first_chars[..first_chars.len() - 2].iter().collect();
+                        let result = format!("{prefix}{nasal}्{second}");
+                        return Some(SandhiResult {
+                            output: result,
+                            sandhi_type: SandhiType::ConsonantSandhi,
+                            rule_citation:
+                                "व्यञ्जन सन्धि: stop→nasal before nasal (panchham assimilation)",
+                        });
+                    }
+                }
+            }
+
+            // General voicing: voiceless stop + voiced consonant → voiced counterpart
+            // e.g., दिक् + गज → दिग्गज, वाक् + दान → वाग्दान
+            if !second_chars.is_empty()
+                && varnavinyas_akshar::is_voiceless(base_consonant)
+                && varnavinyas_akshar::is_voiced(second_chars[0])
+            {
+                if let Some(voiced) = varnavinyas_akshar::voiced_counterpart(base_consonant) {
+                    let prefix: String = first_chars[..first_chars.len() - 2].iter().collect();
+                    let result = format!("{prefix}{voiced}्{second}");
+                    return Some(SandhiResult {
+                        output: result,
+                        sandhi_type: SandhiType::ConsonantSandhi,
+                        rule_citation:
+                            "व्यञ्जन सन्धि: voiceless→voiced before voiced consonant",
+                    });
+                }
             }
         }
     }
@@ -53,5 +89,23 @@ static CONSONANT_ASSIMILATION_TABLE: &[(&str, &str, &str, &str)] = &[
         "क",
         "सङ्क",
         "व्यञ्जन सन्धि: सम् + क → सङ्क (panchham assimilation)",
+    ),
+    (
+        "सम्",
+        "ख",
+        "सङ्ख",
+        "व्यञ्जन सन्धि: सम् + ख → सङ्ख (panchham assimilation)",
+    ),
+    (
+        "सम्",
+        "ग",
+        "सङ्ग",
+        "व्यञ्जन सन्धि: सम् + ग → सङ्ग (panchham assimilation)",
+    ),
+    (
+        "सम्",
+        "घ",
+        "सङ्घ",
+        "व्यञ्जन सन्धि: सम् + घ → सङ्घ (panchham assimilation)",
     ),
 ];

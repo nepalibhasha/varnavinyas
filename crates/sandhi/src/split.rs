@@ -157,8 +157,83 @@ pub fn split(word: &str) -> Vec<(String, String, SandhiResult)> {
                 }
              }
         }
+
+        // Strategy 5: Ayadi Sandhi Reconstruction
+        // ए+vowel→अय, ऐ+vowel→आय, ओ+vowel→अव, औ+vowel→आव
+        // Reverse: if raw_left ends in य, try ए/े; if ends in ाय, try ऐ/ै;
+        //          if raw_left ends in व, try ओ/ो; if ends in ाव, try औ/ौ.
+
+        // ऐ→आय: raw_left ends in ाय (longer pattern, check first)
+        if let Some(base) = raw_left.strip_suffix("ाय") {
+            let left_candidates = [format!("{base}ै"), format!("{base}ऐ")];
+            for left in left_candidates {
+                if !lex.contains(&left) { continue; }
+                for v in vowels {
+                    let right = format!("{v}{raw_right}");
+                    if lex.contains(&right) {
+                        if let Ok(res) = apply(&left, &right) {
+                            if res.output == word {
+                                results.push((left.clone(), right, res));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // ए→अय: raw_left ends in य (but not ाय, already handled above)
+        else if let Some(base) = raw_left.strip_suffix('य') {
+            let left_candidates = [format!("{base}े"), format!("{base}ए")];
+            for left in left_candidates {
+                if !lex.contains(&left) { continue; }
+                for v in vowels {
+                    let right = format!("{v}{raw_right}");
+                    if lex.contains(&right) {
+                        if let Ok(res) = apply(&left, &right) {
+                            if res.output == word {
+                                results.push((left.clone(), right, res));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // औ→आव: raw_left ends in ाव (longer pattern, check first)
+        if let Some(base) = raw_left.strip_suffix("ाव") {
+            let left_candidates = [format!("{base}ौ"), format!("{base}औ")];
+            for left in left_candidates {
+                if !lex.contains(&left) { continue; }
+                for v in vowels {
+                    let right = format!("{v}{raw_right}");
+                    if lex.contains(&right) {
+                        if let Ok(res) = apply(&left, &right) {
+                            if res.output == word {
+                                results.push((left.clone(), right, res));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // ओ→अव: raw_left ends in व (but not ाव, already handled above)
+        else if let Some(base) = raw_left.strip_suffix('व') {
+            let left_candidates = [format!("{base}ो"), format!("{base}ओ")];
+            for left in left_candidates {
+                if !lex.contains(&left) { continue; }
+                for v in vowels {
+                    let right = format!("{v}{raw_right}");
+                    if lex.contains(&right) {
+                        if let Ok(res) = apply(&left, &right) {
+                            if res.output == word {
+                                results.push((left.clone(), right, res));
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
-    
+
     // Deduplicate results
     results.sort_by(|a, b| a.0.cmp(&b.0));
     results.dedup_by(|a, b| a.0 == b.0 && a.1 == b.1);

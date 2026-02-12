@@ -13,7 +13,7 @@ pub fn apply_visarga_sandhi(first: &str, second: &str) -> Option<SandhiResult> {
     let first_of_second = *second_chars.first()?;
 
     // Visarga retained before sibilants (स, श, ष) and unvoiced stops
-    if matches!(first_of_second, 'स' | 'श' | 'ष' | 'क' | 'ख' | 'प' | 'फ') {
+    if matches!(first_of_second, 'स' | 'श' | 'ष' | 'क' | 'ख' | 'च' | 'छ' | 'ट' | 'ठ' | 'त' | 'थ' | 'प' | 'फ') {
         let result = format!("{first}{second}");
         return Some(SandhiResult {
             output: result,
