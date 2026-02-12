@@ -36,6 +36,11 @@
       व्युत्पत्ति
       <span class="tab-label">Deriver</span>
     </button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="reference">
+      <span class="tab-icon">📖</span>
+      नियम सन्दर्भ
+      <span class="tab-label">Rules Reference</span>
+    </button>
   </nav>
 
   <main class="main">
@@ -138,6 +143,18 @@
         <div class="deriver-empty" id="deriver-empty">
           <p>शब्द लेख्नुहोस् र व्युत्पत्ति हेर्नुहोस्।</p>
         </div>
+      </div>
+    </section>
+
+    <!-- Rules Reference Tab -->
+    <section id="tab-reference" class="tab-panel" role="tabpanel" hidden>
+      <div class="reference-layout">
+        <button class="btn btn-sm ref-back-btn" id="ref-back-btn" hidden>
+          <span class="ref-back-arrow">&larr;</span> फिर्ता जानुहोस् <span class="ref-back-label">Go Back</span>
+        </button>
+        <h2 class="reference-heading">नियम सन्दर्भ <span class="reference-heading-label">Rules Reference</span></h2>
+        <p class="reference-intro">नेपाल प्रज्ञा प्रतिष्ठानको वर्णविन्यास नियमावलीका मुख्य नियमहरू</p>
+        <div class="reference-content" id="reference-content"></div>
       </div>
     </section>
   </main>

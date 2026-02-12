@@ -3,6 +3,7 @@
  */
 import { deriveWord, analyzeWord } from './wasm-bridge.js';
 import { debounce, escapeHtml, ORIGIN_LABELS } from './utils.js';
+import { getTooltipForRule, getCategoryForRule } from './rules-data.js';
 
 /** Feature flag for word analysis in deriver. Set to true to enable. */
 const FEATURE_ANALYSIS = true;
@@ -63,7 +64,7 @@ function runDerive() {
         (s, i) => `
       <tr>
         <td>${i + 1}</td>
-        <td class="rule-cell">${escapeHtml(s.rule)}</td>
+        <td class="rule-cell">${wrapRuleTooltip(s.rule)}</td>
         <td>${escapeHtml(s.description)}</td>
         <td>${escapeHtml(s.before)}</td>
         <td>${escapeHtml(s.after)}</td>
@@ -78,6 +79,21 @@ function runDerive() {
   if (FEATURE_ANALYSIS) {
     renderDeriverAnalysis(word);
   }
+}
+
+/**
+ * Wrap a rule citation in a tooltip-enabled span.
+ */
+function wrapRuleTooltip(ruleText) {
+  const cat = getCategoryForRule(ruleText);
+  const tooltip = getTooltipForRule(ruleText);
+  if (tooltip && cat) {
+    return `<span class="rule-ref" data-tooltip="${escapeHtml(tooltip)}" data-category="${escapeHtml(cat)}">${escapeHtml(ruleText)}</span>`;
+  }
+  if (tooltip) {
+    return `<span class="rule-ref" data-tooltip="${escapeHtml(tooltip)}">${escapeHtml(ruleText)}</span>`;
+  }
+  return escapeHtml(ruleText);
 }
 
 function renderDeriverAnalysis(word) {
@@ -104,7 +120,7 @@ function renderDeriverAnalysis(word) {
       for (const note of analysis.rule_notes) {
         html += `
         <div class="analysis-note">
-          <span class="analysis-note-rule">${escapeHtml(note.rule)}</span>
+          <span class="analysis-note-rule">${wrapRuleTooltip(note.rule)}</span>
           <span class="analysis-note-text">${escapeHtml(note.explanation)}</span>
         </div>`;
       }

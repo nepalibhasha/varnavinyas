@@ -6,6 +6,7 @@
  */
 import { checkText, analyzeWord } from './wasm-bridge.js';
 import { debounce, escapeHtml, CATEGORY_COLORS, CATEGORY_LABELS, ORIGIN_LABELS } from './utils.js';
+import { getTooltipForRule, getCategoryForRule, RULE_TOOLTIPS } from './rules-data.js';
 
 /** Feature flag for word analysis panel. Set to true to enable. */
 const FEATURE_ANALYSIS = true;
@@ -138,7 +139,7 @@ function renderDiagnostics() {
           <span class="diag-correct">${escapeHtml(d.correction)}</span>
         </div>
         <div class="diag-explanation">${escapeHtml(d.explanation)}</div>
-        <div class="diag-rule">${escapeHtml(d.rule)}</div>
+        <div class="diag-rule">${wrapRuleTooltip(d.rule, d.category_code)}</div>
         <button class="btn btn-sm btn-primary diag-fix" data-index="${i}">सच्याउनुहोस्</button>
       </div>`;
     })
@@ -304,7 +305,7 @@ function renderAnalysisPanel(word) {
       for (const note of analysis.rule_notes) {
         html += `
         <div class="analysis-note">
-          <span class="analysis-note-rule">${escapeHtml(note.rule)}</span>
+          <span class="analysis-note-rule">${wrapRuleTooltip(note.rule)}</span>
           <span class="analysis-note-text">${escapeHtml(note.explanation)}</span>
         </div>`;
       }
@@ -316,6 +317,21 @@ function renderAnalysisPanel(word) {
   } catch {
     panel.hidden = true;
   }
+}
+
+/**
+ * Wrap a rule citation in a tooltip-enabled span.
+ */
+function wrapRuleTooltip(ruleText, categoryCode) {
+  const cat = categoryCode || getCategoryForRule(ruleText);
+  const tooltip = (cat && RULE_TOOLTIPS[cat]) || getTooltipForRule(ruleText);
+  if (tooltip && cat) {
+    return `<span class="rule-ref" data-tooltip="${escapeHtml(tooltip)}" data-category="${escapeHtml(cat)}">${escapeHtml(ruleText)}</span>`;
+  }
+  if (tooltip) {
+    return `<span class="rule-ref" data-tooltip="${escapeHtml(tooltip)}">${escapeHtml(ruleText)}</span>`;
+  }
+  return escapeHtml(ruleText);
 }
 
 /**

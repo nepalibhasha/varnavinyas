@@ -690,6 +690,207 @@ body {
   color: var(--color-primary);
 }
 
+/* === Rules Reference Tab === */
+.reference-layout {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.reference-heading {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.reference-heading-label {
+  font-family: var(--font-latin);
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--color-text-secondary);
+  margin-left: 0.3rem;
+}
+
+.reference-intro {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 1.25rem;
+}
+
+.reference-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.ref-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  transition: box-shadow var(--transition);
+}
+
+.ref-card:hover {
+  box-shadow: var(--shadow);
+}
+
+.ref-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.ref-badge {
+  font-family: var(--font-latin);
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: white;
+}
+
+.ref-code {
+  font-family: var(--font-latin);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.ref-title {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.ref-summary {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+  margin-bottom: 0.75rem;
+}
+
+.ref-examples {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+}
+
+.ref-examples th {
+  text-align: left;
+  padding: 0.35rem 0.5rem;
+  border-bottom: 2px solid var(--color-border);
+  font-weight: 600;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+.ref-examples td {
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.ref-examples tr:last-child td { border-bottom: none; }
+
+.ref-wrong {
+  color: var(--color-error);
+  text-decoration: line-through;
+}
+
+.ref-arrow {
+  color: var(--color-text-secondary);
+  text-align: center;
+  width: 2rem;
+}
+
+.ref-right {
+  color: var(--color-success);
+  font-weight: 600;
+}
+
+.ref-subrules {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.ref-subrules li {
+  font-family: var(--font-latin);
+  font-size: 0.7rem;
+  color: var(--color-text-secondary);
+  background: var(--color-bg);
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm);
+}
+
+/* Back button on reference tab */
+.ref-back-btn {
+  margin-bottom: 0.75rem;
+}
+
+.ref-back-arrow {
+  font-size: 1rem;
+}
+
+.ref-back-label {
+  font-family: var(--font-latin);
+  font-size: 0.65rem;
+  color: var(--color-text-secondary);
+  margin-left: 0.15rem;
+}
+
+/* Highlight animation when navigated to from a rule citation */
+.ref-card-highlight {
+  animation: refHighlight 1.5s ease;
+}
+
+@keyframes refHighlight {
+  0% { box-shadow: 0 0 0 3px var(--color-primary); }
+  100% { box-shadow: none; }
+}
+
+/* === Rule Tooltips === */
+.rule-ref {
+  position: relative;
+  cursor: pointer;
+  border-bottom: 1px dotted var(--color-primary);
+}
+
+.rule-ref:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.35rem 0.6rem;
+  background: var(--color-text);
+  color: var(--color-surface);
+  font-family: var(--font-devanagari);
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.4;
+  white-space: nowrap;
+  border-radius: var(--radius-sm);
+  z-index: 100;
+  pointer-events: none;
+  margin-bottom: 4px;
+}
+
+.rule-ref:hover::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: var(--color-text);
+  z-index: 100;
+  pointer-events: none;
+}
+
 /* === Footer === */
 .footer {
   text-align: center;
@@ -724,4 +925,11 @@ body {
   }
 
   .translit-textarea { min-height: 200px; }
+
+  .ref-card-header { flex-direction: column; align-items: flex-start; }
+  .ref-examples { font-size: 0.8rem; }
+  .ref-subrules { flex-direction: column; }
+
+  .rule-ref:hover::after { white-space: normal; max-width: 250px; left: 0; transform: none; }
+  .rule-ref:hover::before { left: 1rem; transform: none; }
 }
