@@ -9,6 +9,8 @@ members = [
     "crates/kosha",
     "crates/lekhya",
     "crates/parikshak",
+    "crates/vyakaran",
+    "crates/eval",
     "crates/cli",
     "crates/lsp",
     "crates/bindings-python",
@@ -26,6 +28,8 @@ default-members = [
     "crates/kosha",
     "crates/lekhya",
     "crates/parikshak",
+    "crates/vyakaran",
+    "crates/eval",
     "crates/cli",
     "crates/lsp",
 ]
@@ -67,3 +71,4 @@ varnavinyas-prakriya = { path = "crates/prakriya" }
 varnavinyas-kosha = { path = "crates/kosha" }
 varnavinyas-lekhya = { path = "crates/lekhya" }
 varnavinyas-parikshak = { path = "crates/parikshak" }
+varnavinyas-vyakaran = { path = "crates/vyakaran" }

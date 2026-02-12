@@ -8,6 +8,7 @@ description = "Sandhi (sound change) rules for Nepali morpheme combination"
 
 [dependencies]
 varnavinyas-akshar = { workspace = true }
+varnavinyas-kosha = { workspace = true }
 thiserror = { workspace = true }
 
 [dev-dependencies]

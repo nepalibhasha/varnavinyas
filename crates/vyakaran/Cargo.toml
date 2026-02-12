@@ -1,0 +1,10 @@
+[package]
+name = "varnavinyas-vyakaran"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Morphological analysis for Nepali"
+
+[dependencies]
+thiserror = { workspace = true }

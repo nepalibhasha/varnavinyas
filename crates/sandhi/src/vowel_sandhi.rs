@@ -110,6 +110,40 @@ pub fn apply_vowel_sandhi(first: &str, second: &str) -> Option<SandhiResult> {
         });
     }
 
+    // वृद्धि सन्धि: अ/आ + ए/ऐ → ऐ
+    if matches!(last, 'अ' | 'आ' | 'ा') && matches!(first_of_second, 'ए' | 'ऐ') {
+        let prefix: String = first_chars[..first_chars.len() - 1].iter().collect();
+        let rest: String = second_chars[1..].iter().collect();
+        // Result is ऐ (or ै matra if after consonant)
+        let result = if prefix.is_empty() {
+            format!("ऐ{rest}")
+        } else {
+            format!("{prefix}ै{rest}")
+        };
+        return Some(SandhiResult {
+            output: result,
+            sandhi_type: SandhiType::VowelSandhi,
+            rule_citation: "वृद्धि सन्धि: अ/आ + ए/ऐ → ऐ",
+        });
+    }
+
+    // वृद्धि सन्धि: अ/आ + ओ/औ → औ
+    if matches!(last, 'अ' | 'आ' | 'ा') && matches!(first_of_second, 'ओ' | 'औ') {
+        let prefix: String = first_chars[..first_chars.len() - 1].iter().collect();
+        let rest: String = second_chars[1..].iter().collect();
+        // Result is औ (or ौ matra if after consonant)
+        let result = if prefix.is_empty() {
+            format!("औ{rest}")
+        } else {
+            format!("{prefix}ौ{rest}")
+        };
+        return Some(SandhiResult {
+            output: result,
+            sandhi_type: SandhiType::VowelSandhi,
+            rule_citation: "वृद्धि सन्धि: अ/आ + ओ/औ → औ",
+        });
+    }
+
     None
 }
 

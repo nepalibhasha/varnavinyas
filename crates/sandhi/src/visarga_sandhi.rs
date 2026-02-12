@@ -27,6 +27,11 @@ pub fn apply_visarga_sandhi(first: &str, second: &str) -> Option<SandhiResult> {
     // because र already carries inherent अ.
     // For other vowels, they become matras attached to र.
     if is_svar(first_of_second) {
+        // Exception: अः + अ -> ओ + (avagraha/deletion)
+        // Usually in Nepali: मनः + अनुकूल -> मनोनुकूल.
+        // We handle this under the general "voiced" rule below if we treat vowels as voiced?
+        // Actually, let's keep the R rule for now as it handles पुनरागमन.
+        
         let second_remainder: String;
         let ra_form: String;
 
@@ -49,8 +54,33 @@ pub fn apply_visarga_sandhi(first: &str, second: &str) -> Option<SandhiResult> {
         });
     }
 
-    // Visarga → र before voiced consonants
+    // Visarga transformation before voiced consonants depends on preceding vowel.
     if is_voiced_consonant(first_of_second) {
+        // Check what precedes the visarga.
+        let prefix_chars: Vec<char> = prefix.chars().collect();
+        let last_char_of_prefix = prefix_chars.last().unwrap(); // Safe because prefix !empty
+
+        // If prefix ends in consonant (implicit 'a'), then it is अः
+        // Rule: अः + voiced consonant → ओ
+        // Exception: पुनः (punar) and अन्तः (antar) always become र
+        let is_implicit_a = !varnavinyas_akshar::is_matra(*last_char_of_prefix) 
+                            && !varnavinyas_akshar::is_svar(*last_char_of_prefix)
+                            && *last_char_of_prefix != '्'; // halanta shouldn't precede visarga
+
+        let is_punah_antah = prefix == "पुन" || prefix == "अन्त";
+
+        if is_implicit_a && !is_punah_antah {
+            // मनः + रथ -> मन + ो + रथ -> मनोरथ
+            // We append 'ो' to the prefix.
+            let result = format!("{prefix}ो{second}");
+            return Some(SandhiResult {
+                output: result,
+                sandhi_type: SandhiType::VisargaSandhi,
+                rule_citation: "विसर्ग सन्धि: अः + घोष वर्ण → ओ",
+            });
+        }
+
+        // Default case (preceded by i/u OR specific words like Punah): Visarga → र
         let result = format!("{prefix}र{second}");
         return Some(SandhiResult {
             output: result,

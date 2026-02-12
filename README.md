@@ -24,6 +24,10 @@ The project is organized as a Cargo workspace:
 *   **`crates/lipi`**: Transliteration and script conversion.
 *   **`docs/`**: Detailed documentation, including the Product Requirements Document (PRD) and roadmap.
 
+## Status
+
+Feature matrix and implementation status: [docs/STATUS.md](docs/STATUS.md).
+
 ## Usage
 
 ### Prerequisites
