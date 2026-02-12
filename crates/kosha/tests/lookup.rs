@@ -101,9 +101,33 @@ fn bracket_invariant_all_brackets_are_origin_or_known() {
     // If a first-bracket starts with one of these, parse_origin_tag MUST
     // return Some(_). (Matches the prefixes in origin_tag::classify_tag.)
     let origin_prefixes: &[&str] = &[
-        "सं", "अ.", "अ ", "अङ्", "अङ.", "अड्", "फा", "तु", "था", "फ्रा",
-        "फ्रे", "पोर्त", "ग्री", "स्पे", "जापा", "भा.", "प्रा", "हि",
-        "भो.", "मरा", "मै", "नेवा", "लि", "मो.", "मगा", "डो", "बा.",
+        "सं",
+        "अ.",
+        "अ ",
+        "अङ्",
+        "अङ.",
+        "अड्",
+        "फा",
+        "तु",
+        "था",
+        "फ्रा",
+        "फ्रे",
+        "पोर्त",
+        "ग्री",
+        "स्पे",
+        "जापा",
+        "भा.",
+        "प्रा",
+        "हि",
+        "भो.",
+        "मरा",
+        "मै",
+        "नेवा",
+        "लि",
+        "मो.",
+        "मगा",
+        "डो",
+        "बा.",
     ];
 
     let headwords_data = include_str!("../../../data/headwords.tsv");
@@ -127,9 +151,7 @@ fn bracket_invariant_all_brackets_are_origin_or_known() {
         let tag_content = pos[start + 1..start + end_rel].trim();
 
         // Check: does this bracket start with an origin abbreviation?
-        let looks_like_origin = origin_prefixes
-            .iter()
-            .any(|p| tag_content.starts_with(p));
+        let looks_like_origin = origin_prefixes.iter().any(|p| tag_content.starts_with(p));
 
         if looks_like_origin {
             // It SHOULD parse to Some. If it doesn't, the parser has a gap.

@@ -184,3 +184,66 @@ fn nu_not_applied_to_internal() {
     assert_eq!(p.output, "अनुभव");
     assert!(p.is_correct);
 }
+
+// =================================================================
+// O7: Missing Orthography Rules — acceptance criteria
+// =================================================================
+
+// O7.1c: Tatsam ष preserved (sibilant rule does not overwrite)
+#[test]
+fn o7_tatsam_retroflex_sibilant_preserved() {
+    let p = derive("भाषा");
+    assert!(p.is_correct, "Tatsam भाषा must not be changed");
+}
+
+// O7.3: halanta required on tatsam -मान्/-वान् suffix words
+#[test]
+fn o7_halanta_mahaan() {
+    let p = derive("महान");
+    assert!(!p.is_correct);
+    assert_eq!(p.output, "महान्");
+    assert!(matches!(p.steps[0].rule, Rule::VarnaVinyasNiyam(_)));
+}
+
+#[test]
+fn o7_halanta_buddhimaan() {
+    let p = derive("बुद्धिमान");
+    assert_eq!(p.output, "बुद्धिमान्");
+}
+
+#[test]
+fn o7_halanta_bhagavaan() {
+    let p = derive("भगवान");
+    assert_eq!(p.output, "भगवान्");
+}
+
+#[test]
+fn o7_halanta_vidvaan() {
+    let p = derive("विद्वान");
+    assert_eq!(p.output, "विद्वान्");
+}
+
+#[test]
+fn o7_halanta_shrimaan() {
+    let p = derive("श्रीमान");
+    assert_eq!(p.output, "श्रीमान्");
+}
+
+// O7.4: क्ष/छ corrections via correction table
+#[test]
+fn o7_ksha_chhya_lakshya() {
+    let p = derive("लछ्य");
+    assert_eq!(p.output, "लक्ष्य");
+}
+
+#[test]
+fn o7_ksha_chhya_ichchha() {
+    let p = derive("इक्षा");
+    assert_eq!(p.output, "इच्छा");
+}
+
+#[test]
+fn o7_ksha_chhya_kshetra() {
+    let p = derive("छेत्र");
+    assert_eq!(p.output, "क्षेत्र");
+}

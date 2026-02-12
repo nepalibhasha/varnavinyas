@@ -11,7 +11,7 @@ pub struct CorrectionEntry {
 /// Static correction table covering all 91 gold.toml entries.
 /// Key: incorrect form, Value: correction entry.
 pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = LazyLock::new(|| {
-    vec![
+    let mut table = vec![
         // =================================================================
         // shuddha_table entries (Section 4)
         // =================================================================
@@ -702,6 +702,89 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
                 description: "halanta required on अव्यय: अर्थात्",
             },
         ),
+        (
+            "बुद्धिमान",
+            CorrectionEntry {
+                correct: "बुद्धिमान्",
+                rule: Rule::VarnaVinyasNiyam("3(ङ)"),
+                description: "halanta required: -मान् suffix (बुद्धिमान्)",
+            },
+        ),
+        (
+            "भगवान",
+            CorrectionEntry {
+                correct: "भगवान्",
+                rule: Rule::VarnaVinyasNiyam("3(ङ)"),
+                description: "halanta required: -वान् suffix (भगवान्)",
+            },
+        ),
+        (
+            "महान",
+            CorrectionEntry {
+                correct: "महान्",
+                rule: Rule::VarnaVinyasNiyam("3(ङ)"),
+                description: "halanta required: tatsam stem ends in न् (महान्)",
+            },
+        ),
+        (
+            "विद्वान",
+            CorrectionEntry {
+                correct: "विद्वान्",
+                rule: Rule::VarnaVinyasNiyam("3(ङ)"),
+                description: "halanta required: -वान् suffix (विद्वान्)",
+            },
+        ),
+        (
+            "श्रीमान",
+            CorrectionEntry {
+                correct: "श्रीमान्",
+                rule: Rule::VarnaVinyasNiyam("3(ङ)"),
+                description: "halanta required: -मान् suffix (श्रीमान्)",
+            },
+        ),
+        // =================================================================
+        // b_v entries (Section 3(ग)-बव)
+        // =================================================================
+        (
+            "बिद्या",
+            CorrectionEntry {
+                correct: "विद्या",
+                rule: Rule::VarnaVinyasNiyam("3(ग)-बव"),
+                description: "tatsam word uses व (not ब): विद्या",
+            },
+        ),
+        (
+            "बिद्वान",
+            CorrectionEntry {
+                correct: "विद्वान्",
+                rule: Rule::VarnaVinyasNiyam("3(ग)-बव"),
+                description: "tatsam word uses व (not ब) + halanta: विद्वान्",
+            },
+        ),
+        (
+            "बिदेश",
+            CorrectionEntry {
+                correct: "विदेश",
+                rule: Rule::VarnaVinyasNiyam("3(ग)-बव"),
+                description: "tatsam word uses व (not ब): विदेश",
+            },
+        ),
+        (
+            "बिकास",
+            CorrectionEntry {
+                correct: "विकास",
+                rule: Rule::VarnaVinyasNiyam("3(ग)-बव"),
+                description: "tatsam word uses व (not ब): विकास",
+            },
+        ),
+        (
+            "बिज्ञान",
+            CorrectionEntry {
+                correct: "विज्ञान",
+                rule: Rule::VarnaVinyasNiyam("3(ग)-बव"),
+                description: "tatsam word uses व (not ब): विज्ञान",
+            },
+        ),
         // =================================================================
         // ya_e entries (Section 3(छ))
         // =================================================================
@@ -767,7 +850,10 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
                 description: "shirbindu form: संसार (not halanta-न सन्सार)",
             },
         ),
-    ]
+    ];
+    // Sort to support future binary search optimizations, though lookup currently uses linear scan.
+    table.sort_by(|a, b| a.0.cmp(b.0));
+    table
 });
 
 /// Look up a word in the correction table.
@@ -776,6 +862,11 @@ pub fn lookup(word: &str) -> Option<&'static CorrectionEntry> {
         .iter()
         .find(|(incorrect, _)| *incorrect == word)
         .map(|(_, entry)| entry)
+}
+
+/// Check if a word exists in the correction table (as an incorrect form).
+pub fn contains(word: &str) -> bool {
+    lookup(word).is_some()
 }
 
 /// Check if a word is a known correct form.

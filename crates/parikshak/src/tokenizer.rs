@@ -1,3 +1,6 @@
+use varnavinyas_kosha::kosha;
+use varnavinyas_prakriya::is_in_correction_table;
+
 /// A token extracted from text.
 #[derive(Debug, Clone)]
 pub struct Token {
@@ -8,6 +11,24 @@ pub struct Token {
     /// Byte offset of the end of this token in the original text.
     pub end: usize,
 }
+
+/// A token with suffix analysis — the stem and optional detached suffix.
+#[derive(Debug, Clone)]
+pub struct AnalyzedToken {
+    /// The stem (after suffix detachment, or the full word if no suffix matched).
+    pub stem: String,
+    /// The detached suffix, if any.
+    pub suffix: Option<String>,
+    /// Byte offset of the start of the full token (stem+suffix) in the original text.
+    pub start: usize,
+    /// Byte offset of the end of the full token (stem+suffix) in the original text.
+    pub end: usize,
+}
+
+/// Known Nepali postpositions and plural markers, ordered longest-first for greedy matching.
+const SUFFIXES: &[&str] = &[
+    "भित्र", "देखि", "हरू", "हरु", "लाई", "बाट", "सँग", "तिर", "ले", "को", "मा",
+];
 
 /// Tokenize text into word tokens with byte offsets.
 ///
@@ -36,6 +57,41 @@ pub fn tokenize(text: &str) -> Vec<Token> {
     }
 
     tokens
+}
+
+/// Tokenize text into analyzed tokens with suffix detachment.
+///
+/// For each whitespace-delimited token, tries to detach a known suffix (longest-first).
+/// A suffix is only detached if the remaining stem exists in the kosha lexicon.
+/// If no valid split is found, the full word becomes the stem with `suffix: None`.
+pub fn tokenize_analyzed(text: &str) -> Vec<AnalyzedToken> {
+    let tokens = tokenize(text);
+    let lex = kosha();
+
+    tokens
+        .into_iter()
+        .map(|tok| {
+            for sfx in SUFFIXES {
+                if let Some(stem) = tok.text.strip_suffix(sfx) {
+                    // Accept split if stem is in lexicon OR is a known incorrect form in correction table
+                    if !stem.is_empty() && (lex.contains(stem) || is_in_correction_table(stem)) {
+                        return AnalyzedToken {
+                            stem: stem.to_string(),
+                            suffix: Some(sfx.to_string()),
+                            start: tok.start,
+                            end: tok.end,
+                        };
+                    }
+                }
+            }
+            AnalyzedToken {
+                stem: tok.text,
+                suffix: None,
+                start: tok.start,
+                end: tok.end,
+            }
+        })
+        .collect()
 }
 
 /// Strip leading and trailing punctuation from a token.
@@ -141,5 +197,78 @@ mod tests {
         assert_eq!(tokens.len(), 2);
         assert_eq!(&text[tokens[0].start..tokens[0].end], "नेपाल");
         assert_eq!(&text[tokens[1].start..tokens[1].end], "राम्रो");
+    }
+
+    // --- O8 acceptance tests: suffix-aware tokenizer ---
+
+    /// O8.1: "रामलाई" → stem "राम", suffix "लाई"
+    #[test]
+    fn o8_1_detach_laai() {
+        let tokens = tokenize_analyzed("रामलाई");
+        assert_eq!(tokens.len(), 1);
+        assert_eq!(tokens[0].stem, "राम");
+        assert_eq!(tokens[0].suffix.as_deref(), Some("लाई"));
+    }
+
+    /// O8.2: "घरहरु" → stem "घर", suffix "हरु"
+    #[test]
+    fn o8_2_detach_haru() {
+        let tokens = tokenize_analyzed("घरहरु");
+        assert_eq!(tokens.len(), 1);
+        assert_eq!(tokens[0].stem, "घर");
+        assert_eq!(tokens[0].suffix.as_deref(), Some("हरु"));
+    }
+
+    /// O8.3: "नेपालमा" → stem "नेपाल", suffix "मा"
+    #[test]
+    fn o8_3_detach_maa() {
+        let tokens = tokenize_analyzed("नेपालमा");
+        assert_eq!(tokens.len(), 1);
+        assert_eq!(tokens[0].stem, "नेपाल");
+        assert_eq!(tokens[0].suffix.as_deref(), Some("मा"));
+    }
+
+    /// O8.4: Unknown stem keeps original token unsplit.
+    #[test]
+    fn o8_4_unknown_stem_unsplit() {
+        let tokens = tokenize_analyzed("ज्ञपतमा");
+        assert_eq!(tokens.len(), 1);
+        assert_eq!(tokens[0].stem, "ज्ञपतमा");
+        assert_eq!(tokens[0].suffix, None);
+    }
+
+    /// O8.5: Longest suffix wins — "घरभित्र" matches "भित्र" (15 bytes), not shorter.
+    #[test]
+    fn o8_5_longest_suffix_wins() {
+        let tokens = tokenize_analyzed("घरभित्र");
+        assert_eq!(tokens.len(), 1);
+        assert_eq!(tokens[0].stem, "घर");
+        assert_eq!(tokens[0].suffix.as_deref(), Some("भित्र"));
+    }
+
+    /// O8.6: tokenize() still returns Vec<Token> unchanged.
+    #[test]
+    fn o8_6_tokenize_unchanged() {
+        let tokens = tokenize("रामलाई नेपालमा");
+        assert_eq!(tokens.len(), 2);
+        assert_eq!(tokens[0].text, "रामलाई");
+        assert_eq!(tokens[1].text, "नेपालमा");
+    }
+
+    /// O8.7: tokenize_analyzed() compiles and returns Vec<AnalyzedToken>.
+    #[test]
+    fn o8_7_returns_analyzed_tokens() {
+        let tokens: Vec<AnalyzedToken> = tokenize_analyzed("राम नेपाल");
+        assert_eq!(tokens.len(), 2);
+    }
+
+    /// O8.8: Byte offsets cover the full original unsplit form.
+    #[test]
+    fn o8_8_byte_offsets_cover_full_token() {
+        let text = "रामलाई नेपालमा";
+        let tokens = tokenize_analyzed(text);
+        assert_eq!(tokens.len(), 2);
+        assert_eq!(&text[tokens[0].start..tokens[0].end], "रामलाई");
+        assert_eq!(&text[tokens[1].start..tokens[1].end], "नेपालमा");
     }
 }

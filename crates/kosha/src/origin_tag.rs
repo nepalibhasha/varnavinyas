@@ -69,22 +69,23 @@ fn classify_tag(tag: &str) -> Option<OriginTag> {
     // Foreign / Aagantuk — exact match OR prefix + etymological root
     // e.g., [अ.] or [अ. इकवाल], [फा.] or [फा. अङ्गुर]
     static AAGANTUK_PREFIXES: &[&str] = &[
-        "अ.",  // Arabic (अरबी) — must check before अङ्/अड्
-        "अ ",  // Arabic without period
-        "अङ्", // English (अङ्ग्रेजी)
-        "अङ.", // English variant
-        "अङ",  // English (after period stripping: अङ. → अङ)
-        "अड्", // English variant
-        "फा",  // Persian (फारसी)
-        "तु",  // Turkish (तुर्की)
-        "था",  // Tharu (थारू)
-        "फ्रा", // French (फ्रान्सेली)
-        "फ्रे", // French variant
+        "अ.",   // Arabic (अरबी) — must check before अङ्/अड्
+        "अ ",   // Arabic without period
+        "अङ्",   // English (अङ्ग्रेजी)
+        "अङ.",  // English variant
+        "अङ",   // English (after period stripping: अङ. → अङ)
+        "अड्",   // English variant
+        "फा",   // Persian (फारसी)
+        "तु",    // Turkish (तुर्की)
+        "था",   // Tharu (थारू)
+        "फ्रा",  // French (फ्रान्सेली)
+        "फ्रे",   // French variant
         "पोर्त", // Portuguese
-        "ग्री", // Greek
-        "स्पे", // Spanish
+        "ग्री",  // Greek
+        "स्पे",   // Spanish
         "जापा", // Japanese
-        "भा. इ", "भा.इ", // Indo-Iranian
+        "भा. इ",
+        "भा.इ", // Indo-Iranian
     ];
     for prefix in AAGANTUK_PREFIXES {
         if normalized == *prefix || normalized.starts_with(prefix) {
@@ -103,7 +104,7 @@ fn classify_tag(tag: &str) -> Option<OriginTag> {
         "हि",  // Hindi
         "भो",  // Bhojpuri (भोजपुरी) — covers भो. ब, भो. पु., etc.
         "मरा", // Marathi
-        "मै",  // Maithili
+        "मै",   // Maithili
     ];
     for prefix in TADBHAV_PREFIXES {
         if normalized == *prefix || normalized.starts_with(prefix) {
@@ -115,11 +116,11 @@ fn classify_tag(tag: &str) -> Option<OriginTag> {
     // both bare tags [नेवा.] and tags with etymological roots [नेवा. अलःकै]
     static DESHAJ_PREFIXES: &[&str] = &[
         "नेवा", // Newari (नेवारी)
-        "लि",   // Limbu (लिम्बू)
-        "मो",   // Tibeto-Burman (मो. ब = मोङ्गोल बर्मेली)
-        "मगा",  // Magar (मगार)
-        "डो",   // Doteli (डोटेली)
-        "बा",   // Children's language (बा. बो = बालबोली)
+        "लि",  // Limbu (लिम्बू)
+        "मो",  // Tibeto-Burman (मो. ब = मोङ्गोल बर्मेली)
+        "मगा", // Magar (मगार)
+        "डो",  // Doteli (डोटेली)
+        "बा",  // Children's language (बा. बो = बालबोली)
     ];
     for prefix in DESHAJ_PREFIXES {
         if normalized == *prefix || normalized.starts_with(prefix) {
@@ -132,7 +133,8 @@ fn classify_tag(tag: &str) -> Option<OriginTag> {
     if tag.contains("८ सं") || tag.contains("८सं") {
         return Some(OriginTag::Tadbhav);
     }
-    if tag.contains("८ अ") || tag.contains("८ फा") || tag.contains("८ पोर्त") {
+    if tag.contains("८ अ") || tag.contains("८ फा") || tag.contains("८ पोर्त")
+    {
         return Some(OriginTag::Aagantuk);
     }
 
@@ -191,18 +193,12 @@ mod tests {
     #[test]
     fn test_sanskrit_with_root_is_tadbhav() {
         // [सं. X] with etymological root = tadbhav (derived from Sanskrit)
-        assert_eq!(
-            parse_origin_tag("[सं. दण्ड] ना."),
-            Some(OriginTag::Tadbhav)
-        );
+        assert_eq!(parse_origin_tag("[सं. दण्ड] ना."), Some(OriginTag::Tadbhav));
         assert_eq!(
             parse_origin_tag("क्रि.वि. [सं. इह]"),
             Some(OriginTag::Tadbhav)
         );
-        assert_eq!(
-            parse_origin_tag("ना. [सं. आकाश]"),
-            Some(OriginTag::Tadbhav)
-        );
+        assert_eq!(parse_origin_tag("ना. [सं. आकाश]"), Some(OriginTag::Tadbhav));
     }
 
     #[test]

@@ -115,3 +115,19 @@ fn punctuation_in_check_text() {
         "Should detect period misuse, got: {punct_diags:?}"
     );
 }
+
+/// Regression test: ensure suffix is preserved in correction string.
+/// "बिज्ञानमा" -> stem "बिज्ञान" (wrong) + suffix "मा".
+/// Correction should be "विज्ञान" + "मा" = "विज्ञानमा".
+#[test]
+fn suffix_preservation_in_correction() {
+    let text = "बिज्ञानमा";
+    let diags = check_text(text);
+    assert_eq!(diags.len(), 1);
+    let diag = &diags[0];
+    
+    // The critical check:
+    assert_eq!(diag.incorrect, "बिज्ञानमा");
+    assert_eq!(diag.correction, "विज्ञानमा");
+    assert_eq!(diag.span.1 - diag.span.0, text.len());
+}
