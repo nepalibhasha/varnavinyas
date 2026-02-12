@@ -55,10 +55,97 @@ pub fn check_punctuation(text: &str) -> Vec<LekhyaDiagnostic> {
 
     check_period_as_sentence_end(text, &mut diagnostics);
     check_ellipsis(text, &mut diagnostics);
+    check_quotes(text, &mut diagnostics);
+    check_nirdeshak(text, &mut diagnostics);
+    check_spacing(text, &mut diagnostics);
 
     // Sort by span start
     diagnostics.sort_by_key(|d| d.span.0);
     diagnostics
+}
+
+/// Y5: Detect bare `:` that should be `:-` (Nirdeshak) in Nepali.
+fn check_nirdeshak(text: &str, diagnostics: &mut Vec<LekhyaDiagnostic>) {
+    let bytes = text.as_bytes();
+    for (i, c) in text.char_indices() {
+        if c == ':' {
+            // Check if it's already :-
+            if i + 1 < bytes.len() && bytes[i+1] == b'-' {
+                continue;
+            }
+            
+            // Check context
+            if has_devanagari_before_pos(text, i) {
+                diagnostics.push(LekhyaDiagnostic {
+                    span: (i, i + 1),
+                    found: ":".to_string(),
+                    expected: ":-".to_string(),
+                    rule: "Section 5: निर्देशक — use colon-dash (:-), not just colon (:)",
+                });
+            }
+        }
+    }
+}
+
+/// Y6/Y7: Convert straight quotes to smart quotes in Devanagari context.
+/// "..." -> “...” and '...' -> ‘...’
+fn check_quotes(text: &str, diagnostics: &mut Vec<LekhyaDiagnostic>) {
+    // Basic state machine for quote balancing would be complex to implement stateless.
+    // For now, we flag ANY straight quote in Devanagari context as "should be smart quote".
+    // We can suggest opening/closing based on whitespace context.
+    
+    for (i, c) in text.char_indices() {
+        if c == '"' || c == '\'' {
+            if has_devanagari_before_pos(text, i) || has_devanagari_after_pos(text, i + 1) {
+                let is_double = c == '"';
+                let found = c.to_string();
+                
+                // Heuristic: if preceded by space/start, it's opening. Otherwise closing.
+                // This is simplistic but works for most prose.
+                let is_opening = i == 0 || text.as_bytes()[i-1].is_ascii_whitespace();
+                
+                let expected = if is_double {
+                    if is_opening { "“" } else { "”" }
+                } else {
+                    if is_opening { "‘" } else { "’" }
+                };
+
+                diagnostics.push(LekhyaDiagnostic {
+                    span: (i, i + 1),
+                    found,
+                    expected: expected.to_string(),
+                    rule: if is_double { 
+                        "Section 5: दोहोरो उद्धरण — use smart quotes “...” instead of straight \"" 
+                    } else { 
+                        "Section 5: एकल उद्धरण — use smart quotes ‘...’ instead of straight '" 
+                    },
+                });
+            }
+        }
+    }
+}
+
+/// Y2, Y4, Y13, Y14: Check spacing for ?, !, ;, ,
+/// Standard rule: attached to previous word, followed by space.
+fn check_spacing(text: &str, diagnostics: &mut Vec<LekhyaDiagnostic>) {
+    let chars: Vec<(usize, char)> = text.char_indices().collect();
+    for idx in 0..chars.len() {
+        let (pos, c) = chars[idx];
+        if matches!(c, '?' | '!' | ';' | ',') {
+            if has_devanagari_before_pos(text, pos) {
+                // Check if preceded by space (error)
+                if idx > 0 && chars[idx-1].1.is_whitespace() {
+                    let prev_pos = chars[idx-1].0;
+                    diagnostics.push(LekhyaDiagnostic {
+                        span: (prev_pos, pos + c.len_utf8()),
+                        found: format!(" {}", c),
+                        expected: c.to_string(),
+                        rule: "Section 5: punctuation should attach to the previous word",
+                    });
+                }
+            }
+        }
+    }
 }
 
 /// Y1: Detect `.` used as sentence-end in Devanagari text instead of `।`.
@@ -77,27 +164,51 @@ fn check_period_as_sentence_end(text: &str, diagnostics: &mut Vec<LekhyaDiagnost
             // Check what precedes the period
             let has_devanagari_before = has_devanagari_before_pos(text, period_start);
 
-            // Check what follows: end of text, whitespace, or newline
-            let is_sentence_end = period_end >= bytes.len()
-                || bytes[period_end] == b' '
-                || bytes[period_end] == b'\n'
-                || bytes[period_end] == b'\r';
+            if has_devanagari_before {
+                // Check what follows
+                let is_eof = period_end >= bytes.len();
+                let next_char = if !is_eof { Some(bytes[period_end]) } else { None };
+                
+                let is_newline = matches!(next_char, Some(b'\n' | b'\r'));
+                let is_space = matches!(next_char, Some(b' '));
 
-            // Only flag if preceded by Devanagari and in sentence-final position
-            if has_devanagari_before && is_sentence_end {
-                // Check it's not part of "..." (ellipsis handled separately)
-                let is_ellipsis = (period_start >= 2
-                    && bytes[period_start - 1] == b'.'
-                    && bytes[period_start - 2] == b'.')
-                    || (period_end < bytes.len() && bytes[period_end] == b'.');
+                // Case 1: End of sentence/text (EOF or Newline). ALWAYS an error (should be ।).
+                // Even if it's an abbreviation, a sentence must end with ।.
+                if is_eof || is_newline {
+                    // Check exclusion for ellipsis handled separately
+                    let is_part_of_ellipsis = (period_start >= 2
+                        && bytes[period_start - 1] == b'.'
+                        && bytes[period_start - 2] == b'.')
+                        || (period_end < bytes.len() && bytes[period_end] == b'.'); // Lookahead safety check
 
-                if !is_ellipsis {
-                    diagnostics.push(LekhyaDiagnostic {
-                        span: (period_start, period_end),
-                        found: ".".to_string(),
-                        expected: "।".to_string(),
-                        rule: "Section 5: पूर्णविराम (।) used as sentence-end in Nepali, not period (.)",
-                    });
+                    if !is_part_of_ellipsis {
+                        diagnostics.push(LekhyaDiagnostic {
+                            span: (period_start, period_end),
+                            found: ".".to_string(),
+                            expected: "।".to_string(),
+                            rule: "Section 5: पूर्णविराम (।) used as sentence-end in Nepali, not period (.)",
+                        });
+                    }
+                }
+                // Case 2: Medial period (followed by space). Check for abbreviation.
+                else if is_space {
+                    let is_abbreviation = is_likely_abbreviation(text, period_start);
+                    if !is_abbreviation {
+                         // Check exclusion for ellipsis
+                        let is_part_of_ellipsis = (period_start >= 2
+                            && bytes[period_start - 1] == b'.'
+                            && bytes[period_start - 2] == b'.')
+                            || (period_end < bytes.len() && bytes[period_end] == b'.');
+
+                        if !is_part_of_ellipsis {
+                            diagnostics.push(LekhyaDiagnostic {
+                                span: (period_start, period_end),
+                                found: ".".to_string(),
+                                expected: "।".to_string(),
+                                rule: "Section 5: पूर्णविराम (।) used as sentence-end in Nepali, not period (.)",
+                            });
+                        }
+                    }
                 }
             }
             i = period_end;
@@ -105,6 +216,26 @@ fn check_period_as_sentence_end(text: &str, diagnostics: &mut Vec<LekhyaDiagnost
             i += 1;
         }
     }
+}
+
+/// Helper for Y10: Check if the text before `pos` looks like an abbreviation.
+fn is_likely_abbreviation(text: &str, pos: usize) -> bool {
+    // Look back to find the start of the word
+    let prefix = &text[..pos];
+    let word_start = prefix.rfind(|c: char| c.is_whitespace()).map(|i| i + 1).unwrap_or(0);
+    let word = &prefix[word_start..];
+    
+    // Common sentence-ending verbs that are short but definitely NOT abbreviations.
+    // If the word is one of these, it's a full stop error, not an abbreviation.
+    let common_enders = ["हो", "छ", "हुन्", "छन्", "थियो", "थिन्", "भयो", "गर्यो"];
+    if common_enders.contains(&word) {
+        return false;
+    }
+
+    // If word is very short (1-3 chars) and fully Devanagari, treat as likely abbreviation
+    // e.g. "डा", "प्रा", "इ"
+    let char_count = word.chars().count();
+    char_count > 0 && char_count <= 3 && word.chars().all(is_devanagari_char)
 }
 
 /// Y3: Detect "..." that should be ऐजन बिन्दु (ellipsis).
@@ -161,6 +292,12 @@ mod tests {
     }
 
     #[test]
+    fn abbreviation_dot_allowed() {
+        let diags = check_punctuation("डा. राम");
+        assert!(diags.is_empty(), "Abbreviation dot should be allowed");
+    }
+
+    #[test]
     fn purna_viram_is_correct() {
         let diags = check_punctuation("नेपाल सुन्दर देश हो।");
         assert!(diags.is_empty());
@@ -178,6 +315,30 @@ mod tests {
         assert_eq!(diags.len(), 1);
         assert_eq!(diags[0].found, "...");
         assert_eq!(diags[0].expected, "…");
+    }
+
+    #[test]
+    fn nirdeshak_detected() {
+        let diags = check_punctuation("उदाहरण:");
+        assert_eq!(diags.len(), 1);
+        assert_eq!(diags[0].found, ":");
+        assert_eq!(diags[0].expected, ":-");
+    }
+
+    #[test]
+    fn smart_quotes_detected() {
+        let diags = check_punctuation("\"नेपाल\"");
+        assert_eq!(diags.len(), 2);
+        assert_eq!(diags[0].expected, "“");
+        assert_eq!(diags[1].expected, "”");
+    }
+
+    #[test]
+    fn spacing_detected() {
+        let diags = check_punctuation("के छ ?");
+        assert_eq!(diags.len(), 1);
+        assert_eq!(diags[0].found, " ?");
+        assert_eq!(diags[0].expected, "?");
     }
 
     #[test]
