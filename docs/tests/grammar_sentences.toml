@@ -3,10 +3,12 @@
 [[sentence]]
 text = "सूर्योदय भयो।"
 expect_variant_or_ambiguous_min = 1
+expected_rule_codes = ["samasa-heuristic"]
 
 [[sentence]]
 text = "महोत्सव भव्य छ।"
 expect_variant_or_ambiguous_min = 1
+expected_rule_codes = ["samasa-heuristic"]
 
 [[sentence]]
 text = "नेपाल राम्रो देश हो।"
@@ -16,10 +18,12 @@ expect_variant_or_ambiguous_max = 0
 [[sentence]]
 text = "रामले गयो।"
 expect_variant_or_ambiguous_min = 1
+expected_rule_codes = ["ergative-le-intransitive"]
 
 [[sentence]]
 text = "रामको किताबहरु हराए।"
 expect_variant_or_ambiguous_min = 1
+expected_rule_codes = ["genitive-mismatch-plural"]
 
 [[sentence]]
 text = "रामका किताबहरु हराए।"
