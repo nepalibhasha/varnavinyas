@@ -21,6 +21,7 @@ const fixAllBtn = document.getElementById('fix-all-btn');
 const categoryFilters = document.getElementById('category-filters');
 const panelCol = document.getElementById('panel-col');
 const grammarToggle = document.getElementById('grammar-toggle');
+const grammarCoverage = document.getElementById('grammar-coverage');
 
 /**
  * Initialize the spell checker module.
@@ -83,6 +84,7 @@ function runCheck() {
     renderBackdrop(text);
     renderDiagnostics();
     renderFilters();
+    renderGrammarCoverage();
     return;
   }
 
@@ -96,6 +98,45 @@ function runCheck() {
   renderBackdrop(text);
   renderDiagnostics();
   renderFilters();
+  renderGrammarCoverage();
+}
+
+function renderGrammarCoverage() {
+  if (!grammarCoverage) return;
+
+  const enabled = isGrammarEnabled();
+  const ruleCodes = Object.keys(HEURISTIC_RULE_LABELS);
+
+  if (!enabled) {
+    grammarCoverage.innerHTML = `
+      <div class="grammar-coverage-head">
+        <span>Grammar Coverage</span>
+        <span class="grammar-coverage-label">Heuristics</span>
+      </div>
+      <p class="grammar-coverage-note">व्याकरण जाँच बन्द छ।</p>`;
+    return;
+  }
+
+  const counts = Object.fromEntries(ruleCodes.map((code) => [code, 0]));
+  for (const d of diagnostics) {
+    if (d.rule_code in counts) counts[d.rule_code] += 1;
+  }
+
+  const chips = ruleCodes
+    .map((code) => `
+      <span class="grammar-coverage-chip">
+        ${escapeHtml(HEURISTIC_RULE_LABELS[code])}
+        <span class="grammar-coverage-count">${counts[code]}</span>
+      </span>`)
+    .join("");
+
+  grammarCoverage.innerHTML = `
+    <div class="grammar-coverage-head">
+      <span>Grammar Coverage</span>
+      <span class="grammar-coverage-label">Heuristics</span>
+    </div>
+    <p class="grammar-coverage-note">फेला परेका नियम संकेतहरू</p>
+    <div class="grammar-coverage-list">${chips}</div>`;
 }
 
 /**

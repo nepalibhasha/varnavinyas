@@ -298,6 +298,56 @@ body {
   margin: 0;
 }
 
+.grammar-coverage {
+  margin-top: 0.35rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0.45rem 0.55rem;
+  background: #f8fafc;
+}
+
+.grammar-coverage-head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+}
+
+.grammar-coverage-label {
+  font-family: var(--font-latin);
+  font-size: 0.62rem;
+  color: #475569;
+}
+
+.grammar-coverage-note {
+  margin-top: 0.2rem;
+  font-size: 0.76rem;
+  color: var(--color-text-secondary);
+}
+
+.grammar-coverage-list {
+  margin-top: 0.35rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.grammar-coverage-chip {
+  font-family: var(--font-latin);
+  font-size: 0.66rem;
+  border-radius: 999px;
+  border: 1px solid #cbd5e1;
+  padding: 0.08rem 0.45rem;
+  background: white;
+  color: #334155;
+}
+
+.grammar-coverage-count {
+  font-weight: 600;
+  margin-left: 0.18rem;
+}
+
 /* Diagnostics panel */
 .checker-panel-col {
   display: flex;
