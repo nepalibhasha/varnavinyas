@@ -1,0 +1,13 @@
+# Initial grammar-eval sentence set for optional grammar-pass diagnostics.
+
+[[sentence]]
+text = "सूर्योदय भयो।"
+expect_variant_or_ambiguous_min = 1
+
+[[sentence]]
+text = "महोत्सव भव्य छ।"
+expect_variant_or_ambiguous_min = 1
+
+[[sentence]]
+text = "नेपाल राम्रो देश हो।"
+expect_variant_or_ambiguous_min = 0

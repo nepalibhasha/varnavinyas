@@ -2150,6 +2150,7 @@ dependencies = [
  "varnavinyas-samasa",
  "varnavinyas-sandhi",
  "varnavinyas-shabda",
+ "varnavinyas-vyakaran",
 ]
 
 [[package]]

@@ -1,0 +1,53 @@
+# Initial morphology gold set for vyakaran MVP.
+# Keep entries aligned with currently implemented feature set.
+
+[[morph]]
+word = "केटालाई"
+lemma = "केटो"
+case = "Dative"
+number = "Singular"
+
+[[morph]]
+word = "केटाहरूको"
+lemma = "केटो"
+case = "Genitive"
+number = "Plural"
+
+[[morph]]
+word = "नेपालमा"
+lemma = "नेपाल"
+case = "Locative"
+number = "Singular"
+
+[[morph]]
+word = "रामले"
+lemma = "राम"
+case = "Instrumental"
+number = "Singular"
+
+[[morph]]
+word = "घरबाट"
+lemma = "घर"
+case = "Ablative"
+number = "Singular"
+
+[[morph]]
+word = "लेखनु"
+suffix = "नु"
+tense = "Unknown"
+
+[[morph]]
+word = "गर्दैछ"
+suffix = "छ"
+tense = "Present"
+person = "Third"
+
+[[morph]]
+word = "छैन"
+suffix = "छैन"
+tense = "Present"
+
+[[morph]]
+word = "गएन"
+suffix = "एन"
+tense = "Past"

@@ -9,11 +9,12 @@ publish = false
 [dependencies]
 varnavinyas-akshar = { workspace = true }
 varnavinyas-kosha = { workspace = true }
-varnavinyas-parikshak = { workspace = true }
+varnavinyas-parikshak = { workspace = true, features = ["grammar-pass"] }
 varnavinyas-prakriya = { workspace = true }
 varnavinyas-sandhi = { workspace = true }
 varnavinyas-shabda = { workspace = true, features = ["iterative-decompose"] }
 varnavinyas-samasa = { workspace = true }
+varnavinyas-vyakaran = { workspace = true, features = ["vyakaran-mvp"] }
 toml = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
