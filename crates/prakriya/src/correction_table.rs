@@ -868,11 +868,3 @@ pub fn lookup(word: &str) -> Option<&'static CorrectionEntry> {
 pub fn contains(word: &str) -> bool {
     lookup(word).is_some()
 }
-
-/// Check if a word is a known correct form.
-#[allow(dead_code)]
-pub fn is_known_correct(word: &str) -> bool {
-    CORRECTION_TABLE
-        .iter()
-        .any(|(_, entry)| entry.correct == word || entry.correct.split('/').any(|alt| alt == word))
-}

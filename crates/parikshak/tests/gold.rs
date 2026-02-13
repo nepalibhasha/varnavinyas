@@ -5,12 +5,12 @@ use varnavinyas_parikshak::check_word;
 struct GoldEntry {
     incorrect: String,
     correct: String,
-    #[allow(dead_code)]
-    rule: String,
-    #[allow(dead_code)]
-    section: String,
-    #[allow(dead_code)]
-    page: u32,
+    #[serde(rename = "rule")]
+    _rule: String,
+    #[serde(rename = "section")]
+    _section: String,
+    #[serde(rename = "page")]
+    _page: u32,
 }
 
 #[derive(Debug, Deserialize)]
@@ -31,9 +31,6 @@ struct GoldData {
     ya_e: Vec<GoldEntry>,
     #[serde(default)]
     ksha_chhya: Vec<GoldEntry>,
-    #[serde(default)]
-    #[allow(dead_code)]
-    paragraph_correction: Vec<GoldEntry>,
 }
 
 fn load_gold() -> GoldData {

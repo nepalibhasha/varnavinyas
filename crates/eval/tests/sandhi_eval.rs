@@ -107,9 +107,6 @@ fn no_split_words_are_clean() {
 #[test]
 fn headword_sandhi_census() {
     let lex = kosha();
-    let headwords: Vec<_> = (0..lex.headword_count())
-        .filter_map(|_| None::<&str>) // placeholder, iterate via data
-        .collect();
 
     // We'll read headwords directly from the data
     let data = include_str!("../../../data/headwords.tsv");
@@ -145,8 +142,6 @@ fn headword_sandhi_census() {
             split_words.push((word, results));
         }
     }
-
-    let _ = headwords; // suppress unused
 
     println!("\n=== Sandhi Split Census ===");
     println!("Total headwords:      {}", total);

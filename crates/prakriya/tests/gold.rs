@@ -2,13 +2,15 @@ use serde::Deserialize;
 use varnavinyas_prakriya::derive;
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct GoldEntry {
     incorrect: String,
     correct: String,
-    rule: String,
-    section: String,
-    page: u32,
+    #[serde(rename = "rule")]
+    _rule: String,
+    #[serde(rename = "section")]
+    _section: String,
+    #[serde(rename = "page")]
+    _page: u32,
 }
 
 #[derive(Debug, Deserialize)]

@@ -1,6 +1,22 @@
 use crate::{SandhiResult, apply};
 use varnavinyas_akshar::split_aksharas;
 use varnavinyas_kosha::kosha;
+use varnavinyas_kosha::origin_tag::OriginTag;
+
+/// Known one-akshara upasarga forms that are valid left segments in compounds.
+///
+/// We keep this list intentionally conservative to avoid introducing noisy
+/// splits like रा + आम for राम. Multi-akshara prefixes are already allowed by
+/// the generic >=2 akshara guard.
+const ONE_AKSHARA_UPASARGAS: &[&str] = &["प्र", "वि", "सु", "नि", "आ"];
+const DIRECT_JOIN_UPASARGAS: &[&str] = &["प्र", "वि"];
+
+fn valid_split_parts(left: &str, right: &str) -> bool {
+    let left_len = split_aksharas(left).len();
+    let right_len = split_aksharas(right).len();
+    let valid_left = left_len >= 2 || ONE_AKSHARA_UPASARGAS.contains(&left);
+    valid_left && right_len >= 2
+}
 
 /// Split a word at potential sandhi boundaries using general brute-force strategy.
 ///
@@ -28,6 +44,29 @@ pub fn split(word: &str) -> Vec<(String, String, SandhiResult)> {
     // Iterate over all internal character boundaries
     for (i, _) in word.char_indices().skip(1) {
         let (raw_left, raw_right) = word.split_at(i);
+
+        // Strategy 0: Direct upasarga + stem concatenation (no sandhi mutation)
+        // e.g., प्र + गति → प्रगति, वि + देश → विदेश
+        // Guardrails:
+        // - left must be a known upasarga
+        // - both parts must be lexically known
+        // - full word must be tatsam (avoid broad false positives in native words)
+        if DIRECT_JOIN_UPASARGAS.contains(&raw_left)
+            && lex.contains(raw_left)
+            && lex.contains(raw_right)
+            && lex.origin_of(word) == Some(OriginTag::Tatsam)
+            && lex.origin_of(raw_right) == Some(OriginTag::Tatsam)
+        {
+            results.push((
+                raw_left.to_string(),
+                raw_right.to_string(),
+                SandhiResult {
+                    output: word.to_string(),
+                    sandhi_type: crate::SandhiType::ConsonantSandhi,
+                    rule_citation: "उपसर्ग संयोग: direct prefix-stem concatenation",
+                },
+            ));
+        }
 
         // Strategy 1: Simple concatenation (Visarga retained, or no change)
         // Check if raw_left and raw_right are valid words
@@ -328,9 +367,23 @@ pub fn split(word: &str) -> Vec<(String, String, SandhiResult)> {
     // Filter out degenerate splits where either part has fewer than 2 aksharas.
     // e.g. "रा + आम → राम" is technically valid दीर्घ sandhi but linguistically
     // meaningless — "राम" is a single morpheme, not a compound.
-    // Meaningful sandhi components are almost always multi-syllabic words.
+    //
+    // Exception: allow single-akshara left parts for known upasarga forms
+    // (e.g. प्र + गति → प्रगति, वि + देश → विदेश).
     results.retain(|(left, right, _)| {
-        split_aksharas(left).len() >= 2 && split_aksharas(right).len() >= 2
+        if !valid_split_parts(left, right) {
+            return false;
+        }
+
+        // Additional precision guard for one-akshara upasarga splits.
+        // Keep these only for tatsam compounds to avoid broad false positives
+        // on native/agglutinative forms.
+        if split_aksharas(left).len() < 2 {
+            return lex.origin_of(word) == Some(OriginTag::Tatsam)
+                && lex.origin_of(right) == Some(OriginTag::Tatsam);
+        }
+
+        true
     });
 
     // Deduplicate results by (left, right) pair
@@ -358,5 +411,26 @@ mod tests {
                 );
             }
         }
+    }
+
+    #[test]
+    fn one_akshara_upasarga_passes_part_filter() {
+        assert!(valid_split_parts("प्र", "गति"));
+        assert!(valid_split_parts("वि", "देश"));
+    }
+
+    #[test]
+    fn non_upasarga_one_akshara_still_filtered() {
+        assert!(!valid_split_parts("रा", "आम"));
+        assert!(!valid_split_parts("क", "था"));
+    }
+
+    #[test]
+    fn direct_upasarga_concatenation_supported() {
+        let results = split("प्रगति");
+        assert!(
+            results.iter().any(|(l, r, _)| l == "प्र" && r == "गति"),
+            "Expected प्र + गति split for प्रगति, got {results:?}"
+        );
     }
 }

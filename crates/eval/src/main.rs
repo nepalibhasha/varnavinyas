@@ -8,9 +8,6 @@ use varnavinyas_parikshak::check_word;
 struct TestCase {
     incorrect: String,
     correct: String,
-    #[serde(default)]
-    #[allow(dead_code)]
-    description: String,
 }
 
 type GoldData = HashMap<String, Vec<TestCase>>;

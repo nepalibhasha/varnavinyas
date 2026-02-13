@@ -22,7 +22,6 @@ impl From<Scheme> for PyScheme {
         match s {
             Scheme::Devanagari => PyScheme::Devanagari,
             Scheme::Iast => PyScheme::Iast,
-            _ => PyScheme::Devanagari,
         }
     }
 }
