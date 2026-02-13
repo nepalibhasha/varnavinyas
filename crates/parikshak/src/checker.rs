@@ -199,60 +199,93 @@ fn add_grammar_diagnostics(
         if has_plural_suffix(&full) && idx > 0 && is_quantifier(&token_full_form(&tokens[idx - 1]))
         {
             let singular = strip_plural_suffix(&full).unwrap_or(&full).to_string();
-            diagnostics.push(Diagnostic {
-                span,
-                incorrect: full.clone(),
-                correction: singular,
-                rule: Rule::Vyakaran("quantifier-plural-redundancy"),
-                explanation: "परिमाणबोधक शब्दपछि बहुवचन -हरु/-हरू प्रायः अनावश्यक हुन्छ।".to_string(),
-                category: DiagnosticCategory::ShuddhaTable,
-                kind: DiagnosticKind::Variant,
-                confidence: 0.62,
-            });
+            push_best_grammar_variant(
+                diagnostics,
+                Diagnostic {
+                    span,
+                    incorrect: full.clone(),
+                    correction: singular,
+                    rule: Rule::Vyakaran("quantifier-plural-redundancy"),
+                    explanation: "परिमाणबोधक शब्दपछि बहुवचन -हरु/-हरू प्रायः अनावश्यक हुन्छ।".to_string(),
+                    category: DiagnosticCategory::ShuddhaTable,
+                    kind: DiagnosticKind::Variant,
+                    confidence: 0.62,
+                },
+            );
         }
 
         if has_ergative_suffix(token) && sentence_has_intransitive_predicate(tokens, idx) {
-            diagnostics.push(Diagnostic {
-                span,
-                incorrect: full.clone(),
-                correction: token.stem.clone(),
-                rule: Rule::Vyakaran("ergative-le-intransitive"),
-                explanation: "सामान्य अकर्मक क्रियासँग कर्तामा ले प्रायः प्रयोग हुँदैन।".to_string(),
-                category: DiagnosticCategory::ShuddhaTable,
-                kind: DiagnosticKind::Variant,
-                confidence: 0.68,
-            });
+            push_best_grammar_variant(
+                diagnostics,
+                Diagnostic {
+                    span,
+                    incorrect: full.clone(),
+                    correction: token.stem.clone(),
+                    rule: Rule::Vyakaran("ergative-le-intransitive"),
+                    explanation: "सामान्य अकर्मक क्रियासँग कर्तामा ले प्रायः प्रयोग हुँदैन।".to_string(),
+                    category: DiagnosticCategory::ShuddhaTable,
+                    kind: DiagnosticKind::Variant,
+                    confidence: 0.68,
+                },
+            );
         }
 
         if let Some(suggested_suffix) = suggested_genitive_suffix(token, tokens.get(idx + 1)) {
-            diagnostics.push(Diagnostic {
-                span,
-                incorrect: full.clone(),
-                correction: format!("{}{}", token.stem, suggested_suffix),
-                rule: Rule::Vyakaran("genitive-mismatch-plural"),
-                explanation: "बहुवचन संज्ञा अघि सामान्यतया सम्बन्ध सूचक का प्रयोग उपयुक्त हुन्छ।".to_string(),
-                category: DiagnosticCategory::ShuddhaTable,
-                kind: DiagnosticKind::Variant,
-                confidence: 0.64,
-            });
+            push_best_grammar_variant(
+                diagnostics,
+                Diagnostic {
+                    span,
+                    incorrect: full.clone(),
+                    correction: format!("{}{}", token.stem, suggested_suffix),
+                    rule: Rule::Vyakaran("genitive-mismatch-plural"),
+                    explanation: "बहुवचन संज्ञा अघि सामान्यतया सम्बन्ध सूचक का प्रयोग उपयुक्त हुन्छ।"
+                        .to_string(),
+                    category: DiagnosticCategory::ShuddhaTable,
+                    kind: DiagnosticKind::Variant,
+                    confidence: 0.64,
+                },
+            );
         }
 
         // Optional samasa hint: expose high-confidence split as variant guidance.
         let candidates = varnavinyas_samasa::analyze_compound(&full);
         if let Some(top) = candidates.first() {
             if top.score >= 0.75 {
-                diagnostics.push(Diagnostic {
-                    span,
-                    incorrect: full.clone(),
-                    correction: format!("{} + {}", top.left, top.right),
-                    rule: Rule::Vyakaran("samasa-heuristic"),
-                    explanation: format!("समास सम्भावना ({:?}): {}", top.samasa_type, top.vigraha),
-                    category: DiagnosticCategory::Sandhi,
-                    kind: DiagnosticKind::Variant,
-                    confidence: top.score.min(0.9),
-                });
+                push_best_grammar_variant(
+                    diagnostics,
+                    Diagnostic {
+                        span,
+                        incorrect: full.clone(),
+                        correction: format!("{} + {}", top.left, top.right),
+                        rule: Rule::Vyakaran("samasa-heuristic"),
+                        explanation: format!(
+                            "समास सम्भावना ({:?}): {}",
+                            top.samasa_type, top.vigraha
+                        ),
+                        category: DiagnosticCategory::Sandhi,
+                        kind: DiagnosticKind::Variant,
+                        confidence: top.score.min(0.9),
+                    },
+                );
             }
         }
+    }
+}
+
+#[cfg(feature = "grammar-pass")]
+fn push_best_grammar_variant(diagnostics: &mut Vec<Diagnostic>, candidate: Diagnostic) {
+    let existing = diagnostics.iter_mut().find(|d| {
+        d.span == candidate.span
+            && matches!(d.kind, DiagnosticKind::Variant)
+            && matches!(d.rule, Rule::Vyakaran(_))
+    });
+
+    if let Some(diag) = existing {
+        if candidate.confidence > diag.confidence {
+            *diag = candidate;
+        }
+    } else {
+        diagnostics.push(candidate);
     }
 }
 
@@ -312,5 +345,57 @@ fn token_full_form(token: &AnalyzedToken) -> String {
     match &token.suffix {
         Some(sfx) => format!("{}{}", token.stem, sfx),
         None => token.stem.clone(),
+    }
+}
+
+#[cfg(all(test, feature = "grammar-pass"))]
+mod grammar_variant_refine_tests {
+    use super::*;
+
+    fn mk_variant(span: (usize, usize), rule_code: &'static str, confidence: f32) -> Diagnostic {
+        Diagnostic {
+            span,
+            incorrect: "x".to_string(),
+            correction: "y".to_string(),
+            rule: Rule::Vyakaran(rule_code),
+            explanation: "heuristic".to_string(),
+            category: DiagnosticCategory::ShuddhaTable,
+            kind: DiagnosticKind::Variant,
+            confidence,
+        }
+    }
+
+    #[test]
+    fn keeps_highest_confidence_variant_per_span() {
+        let mut diagnostics = Vec::new();
+
+        push_best_grammar_variant(
+            &mut diagnostics,
+            mk_variant((3, 12), "quantifier-plural-redundancy", 0.62),
+        );
+        push_best_grammar_variant(
+            &mut diagnostics,
+            mk_variant((3, 12), "samasa-heuristic", 0.86),
+        );
+
+        assert_eq!(diagnostics.len(), 1);
+        assert_eq!(diagnostics[0].rule, Rule::Vyakaran("samasa-heuristic"));
+        assert_eq!(diagnostics[0].confidence, 0.86);
+    }
+
+    #[test]
+    fn keeps_variants_for_different_spans() {
+        let mut diagnostics = Vec::new();
+
+        push_best_grammar_variant(
+            &mut diagnostics,
+            mk_variant((0, 6), "quantifier-plural-redundancy", 0.62),
+        );
+        push_best_grammar_variant(
+            &mut diagnostics,
+            mk_variant((7, 14), "ergative-le-intransitive", 0.68),
+        );
+
+        assert_eq!(diagnostics.len(), 2);
     }
 }
