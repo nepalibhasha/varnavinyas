@@ -162,3 +162,15 @@ fn suffixes_sorted_descending_by_byte_length() {
         );
     }
 }
+
+#[test]
+fn decompose_explicit_derivational_unjel() {
+    let m = decompose("खाउन्जेल");
+    assert!(m.suffixes.contains(&"उन्जेल".to_string()));
+}
+
+#[test]
+fn decompose_explicit_derivational_at() {
+    let m = decompose("सुरुआत");
+    assert!(m.suffixes.contains(&"आत".to_string()) || m.suffixes.contains(&"अट".to_string()));
+}

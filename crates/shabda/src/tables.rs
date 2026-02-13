@@ -177,6 +177,8 @@ pub static PLURAL_MARKERS: &[&str] = &["हरू", "हरु"];
 /// decompose() breaks on first match, so longer suffixes must precede shorter ones
 /// (e.g., ईकरण before ई, इलो before इक).
 pub static SUFFIXES: &[&str] = &[
+    // 18 bytes
+    "उन्जेल",
     // 12 bytes
     "ईकरण",
     // 9 bytes
@@ -193,6 +195,8 @@ pub static SUFFIXES: &[&str] = &[
     "ता",
     "नु",
     "ने",
+    "आत",
+    "अट",
     "को",
     "मा",
     "ले",

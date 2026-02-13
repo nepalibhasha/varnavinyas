@@ -128,6 +128,9 @@ impl MorphAnalyzer for RuleBasedAnalyzer {
         if let Some(analysis) = analyze_verbal(word) {
             analyses.push(analysis);
         }
+        if let Some(analysis) = analyze_derivational(word) {
+            analyses.push(analysis);
+        }
 
         if analyses.is_empty() {
             analyses.push(MorphAnalysis {
@@ -179,7 +182,10 @@ const CASE_SUFFIXES: &[(&str, Case)] = &[
 const PLURAL_SUFFIXES: &[&str] = &["हरू", "हरु"];
 
 #[cfg(feature = "vyakaran-mvp")]
-const NONFINITE_VERB_ENDINGS: &[&str] = &["दा", "ई", "एर", "नु", "दै"];
+const NONFINITE_VERB_ENDINGS: &[&str] = &["उन्जेल", "दै", "दा", "एर", "नु", "ई"];
+
+#[cfg(feature = "vyakaran-mvp")]
+const DERIVATIONAL_SUFFIXES: &[&str] = &["उन्जेल", "आत", "अट"];
 
 #[cfg(feature = "vyakaran-mvp")]
 const PRESENT_PERSON_ENDINGS: &[(&str, Person)] = &[
@@ -309,6 +315,31 @@ fn is_nonfinite_verbal_stem(stem: &str) -> bool {
 }
 
 #[cfg(feature = "vyakaran-mvp")]
+fn detect_nonfinite_suffix(word: &str) -> Option<&'static str> {
+    NONFINITE_VERB_ENDINGS
+        .iter()
+        .find(|ending| word.ends_with(*ending) && word.len() > ending.len())
+        .copied()
+}
+
+#[cfg(feature = "vyakaran-mvp")]
+fn analyze_derivational(word: &str) -> Option<MorphAnalysis> {
+    for &sfx in DERIVATIONAL_SUFFIXES {
+        if let Some(stem) = word.strip_suffix(sfx) {
+            if !stem.is_empty() {
+                return Some(MorphAnalysis {
+                    lemma: stem.to_string(),
+                    prefix: None,
+                    suffix: Some(sfx.to_string()),
+                    features: Features::default(),
+                });
+            }
+        }
+    }
+    None
+}
+
+#[cfg(feature = "vyakaran-mvp")]
 fn detect_present_person_suffix(word: &str) -> Option<(&'static str, Person)> {
     PRESENT_PERSON_ENDINGS
         .iter()
@@ -375,6 +406,19 @@ fn analyze_verbal(word: &str) -> Option<MorphAnalysis> {
                 });
             }
         }
+    }
+
+    // Non-finite verbal cues (including -उन्जेल).
+    if let Some(ending) = detect_nonfinite_suffix(word) {
+        return Some(MorphAnalysis {
+            lemma: word.to_string(),
+            prefix: None,
+            suffix: Some(ending.to_string()),
+            features: Features {
+                tense: Some(Tense::Unknown),
+                ..Default::default()
+            },
+        });
     }
 
     // Infinitive: -नु

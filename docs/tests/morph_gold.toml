@@ -123,3 +123,13 @@ prefix = "न"
 suffix = "नेछु"
 tense = "Future"
 person = "First"
+
+[[morph]]
+word = "खाउन्जेल"
+suffix = "उन्जेल"
+tense = "Unknown"
+
+[[morph]]
+word = "सुरुआत"
+lemma = "सुरु"
+suffix = "आत"

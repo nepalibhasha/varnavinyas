@@ -171,3 +171,23 @@ fn detects_na_prefix_in_finite_future_forms() {
             && a.features.person == Some(Person::First)
     }));
 }
+
+#[cfg(feature = "vyakaran-mvp")]
+#[test]
+fn detects_derivational_suffix_unjel() {
+    let analyzer = RuleBasedAnalyzer;
+    let analyses = analyzer.analyze("खाउन्जेल").expect("analysis should succeed");
+    assert!(analyses.iter().any(|a| a.suffix.as_deref() == Some("उन्जेल")));
+}
+
+#[cfg(feature = "vyakaran-mvp")]
+#[test]
+fn detects_derivational_suffix_at() {
+    let analyzer = RuleBasedAnalyzer;
+    let analyses = analyzer.analyze("सुरुआत").expect("analysis should succeed");
+    assert!(
+        analyses
+            .iter()
+            .any(|a| matches!(a.suffix.as_deref(), Some("आत") | Some("अट")))
+    );
+}
