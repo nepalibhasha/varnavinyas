@@ -8,6 +8,9 @@ use std::collections::{BTreeMap, HashSet};
 use serde::Deserialize;
 use varnavinyas_parikshak::{CheckOptions, DiagnosticKind, check_text_with_options};
 
+const MIN_RULE_SUPPORT_FOR_GATE: usize = 2;
+const MIN_RULE_RECALL_FOR_GATE: f64 = 0.80;
+
 #[derive(Debug, Deserialize)]
 struct GrammarGold {
     sentence: Vec<SentenceEntry>,
@@ -115,13 +118,36 @@ fn grammar_pass_sentence_expectations() {
             } else {
                 hits as f64 / *expected as f64
             };
+            let gate_applies = *expected >= MIN_RULE_SUPPORT_FOR_GATE;
+            let gate_ok = !gate_applies || recall >= MIN_RULE_RECALL_FOR_GATE;
+
             println!(
-                "  {}: hits {}/{} ({:.1}%)",
+                "  {}: hits {}/{} ({:.1}%){}",
                 rule,
                 hits,
                 expected,
-                recall * 100.0
+                recall * 100.0,
+                if gate_applies {
+                    format!(
+                        " [gate {}: >= {:.0}%]",
+                        if gate_ok { "PASS" } else { "FAIL" },
+                        MIN_RULE_RECALL_FOR_GATE * 100.0
+                    )
+                } else {
+                    " [gate skipped: low support]".to_string()
+                }
             );
+
+            if !gate_ok {
+                failures.push((
+                    format!("RULE_GATE:{rule}"),
+                    hits,
+                    ((*expected as f64) * MIN_RULE_RECALL_FOR_GATE).ceil() as usize,
+                    Some(*expected),
+                    Some(vec![rule.clone()]),
+                    HashSet::new(),
+                ));
+            }
         }
     }
 
