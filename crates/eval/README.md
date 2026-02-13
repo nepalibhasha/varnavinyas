@@ -40,3 +40,9 @@ cargo test -p varnavinyas-eval --tests -- --nocapture
 - `docs/tests/grammar_sentences.toml`
 
 Keep fixtures high-confidence and deterministic. Add small curated sets first, then expand with measured threshold updates.
+
+## Triage
+
+When eval failures occur, classify and track them using:
+
+- `docs/tests/ERROR_TRIAGE.md`
