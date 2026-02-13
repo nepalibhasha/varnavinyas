@@ -4,6 +4,7 @@
  */
 import init, {
   check_text,
+  check_text_with_options,
   check_word,
   transliterate as wasmTransliterate,
   derive,
@@ -48,8 +49,11 @@ export function byteOffsetToCharIndex(text, byteOffset) {
  * Check a full text for spelling/punctuation issues.
  * Returns an array of diagnostics with char-index spans.
  */
-export function checkText(text) {
-  const raw = JSON.parse(check_text(text));
+export function checkText(text, options = {}) {
+  const { grammar = false } = options;
+  const raw = grammar
+    ? JSON.parse(check_text_with_options(text, grammar))
+    : JSON.parse(check_text(text));
   return raw.map((d) => ({
     ...d,
     charStart: byteOffsetToCharIndex(text, d.span_start),
