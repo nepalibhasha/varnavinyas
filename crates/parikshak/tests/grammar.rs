@@ -43,3 +43,18 @@ fn grammar_pass_flags_ergative_with_intransitive_predicate() {
         "Expected ergative/intransitive heuristic diagnostic, got: {diags:?}"
     );
 }
+
+#[cfg(feature = "grammar-pass")]
+#[test]
+fn grammar_pass_flags_genitive_mismatch_before_plural() {
+    let text = "रामको किताबहरु हराए।";
+    let diags = check_text_with_options(text, CheckOptions { grammar: true });
+
+    assert!(
+        diags.iter().any(|d| {
+            d.rule == varnavinyas_prakriya::Rule::Vyakaran("genitive-mismatch-plural")
+                && matches!(d.kind, DiagnosticKind::Variant)
+        }),
+        "Expected genitive/plural mismatch heuristic diagnostic, got: {diags:?}"
+    );
+}

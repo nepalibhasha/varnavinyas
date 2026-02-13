@@ -224,6 +224,19 @@ fn add_grammar_diagnostics(
             });
         }
 
+        if let Some(suggested_suffix) = suggested_genitive_suffix(token, tokens.get(idx + 1)) {
+            diagnostics.push(Diagnostic {
+                span,
+                incorrect: full.clone(),
+                correction: format!("{}{}", token.stem, suggested_suffix),
+                rule: Rule::Vyakaran("genitive-mismatch-plural"),
+                explanation: "बहुवचन संज्ञा अघि सामान्यतया सम्बन्ध सूचक का प्रयोग उपयुक्त हुन्छ।".to_string(),
+                category: DiagnosticCategory::ShuddhaTable,
+                kind: DiagnosticKind::Variant,
+                confidence: 0.64,
+            });
+        }
+
         // Optional samasa hint: expose high-confidence split as variant guidance.
         let candidates = varnavinyas_samasa::analyze_compound(&full);
         if let Some(top) = candidates.first() {
@@ -274,6 +287,24 @@ fn sentence_has_intransitive_predicate(tokens: &[AnalyzedToken], subject_idx: us
 #[cfg(feature = "grammar-pass")]
 fn is_intransitive_verb_form(word: &str) -> bool {
     INTRANSITIVE_VERB_FORMS.contains(&word)
+}
+
+#[cfg(feature = "grammar-pass")]
+fn suggested_genitive_suffix(
+    token: &AnalyzedToken,
+    next_token: Option<&AnalyzedToken>,
+) -> Option<String> {
+    let suffix = token.suffix.as_deref()?;
+    if suffix == "का" || !matches!(suffix, "को" | "की") {
+        return None;
+    }
+
+    let next = next_token?;
+    if has_plural_suffix(&token_full_form(next)) {
+        Some("का".to_string())
+    } else {
+        None
+    }
 }
 
 #[cfg(feature = "grammar-pass")]

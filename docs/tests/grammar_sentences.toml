@@ -15,3 +15,7 @@ expect_variant_or_ambiguous_min = 0
 [[sentence]]
 text = "रामले गयो।"
 expect_variant_or_ambiguous_min = 1
+
+[[sentence]]
+text = "रामको किताबहरु हराए।"
+expect_variant_or_ambiguous_min = 1
