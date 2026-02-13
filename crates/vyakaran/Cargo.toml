@@ -6,5 +6,10 @@ license.workspace = true
 repository.workspace = true
 description = "Morphological analysis for Nepali"
 
+[features]
+vyakaran-mvp = ["dep:varnavinyas-kosha", "dep:varnavinyas-shabda"]
+
 [dependencies]
 thiserror = { workspace = true }
+varnavinyas-kosha = { workspace = true, optional = true }
+varnavinyas-shabda = { workspace = true, optional = true }

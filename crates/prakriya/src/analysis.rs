@@ -1,6 +1,6 @@
 use crate::engine;
 use crate::rule::Rule;
-use varnavinyas_shabda::{Origin, classify, source_language};
+use varnavinyas_shabda::{Origin, OriginSource, classify_with_provenance, source_language};
 
 /// Analysis of a word's orthography with origin-based explanations.
 #[derive(Debug, Clone)]
@@ -9,6 +9,10 @@ pub struct WordAnalysis {
     pub word: String,
     /// The word's origin classification.
     pub origin: Origin,
+    /// Provenance for origin classification (`override`, `kosha`, `heuristic`).
+    pub origin_source: OriginSource,
+    /// Confidence score for origin classification (0.0–1.0).
+    pub origin_confidence: f32,
     /// Source language name (e.g., "फारसी", "अरबी", "संस्कृत"), if known.
     pub source_language: Option<String>,
     /// Whether the word's orthography is correct.
@@ -37,6 +41,8 @@ pub fn analyze(input: &str) -> WordAnalysis {
         return WordAnalysis {
             word: String::new(),
             origin: Origin::Deshaj,
+            origin_source: OriginSource::Heuristic,
+            origin_confidence: 0.0,
             source_language: None,
             is_correct: true,
             correction: None,
@@ -44,7 +50,8 @@ pub fn analyze(input: &str) -> WordAnalysis {
         };
     }
 
-    let origin = classify(input);
+    let origin_decision = classify_with_provenance(input);
+    let origin = origin_decision.origin;
     let source_lang = source_language(input).map(String::from);
     let prakriya = engine::derive(input);
     let mut rule_notes = Vec::new();
@@ -65,6 +72,8 @@ pub fn analyze(input: &str) -> WordAnalysis {
     WordAnalysis {
         word: input.to_string(),
         origin,
+        origin_source: origin_decision.source,
+        origin_confidence: origin_decision.confidence,
         source_language: source_lang,
         is_correct: prakriya.is_correct,
         correction: if prakriya.is_correct {

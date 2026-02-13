@@ -851,7 +851,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             },
         ),
     ];
-    // Sort to support future binary search optimizations, though lookup currently uses linear scan.
+    // Sort for binary-search lookup.
     table.sort_by(|a, b| a.0.cmp(b.0));
     table
 });
@@ -859,9 +859,9 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
 /// Look up a word in the correction table.
 pub fn lookup(word: &str) -> Option<&'static CorrectionEntry> {
     CORRECTION_TABLE
-        .iter()
-        .find(|(incorrect, _)| *incorrect == word)
-        .map(|(_, entry)| entry)
+        .binary_search_by_key(&word, |(incorrect, _)| *incorrect)
+        .ok()
+        .map(|idx| &CORRECTION_TABLE[idx].1)
 }
 
 /// Check if a word exists in the correction table (as an incorrect form).

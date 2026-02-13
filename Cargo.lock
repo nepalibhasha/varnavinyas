@@ -2237,6 +2237,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "varnavinyas-samasa"
+version = "0.1.0"
+dependencies = [
+ "varnavinyas-kosha",
+ "varnavinyas-sandhi",
+]
+
+[[package]]
 name = "varnavinyas-sandhi"
 version = "0.1.0"
 dependencies = [
@@ -2263,6 +2271,8 @@ name = "varnavinyas-vyakaran"
 version = "0.1.0"
 dependencies = [
  "thiserror 2.0.18",
+ "varnavinyas-kosha",
+ "varnavinyas-shabda",
 ]
 
 [[package]]

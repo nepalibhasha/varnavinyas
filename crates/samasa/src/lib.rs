@@ -1,0 +1,218 @@
+use varnavinyas_kosha::WordEntry;
+use varnavinyas_kosha::kosha;
+
+/// Initial samasa taxonomy for MVP.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SamasaType {
+    Tatpurusha,
+    Karmadharaya,
+    Dvigu,
+    Bahuvrihi,
+    Dvandva,
+    Avyayibhava,
+    Unknown,
+}
+
+/// Ranked compound interpretation candidate.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SamasaCandidate {
+    pub left: String,
+    pub right: String,
+    pub samasa_type: SamasaType,
+    pub score: f32,
+    pub vigraha: String,
+}
+
+/// Analyze a word as potential samasa by reusing sandhi split candidates.
+///
+/// MVP behavior:
+/// - generate split candidates via `varnavinyas_sandhi::split`
+/// - keep lexically plausible pairs only
+/// - assign heuristic samasa type + score
+/// - return ranked candidates
+pub fn analyze_compound(word: &str) -> Vec<SamasaCandidate> {
+    if word.is_empty() {
+        return Vec::new();
+    }
+
+    let lex = kosha();
+    let mut out = Vec::new();
+
+    for (left, right, _res) in varnavinyas_sandhi::split(word) {
+        if !lex.contains(&left) || !lex.contains(&right) {
+            continue;
+        }
+
+        let left_entry = lex.lookup(&left);
+        let right_entry = lex.lookup(&right);
+        let (samasa_type, score) = classify_candidate(&left, &right, left_entry, right_entry);
+        let vigraha = make_vigraha(&left, &right, samasa_type);
+
+        out.push(SamasaCandidate {
+            left,
+            right,
+            samasa_type,
+            score,
+            vigraha,
+        });
+    }
+
+    out.sort_by(|a, b| {
+        b.score
+            .total_cmp(&a.score)
+            .then_with(|| a.left.cmp(&b.left))
+            .then_with(|| a.right.cmp(&b.right))
+    });
+    out.dedup_by(|a, b| a.left == b.left && a.right == b.right && a.samasa_type == b.samasa_type);
+    out
+}
+
+fn classify_candidate(
+    left: &str,
+    right: &str,
+    left_entry: Option<&WordEntry>,
+    right_entry: Option<&WordEntry>,
+) -> (SamasaType, f32) {
+    let left_pos = left_entry.map(|e| e.pos).unwrap_or("");
+    let right_pos = right_entry.map(|e| e.pos).unwrap_or("");
+
+    // Dvigu: numeral-led compounds.
+    if is_numeral(left) {
+        return (SamasaType::Dvigu, 0.92);
+    }
+
+    // Avyayibhava: indeclinable (अव्यय) leading component.
+    if left_pos.contains("अव्य") {
+        return (SamasaType::Avyayibhava, 0.86);
+    }
+
+    // Karmadharaya: adjective + noun.
+    if left_pos.contains("वि.") && right_pos.contains("ना.") {
+        return (SamasaType::Karmadharaya, 0.84);
+    }
+
+    // Bahuvrihi (weak MVP signal): adjective + adjective.
+    if left_pos.contains("वि.") && right_pos.contains("वि.") {
+        return (SamasaType::Bahuvrihi, 0.74);
+    }
+
+    // Dvandva (weak MVP signal): coordinated noun pair with direct concatenation.
+    if left_pos.contains("ना.") && right_pos.contains("ना.") {
+        let direct_join = format!("{left}{right}");
+        if direct_join.chars().count() >= 4 {
+            return (SamasaType::Dvandva, 0.76);
+        }
+        return (SamasaType::Tatpurusha, 0.8);
+    }
+
+    // Default for lexically plausible split is Tatpurusha in MVP.
+    if left_entry.is_some() && right_entry.is_some() {
+        return (SamasaType::Tatpurusha, 0.78);
+    }
+
+    (SamasaType::Unknown, 0.5)
+}
+
+fn make_vigraha(left: &str, right: &str, t: SamasaType) -> String {
+    match t {
+        SamasaType::Tatpurusha => format!("{left} को {right}"),
+        SamasaType::Karmadharaya => format!("{left} {right}"),
+        SamasaType::Dvigu => format!("{left} वटा {right}"),
+        SamasaType::Bahuvrihi => format!("{left} {right} भएको"),
+        SamasaType::Dvandva => format!("{left} र {right}"),
+        SamasaType::Avyayibhava => format!("{left} {right}"),
+        SamasaType::Unknown => format!("{left}+{right}"),
+    }
+}
+
+fn is_numeral(s: &str) -> bool {
+    matches!(
+        s,
+        "एक" | "द्वि"
+            | "त्रि"
+            | "चतुर"
+            | "चतु"
+            | "पञ्च"
+            | "षड"
+            | "षट"
+            | "सप्त"
+            | "अष्ट"
+            | "नव"
+            | "दश"
+    )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn classify_dvigu_from_numeral() {
+        let (t, score) = classify_candidate("एक", "चक्र", None, None);
+        assert_eq!(t, SamasaType::Dvigu);
+        assert!(score > 0.9);
+    }
+
+    #[test]
+    fn classify_avyayibhava_from_pos() {
+        let left = WordEntry {
+            word: "उपरि",
+            pos: "अव्य.",
+        };
+        let right = WordEntry {
+            word: "भाग",
+            pos: "ना.",
+        };
+        let (t, _) = classify_candidate("उपरि", "भाग", Some(&left), Some(&right));
+        assert_eq!(t, SamasaType::Avyayibhava);
+    }
+
+    #[test]
+    fn classify_karmadharaya_from_adj_noun() {
+        let left = WordEntry {
+            word: "मह",
+            pos: "वि.",
+        };
+        let right = WordEntry {
+            word: "उत्सव",
+            pos: "ना.",
+        };
+        let (t, _) = classify_candidate("मह", "उत्सव", Some(&left), Some(&right));
+        assert_eq!(t, SamasaType::Karmadharaya);
+    }
+
+    #[test]
+    fn classify_bahuvrihi_from_adj_adj() {
+        let left = WordEntry {
+            word: "नील",
+            pos: "वि.",
+        };
+        let right = WordEntry {
+            word: "कण्ठ",
+            pos: "वि.",
+        };
+        let (t, _) = classify_candidate("नील", "कण्ठ", Some(&left), Some(&right));
+        assert_eq!(t, SamasaType::Bahuvrihi);
+    }
+
+    #[test]
+    fn classify_dvandva_from_noun_noun() {
+        let left = WordEntry {
+            word: "राम",
+            pos: "ना.",
+        };
+        let right = WordEntry {
+            word: "लक्ष्मण",
+            pos: "ना.",
+        };
+        let (t, _) = classify_candidate("राम", "लक्ष्मण", Some(&left), Some(&right));
+        assert_eq!(t, SamasaType::Dvandva);
+    }
+
+    #[test]
+    fn analyze_compound_returns_ranked_candidates() {
+        let candidates = analyze_compound("सूर्योदय");
+        assert!(!candidates.is_empty());
+        assert!(candidates.windows(2).all(|w| w[0].score >= w[1].score));
+    }
+}

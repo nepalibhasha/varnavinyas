@@ -36,7 +36,10 @@ pub fn check_word(word: &str) -> Option<Diagnostic> {
             .first()
             .map(|s| s.description.clone())
             .unwrap_or_default();
-        let category = DiagnosticCategory::from_rule(&rule);
+        let category = prakriya
+            .category
+            .map(DiagnosticCategory::from_rule_category)
+            .unwrap_or_else(|| DiagnosticCategory::from_rule(&rule));
 
         return Some(Diagnostic {
             span: (0, word.len()),
@@ -45,7 +48,7 @@ pub fn check_word(word: &str) -> Option<Diagnostic> {
             rule,
             explanation,
             category,
-            kind: DiagnosticKind::Error,
+            kind: prakriya.kind,
             confidence: 1.0,
         });
     }

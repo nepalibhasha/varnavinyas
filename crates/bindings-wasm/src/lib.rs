@@ -122,6 +122,8 @@ pub fn derive(word: &str) -> String {
 struct JsWordAnalysis {
     word: String,
     origin: String,
+    origin_source: String,
+    origin_confidence: f32,
     #[serde(skip_serializing_if = "Option::is_none")]
     source_language: Option<String>,
     is_correct: bool,
@@ -144,6 +146,8 @@ pub fn analyze_word(word: &str) -> String {
     let js = JsWordAnalysis {
         word: analysis.word,
         origin: origin_to_string(analysis.origin),
+        origin_source: origin_source_to_string(analysis.origin_source),
+        origin_confidence: analysis.origin_confidence,
         source_language: analysis.source_language,
         is_correct: analysis.is_correct,
         correction: analysis.correction,
@@ -249,6 +253,14 @@ fn origin_to_string(origin: varnavinyas_shabda::Origin) -> String {
         varnavinyas_shabda::Origin::Tadbhav => "tadbhav".into(),
         varnavinyas_shabda::Origin::Deshaj => "deshaj".into(),
         varnavinyas_shabda::Origin::Aagantuk => "aagantuk".into(),
+    }
+}
+
+fn origin_source_to_string(source: varnavinyas_shabda::OriginSource) -> String {
+    match source {
+        varnavinyas_shabda::OriginSource::Override => "override".into(),
+        varnavinyas_shabda::OriginSource::Kosha => "kosha".into(),
+        varnavinyas_shabda::OriginSource::Heuristic => "heuristic".into(),
     }
 }
 

@@ -1,0 +1,23 @@
+# Initial samasa gold set (MVP)
+# This file is intentionally small and high-confidence; expand in Phase 4.
+
+[[samasa]]
+word = "सूर्योदय"
+left = "सूर्य"
+right = "उदय"
+expected_type = "Tatpurusha"
+notes = "Canonical compound often analyzed as tatpurusha."
+
+[[samasa]]
+word = "महोत्सव"
+left = "मह"
+right = "उत्सव"
+expected_type = "Karmadharaya"
+notes = "Adjectival/intensifier left component with noun right component."
+
+[[samasa]]
+word = "एकचक्र"
+left = "एक"
+right = "चक्र"
+expected_type = "Dvigu"
+notes = "Numeral-led compound pattern for dvigu heuristic evaluation."

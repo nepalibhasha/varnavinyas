@@ -1,0 +1,11 @@
+[package]
+name = "varnavinyas-samasa"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Heuristic samasa (compound) analysis for Nepali/Sanskrit words"
+
+[dependencies]
+varnavinyas-kosha = { workspace = true }
+varnavinyas-sandhi = { workspace = true }

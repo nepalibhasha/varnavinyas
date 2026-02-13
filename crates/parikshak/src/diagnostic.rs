@@ -1,4 +1,4 @@
-use varnavinyas_prakriya::{DiagnosticKind, Rule};
+use varnavinyas_prakriya::{DiagnosticKind, Rule, RuleCategory};
 
 /// Category of a diagnostic.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -68,6 +68,23 @@ impl DiagnosticCategory {
                     DiagnosticCategory::ShuddhaTable
                 }
             }
+        }
+    }
+
+    /// Typed mapping from prakriya rule categories.
+    pub fn from_rule_category(category: RuleCategory) -> Self {
+        match category {
+            RuleCategory::ShuddhaTable => DiagnosticCategory::ShuddhaTable,
+            RuleCategory::HrasvaDirgha => DiagnosticCategory::HrasvaDirgha,
+            RuleCategory::Chandrabindu => DiagnosticCategory::Chandrabindu,
+            RuleCategory::ShaShaS => DiagnosticCategory::ShaShaS,
+            RuleCategory::RiKri => DiagnosticCategory::RiKri,
+            RuleCategory::Halanta => DiagnosticCategory::Halanta,
+            RuleCategory::Sandhi => DiagnosticCategory::Sandhi,
+            RuleCategory::AadhiVriddhi => DiagnosticCategory::ShuddhaTable,
+            RuleCategory::YaE => DiagnosticCategory::YaE,
+            RuleCategory::KshaChhya => DiagnosticCategory::KshaChhya,
+            RuleCategory::Structural => DiagnosticCategory::ShuddhaTable,
         }
     }
 }

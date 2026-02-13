@@ -26,6 +26,7 @@ impl DiagnosticKind {
 /// Category grouping for pattern rules.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RuleCategory {
+    ShuddhaTable,
     HrasvaDirgha,
     Chandrabindu,
     ShaShaS,

@@ -4,7 +4,7 @@ use crate::correction_table;
 use crate::hrasva_dirgha;
 use crate::orthographic;
 use crate::prakriya::Prakriya;
-use crate::rule_spec::PatternRule;
+use crate::rule_spec::{DiagnosticKind, PatternRule, RuleCategory};
 use crate::step::Step;
 use crate::structural;
 
@@ -118,7 +118,7 @@ pub fn derive(input: &str) -> Prakriya {
 fn try_pattern_rules(input: &str) -> Option<Prakriya> {
     for rule in PATTERN_RULES.iter() {
         if let Some(p) = (rule.apply)(input) {
-            return Some(p);
+            return Some(p.with_metadata(rule.spec.category, rule.spec.kind));
         }
     }
     None
@@ -132,11 +132,14 @@ fn try_correction_table(input: &str) -> Option<Prakriya> {
     // Return the first alternative
     let output = entry.correct.split('/').next().unwrap_or(entry.correct);
 
-    Some(Prakriya::corrected(
-        input,
-        output,
-        vec![Step::new(entry.rule, entry.description, input, output)],
-    ))
+    Some(
+        Prakriya::corrected(
+            input,
+            output,
+            vec![Step::new(entry.rule, entry.description, input, output)],
+        )
+        .with_metadata(RuleCategory::ShuddhaTable, DiagnosticKind::Error),
+    )
 }
 
 #[cfg(test)]

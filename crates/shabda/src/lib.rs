@@ -3,7 +3,9 @@ mod origin;
 pub mod tables;
 
 pub use morphology::{Morpheme, decompose};
-pub use origin::{Origin, classify, source_language};
+pub use origin::{
+    Origin, OriginDecision, OriginSource, classify, classify_with_provenance, source_language,
+};
 
 /// Error type for shabda operations.
 #[derive(Debug, thiserror::Error)]

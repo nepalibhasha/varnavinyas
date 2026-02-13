@@ -14,6 +14,25 @@ pub enum Origin {
     Aagantuk,
 }
 
+/// Provenance for origin classification.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum OriginSource {
+    /// From the local override table.
+    Override,
+    /// From kosha dictionary origin tags.
+    Kosha,
+    /// From heuristic fallback rules.
+    Heuristic,
+}
+
+/// Origin decision with provenance metadata.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct OriginDecision {
+    pub origin: Origin,
+    pub source: OriginSource,
+    pub confidence: f32,
+}
+
 impl From<OriginTag> for Origin {
     fn from(tag: OriginTag) -> Self {
         match tag {
@@ -32,22 +51,43 @@ impl From<OriginTag> for Origin {
 /// 2. Kosha dictionary lookup (~26K words with origin tags from Brihat Shabdakosha)
 /// 3. Heuristic classification (phonological pattern matching)
 pub fn classify(word: &str) -> Origin {
+    classify_with_provenance(word).origin
+}
+
+/// Classify a word with provenance and confidence metadata.
+pub fn classify_with_provenance(word: &str) -> OriginDecision {
     if word.is_empty() {
-        return Origin::Deshaj;
+        return OriginDecision {
+            origin: Origin::Deshaj,
+            source: OriginSource::Heuristic,
+            confidence: 0.0,
+        };
     }
 
     // 1. Override table (small set of manually verified edge cases)
     if let Some(origin) = tables::lookup_origin(word) {
-        return origin;
+        return OriginDecision {
+            origin,
+            source: OriginSource::Override,
+            confidence: 1.0,
+        };
     }
 
     // 2. Kosha dictionary lookup (~26K words with origin tags)
     if let Some(tag) = varnavinyas_kosha::kosha().origin_of(word) {
-        return tag.into();
+        return OriginDecision {
+            origin: tag.into(),
+            source: OriginSource::Kosha,
+            confidence: 0.95,
+        };
     }
 
     // 3. Heuristic classification
-    classify_heuristic(word)
+    OriginDecision {
+        origin: classify_heuristic(word),
+        source: OriginSource::Heuristic,
+        confidence: 0.65,
+    }
 }
 
 fn classify_heuristic(word: &str) -> Origin {

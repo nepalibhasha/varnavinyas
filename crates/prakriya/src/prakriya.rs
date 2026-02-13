@@ -1,3 +1,4 @@
+use crate::rule_spec::{DiagnosticKind, RuleCategory};
 use crate::step::Step;
 
 /// The derivation state, tracking history.
@@ -11,6 +12,10 @@ pub struct Prakriya {
     pub steps: Vec<Step>,
     /// Whether the input was already correct.
     pub is_correct: bool,
+    /// Typed diagnostic category propagated from rule metadata.
+    pub category: Option<RuleCategory>,
+    /// Typed diagnostic severity propagated from rule metadata.
+    pub kind: DiagnosticKind,
 }
 
 impl Prakriya {
@@ -21,6 +26,8 @@ impl Prakriya {
             output: word.to_string(),
             steps: Vec::new(),
             is_correct: true,
+            category: None,
+            kind: DiagnosticKind::Error,
         }
     }
 
@@ -31,7 +38,16 @@ impl Prakriya {
             output: output.to_string(),
             steps,
             is_correct: false,
+            category: None,
+            kind: DiagnosticKind::Error,
         }
+    }
+
+    /// Attach typed metadata from rule dispatch.
+    pub fn with_metadata(mut self, category: RuleCategory, kind: DiagnosticKind) -> Self {
+        self.category = Some(category);
+        self.kind = kind;
+        self
     }
 }
 

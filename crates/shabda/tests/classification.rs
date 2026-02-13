@@ -1,4 +1,6 @@
-use varnavinyas_shabda::{Origin, classify, decompose, tables};
+use varnavinyas_shabda::{
+    Origin, OriginSource, classify, classify_with_provenance, decompose, tables,
+};
 
 // S1: Classifies विज्ञान as Tatsam
 #[test]
@@ -70,6 +72,22 @@ fn classify_deshaj_words() {
     assert_eq!(classify("टोपी"), Origin::Deshaj);
     assert_eq!(classify("चुला"), Origin::Deshaj);
     assert_eq!(classify("भाका"), Origin::Deshaj);
+}
+
+#[test]
+fn classify_with_provenance_override_source() {
+    let d = classify_with_provenance("विज्ञान");
+    assert_eq!(d.origin, Origin::Tatsam);
+    assert_eq!(d.source, OriginSource::Override);
+    assert!((d.confidence - 1.0).abs() < f32::EPSILON);
+}
+
+#[test]
+fn classify_with_provenance_heuristic_source() {
+    // Intentionally unknown to force heuristic fallback.
+    let d = classify_with_provenance("क़लम");
+    assert_eq!(d.source, OriginSource::Heuristic);
+    assert_eq!(d.origin, Origin::Aagantuk);
 }
 
 #[test]
