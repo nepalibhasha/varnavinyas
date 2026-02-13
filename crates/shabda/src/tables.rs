@@ -152,7 +152,7 @@ pub static PREFIX_FORMS: &[(&str, &str, &str)] = &[
 /// Sorted by descending byte length.
 #[cfg(feature = "iterative-decompose")]
 pub static CASE_MARKERS: &[&str] = &[
-    "भित्र", "देखि", "लाई", "बाट", "सँग", "तिर", "का", "की", "ले", "को", "मा",
+    "भित्र", "प्रति", "देखि", "लाई", "बाट", "सँग", "तिर", "का", "की", "ले", "को", "मा",
 ];
 
 /// Plural markers for iterative decomposition.

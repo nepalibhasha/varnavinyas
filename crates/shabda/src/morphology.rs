@@ -56,14 +56,22 @@ pub fn decompose(word: &str) -> Morpheme {
     {
         // 3-phase iterative: Case marker → Plural → Derivational
         let min_root_chars = if prefixes.is_empty() { 1 } else { 4 };
-        // Phase 1: Case markers (postpositions)
-        for &sfx in tables::CASE_MARKERS.iter() {
-            if let Some(rest) = remaining.strip_suffix(sfx) {
-                if rest.chars().count() >= min_root_chars {
-                    suffixes.push(sfx.to_string());
-                    remaining = rest.to_string();
-                    break;
+        // Phase 1: Case markers (postpositions) — loop to strip stacked markers
+        // e.g., गाईप्रतिको → strip को → गाईप्रति → strip प्रति → गाई
+        loop {
+            let mut found = false;
+            for &sfx in tables::CASE_MARKERS.iter() {
+                if let Some(rest) = remaining.strip_suffix(sfx) {
+                    if rest.chars().count() >= min_root_chars {
+                        suffixes.push(sfx.to_string());
+                        remaining = rest.to_string();
+                        found = true;
+                        break;
+                    }
                 }
+            }
+            if !found {
+                break;
             }
         }
         // Phase 2: Plural markers
@@ -77,12 +85,18 @@ pub fn decompose(word: &str) -> Morpheme {
             }
         }
         // Phase 3: Derivational suffixes
-        for &sfx in tables::SUFFIXES.iter() {
-            if let Some(rest) = remaining.strip_suffix(sfx) {
-                if rest.chars().count() >= min_root_chars {
-                    suffixes.push(sfx.to_string());
-                    remaining = rest.to_string();
-                    break;
+        // If case/plural markers were already stripped and the remaining root is a
+        // valid dictionary word, skip derivational stripping to avoid over-decomposition
+        // (e.g., गाईप्रतिको → गाई is the root, not गा + ई)
+        let skip_derivational = !suffixes.is_empty() && lex.contains(&remaining);
+        if !skip_derivational {
+            for &sfx in tables::SUFFIXES.iter() {
+                if let Some(rest) = remaining.strip_suffix(sfx) {
+                    if rest.chars().count() >= min_root_chars {
+                        suffixes.push(sfx.to_string());
+                        remaining = rest.to_string();
+                        break;
+                    }
                 }
             }
         }

@@ -27,7 +27,8 @@ pub struct AnalyzedToken {
 
 /// Known Nepali postpositions and plural markers, ordered longest-first for greedy matching.
 const SUFFIXES: &[&str] = &[
-    "भित्र", "देखि", "हरू", "हरु", "लाई", "बाट", "सँग", "तिर", "का", "की", "ले", "को", "मा",
+    "भित्र", "प्रति", "देखि", "हरू", "हरु", "लाई", "बाट", "सँग", "तिर", "का", "की", "ले", "को",
+    "मा",
 ];
 
 /// Vocative case markers. Only active behind `vocative-tokenization` feature.

@@ -2,6 +2,7 @@ use crate::prakriya::Prakriya;
 use crate::rule::Rule;
 use crate::rule_spec::{DiagnosticKind, RuleCategory, RuleSpec};
 use crate::step::Step;
+use varnavinyas_akshar::{is_matra, is_svar, is_vyanjan};
 use varnavinyas_shabda::{Origin, classify};
 
 pub const SPEC_CHANDRABINDU: RuleSpec = RuleSpec {
@@ -31,8 +32,6 @@ pub const SPEC_RI_KRI: RuleSpec = RuleSpec {
     examples: &[("रिषि", "ऋषि"), ("क्रिति", "कृति")],
 };
 
-// Not yet registered in engine — stub for future generalizable halanta detection.
-#[allow(dead_code)]
 pub const SPEC_HALANTA: RuleSpec = RuleSpec {
     id: "ortho-halanta",
     category: RuleCategory::Halanta,
@@ -40,6 +39,33 @@ pub const SPEC_HALANTA: RuleSpec = RuleSpec {
     priority: 330,
     citation: Rule::VarnaVinyasNiyam("3(ङ)"),
     examples: &[("बुद्धिमान", "बुद्धिमान्"), ("श्रीमान", "श्रीमान्")],
+};
+
+pub const SPEC_AADHI_VRIDDHI: RuleSpec = RuleSpec {
+    id: "ortho-aadhi-vriddhi",
+    category: RuleCategory::AadhiVriddhi,
+    kind: DiagnosticKind::Error,
+    priority: 340,
+    citation: Rule::VarnaVinyasNiyam("3(क)"),
+    examples: &[("अर्थिक", "आर्थिक"), ("इतिहासिक", "ऐतिहासिक")],
+};
+
+pub const SPEC_YA_E: RuleSpec = RuleSpec {
+    id: "ortho-ya-e",
+    category: RuleCategory::YaE,
+    kind: DiagnosticKind::Error,
+    priority: 350,
+    citation: Rule::VarnaVinyasNiyam("3(इ)"),
+    examples: &[("एथार्थ", "यथार्थ"), ("यकता", "एकता")],
+};
+
+pub const SPEC_KSHA_CHHYA: RuleSpec = RuleSpec {
+    id: "ortho-ksha-chhya",
+    category: RuleCategory::KshaChhya,
+    kind: DiagnosticKind::Error,
+    priority: 360,
+    citation: Rule::VarnaVinyasNiyam("3(उ)"),
+    examples: &[("लछ्य", "लक्ष्य"), ("छेत्र", "क्षेत्र")],
 };
 
 /// Academy 3(ख): chandrabindu vs shirbindu rules based on word origin.
@@ -265,24 +291,225 @@ pub fn rule_ri_kri(input: &str) -> Option<Prakriya> {
     None
 }
 
-/// Academy 3(ङ): halanta rules.
-/// - Verb roots (धातु), 2nd person disrespect, 3rd person plural → halanta
-/// - -मान्/-वान्/-वत् suffix words → halanta
-/// - Monosyllabic pronouns/avyaya (म, तँ, र, न) → NO halanta
+/// Academy 3(ङ): halanta rules for tatsam suffix patterns.
 ///
-/// Known word-level corrections (महान→महान्, बुद्धिमान→बुद्धिमान्, etc.)
-/// live in the correction table (Phase A). This function handles generalizable
-/// pattern detection for tatsam words not covered by the table.
-#[allow(dead_code)]
+/// Detects tatsam words ending in -मान, -वान, -वत that require halanta
+/// (-मान्, -वान्, -वत्). Other halanta corrections (महान→महान्, etc.)
+/// live in the correction table (Phase A).
+///
+/// Future: verb roots (धातु), 2nd-person disrespect, 3rd-person plural forms.
 pub fn rule_halanta(input: &str) -> Option<Prakriya> {
     let origin = classify(input);
     if !matches!(origin, Origin::Tatsam) {
         return None;
     }
 
-    // Future: detect tatsam words ending in a bare consonant (no virama)
-    // and suggest adding halanta. Requires careful scoping to avoid
-    // false positives on nativized tatsam forms.
+    // Check for Tatsam suffixes that require halanta: -मान, -वान, -वत -> -मान्, -वान्, -वत्
+    // Examples: बुद्धिमान -> बुद्धिमान्, भगवान -> भगवान्, विधिवत -> विधिवत्
+    let suffixes = [
+        ("मान", "मान्", "3(ङ)-मान्"),
+        ("वान", "वान्", "3(ङ)-वान्"),
+        ("वत", "वत्", "3(ङ)-वत्"),
+    ];
+
+    for (wrong_suffix, correct_suffix, rule_citation) in suffixes {
+        if let Some(stem) = input.strip_suffix(wrong_suffix) {
+            let output = format!("{}{}", stem, correct_suffix);
+            return Some(Prakriya::corrected(
+                input,
+                &output,
+                vec![Step::new(
+                    Rule::VarnaVinyasNiyam(rule_citation),
+                    format!("Tatsam suffix ends in halanta: {} -> {}", wrong_suffix, correct_suffix),
+                    input,
+                    &output,
+                )],
+            ));
+        }
+    }
+
+    None
+}
+
+/// Apply vriddhi to the first vowel position in a character sequence.
+/// Returns `None` if already in vriddhi form or no applicable vowel found.
+///
+/// Vriddhi mappings: अ→आ, इ/ई→ऐ, उ/ऊ→औ (both standalone svars and matras).
+fn apply_vriddhi(chars: &[char]) -> Option<Vec<char>> {
+    for (i, &c) in chars.iter().enumerate() {
+        if is_svar(c) {
+            let vriddhi = match c {
+                'अ' => 'आ',
+                'इ' | 'ई' => 'ऐ',
+                'उ' | 'ऊ' => 'औ',
+                'आ' | 'ऐ' | 'औ' => return None,
+                _ => return None,
+            };
+            let mut result = chars.to_vec();
+            result[i] = vriddhi;
+            return Some(result);
+        }
+        if is_matra(c) {
+            let vriddhi = match c {
+                'ि' | 'ी' => 'ै',
+                'ु' | 'ू' => 'ौ',
+                'ा' | 'ै' | 'ौ' => return None,
+                _ => return None,
+            };
+            let mut result = chars.to_vec();
+            result[i] = vriddhi;
+            return Some(result);
+        }
+        if is_vyanjan(c) {
+            let next = chars.get(i + 1).copied();
+            // Matra follows — vowel will be handled in the next iteration
+            if next.is_some_and(is_matra) {
+                continue;
+            }
+            // Halanta (virama) — consonant cluster, skip
+            if next == Some('्') {
+                continue;
+            }
+            // Inherent अ — vriddhi is आ, represented by ा matra
+            let mut result = chars.to_vec();
+            result.insert(i + 1, 'ा');
+            return Some(result);
+        }
+    }
+    None
+}
+
+/// Academy 3(क): ādhivr̥ddhi with -इक suffix.
+///
+/// When -इक is added to a root, the first vowel undergoes vr̥ddhi:
+/// अ→आ, इ/ई→ऐ, उ/ऊ→औ. The root must exist in kosha.
+pub fn rule_aadhi_vriddhi(input: &str) -> Option<Prakriya> {
+    let chars: Vec<char> = input.chars().collect();
+    let len = chars.len();
+    if len < 3 {
+        return None;
+    }
+
+    // Check for -इक suffix: ि + क (matra form) or इ + क (standalone)
+    let has_ik = (chars[len - 2] == 'ि' || chars[len - 2] == 'इ') && chars[len - 1] == 'क';
+    if !has_ik {
+        return None;
+    }
+
+    // Strip suffix to get candidate root
+    let root: String = chars[..len - 2].iter().collect();
+    if root.is_empty() {
+        return None;
+    }
+
+    let kosha = varnavinyas_kosha::kosha();
+    if !kosha.contains(&root) {
+        return None;
+    }
+
+    let corrected_chars = apply_vriddhi(&chars)?;
+    let output: String = corrected_chars.into_iter().collect();
+
+    if output == input {
+        return None;
+    }
+
+    Some(Prakriya::corrected(
+        input,
+        &output,
+        vec![Step::new(
+            Rule::VarnaVinyasNiyam("3(क)"),
+            "इक प्रत्ययमा आदिवृद्धि: प्रथम स्वरमा वृद्धि हुन्छ",
+            input,
+            &output,
+        )],
+    ))
+}
+
+/// Academy 3(इ): ए/य distinction.
+///
+/// Tatsam words use य (यज्ञ, यथार्थ). एक-derived words use ए (एक, एकता).
+/// Swaps initial ए↔य and validates against kosha.
+pub fn rule_ya_e(input: &str) -> Option<Prakriya> {
+    let chars: Vec<char> = input.chars().collect();
+    if chars.is_empty() {
+        return None;
+    }
+
+    let swap_char = match chars[0] {
+        'ए' => 'य',
+        'य' => 'ए',
+        _ => return None,
+    };
+
+    let kosha = varnavinyas_kosha::kosha();
+    if kosha.contains(input) {
+        return None;
+    }
+
+    let mut swapped = chars;
+    swapped[0] = swap_char;
+    let candidate: String = swapped.into_iter().collect();
+
+    if kosha.contains(&candidate) {
+        return Some(Prakriya::corrected(
+            input,
+            &candidate,
+            vec![Step::new(
+                Rule::VarnaVinyasNiyam("3(इ)"),
+                "ए/य भेद: शब्दादिमा ए र य फरक हुन्छ",
+                input,
+                &candidate,
+            )],
+        ));
+    }
+
+    None
+}
+
+/// Academy 3(उ): क्ष/छ distinction.
+///
+/// क्ष/क्षे/क्ष्य is tatsam-only. छ/छे/छ्य is used in all origins.
+/// Tries character substitutions and validates against kosha.
+pub fn rule_ksha_chhya(input: &str) -> Option<Prakriya> {
+    let kosha = varnavinyas_kosha::kosha();
+    if kosha.contains(input) {
+        return None;
+    }
+
+    if !input.contains("क्ष") && !input.contains('छ') && !input.contains("च्छ") {
+        return None;
+    }
+
+    // Longer patterns first to avoid partial matches
+    const SUBS: &[(&str, &str)] = &[
+        ("छ्य", "क्ष्य"),
+        ("क्ष्य", "छ्य"),
+        ("छे", "क्षे"),
+        ("क्षे", "छे"),
+        ("क्ष", "च्छ"),
+        ("च्छ", "क्ष"),
+        ("छ", "क्ष"),
+        ("क्ष", "छ"),
+    ];
+
+    for &(from, to) in SUBS {
+        if input.contains(from) {
+            let candidate = input.replace(from, to);
+            if kosha.contains(&candidate) {
+                return Some(Prakriya::corrected(
+                    input,
+                    &candidate,
+                    vec![Step::new(
+                        Rule::VarnaVinyasNiyam("3(उ)"),
+                        format!("क्ष/छ भेद: {} → {}", from, to),
+                        input,
+                        &candidate,
+                    )],
+                ));
+            }
+        }
+    }
 
     None
 }
@@ -316,4 +543,135 @@ fn is_stop_consonant(c: char) -> bool {
             | 'भ'
             | 'म'
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_halanta_maan() {
+        let p = rule_halanta("बुद्धिमान").expect("should correct बुद्धिमान");
+        assert_eq!(p.output, "बुद्धिमान्");
+
+        let p = rule_halanta("शक्तिमान").expect("should correct शक्तिमान");
+        assert_eq!(p.output, "शक्तिमान्");
+    }
+
+    #[test]
+    fn test_halanta_vaan() {
+        // विद्वान contains द्व conjunct → tatsam heuristic
+        let p = rule_halanta("विद्वान").expect("should correct विद्वान");
+        assert_eq!(p.output, "विद्वान्");
+    }
+
+    #[test]
+    fn test_halanta_vat() {
+        let p = rule_halanta("आत्मवत").expect("should correct आत्मवत");
+        assert_eq!(p.output, "आत्मवत्");
+    }
+
+    #[test]
+    fn test_halanta_skips_non_tatsam() {
+        assert!(rule_halanta("नेपाल").is_none());
+    }
+
+    // --- Aadhi-vriddhi tests ---
+
+    #[test]
+    fn test_aadhi_vriddhi_standalone_a() {
+        // अर्थिक → आर्थिक (standalone अ → आ)
+        let p = rule_aadhi_vriddhi("अर्थिक").expect("should correct अर्थिक");
+        assert_eq!(p.output, "आर्थिक");
+    }
+
+    #[test]
+    fn test_aadhi_vriddhi_standalone_i() {
+        // इतिहासिक → ऐतिहासिक (standalone इ → ऐ)
+        let p = rule_aadhi_vriddhi("इतिहासिक").expect("should correct इतिहासिक");
+        assert_eq!(p.output, "ऐतिहासिक");
+    }
+
+    #[test]
+    fn test_aadhi_vriddhi_matra_i() {
+        // दिनिक → दैनिक (matra ि → ै)
+        let p = rule_aadhi_vriddhi("दिनिक").expect("should correct दिनिक");
+        assert_eq!(p.output, "दैनिक");
+    }
+
+    #[test]
+    fn test_aadhi_vriddhi_standalone_u() {
+        // उद्योगिक → औद्योगिक (standalone उ → औ)
+        let p = rule_aadhi_vriddhi("उद्योगिक").expect("should correct उद्योगिक");
+        assert_eq!(p.output, "औद्योगिक");
+    }
+
+    #[test]
+    fn test_aadhi_vriddhi_already_correct() {
+        // आर्थिक → None (root "आर्थ" not in kosha)
+        assert!(rule_aadhi_vriddhi("आर्थिक").is_none());
+    }
+
+    #[test]
+    fn test_aadhi_vriddhi_no_suffix() {
+        // संगीत → None (no -इक suffix)
+        assert!(rule_aadhi_vriddhi("संगीत").is_none());
+    }
+
+    // --- Ya/E distinction tests ---
+
+    #[test]
+    fn test_ya_e_e_to_ya() {
+        // एथार्थ → यथार्थ
+        let p = rule_ya_e("एथार्थ").expect("should correct एथार्थ");
+        assert_eq!(p.output, "यथार्थ");
+    }
+
+    #[test]
+    fn test_ya_e_ya_to_e() {
+        // यकता → एकता
+        let p = rule_ya_e("यकता").expect("should correct यकता");
+        assert_eq!(p.output, "एकता");
+    }
+
+    #[test]
+    fn test_ya_e_already_valid() {
+        // एक → None (in kosha)
+        assert!(rule_ya_e("एक").is_none());
+    }
+
+    #[test]
+    fn test_ya_e_no_match() {
+        // नेपाल → None (doesn't start with ए/य)
+        assert!(rule_ya_e("नेपाल").is_none());
+    }
+
+    // --- Ksha/Chhya distinction tests ---
+
+    #[test]
+    fn test_ksha_chhya_chhy_to_kshy() {
+        // लछ्य → लक्ष्य
+        let p = rule_ksha_chhya("लछ्य").expect("should correct लछ्य");
+        assert_eq!(p.output, "लक्ष्य");
+    }
+
+    #[test]
+    fn test_ksha_chhya_chh_to_ksh() {
+        // छमा → क्षमा (छ→क्ष)
+        let p = rule_ksha_chhya("छमा").expect("should correct छमा");
+        assert_eq!(p.output, "क्षमा");
+    }
+
+    #[test]
+    fn test_ksha_chhya_ksh_to_chchh() {
+        // इक्षा → इच्छा
+        let p = rule_ksha_chhya("इक्षा").expect("should correct इक्षा");
+        assert_eq!(p.output, "इच्छा");
+    }
+
+    #[test]
+    fn test_ksha_chhya_already_valid() {
+        // क्षेत्र → None (in kosha)
+        assert!(rule_ksha_chhya("क्षेत्र").is_none());
+    }
 }

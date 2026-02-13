@@ -248,6 +248,15 @@ pub fn rule_tadbhav_hrasva(input: &str) -> Option<Prakriya> {
 
     if changed {
         let output: String = output_chars.into_iter().collect();
+
+        // Only apply if the hrasva form is validated by the dictionary.
+        // This prevents false positives on compounds containing legitimate
+        // dirgha stems (e.g. गाईप्रतिको — "गाई" is a valid word).
+        let kosha = varnavinyas_kosha::kosha();
+        if !kosha.contains(&output) {
+            return None;
+        }
+
         return Some(Prakriya::corrected(
             input,
             &output,

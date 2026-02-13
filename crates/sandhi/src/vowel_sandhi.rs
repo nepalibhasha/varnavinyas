@@ -1,7 +1,10 @@
 use crate::{SandhiResult, SandhiType};
-use varnavinyas_akshar::{is_matra, is_svar};
+use varnavinyas_akshar::{is_matra, is_svar, is_vyanjan};
 
 /// Apply vowel sandhi at the boundary of two morphemes.
+///
+/// Handles both explicit vowel endings (e.g., "विद्या" ends in 'ा') and
+/// inherent vowel endings (e.g., "प्र" ends in consonant र with implicit अ).
 pub fn apply_vowel_sandhi(first: &str, second: &str) -> Option<SandhiResult> {
     let first_chars: Vec<char> = first.chars().collect();
     let second_chars: Vec<char> = second.chars().collect();
@@ -10,7 +13,18 @@ pub fn apply_vowel_sandhi(first: &str, second: &str) -> Option<SandhiResult> {
         return None;
     }
 
-    let last = *first_chars.last().unwrap();
+    let last_char = *first_chars.last().unwrap();
+
+    // A Devanagari consonant without explicit virama (्) carries an inherent
+    // schwa (अ). Detect this so अ/आ-class sandhi rules can fire on morphemes
+    // like "प्र", "स", "अप" that end in a bare consonant.
+    // Only actual consonants (व्यञ्जन) carry inherent अ — signs like ं, ँ, ः do not.
+    let (last, inherent) = if is_vyanjan(last_char) {
+        ('अ', true)
+    } else {
+        (last_char, false)
+    };
+
     let first_of_second = second_chars[0];
 
     // दीर्घ sandhi: इ/ई + इ/ई → ई (same-vowel lengthening for i-class)
@@ -81,65 +95,42 @@ pub fn apply_vowel_sandhi(first: &str, second: &str) -> Option<SandhiResult> {
         });
     }
 
-    // दीर्घ sandhi: अ/आ + अ/आ → आ
+    // --- अ/आ-class rules below all share the same prefix/output pattern ---
+    // Use emit_a_sandhi() to handle both explicit and inherent अ endings.
+
+    let rest: String = second_chars[1..].iter().collect();
+
+    // दीर्घ सन्धि: अ/आ + अ/आ → आ
     if matches!(last, 'अ' | 'आ' | 'ा') && matches!(first_of_second, 'अ' | 'आ') {
-        let prefix: String = first_chars[..first_chars.len() - 1].iter().collect();
-        let rest: String = second_chars[1..].iter().collect();
-        let result = if prefix.is_empty() || is_svar(prefix.chars().last().unwrap_or('\0')) {
-            format!("{prefix}आ{rest}")
-        } else {
-            format!("{prefix}ा{rest}")
-        };
         return Some(SandhiResult {
-            output: result,
+            output: emit_a_sandhi(first, &first_chars, inherent, &rest, "आ", "ा"),
             sandhi_type: SandhiType::VowelSandhi,
             rule_citation: "दीर्घ सन्धि: अ/आ + अ/आ → आ",
         });
     }
 
-    // गुण sandhi: अ/आ + इ/ई → ए
+    // गुण सन्धि: अ/आ + इ/ई → ए
     if matches!(last, 'अ' | 'आ' | 'ा') && matches!(first_of_second, 'इ' | 'ई') {
-        let prefix: String = first_chars[..first_chars.len() - 1].iter().collect();
-        let rest: String = second_chars[1..].iter().collect();
-        let result = if prefix.is_empty() {
-            format!("ए{rest}")
-        } else {
-            format!("{prefix}े{rest}")
-        };
         return Some(SandhiResult {
-            output: result,
+            output: emit_a_sandhi(first, &first_chars, inherent, &rest, "ए", "े"),
             sandhi_type: SandhiType::VowelSandhi,
             rule_citation: "गुण सन्धि: अ/आ + इ/ई → ए",
         });
     }
 
-    // गुण sandhi: अ/आ + उ/ऊ → ओ
+    // गुण सन्धि: अ/आ + उ/ऊ → ओ
     if matches!(last, 'अ' | 'आ' | 'ा') && matches!(first_of_second, 'उ' | 'ऊ') {
-        let prefix: String = first_chars[..first_chars.len() - 1].iter().collect();
-        let rest: String = second_chars[1..].iter().collect();
-        let result = if prefix.is_empty() {
-            format!("ओ{rest}")
-        } else {
-            format!("{prefix}ो{rest}")
-        };
         return Some(SandhiResult {
-            output: result,
+            output: emit_a_sandhi(first, &first_chars, inherent, &rest, "ओ", "ो"),
             sandhi_type: SandhiType::VowelSandhi,
             rule_citation: "गुण सन्धि: अ/आ + उ/ऊ → ओ",
         });
     }
 
-    // गुण sandhi: अ/आ + ऋ → अर्
+    // गुण सन्धि: अ/आ + ऋ → अर्
     if matches!(last, 'अ' | 'आ' | 'ा') && first_of_second == 'ऋ' {
-        let prefix: String = first_chars[..first_chars.len() - 1].iter().collect();
-        let rest: String = second_chars[1..].iter().collect();
-        let result = if prefix.is_empty() {
-            format!("अर्{rest}")
-        } else {
-            format!("{prefix}र्{rest}")
-        };
         return Some(SandhiResult {
-            output: result,
+            output: emit_a_sandhi(first, &first_chars, inherent, &rest, "अर्", "र्"),
             sandhi_type: SandhiType::VowelSandhi,
             rule_citation: "गुण सन्धि: अ/आ + ऋ → अर्",
         });
@@ -147,15 +138,8 @@ pub fn apply_vowel_sandhi(first: &str, second: &str) -> Option<SandhiResult> {
 
     // वृद्धि सन्धि: अ/आ + ए/ऐ → ऐ
     if matches!(last, 'अ' | 'आ' | 'ा') && matches!(first_of_second, 'ए' | 'ऐ') {
-        let prefix: String = first_chars[..first_chars.len() - 1].iter().collect();
-        let rest: String = second_chars[1..].iter().collect();
-        let result = if prefix.is_empty() {
-            format!("ऐ{rest}")
-        } else {
-            format!("{prefix}ै{rest}")
-        };
         return Some(SandhiResult {
-            output: result,
+            output: emit_a_sandhi(first, &first_chars, inherent, &rest, "ऐ", "ै"),
             sandhi_type: SandhiType::VowelSandhi,
             rule_citation: "वृद्धि सन्धि: अ/आ + ए/ऐ → ऐ",
         });
@@ -163,15 +147,8 @@ pub fn apply_vowel_sandhi(first: &str, second: &str) -> Option<SandhiResult> {
 
     // वृद्धि सन्धि: अ/आ + ओ/औ → औ
     if matches!(last, 'अ' | 'आ' | 'ा') && matches!(first_of_second, 'ओ' | 'औ') {
-        let prefix: String = first_chars[..first_chars.len() - 1].iter().collect();
-        let rest: String = second_chars[1..].iter().collect();
-        let result = if prefix.is_empty() {
-            format!("औ{rest}")
-        } else {
-            format!("{prefix}ौ{rest}")
-        };
         return Some(SandhiResult {
-            output: result,
+            output: emit_a_sandhi(first, &first_chars, inherent, &rest, "औ", "ौ"),
             sandhi_type: SandhiType::VowelSandhi,
             rule_citation: "वृद्धि सन्धि: अ/आ + ओ/औ → औ",
         });
@@ -222,6 +199,40 @@ pub fn apply_vowel_sandhi(first: &str, second: &str) -> Option<SandhiResult> {
     }
 
     None
+}
+
+/// Build sandhi output for अ/आ-class rules, handling both explicit and
+/// inherent अ endings uniformly.
+///
+/// - `full_vowel`: standalone vowel form (e.g., "आ", "ए", "ओ")
+/// - `matra`: combining matra form (e.g., "ा", "े", "ो")
+///
+/// When `first` ends in an inherent अ (bare consonant), the consonant is kept
+/// and the matra is appended: `प्र` + ई → `प्रे` (not *`प्ए`).
+/// When `first` ends in an explicit अ/आ/ा, it is stripped and the appropriate
+/// form is used: `महा` + इ → `महे` (matra after consonant) or bare `ए` at
+/// word-initial position.
+fn emit_a_sandhi(
+    first: &str,
+    first_chars: &[char],
+    inherent: bool,
+    rest: &str,
+    full_vowel: &str,
+    matra: &str,
+) -> String {
+    if inherent {
+        // Consonant kept, append matra: प्र + ा → प्रा
+        format!("{first}{matra}{rest}")
+    } else {
+        let prefix: String = first_chars[..first_chars.len() - 1].iter().collect();
+        if prefix.is_empty() {
+            // Word-initial: use standalone vowel form
+            format!("{full_vowel}{rest}")
+        } else {
+            // After consonant: use matra form
+            format!("{prefix}{matra}{rest}")
+        }
+    }
 }
 
 fn is_vowel_start(c: char) -> bool {

@@ -33,6 +33,9 @@ pub enum RuleCategory {
     Halanta,
     Structural,
     Sandhi,
+    AadhiVriddhi,
+    YaE,
+    KshaChhya,
 }
 
 /// Metadata for a single pattern rule.

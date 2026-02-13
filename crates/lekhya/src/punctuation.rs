@@ -101,9 +101,12 @@ fn check_quotes(text: &str, diagnostics: &mut Vec<LekhyaDiagnostic>) {
             let is_double = c == '"';
             let found = c.to_string();
 
-            // Heuristic: if preceded by space/start, it's opening. Otherwise closing.
-            // This is simplistic but works for most prose.
-            let is_opening = i == 0 || text.as_bytes()[i - 1].is_ascii_whitespace();
+            // Heuristic: if preceded by space/start OR specific punctuation like '(', '[', '{', '-', it's opening.
+            // Otherwise closing.
+            let is_opening = i == 0 || {
+                let prev_char = text[..i].chars().last().unwrap_or(' ');
+                prev_char.is_whitespace() || "([{".contains(prev_char) || prev_char == '-'
+            };
 
             let expected = if is_double {
                 if is_opening { "\u{201C}" } else { "\u{201D}" }
@@ -237,10 +240,13 @@ fn is_likely_abbreviation(text: &str, pos: usize) -> bool {
         return false;
     }
 
-    // If word is very short (1-3 chars) and fully Devanagari, treat as likely abbreviation
-    // e.g. "डा", "प्रा", "इ"
+    // If word is very short (1-3 chars) and fully Devanagari, treat as likely abbreviation.
+    // BUT exclude numbers — digits are never abbreviations.
+    // e.g. "५." is "5.", not an abbreviation.
     let char_count = word.chars().count();
-    char_count > 0 && char_count <= 3 && word.chars().all(is_devanagari_char)
+    char_count > 0 
+        && char_count <= 3 
+        && word.chars().all(|c| is_devanagari_char(c) && !c.is_numeric())
 }
 
 /// Y3: Detect "..." that should be ऐजन बिन्दु (ellipsis).

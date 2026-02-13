@@ -39,24 +39,18 @@ pub fn split(word: &str) -> Vec<(String, String, SandhiResult)> {
              }
         }
 
-        // Strategy 2: Vowel reconstruction on the right side
-        // e.g. "महेन्द्र" split at "मह" + "न्द्र" -> try "मह" + "इन्द्र"
-        // Try prepending every vowel to `raw_right`
+        // Strategy 2: Vowel reconstruction on the right side.
+        // Try prepending every vowel to raw_right to reconstruct the pre-sandhi form.
+        // e.g., "मह"|"न्द्र" → try "मह" + "इन्द्र" (गुण: अ+इ=ए).
         let vowels = ["अ", "आ", "इ", "ई", "उ", "ऊ", "ए", "ऐ", "ओ", "औ", "ऋ"];
-        
+
         for v in vowels {
             let candidate_right = format!("{v}{raw_right}");
-            
-            // Optimization: check if candidate_right is a valid word first
             if !lex.contains(&candidate_right) {
                 continue;
             }
 
-            // Sub-strategy 2a: Left side is unchanged (e.g. Visarga -> R)
-            // पुनः + आगमन = पुनरागमन. Split "पुन" + "रागमन" -> "पुन" + "आगमन"? 
-            // Only if "पुन" is valid. "पुनः" is valid.
-            
-            // Try raw_left as-is
+            // 2a: Left as-is (inherent अ or explicit vowel ending).
             if lex.contains(raw_left) {
                 if let Ok(res) = apply(raw_left, &candidate_right) {
                     if res.output == word {
@@ -65,25 +59,9 @@ pub fn split(word: &str) -> Vec<(String, String, SandhiResult)> {
                 }
             }
 
-            // Sub-strategy 2b: Left side needs reconstruction too (Vowel Sandhi)
-            // "महेन्द्र" -> "मह" + "इन्द्र". "मह" might be "महा" or "मह".
-            // Try appending vowels to raw_left (replacing last char if it's a matra? No, raw_left comes from split)
-            
-            // "महेन्द्र" split "मह" "न्द्र". right="इन्द्र". left="मह".
-            // apply("मह", "इन्द्र") -> "महेन्द्र" (Guna: a+i=e).
-            // So checking raw_left is enough IF raw_left ends in 'a' (implicit).
-            
-            // But what if left was "महा"? "महा" + "इन्द्र" -> "महेन्द्र".
-            // "मह" split doesn't contain 'a' vowel? "मह" ends in 'h' which has implicit 'a'.
-            // So "मह" works.
-            
-            // Try "महा" (append 'ा')
-            let left_variants = vec![
-                format!("{}ा", raw_left), // Aa
-                format!("{}ः", raw_left), // Visarga
-            ];
-            
-            for left in left_variants {
+            // 2b: Left with आ or visarga appended (e.g., "महा" + "इन्द्र").
+            for suffix in ["ा", "ः"] {
+                let left = format!("{raw_left}{suffix}");
                 if lex.contains(&left) {
                     if let Ok(res) = apply(&left, &candidate_right) {
                         if res.output == word {
@@ -239,6 +217,62 @@ pub fn split(word: &str) -> Vec<(String, String, SandhiResult)> {
                         if let Ok(res) = apply(&left, &right) {
                             if res.output == word {
                                 results.push((left.clone(), right, res));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Strategy 6: Guna/Vriddhi matra reconstruction.
+        // When a sandhi merges अ/आ with another vowel, the result appears as a
+        // matra on the preceding consonant: सूर्य+उदय → सूर्योदय (ो matra).
+        // Splitting at "सूर्य"|"ोदय" gives raw_right starting with a matra.
+        // Strip the matra and try prepending the original vowel.
+        //
+        // Matra → candidate pre-sandhi vowels:
+        //   ा → अ, आ (दीर्घ)    े → इ, ई (गुण)    ो → उ, ऊ (गुण)
+        //   ै → ए, ऐ (वृद्धि)   ौ → ओ, औ (वृद्धि)
+        let mut right_chars = raw_right.chars();
+        if let Some(first_char) = right_chars.next() {
+            let candidate_vowels: Option<&[&str]> = match first_char {
+                'ा' => Some(&["अ", "आ"]),
+                'े' => Some(&["इ", "ई"]),
+                'ो' => Some(&["उ", "ऊ"]),
+                'ै' => Some(&["ए", "ऐ"]),
+                'ौ' => Some(&["ओ", "औ"]),
+                _ => None,
+            };
+
+            if let Some(vowels) = candidate_vowels {
+                let remainder = right_chars.as_str();
+
+                // Try raw_left as-is (inherent अ participates in sandhi).
+                if lex.contains(raw_left) {
+                    for v in vowels {
+                        let candidate_right = format!("{v}{remainder}");
+                        if lex.contains(&candidate_right) {
+                            if let Ok(res) = apply(raw_left, &candidate_right) {
+                                if res.output == word {
+                                    results.push((raw_left.to_string(), candidate_right, res));
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Try left with आ or visarga appended (e.g., "महा" + "इन्द्र").
+                for suffix in ["ा", "ः"] {
+                    let left = format!("{raw_left}{suffix}");
+                    if lex.contains(&left) {
+                        for v in vowels {
+                            let candidate_right = format!("{v}{remainder}");
+                            if lex.contains(&candidate_right) {
+                                if let Ok(res) = apply(&left, &candidate_right) {
+                                    if res.output == word {
+                                        results.push((left.clone(), candidate_right, res));
+                                    }
+                                }
                             }
                         }
                     }
