@@ -9,6 +9,7 @@ struct JsDiagnostic {
     incorrect: String,
     correction: String,
     rule: String,
+    rule_code: String,
     explanation: String,
     /// Human-readable category label (Nepali display text).
     category: String,
@@ -60,6 +61,7 @@ pub fn check_text_with_options(text: &str, grammar: bool) -> String {
             incorrect: d.incorrect,
             correction: d.correction,
             rule: d.rule.to_string(),
+            rule_code: d.rule.code().to_string(),
             explanation: d.explanation,
             category: d.category.to_string(),
             category_code: d.category.as_code().to_string(),
@@ -81,6 +83,7 @@ pub fn check_word(word: &str) -> String {
                 incorrect: d.incorrect,
                 correction: d.correction,
                 rule: d.rule.to_string(),
+                rule_code: d.rule.code().to_string(),
                 explanation: d.explanation,
                 category: d.category.to_string(),
                 category_code: d.category.as_code().to_string(),
@@ -144,6 +147,7 @@ struct JsWordAnalysis {
 #[derive(Serialize)]
 struct JsRuleNote {
     rule: String,
+    rule_code: String,
     explanation: String,
 }
 
@@ -165,6 +169,7 @@ pub fn analyze_word(word: &str) -> String {
             .into_iter()
             .map(|n| JsRuleNote {
                 rule: n.rule.to_string(),
+                rule_code: n.rule.code().to_string(),
                 explanation: n.explanation,
             })
             .collect(),

@@ -44,6 +44,14 @@ export function initChecker() {
 
 const debouncedCheck = debounce(() => runCheck(), 300);
 
+const HEURISTIC_RULE_LABELS = {
+  "samasa-heuristic": "समास",
+  "morph-ambiguity": "अस्पष्ट",
+  "quantifier-plural-redundancy": "बहुवचन",
+  "ergative-le-intransitive": "ले-कारक",
+  "genitive-mismatch-plural": "सम्बन्ध",
+};
+
 function syncScroll() {
   editorBackdrop.scrollTop = editorInput.scrollTop;
   editorBackdrop.scrollLeft = editorInput.scrollLeft;
@@ -59,6 +67,13 @@ export function setText(text) {
 
 function isGrammarEnabled() {
   return Boolean(grammarToggle?.checked);
+}
+
+function heuristicLabel(diag) {
+  if (diag.kind === "Error" && diag.confidence >= 0.8) {
+    return null;
+  }
+  return HEURISTIC_RULE_LABELS[diag.rule_code] || "heuristic";
 }
 
 function runCheck() {
@@ -144,10 +159,11 @@ function renderDiagnostics() {
       const active = i === activeCardIndex ? ' active' : '';
       const code = escapeHtml(d.category_code);
       const label = CATEGORY_LABELS[d.category_code] || d.category;
-      const isHeuristic = d.kind !== "Error" || d.confidence < 0.8;
+      const tagLabel = heuristicLabel(d);
+      const isHeuristic = Boolean(tagLabel);
       const heuristicClass = isHeuristic ? " heuristic" : "";
       const heuristicTag = isHeuristic
-        ? `<span class="diag-heuristic-tag">heuristic</span>`
+        ? `<span class="diag-heuristic-tag">${escapeHtml(tagLabel)}</span>`
         : "";
       const confidence = Number.isFinite(d.confidence) ? Math.round(d.confidence * 100) : 0;
       return `
