@@ -273,9 +273,29 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.75rem;
   padding: 0.5rem 0;
   font-size: 0.85rem;
   color: var(--color-text-secondary);
+}
+
+.editor-status-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.grammar-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.grammar-toggle input {
+  margin: 0;
 }
 
 /* Diagnostics panel */
@@ -913,6 +933,10 @@ body {
 
   .checker-panel-col {
     max-height: 300px;
+  }
+
+  .editor-status {
+    flex-wrap: wrap;
   }
 
   .inspector-word-header { flex-direction: column; align-items: flex-start; }

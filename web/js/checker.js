@@ -20,6 +20,7 @@ const errorCount = document.getElementById('error-count');
 const fixAllBtn = document.getElementById('fix-all-btn');
 const categoryFilters = document.getElementById('category-filters');
 const panelCol = document.getElementById('panel-col');
+const grammarToggle = document.getElementById('grammar-toggle');
 
 /**
  * Initialize the spell checker module.
@@ -29,6 +30,7 @@ export function initChecker() {
   editorInput.addEventListener('scroll', syncScroll);
   editorInput.addEventListener('click', onEditorClick);
   fixAllBtn.addEventListener('click', fixAll);
+  grammarToggle?.addEventListener('change', () => runCheck());
 
   // Initialize the inspector on the panel column
   const panelContent = document.getElementById('panel-content');
@@ -55,6 +57,10 @@ export function setText(text) {
   runCheck();
 }
 
+function isGrammarEnabled() {
+  return Boolean(grammarToggle?.checked);
+}
+
 function runCheck() {
   const text = editorInput.value;
   if (!text.trim()) {
@@ -66,7 +72,7 @@ function runCheck() {
   }
 
   try {
-    diagnostics = checkText(text);
+    diagnostics = checkText(text, { grammar: isGrammarEnabled() });
   } catch {
     diagnostics = [];
   }
