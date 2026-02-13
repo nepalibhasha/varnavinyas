@@ -91,3 +91,35 @@ prefix = "न"
 suffix = "छ"
 tense = "Present"
 person = "Third"
+
+[[morph]]
+word = "जानेछु"
+suffix = "नेछु"
+tense = "Future"
+person = "First"
+
+[[morph]]
+word = "जानेछन्"
+suffix = "नेछन्"
+tense = "Future"
+person = "Third"
+
+[[morph]]
+word = "गयो"
+suffix = "यो"
+tense = "Past"
+person = "Third"
+
+[[morph]]
+word = "गयौ"
+suffix = "यौ"
+tense = "Past"
+person = "Second"
+
+[[morph]]
+word = "नजानेछु"
+lemma = "जानेछु"
+prefix = "न"
+suffix = "नेछु"
+tense = "Future"
+person = "First"

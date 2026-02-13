@@ -209,6 +209,22 @@ const PRESENT_NEGATIVE_ENDINGS: &[(&str, Person)] = &[
 ];
 
 #[cfg(feature = "vyakaran-mvp")]
+const FUTURE_PERSON_ENDINGS: &[(&str, Person)] = &[
+    ("नेछन्", Person::Third),
+    ("नेछौं", Person::First),
+    ("नेछु", Person::First),
+    ("नेछौ", Person::Second),
+    ("नेछ", Person::Third),
+];
+
+#[cfg(feature = "vyakaran-mvp")]
+const PAST_POSITIVE_ENDINGS: &[(&str, Person)] = &[
+    ("यौ", Person::Second),
+    ("एँ", Person::First),
+    ("यो", Person::Third),
+];
+
+#[cfg(feature = "vyakaran-mvp")]
 fn analyze_nominal(word: &str) -> Option<MorphAnalysis> {
     let mut stem = word;
     let mut suffix_parts: Vec<&str> = Vec::new();
@@ -301,10 +317,39 @@ fn detect_present_person_suffix(word: &str) -> Option<(&'static str, Person)> {
 }
 
 #[cfg(feature = "vyakaran-mvp")]
+fn detect_future_person_suffix(word: &str) -> Option<(&'static str, Person)> {
+    FUTURE_PERSON_ENDINGS
+        .iter()
+        .find(|(ending, _)| word.ends_with(*ending))
+        .copied()
+}
+
+#[cfg(feature = "vyakaran-mvp")]
+fn detect_past_positive_suffix(word: &str) -> Option<(&'static str, Person)> {
+    PAST_POSITIVE_ENDINGS
+        .iter()
+        .find(|(ending, _)| word.ends_with(*ending))
+        .copied()
+}
+
+#[cfg(feature = "vyakaran-mvp")]
 fn analyze_verbal(word: &str) -> Option<MorphAnalysis> {
     // Na- prefix: non-finite negative forms (e.g., नगर्दा, नखाई).
     if let Some(stem) = word.strip_prefix("न") {
         if !stem.is_empty() {
+            if let Some((ending, person)) = detect_future_person_suffix(stem) {
+                return Some(MorphAnalysis {
+                    lemma: stem.to_string(),
+                    prefix: Some("न".to_string()),
+                    suffix: Some(ending.to_string()),
+                    features: Features {
+                        tense: Some(Tense::Future),
+                        person: Some(person),
+                        ..Default::default()
+                    },
+                });
+            }
+
             if let Some((ending, person)) = detect_present_person_suffix(stem) {
                 return Some(MorphAnalysis {
                     lemma: stem.to_string(),
@@ -363,6 +408,20 @@ fn analyze_verbal(word: &str) -> Option<MorphAnalysis> {
         }
     }
 
+    // Finite future markers: ...ने + person ending.
+    if let Some((ending, person)) = detect_future_person_suffix(word) {
+        return Some(MorphAnalysis {
+            lemma: word.to_string(),
+            prefix: None,
+            suffix: Some(ending.to_string()),
+            features: Features {
+                tense: Some(Tense::Future),
+                person: Some(person),
+                ..Default::default()
+            },
+        });
+    }
+
     // Simple present negative cues.
     for &(ending, person) in PRESENT_NEGATIVE_ENDINGS {
         if word.ends_with(ending) {
@@ -399,6 +458,20 @@ fn analyze_verbal(word: &str) -> Option<MorphAnalysis> {
             suffix: Some("एन".to_string()),
             features: Features {
                 tense: Some(Tense::Past),
+                ..Default::default()
+            },
+        });
+    }
+
+    // Finite past positive cues (starter coverage).
+    if let Some((ending, person)) = detect_past_positive_suffix(word) {
+        return Some(MorphAnalysis {
+            lemma: word.to_string(),
+            prefix: None,
+            suffix: Some(ending.to_string()),
+            features: Features {
+                tense: Some(Tense::Past),
+                person: Some(person),
                 ..Default::default()
             },
         });

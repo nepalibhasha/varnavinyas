@@ -116,3 +116,58 @@ fn detects_na_prefix_in_finite_present_forms() {
             && a.features.person == Some(Person::Third)
     }));
 }
+
+#[cfg(feature = "vyakaran-mvp")]
+#[test]
+fn detects_finite_future_person_endings() {
+    let analyzer = RuleBasedAnalyzer;
+
+    let first = analyzer.analyze("जानेछु").expect("analysis should succeed");
+    assert!(first.iter().any(|a| {
+        a.suffix.as_deref() == Some("नेछु")
+            && a.features.tense == Some(Tense::Future)
+            && a.features.person == Some(Person::First)
+    }));
+
+    let third = analyzer.analyze("जानेछन्").expect("analysis should succeed");
+    assert!(third.iter().any(|a| {
+        a.suffix.as_deref() == Some("नेछन्")
+            && a.features.tense == Some(Tense::Future)
+            && a.features.person == Some(Person::Third)
+    }));
+}
+
+#[cfg(feature = "vyakaran-mvp")]
+#[test]
+fn detects_finite_past_positive_cues() {
+    let analyzer = RuleBasedAnalyzer;
+
+    let third = analyzer.analyze("गयो").expect("analysis should succeed");
+    assert!(third.iter().any(|a| {
+        a.suffix.as_deref() == Some("यो")
+            && a.features.tense == Some(Tense::Past)
+            && a.features.person == Some(Person::Third)
+    }));
+
+    let second = analyzer.analyze("गयौ").expect("analysis should succeed");
+    assert!(second.iter().any(|a| {
+        a.suffix.as_deref() == Some("यौ")
+            && a.features.tense == Some(Tense::Past)
+            && a.features.person == Some(Person::Second)
+    }));
+}
+
+#[cfg(feature = "vyakaran-mvp")]
+#[test]
+fn detects_na_prefix_in_finite_future_forms() {
+    let analyzer = RuleBasedAnalyzer;
+
+    let analyses = analyzer.analyze("नजानेछु").expect("analysis should succeed");
+    assert!(analyses.iter().any(|a| {
+        a.prefix.as_deref() == Some("न")
+            && a.lemma == "जानेछु"
+            && a.suffix.as_deref() == Some("नेछु")
+            && a.features.tense == Some(Tense::Future)
+            && a.features.person == Some(Person::First)
+    }));
+}
