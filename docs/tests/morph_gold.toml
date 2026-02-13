@@ -67,9 +67,27 @@ person = "Third"
 [[morph]]
 word = "नगर्दा"
 lemma = "गर्दा"
+prefix = "न"
 tense = "Unknown"
 
 [[morph]]
 word = "नखाई"
 lemma = "खाई"
+prefix = "न"
 tense = "Unknown"
+
+[[morph]]
+word = "नगर्छु"
+lemma = "गर्छु"
+prefix = "न"
+suffix = "छु"
+tense = "Present"
+person = "First"
+
+[[morph]]
+word = "नजान्छ"
+lemma = "जान्छ"
+prefix = "न"
+suffix = "छ"
+tense = "Present"
+person = "Third"

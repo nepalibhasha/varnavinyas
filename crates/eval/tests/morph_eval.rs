@@ -15,6 +15,7 @@ struct MorphGold {
 struct MorphEntry {
     word: String,
     lemma: Option<String>,
+    prefix: Option<String>,
     suffix: Option<String>,
     case: Option<String>,
     number: Option<String>,
@@ -47,6 +48,10 @@ fn morph_gold_coverage() {
         let ok = analyses.iter().any(|a| {
             entry.lemma.as_deref().is_none_or(|v| a.lemma == v)
                 && entry
+                    .prefix
+                    .as_deref()
+                    .is_none_or(|v| a.prefix.as_deref() == Some(v))
+                && entry
                     .suffix
                     .as_deref()
                     .is_none_or(|v| a.suffix.as_deref() == Some(v))
@@ -65,8 +70,9 @@ fn morph_gold_coverage() {
                 .take(3)
                 .map(|a| {
                     format!(
-                        "lemma={} suffix={:?} case={:?} number={:?} tense={:?} person={:?}",
+                        "lemma={} prefix={:?} suffix={:?} case={:?} number={:?} tense={:?} person={:?}",
                         a.lemma,
+                        a.prefix,
                         a.suffix,
                         a.features.case,
                         a.features.number,

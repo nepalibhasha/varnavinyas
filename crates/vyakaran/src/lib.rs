@@ -182,6 +182,15 @@ const PLURAL_SUFFIXES: &[&str] = &["हरू", "हरु"];
 const NONFINITE_VERB_ENDINGS: &[&str] = &["दा", "ई", "एर", "नु", "दै"];
 
 #[cfg(feature = "vyakaran-mvp")]
+const PRESENT_PERSON_ENDINGS: &[(&str, Person)] = &[
+    ("छन्", Person::Third),
+    ("छौं", Person::First),
+    ("छु", Person::First),
+    ("छौ", Person::Second),
+    ("छ", Person::Third),
+];
+
+#[cfg(feature = "vyakaran-mvp")]
 const PRESENT_POS_TO_NEG_ENDINGS: &[(&str, &str)] = &[
     ("छन्", "दैनन्"),
     ("छौं", "दैनौं"),
@@ -284,19 +293,42 @@ fn is_nonfinite_verbal_stem(stem: &str) -> bool {
 }
 
 #[cfg(feature = "vyakaran-mvp")]
+fn detect_present_person_suffix(word: &str) -> Option<(&'static str, Person)> {
+    PRESENT_PERSON_ENDINGS
+        .iter()
+        .find(|(ending, _)| word.ends_with(*ending))
+        .copied()
+}
+
+#[cfg(feature = "vyakaran-mvp")]
 fn analyze_verbal(word: &str) -> Option<MorphAnalysis> {
     // Na- prefix: non-finite negative forms (e.g., नगर्दा, नखाई).
     if let Some(stem) = word.strip_prefix("न") {
-        if !stem.is_empty() && is_nonfinite_verbal_stem(stem) {
-            return Some(MorphAnalysis {
-                lemma: stem.to_string(),
-                prefix: Some("न".to_string()),
-                suffix: None,
-                features: Features {
-                    tense: Some(Tense::Unknown),
-                    ..Default::default()
-                },
-            });
+        if !stem.is_empty() {
+            if let Some((ending, person)) = detect_present_person_suffix(stem) {
+                return Some(MorphAnalysis {
+                    lemma: stem.to_string(),
+                    prefix: Some("न".to_string()),
+                    suffix: Some(ending.to_string()),
+                    features: Features {
+                        tense: Some(Tense::Present),
+                        person: Some(person),
+                        ..Default::default()
+                    },
+                });
+            }
+
+            if is_nonfinite_verbal_stem(stem) {
+                return Some(MorphAnalysis {
+                    lemma: stem.to_string(),
+                    prefix: Some("न".to_string()),
+                    suffix: None,
+                    features: Features {
+                        tense: Some(Tense::Unknown),
+                        ..Default::default()
+                    },
+                });
+            }
         }
     }
 
@@ -316,13 +348,7 @@ fn analyze_verbal(word: &str) -> Option<MorphAnalysis> {
     }
 
     // Progressive markers: ...दै + present ending.
-    for &(ending, person) in &[
-        ("छन्", Person::Third),
-        ("छौं", Person::First),
-        ("छु", Person::First),
-        ("छौ", Person::Second),
-        ("छ", Person::Third),
-    ] {
+    for &(ending, person) in PRESENT_PERSON_ENDINGS {
         if word.ends_with(ending) && word.contains("दै") {
             return Some(MorphAnalysis {
                 lemma: word.to_string(),

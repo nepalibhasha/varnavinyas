@@ -92,3 +92,27 @@ fn detects_person_in_present_negative_endings() {
             && a.features.person == Some(Person::Third)
     }));
 }
+
+#[cfg(feature = "vyakaran-mvp")]
+#[test]
+fn detects_na_prefix_in_finite_present_forms() {
+    let analyzer = RuleBasedAnalyzer;
+
+    let analyses = analyzer.analyze("नगर्छु").expect("analysis should succeed");
+    assert!(analyses.iter().any(|a| {
+        a.prefix.as_deref() == Some("न")
+            && a.lemma == "गर्छु"
+            && a.suffix.as_deref() == Some("छु")
+            && a.features.tense == Some(Tense::Present)
+            && a.features.person == Some(Person::First)
+    }));
+
+    let analyses = analyzer.analyze("नजान्छ").expect("analysis should succeed");
+    assert!(analyses.iter().any(|a| {
+        a.prefix.as_deref() == Some("न")
+            && a.lemma == "जान्छ"
+            && a.suffix.as_deref() == Some("छ")
+            && a.features.tense == Some(Tense::Present)
+            && a.features.person == Some(Person::Third)
+    }));
+}
