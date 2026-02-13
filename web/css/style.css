@@ -348,6 +348,12 @@ body {
   margin-left: 0.18rem;
 }
 
+.grammar-coverage-avg {
+  margin-left: 0.2rem;
+  font-size: 0.62rem;
+  color: #64748b;
+}
+
 /* Diagnostics panel */
 .checker-panel-col {
   display: flex;

@@ -118,16 +118,27 @@ function renderGrammarCoverage() {
   }
 
   const counts = Object.fromEntries(ruleCodes.map((code) => [code, 0]));
+  const confidenceSums = Object.fromEntries(ruleCodes.map((code) => [code, 0]));
+
   for (const d of diagnostics) {
-    if (d.rule_code in counts) counts[d.rule_code] += 1;
+    if (d.rule_code in counts) {
+      counts[d.rule_code] += 1;
+      const c = Number.isFinite(d.confidence) ? d.confidence : 0;
+      confidenceSums[d.rule_code] += c;
+    }
   }
 
   const chips = ruleCodes
-    .map((code) => `
+    .map((code) => {
+      const count = counts[code];
+      const avg = count > 0 ? Math.round((confidenceSums[code] / count) * 100) : 0;
+      return `
       <span class="grammar-coverage-chip">
         ${escapeHtml(HEURISTIC_RULE_LABELS[code])}
-        <span class="grammar-coverage-count">${counts[code]}</span>
-      </span>`)
+        <span class="grammar-coverage-count">${count}</span>
+        <span class="grammar-coverage-avg">${avg}%</span>
+      </span>`;
+    })
     .join("");
 
   grammarCoverage.innerHTML = `
@@ -138,6 +149,7 @@ function renderGrammarCoverage() {
     <p class="grammar-coverage-note">फेला परेका नियम संकेतहरू</p>
     <div class="grammar-coverage-list">${chips}</div>`;
 }
+
 
 /**
  * Render the backdrop with <mark> elements for each diagnostic.
