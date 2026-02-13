@@ -10,6 +10,9 @@ use crate::diagnostic::{Diagnostic, DiagnosticCategory};
 use crate::tokenizer::AnalyzedToken;
 use crate::tokenizer::tokenize_analyzed;
 
+#[cfg(feature = "grammar-pass")]
+const QUANTIFIER_WORDS: &[&str] = &["धेरै", "सबै", "केही", "अनेक", "धेरैजसो"];
+
 /// Runtime options for `check_text_with_options`.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct CheckOptions {
@@ -156,7 +159,7 @@ fn add_grammar_diagnostics(
 
     let analyzer = varnavinyas_vyakaran::RuleBasedAnalyzer;
 
-    for token in tokens {
+    for (idx, token) in tokens.iter().enumerate() {
         let span = (token.start, token.end);
         if blocked_spans.contains(&span) {
             continue;
@@ -179,6 +182,21 @@ fn add_grammar_diagnostics(
             }
         }
 
+        if has_plural_suffix(&full) && idx > 0 && is_quantifier(&token_full_form(&tokens[idx - 1]))
+        {
+            let singular = strip_plural_suffix(&full).unwrap_or(&full).to_string();
+            diagnostics.push(Diagnostic {
+                span,
+                incorrect: full.clone(),
+                correction: singular,
+                rule: Rule::Vyakaran("quantifier-plural-redundancy"),
+                explanation: "परिमाणबोधक शब्दपछि बहुवचन -हरु/-हरू प्रायः अनावश्यक हुन्छ।".to_string(),
+                category: DiagnosticCategory::ShuddhaTable,
+                kind: DiagnosticKind::Variant,
+                confidence: 0.62,
+            });
+        }
+
         // Optional samasa hint: expose high-confidence split as variant guidance.
         let candidates = varnavinyas_samasa::analyze_compound(&full);
         if let Some(top) = candidates.first() {
@@ -196,6 +214,21 @@ fn add_grammar_diagnostics(
             }
         }
     }
+}
+
+#[cfg(feature = "grammar-pass")]
+fn has_plural_suffix(word: &str) -> bool {
+    word.ends_with("हरू") || word.ends_with("हरु")
+}
+
+#[cfg(feature = "grammar-pass")]
+fn strip_plural_suffix(word: &str) -> Option<&str> {
+    word.strip_suffix("हरू").or_else(|| word.strip_suffix("हरु"))
+}
+
+#[cfg(feature = "grammar-pass")]
+fn is_quantifier(word: &str) -> bool {
+    QUANTIFIER_WORDS.contains(&word)
 }
 
 #[cfg(feature = "grammar-pass")]

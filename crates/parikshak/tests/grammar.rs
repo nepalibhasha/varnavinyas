@@ -13,3 +13,18 @@ fn grammar_pass_emits_variant_or_ambiguous_hints() {
         "Expected grammar-pass heuristic diagnostics, got: {diags:?}"
     );
 }
+
+#[cfg(feature = "grammar-pass")]
+#[test]
+fn grammar_pass_flags_plural_after_quantifier() {
+    let text = "धेरै मानिसहरु आए।";
+    let diags = check_text_with_options(text, CheckOptions { grammar: true });
+
+    assert!(
+        diags.iter().any(|d| {
+            d.rule == varnavinyas_prakriya::Rule::Vyakaran("quantifier-plural-redundancy")
+                && matches!(d.kind, DiagnosticKind::Variant)
+        }),
+        "Expected quantifier-plural heuristic diagnostic, got: {diags:?}"
+    );
+}
