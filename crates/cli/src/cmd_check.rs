@@ -2,7 +2,7 @@ use std::io::Read;
 use std::process::ExitCode;
 
 use serde::Serialize;
-use varnavinyas_parikshak::{Diagnostic, check_text};
+use varnavinyas_parikshak::{CheckOptions, Diagnostic, check_text_with_options};
 
 use crate::OutputFormat;
 
@@ -20,7 +20,7 @@ struct JsonDiagnostic {
     confidence: f32,
 }
 
-pub fn run(input: Option<String>, explain: bool, format: OutputFormat) -> ExitCode {
+pub fn run(input: Option<String>, explain: bool, grammar: bool, format: OutputFormat) -> ExitCode {
     let (source_name, text) = match read_input(input) {
         Ok(v) => v,
         Err(e) => {
@@ -29,7 +29,7 @@ pub fn run(input: Option<String>, explain: bool, format: OutputFormat) -> ExitCo
         }
     };
 
-    let diagnostics = check_text(&text);
+    let diagnostics = check_text_with_options(&text, CheckOptions { grammar });
 
     let line_offsets = build_line_offsets(&text);
 

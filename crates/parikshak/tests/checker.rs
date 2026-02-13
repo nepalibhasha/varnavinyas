@@ -131,3 +131,14 @@ fn suffix_preservation_in_correction() {
     assert_eq!(diag.correction, "विज्ञानमा");
     assert_eq!(diag.span.1 - diag.span.0, text.len());
 }
+
+#[test]
+fn check_text_with_default_options_matches_check_text() {
+    let text = "अत्याधिक राजनैतिक प्रशाशन भयो।";
+    let a = check_text(text);
+    let b = varnavinyas_parikshak::check_text_with_options(
+        text,
+        varnavinyas_parikshak::CheckOptions::default(),
+    );
+    assert_eq!(a.len(), b.len());
+}

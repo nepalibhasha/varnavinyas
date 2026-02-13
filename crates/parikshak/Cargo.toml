@@ -10,12 +10,15 @@ description = "Nepali spell-check pipeline composing kosha, prakriya, and lekhya
 oblique-forms = []
 nipat-tokenization = []
 vocative-tokenization = []
+grammar-pass = ["dep:varnavinyas-vyakaran", "dep:varnavinyas-samasa", "varnavinyas-vyakaran/vyakaran-mvp"]
 
 [dependencies]
 varnavinyas-akshar = { workspace = true }
 varnavinyas-kosha = { workspace = true }
 varnavinyas-prakriya = { workspace = true }
 varnavinyas-lekhya = { workspace = true }
+varnavinyas-vyakaran = { workspace = true, optional = true }
+varnavinyas-samasa = { workspace = true, optional = true }
 thiserror = { workspace = true }
 
 [dev-dependencies]

@@ -1,11 +1,23 @@
+use std::collections::HashSet;
+
 use varnavinyas_kosha::kosha;
 use varnavinyas_lekhya::check_punctuation;
+use varnavinyas_prakriya::DiagnosticKind;
 use varnavinyas_prakriya::{Rule, derive};
 
-use varnavinyas_prakriya::DiagnosticKind;
-
 use crate::diagnostic::{Diagnostic, DiagnosticCategory};
+#[cfg(feature = "grammar-pass")]
+use crate::tokenizer::AnalyzedToken;
 use crate::tokenizer::tokenize_analyzed;
+
+/// Runtime options for `check_text_with_options`.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct CheckOptions {
+    /// Enable optional grammar-aware heuristics.
+    ///
+    /// This only has effect when compiled with the `grammar-pass` feature.
+    pub grammar: bool,
+}
 
 /// Check a single word and return a diagnostic if it's incorrect.
 ///
@@ -62,15 +74,10 @@ pub fn check_word(word: &str) -> Option<Diagnostic> {
     None
 }
 
-/// Check a full text and return all diagnostics.
-///
-/// Pipeline:
-/// 1. Tokenize into Devanagari word tokens
-/// 2. For each token: derive (rules) → kosha (lexicon validation)
-/// 3. Run lekhya punctuation checks
-/// 4. Return all diagnostics sorted by span
-pub fn check_text(text: &str) -> Vec<Diagnostic> {
+/// Check full text with runtime options.
+pub fn check_text_with_options(text: &str, options: CheckOptions) -> Vec<Diagnostic> {
     let mut diagnostics = Vec::new();
+    let mut blocked_spans: HashSet<(usize, usize)> = HashSet::new();
 
     // Word-level checks (suffix-aware: checks stem, spans full token)
     let tokens = tokenize_analyzed(text);
@@ -97,9 +104,18 @@ pub fn check_text(text: &str) -> Vec<Diagnostic> {
                 diag.correction.push_str(sfx);
             }
 
+            blocked_spans.insert(diag.span);
             diagnostics.push(diag);
         }
     }
+
+    #[cfg(feature = "grammar-pass")]
+    if options.grammar {
+        add_grammar_diagnostics(&tokens, &blocked_spans, &mut diagnostics);
+    }
+
+    #[cfg(not(feature = "grammar-pass"))]
+    let _ = options;
 
     // Punctuation checks
     for lekhya_diag in check_punctuation(text) {
@@ -117,4 +133,75 @@ pub fn check_text(text: &str) -> Vec<Diagnostic> {
 
     diagnostics.sort_by_key(|d| d.span.0);
     diagnostics
+}
+
+/// Check a full text and return all diagnostics.
+///
+/// Pipeline:
+/// 1. Tokenize into Devanagari word tokens
+/// 2. For each token: derive (rules) → kosha (lexicon validation)
+/// 3. Run lekhya punctuation checks
+/// 4. Return all diagnostics sorted by span
+pub fn check_text(text: &str) -> Vec<Diagnostic> {
+    check_text_with_options(text, CheckOptions::default())
+}
+
+#[cfg(feature = "grammar-pass")]
+fn add_grammar_diagnostics(
+    tokens: &[AnalyzedToken],
+    blocked_spans: &HashSet<(usize, usize)>,
+    diagnostics: &mut Vec<Diagnostic>,
+) {
+    use varnavinyas_vyakaran::MorphAnalyzer;
+
+    let analyzer = varnavinyas_vyakaran::RuleBasedAnalyzer;
+
+    for token in tokens {
+        let span = (token.start, token.end);
+        if blocked_spans.contains(&span) {
+            continue;
+        }
+
+        let full = token_full_form(token);
+
+        if let Ok(analyses) = analyzer.analyze(&full) {
+            if analyses.len() > 1 {
+                diagnostics.push(Diagnostic {
+                    span,
+                    incorrect: full.clone(),
+                    correction: full.clone(),
+                    rule: Rule::Vyakaran("morph-ambiguity"),
+                    explanation: "व्याकरण विश्लेषण अस्पष्ट: एकभन्दा बढी सम्भावित संरचना".to_string(),
+                    category: DiagnosticCategory::ShuddhaTable,
+                    kind: DiagnosticKind::Ambiguous,
+                    confidence: 0.55,
+                });
+            }
+        }
+
+        // Optional samasa hint: expose high-confidence split as variant guidance.
+        let candidates = varnavinyas_samasa::analyze_compound(&full);
+        if let Some(top) = candidates.first() {
+            if top.score >= 0.75 {
+                diagnostics.push(Diagnostic {
+                    span,
+                    incorrect: full.clone(),
+                    correction: format!("{} + {}", top.left, top.right),
+                    rule: Rule::Vyakaran("samasa-heuristic"),
+                    explanation: format!("समास सम्भावना ({:?}): {}", top.samasa_type, top.vigraha),
+                    category: DiagnosticCategory::Sandhi,
+                    kind: DiagnosticKind::Variant,
+                    confidence: top.score.min(0.9),
+                });
+            }
+        }
+    }
+}
+
+#[cfg(feature = "grammar-pass")]
+fn token_full_form(token: &AnalyzedToken) -> String {
+    match &token.suffix {
+        Some(sfx) => format!("{}{}", token.stem, sfx),
+        None => token.stem.clone(),
+    }
 }

@@ -23,6 +23,10 @@ enum Commands {
         #[arg(long)]
         explain: bool,
 
+        /// Enable optional grammar/samasa heuristic diagnostics
+        #[arg(long)]
+        grammar: bool,
+
         /// Output format
         #[arg(long, value_enum, default_value = "text")]
         format: OutputFormat,
@@ -62,8 +66,9 @@ fn main() -> ExitCode {
         Commands::Check {
             input,
             explain,
+            grammar,
             format,
-        } => cmd_check::run(input, explain, format),
+        } => cmd_check::run(input, explain, grammar, format),
         Commands::Akshar { text } => {
             cmd_akshar::run(&text);
             ExitCode::SUCCESS

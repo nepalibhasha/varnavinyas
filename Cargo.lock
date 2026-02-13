@@ -2205,6 +2205,8 @@ dependencies = [
  "varnavinyas-kosha",
  "varnavinyas-lekhya",
  "varnavinyas-prakriya",
+ "varnavinyas-samasa",
+ "varnavinyas-vyakaran",
 ]
 
 [[package]]
