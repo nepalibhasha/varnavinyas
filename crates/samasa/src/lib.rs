@@ -23,11 +23,11 @@ pub struct SamasaCandidate {
     pub vigraha: String,
 }
 
-/// Analyze a word as potential samasa by reusing sandhi split candidates.
+/// Analyze a word as potential samasa.
 ///
 /// MVP behavior:
-/// - generate split candidates via `varnavinyas_sandhi::split`
-/// - keep lexically plausible pairs only
+/// - generate candidates from sandhi split
+/// - add direct lexical boundary candidates (for compounds with no explicit sandhi mutation)
 /// - assign heuristic samasa type + score
 /// - return ranked candidates
 pub fn analyze_compound(word: &str) -> Vec<SamasaCandidate> {
@@ -38,23 +38,26 @@ pub fn analyze_compound(word: &str) -> Vec<SamasaCandidate> {
     let lex = kosha();
     let mut out = Vec::new();
 
+    // Strategy 1: sandhi-backed candidates.
     for (left, right, _res) in varnavinyas_sandhi::split(word) {
-        if !lex.contains(&left) || !lex.contains(&right) {
+        push_candidate(&mut out, &left, &right, 0.0);
+    }
+
+    // Strategy 2: direct lexical boundary scan.
+    // Useful for compounds like एकचक्र where no sandhi mutation is needed.
+    for (i, _) in word.char_indices().skip(1) {
+        let (left, right) = word.split_at(i);
+        if !lex.contains(left) || !lex.contains(right) {
             continue;
         }
-
-        let left_entry = lex.lookup(&left);
-        let right_entry = lex.lookup(&right);
-        let (samasa_type, score) = classify_candidate(&left, &right, left_entry, right_entry);
-        let vigraha = make_vigraha(&left, &right, samasa_type);
-
-        out.push(SamasaCandidate {
-            left,
-            right,
-            samasa_type,
-            score,
-            vigraha,
-        });
+        // Avoid noisy tiny fragments except numerals used in dvigu.
+        if left.chars().count() < 2 && !is_numeral(left) {
+            continue;
+        }
+        if right.chars().count() < 2 {
+            continue;
+        }
+        push_candidate(&mut out, left, right, -0.05);
     }
 
     out.sort_by(|a, b| {
@@ -65,6 +68,27 @@ pub fn analyze_compound(word: &str) -> Vec<SamasaCandidate> {
     });
     out.dedup_by(|a, b| a.left == b.left && a.right == b.right && a.samasa_type == b.samasa_type);
     out
+}
+
+fn push_candidate(out: &mut Vec<SamasaCandidate>, left: &str, right: &str, score_adjust: f32) {
+    let lex = kosha();
+    if !lex.contains(left) || !lex.contains(right) {
+        return;
+    }
+
+    let left_entry = lex.lookup(left);
+    let right_entry = lex.lookup(right);
+    let (samasa_type, base_score) = classify_candidate(left, right, left_entry, right_entry);
+    let score = (base_score + score_adjust).clamp(0.0, 1.0);
+    let vigraha = make_vigraha(left, right, samasa_type);
+
+    out.push(SamasaCandidate {
+        left: left.to_string(),
+        right: right.to_string(),
+        samasa_type,
+        score,
+        vigraha,
+    });
 }
 
 fn classify_candidate(
@@ -87,7 +111,8 @@ fn classify_candidate(
     }
 
     // Karmadharaya: adjective + noun.
-    if left_pos.contains("वि.") && right_pos.contains("ना.") {
+    if (left_pos.contains("वि.") || is_adjectival_prefix(left)) && right_pos.contains("ना.")
+    {
         return (SamasaType::Karmadharaya, 0.84);
     }
 
@@ -96,13 +121,14 @@ fn classify_candidate(
         return (SamasaType::Bahuvrihi, 0.74);
     }
 
-    // Dvandva (weak MVP signal): coordinated noun pair with direct concatenation.
+    // Dvandva only for known coordinative pairs in MVP.
+    if is_known_dvandva_pair(left, right) {
+        return (SamasaType::Dvandva, 0.8);
+    }
+
+    // Noun + noun defaults to tatpurusha in MVP.
     if left_pos.contains("ना.") && right_pos.contains("ना.") {
-        let direct_join = format!("{left}{right}");
-        if direct_join.chars().count() >= 4 {
-            return (SamasaType::Dvandva, 0.76);
-        }
-        return (SamasaType::Tatpurusha, 0.8);
+        return (SamasaType::Tatpurusha, 0.82);
     }
 
     // Default for lexically plausible split is Tatpurusha in MVP.
@@ -139,6 +165,17 @@ fn is_numeral(s: &str) -> bool {
             | "अष्ट"
             | "नव"
             | "दश"
+    )
+}
+
+fn is_adjectival_prefix(s: &str) -> bool {
+    matches!(s, "मह" | "सु")
+}
+
+fn is_known_dvandva_pair(left: &str, right: &str) -> bool {
+    matches!(
+        (left, right),
+        ("राम", "लक्ष्मण") | ("माता", "पिता") | ("दिन", "रात") | ("सुख", "दुःख")
     )
 }
 
@@ -196,7 +233,7 @@ mod tests {
     }
 
     #[test]
-    fn classify_dvandva_from_noun_noun() {
+    fn classify_dvandva_for_known_pair() {
         let left = WordEntry {
             word: "राम",
             pos: "ना.",
@@ -214,5 +251,15 @@ mod tests {
         let candidates = analyze_compound("सूर्योदय");
         assert!(!candidates.is_empty());
         assert!(candidates.windows(2).all(|w| w[0].score >= w[1].score));
+    }
+
+    #[test]
+    fn analyze_compound_direct_split_fallback() {
+        let candidates = analyze_compound("एकचक्र");
+        assert!(
+            candidates
+                .iter()
+                .any(|c| c.left == "एक" && c.right == "चक्र")
+        );
     }
 }

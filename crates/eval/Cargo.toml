@@ -13,6 +13,7 @@ varnavinyas-parikshak = { workspace = true }
 varnavinyas-prakriya = { workspace = true }
 varnavinyas-sandhi = { workspace = true }
 varnavinyas-shabda = { workspace = true, features = ["iterative-decompose"] }
+varnavinyas-samasa = { workspace = true }
 toml = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
