@@ -55,7 +55,14 @@ pub fn check_word(word: &str) -> Option<PyDiagnostic> {
 /// Returns a list of Diagnostic objects.
 #[pyfunction]
 pub fn check_text(text: &str) -> Vec<PyDiagnostic> {
-    parikshak_core::check_text(text)
+    check_text_with_options(text, false)
+}
+
+/// Check full text with optional grammar-pass diagnostics.
+#[pyfunction]
+#[pyo3(signature = (text, grammar=false))]
+pub fn check_text_with_options(text: &str, grammar: bool) -> Vec<PyDiagnostic> {
+    parikshak_core::check_text_with_options(text, parikshak_core::CheckOptions { grammar })
         .into_iter()
         .map(|d| PyDiagnostic {
             span_start: d.span.0,
@@ -76,5 +83,6 @@ pub fn parikshak(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyDiagnostic>()?;
     m.add_function(wrap_pyfunction!(check_word, m)?)?;
     m.add_function(wrap_pyfunction!(check_text, m)?)?;
+    m.add_function(wrap_pyfunction!(check_text_with_options, m)?)?;
     Ok(())
 }

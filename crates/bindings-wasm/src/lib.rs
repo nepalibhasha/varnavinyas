@@ -42,7 +42,16 @@ struct JsPrakriya {
 /// Returns a JSON string array of diagnostics.
 #[wasm_bindgen]
 pub fn check_text(text: &str) -> String {
-    let diags = varnavinyas_parikshak::check_text(text);
+    check_text_with_options(text, false)
+}
+
+// Check full text with optional grammar-pass diagnostics.
+#[wasm_bindgen]
+pub fn check_text_with_options(text: &str, grammar: bool) -> String {
+    let diags = varnavinyas_parikshak::check_text_with_options(
+        text,
+        varnavinyas_parikshak::CheckOptions { grammar },
+    );
     let js_diags: Vec<JsDiagnostic> = diags
         .into_iter()
         .map(|d| JsDiagnostic {

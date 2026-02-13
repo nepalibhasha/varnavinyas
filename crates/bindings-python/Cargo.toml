@@ -19,4 +19,4 @@ varnavinyas-sandhi = { workspace = true }
 varnavinyas-prakriya = { workspace = true }
 varnavinyas-kosha = { workspace = true }
 varnavinyas-lekhya = { workspace = true }
-varnavinyas-parikshak = { workspace = true }
+varnavinyas-parikshak = { workspace = true, features = ["grammar-pass"] }

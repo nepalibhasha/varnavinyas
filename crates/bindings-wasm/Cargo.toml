@@ -18,4 +18,4 @@ varnavinyas-lipi = { workspace = true }
 varnavinyas-prakriya = { workspace = true }
 varnavinyas-sandhi = { workspace = true }
 varnavinyas-shabda = { workspace = true, features = ["iterative-decompose"] }
-varnavinyas-parikshak = { workspace = true }
+varnavinyas-parikshak = { workspace = true, features = ["grammar-pass"] }
