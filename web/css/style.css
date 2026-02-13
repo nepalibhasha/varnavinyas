@@ -386,6 +386,37 @@ body {
 .diag-badge[data-category="Punctuation"] { background: var(--cat-punctuation); }
 .diag-badge:not([data-category]) { background: var(--cat-default); }
 
+.diag-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.35rem;
+}
+
+.diag-heuristic-tag {
+  font-family: var(--font-latin);
+  font-size: 0.62rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #92400e;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 999px;
+  padding: 0.05rem 0.4rem;
+}
+
+.diag-confidence {
+  margin-left: auto;
+  font-family: var(--font-latin);
+  font-size: 0.68rem;
+  color: var(--color-text-secondary);
+}
+
+.diag-card.heuristic {
+  background: #fffbeb;
+  border-style: dashed;
+}
+
 .diag-correction {
   font-size: 1rem;
   margin-bottom: 0.25rem;

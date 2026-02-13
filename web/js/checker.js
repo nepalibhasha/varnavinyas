@@ -144,9 +144,19 @@ function renderDiagnostics() {
       const active = i === activeCardIndex ? ' active' : '';
       const code = escapeHtml(d.category_code);
       const label = CATEGORY_LABELS[d.category_code] || d.category;
+      const isHeuristic = d.kind !== "Error" || d.confidence < 0.8;
+      const heuristicClass = isHeuristic ? " heuristic" : "";
+      const heuristicTag = isHeuristic
+        ? `<span class="diag-heuristic-tag">heuristic</span>`
+        : "";
+      const confidence = Number.isFinite(d.confidence) ? Math.round(d.confidence * 100) : 0;
       return `
-      <div class="diag-card${hidden}${active}" data-index="${i}" data-category="${code}">
-        <span class="diag-badge" data-category="${code}">${escapeHtml(label)}</span>
+      <div class="diag-card${hidden}${active}${heuristicClass}" data-index="${i}" data-category="${code}">
+        <div class="diag-meta">
+          <span class="diag-badge" data-category="${code}">${escapeHtml(label)}</span>
+          ${heuristicTag}
+          <span class="diag-confidence">${confidence}%</span>
+        </div>
         <div class="diag-correction">
           <span class="diag-incorrect">${escapeHtml(d.incorrect)}</span>
           <span class="diag-arrow">\u2192</span>
