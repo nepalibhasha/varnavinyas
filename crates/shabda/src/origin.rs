@@ -130,6 +130,14 @@ fn has_tatsam_markers(word: &str, chars: &[char]) -> bool {
     false
 }
 
+/// Look up the source language for a word (e.g., "फारसी", "अरबी", "संस्कृत").
+///
+/// Uses the kosha dictionary's origin tags. Returns `None` if the word has no
+/// recognized language tag or is not a known headword.
+pub fn source_language(word: &str) -> Option<&'static str> {
+    varnavinyas_kosha::kosha().source_language_of(word)
+}
+
 fn has_tadbhav_markers(word: &str, chars: &[char]) -> bool {
     // Common tadbhav endings: -ो, -ा with simplified consonants
     let last = chars.last().copied().unwrap_or('\0');

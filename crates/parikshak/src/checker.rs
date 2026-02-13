@@ -71,11 +71,22 @@ pub fn check_text(text: &str) -> Vec<Diagnostic> {
 
     // Word-level checks (suffix-aware: checks stem, spans full token)
     let tokens = tokenize_analyzed(text);
+    let lex = kosha();
     for token in &tokens {
+        // If the full token (stem+suffix) is a known word, skip correction.
+        // e.g. "संसदमा" = संसद + मा — the stem "संसद" triggers a halanta rule,
+        // but the agglutinative form "संसदमा" is a valid word in the lexicon.
+        if let Some(ref sfx) = token.suffix {
+            let full = format!("{}{}", token.stem, sfx);
+            if lex.contains(&full) {
+                continue;
+            }
+        }
+
         if let Some(mut diag) = check_word(&token.stem) {
             diag.span = (token.start, token.end);
 
-            // Fix: If a suffix was detached, reattach it to the diagnostic strings.
+            // If a suffix was detached, reattach it to the diagnostic strings.
             // The span covers the full token (stem+suffix), so the correction
             // must also be the full form to avoid data loss on replacement.
             if let Some(ref sfx) = token.suffix {

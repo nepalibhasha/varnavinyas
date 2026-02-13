@@ -122,6 +122,8 @@ pub fn derive(word: &str) -> String {
 struct JsWordAnalysis {
     word: String,
     origin: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    source_language: Option<String>,
     is_correct: bool,
     correction: Option<String>,
     rule_notes: Vec<JsRuleNote>,
@@ -142,6 +144,7 @@ pub fn analyze_word(word: &str) -> String {
     let js = JsWordAnalysis {
         word: analysis.word,
         origin: origin_to_string(analysis.origin),
+        source_language: analysis.source_language,
         is_correct: analysis.is_correct,
         correction: analysis.correction,
         rule_notes: analysis

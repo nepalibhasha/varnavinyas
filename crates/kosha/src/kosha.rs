@@ -3,7 +3,7 @@ use std::sync::LazyLock;
 use fst::Set;
 
 use crate::builder::build_fst_set;
-use crate::origin_tag::{OriginTag, parse_origin_tag};
+use crate::origin_tag::{OriginTag, parse_origin_tag, parse_source_language};
 
 /// Static word list (one word per line, byte-sorted).
 static WORDS_DATA: &str = include_str!("../../../data/words.txt");
@@ -93,6 +93,15 @@ impl Kosha {
     pub fn origin_of(&self, word: &str) -> Option<OriginTag> {
         let entry = self.lookup(word)?;
         parse_origin_tag(entry.pos)
+    }
+
+    /// Look up a word's source language from its dictionary metadata tags.
+    ///
+    /// Returns the human-readable language name (e.g., "फारसी", "अरबी", "संस्कृत").
+    /// Returns `None` if the word is not a headword or has no recognized language tag.
+    pub fn source_language_of(&self, word: &str) -> Option<&'static str> {
+        let entry = self.lookup(word)?;
+        parse_source_language(entry.pos)
     }
 }
 

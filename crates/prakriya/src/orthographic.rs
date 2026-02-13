@@ -3,6 +3,7 @@ use crate::rule::Rule;
 use crate::rule_spec::{DiagnosticKind, RuleCategory, RuleSpec};
 use crate::step::Step;
 use varnavinyas_akshar::{is_matra, is_svar, is_vyanjan};
+use varnavinyas_kosha::kosha;
 use varnavinyas_shabda::{Origin, classify};
 
 pub const SPEC_CHANDRABINDU: RuleSpec = RuleSpec {
@@ -306,6 +307,8 @@ pub fn rule_halanta(input: &str) -> Option<Prakriya> {
 
     // Check for Tatsam suffixes that require halanta: -मान, -वान, -वत -> -मान्, -वान्, -वत्
     // Examples: बुद्धिमान -> बुद्धिमान्, भगवान -> भगवान्, विधिवत -> विधिवत्
+    let lex = kosha();
+
     let suffixes = [
         ("मान", "मान्", "3(ङ)-मान्"),
         ("वान", "वान्", "3(ङ)-वान्"),
@@ -315,6 +318,14 @@ pub fn rule_halanta(input: &str) -> Option<Prakriya> {
     for (wrong_suffix, correct_suffix, rule_citation) in suffixes {
         if let Some(stem) = input.strip_suffix(wrong_suffix) {
             let output = format!("{}{}", stem, correct_suffix);
+
+            // Guard: if the input is in kosha but the halanta form is NOT,
+            // this is a root noun (e.g. सम्मान), not a suffix pattern.
+            // Only correct when the halanta form also exists (बुद्धिमान→बुद्धिमान्).
+            if lex.contains(input) && !lex.contains(&output) {
+                return None;
+            }
+
             return Some(Prakriya::corrected(
                 input,
                 &output,

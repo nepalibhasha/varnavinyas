@@ -49,8 +49,13 @@ impl Backend {
                     range,
                     severity: Some(DiagnosticSeverity::WARNING),
                     source: Some("varnavinyas".to_string()),
-                    code: Some(NumberOrString::String(d.rule.code().to_string())),
-                    message: format!("{} → {} ({})", d.incorrect, d.correction, d.category),
+                    code: Some(NumberOrString::String(d.rule.description().to_string())),
+                    message: format!(
+                        "{} → {} ({})",
+                        d.incorrect,
+                        d.correction,
+                        d.rule.description()
+                    ),
                     ..Default::default()
                 }
             })
@@ -264,10 +269,12 @@ impl LanguageServer for Backend {
                     range: diag_range,
                     severity: Some(DiagnosticSeverity::WARNING),
                     source: Some("varnavinyas".to_string()),
-                    code: Some(NumberOrString::String(diag.rule.code().to_string())),
+                    code: Some(NumberOrString::String(diag.rule.description().to_string())),
                     message: format!(
                         "{} → {} ({})",
-                        diag.incorrect, diag.correction, diag.category
+                        diag.incorrect,
+                        diag.correction,
+                        diag.rule.description()
                     ),
                     ..Default::default()
                 }]),

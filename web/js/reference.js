@@ -2,7 +2,7 @@
  * Rules Reference tab — renders Academy rule sections with examples.
  */
 import { RULES_SECTIONS } from './rules-data.js';
-import { escapeHtml, CATEGORY_COLORS } from './utils.js';
+import { escapeHtml, CATEGORY_COLORS, CATEGORY_LABELS } from './utils.js';
 
 const container = document.getElementById('reference-content');
 
@@ -58,11 +58,12 @@ function renderSections() {
           </ul>`
         : '';
 
+    const label = CATEGORY_LABELS[section.categoryCode] || section.categoryCode;
+
     return `
       <div class="ref-card" id="ref-${escapeHtml(section.categoryCode)}">
         <div class="ref-card-header">
-          <span class="ref-badge" style="background: ${color};">${escapeHtml(section.categoryCode)}</span>
-          <span class="ref-code">${escapeHtml(section.code)}</span>
+          <span class="ref-badge" style="background: ${color};">${escapeHtml(label)}</span>
           <h3 class="ref-title">${escapeHtml(section.title)}</h3>
         </div>
         <p class="ref-summary">${escapeHtml(section.summary)}</p>

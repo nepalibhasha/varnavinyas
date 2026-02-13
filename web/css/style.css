@@ -486,6 +486,13 @@ body {
 .origin-deshaj { background: #059669; }
 .origin-aagantuk { background: #c2410c; }
 
+.source-lang {
+  font-family: var(--font-devanagari);
+  font-size: 0.7rem;
+  color: var(--color-muted);
+  margin-left: 0.25rem;
+}
+
 .analysis-status {
   font-size: 0.8rem;
   font-weight: 500;

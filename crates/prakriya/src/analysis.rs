@@ -1,6 +1,6 @@
 use crate::engine;
 use crate::rule::Rule;
-use varnavinyas_shabda::{Origin, classify};
+use varnavinyas_shabda::{Origin, classify, source_language};
 
 /// Analysis of a word's orthography with origin-based explanations.
 #[derive(Debug, Clone)]
@@ -9,6 +9,8 @@ pub struct WordAnalysis {
     pub word: String,
     /// The word's origin classification.
     pub origin: Origin,
+    /// Source language name (e.g., "फारसी", "अरबी", "संस्कृत"), if known.
+    pub source_language: Option<String>,
     /// Whether the word's orthography is correct.
     pub is_correct: bool,
     /// Suggested correction, if any.
@@ -35,6 +37,7 @@ pub fn analyze(input: &str) -> WordAnalysis {
         return WordAnalysis {
             word: String::new(),
             origin: Origin::Deshaj,
+            source_language: None,
             is_correct: true,
             correction: None,
             rule_notes: Vec::new(),
@@ -42,6 +45,7 @@ pub fn analyze(input: &str) -> WordAnalysis {
     }
 
     let origin = classify(input);
+    let source_lang = source_language(input).map(String::from);
     let prakriya = engine::derive(input);
     let mut rule_notes = Vec::new();
 
@@ -61,6 +65,7 @@ pub fn analyze(input: &str) -> WordAnalysis {
     WordAnalysis {
         word: input.to_string(),
         origin,
+        source_language: source_lang,
         is_correct: prakriya.is_correct,
         correction: if prakriya.is_correct {
             None

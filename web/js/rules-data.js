@@ -8,8 +8,7 @@ import { escapeHtml } from './utils.js';
 
 export const RULES_SECTIONS = [
   {
-    code: '3(क)',
-    title: 'ह्रस्व/दीर्घ स्वर',
+    title: 'ह्रस्व/दीर्घ स्वर नियम',
     categoryCode: 'HrasvaDirgha',
     tooltip: 'तत्सममा दीर्घ, तद्भव/देशज/आगन्तुकमा ह्रस्व प्रयोग गर्ने',
     summary:
@@ -21,15 +20,14 @@ export const RULES_SECTIONS = [
       { wrong: 'लक्ष्मि', correct: 'लक्ष्मी' },
     ],
     subRules: [
-      '3(क)-1: तत्सम शब्दमा मूल दीर्घ कायम',
-      '3(क)-2: तद्भव शब्दमा ह्रस्व प्रयोग',
-      '3(क)-3: देशज शब्दमा ह्रस्व प्रयोग',
-      '3(क)-4: आगन्तुक शब्दमा ह्रस्व प्रयोग',
+      'तत्सम शब्दमा मूल दीर्घ कायम',
+      'तद्भव शब्दमा ह्रस्व प्रयोग',
+      'देशज शब्दमा ह्रस्व प्रयोग',
+      'आगन्तुक शब्दमा ह्रस्व प्रयोग',
     ],
   },
   {
-    code: '3(ख)',
-    title: 'अनुस्वार/चन्द्रबिन्दु/पञ्चम वर्ण',
+    title: 'चन्द्रबिन्दु/शिरबिन्दु नियम',
     categoryCode: 'Chandrabindu',
     tooltip: 'तत्सममा शिरबिन्दु+पञ्चम, तद्भवमा चन्द्रबिन्दु',
     summary:
@@ -41,14 +39,13 @@ export const RULES_SECTIONS = [
       { wrong: 'हंस', correct: 'हँस' },
     ],
     subRules: [
-      '3(ख)-1: तत्सममा पञ्चम वर्ण + अनुस्वार',
-      '3(ख)-2: तद्भवमा चन्द्रबिन्दु',
-      '3(ख)-3: वर्गीय नासिक्यमा पञ्चम वर्ण',
+      'तत्सममा पञ्चम वर्ण + अनुस्वार',
+      'तद्भवमा चन्द्रबिन्दु',
+      'वर्गीय नासिक्यमा पञ्चम वर्ण',
     ],
   },
   {
-    code: '3(ग)',
-    title: 'श/ष/स विधान र ऋ/कृ',
+    title: 'श/ष/स प्रयोग नियम',
     categoryCode: 'ShaShaS',
     tooltip: 'श/ष/स उत्पत्ति अनुसार; ऋ तत्सममा मात्र',
     summary:
@@ -60,14 +57,13 @@ export const RULES_SECTIONS = [
       { wrong: 'ऋण', correct: 'ऋण' },
     ],
     subRules: [
-      '3(ग)-1: तत्सममा ष कायम',
-      '3(ग)-2: तद्भवमा स/श प्रयोग',
-      '3(ग)-3: ऋ तत्सम शब्दमा मात्र',
+      'तत्सममा ष कायम',
+      'तद्भवमा स/श प्रयोग',
+      'ऋ तत्सम शब्दमा मात्र',
     ],
   },
   {
-    code: '3(ग)',
-    title: 'ऋ/कृ नियम',
+    title: 'ऋ/कृ प्रयोग नियम',
     categoryCode: 'RiKri',
     tooltip: 'ऋ तत्सम शब्दमा मात्र; अन्यत्र कृ/रि',
     summary:
@@ -77,13 +73,12 @@ export const RULES_SECTIONS = [
       { wrong: 'ऋणी', correct: 'ऋणी' },
     ],
     subRules: [
-      '3(ग)-ऋ-1: तत्सममा ऋ कायम',
-      '3(ग)-ऋ-2: तद्भवमा रि/कृ',
+      'तत्सममा ऋ कायम',
+      'तद्भवमा रि/कृ',
     ],
   },
   {
-    code: '3(ङ)',
-    title: 'हलन्त विधान',
+    title: 'हलन्त नियम',
     categoryCode: 'Halanta',
     tooltip: 'संयुक्त व्यञ्जन नबन्ने ठाउँमा हलन्त अनिवार्य',
     summary:
@@ -93,13 +88,12 @@ export const RULES_SECTIONS = [
       { wrong: 'जगत', correct: 'जगत्' },
     ],
     subRules: [
-      '3(ङ)-1: शब्दान्तमा हलन्त',
-      '3(ङ)-2: संयुक्ताक्षर बन्ने ठाउँमा हलन्त नलगाउने',
+      'शब्दान्तमा हलन्त',
+      'संयुक्ताक्षर बन्ने ठाउँमा हलन्त नलगाउने',
     ],
   },
   {
-    code: '3(छ)',
-    title: 'क्ष/छ नियम',
+    title: 'क्ष/छ भेद नियम',
     categoryCode: 'KshaChhya',
     tooltip: 'तत्सममा क्ष, तद्भवमा छ',
     summary:
@@ -110,28 +104,26 @@ export const RULES_SECTIONS = [
       { wrong: 'छेत्र', correct: 'क्षेत्र' },
     ],
     subRules: [
-      '3(छ)-1: तत्सममा क्ष कायम',
-      '3(छ)-2: तद्भवमा छ प्रयोग',
+      'तत्सममा क्ष कायम',
+      'तद्भवमा छ प्रयोग',
     ],
   },
   {
-    code: '3(च)',
-    title: 'य/ए नियम',
+    title: 'य/ए भेद नियम',
     categoryCode: 'YaE',
-    tooltip: 'सन्धि/प्रत्ययमा य र ए को सही प्रयोग',
+    tooltip: 'शब्दादिमा य र ए को सही प्रयोग',
     summary:
-      'सन्धि र प्रत्ययमा य र ए को भेद राख्ने। शब्दको बीचमा स्वर सन्धिमा "य" प्रयोग हुन्छ, तर अन्तमा "ए" प्रयोग हुने ठाउँमा ए नै लेख्ने।',
+      'तत्सम शब्दमा य (यज्ञ, यथार्थ) र एक-मूलका शब्दमा ए (एक, एकता) प्रयोग हुन्छ। शब्दको सुरुमा य र ए को भेद राख्ने।',
     examples: [
-      { wrong: 'राजनैतिक', correct: 'राजनीतिक' },
-      { wrong: 'दैनिक', correct: 'दैनिक' },
+      { wrong: 'एथार्थ', correct: 'यथार्थ' },
+      { wrong: 'यकता', correct: 'एकता' },
     ],
     subRules: [
-      '3(च)-1: सन्धिमा य प्रयोग',
-      '3(च)-2: प्रत्ययमा ए कायम',
+      'तत्सममा य प्रयोग (यज्ञ, यथार्थ)',
+      'एक-मूलका शब्दमा ए प्रयोग (एक, एकता)',
     ],
   },
   {
-    code: '3(घ)',
     title: 'सन्धि नियम',
     categoryCode: 'Sandhi',
     tooltip: 'स्वर/विसर्ग/व्यञ्जन सन्धि नियम',
@@ -145,14 +137,13 @@ export const RULES_SECTIONS = [
       { wrong: 'अन्तः + तल', correct: 'अन्तःतल' },
     ],
     subRules: [
-      '3(घ)-1: स्वर सन्धि (दीर्घ, गुण, वृद्धि, यण्, अयादि)',
-      '3(घ)-2: विसर्ग सन्धि',
-      '3(घ)-3: व्यञ्जन सन्धि (स्वरीकरण, अनुनासिकीकरण, समीकरण)',
+      'स्वर सन्धि (दीर्घ, गुण, वृद्धि, यण्, अयादि)',
+      'विसर्ग सन्धि',
+      'व्यञ्जन सन्धि (स्वरीकरण, अनुनासिकीकरण, समीकरण)',
     ],
   },
   {
-    code: '४',
-    title: 'शुद्ध-अशुद्ध तालिका',
+    title: 'शुद्ध-अशुद्ध शब्द तालिका',
     categoryCode: 'ShuddhaTable',
     tooltip: 'नेपाल प्रज्ञा प्रतिष्ठानको शुद्ध/अशुद्ध शब्द तालिका',
     summary:
@@ -166,8 +157,7 @@ export const RULES_SECTIONS = [
     subRules: [],
   },
   {
-    code: '५',
-    title: 'विराम चिह्न',
+    title: 'विराम चिह्न नियम',
     categoryCode: 'Punctuation',
     tooltip: 'देवनागरी विराम चिह्नका १४ प्रकार',
     summary:
@@ -177,11 +167,11 @@ export const RULES_SECTIONS = [
       { wrong: '"उनले भने"', correct: '\u201cउनले भने\u201d' },
     ],
     subRules: [
-      '५-1: पूर्णविराम (।)',
-      '५-2: अर्धविराम (;)',
-      '५-3: अल्पविराम (,)',
-      '५-4: प्रश्नचिह्न (?)',
-      '५-5: विस्मयचिह्न (!)',
+      'पूर्णविराम (।)',
+      'अर्धविराम (;)',
+      'अल्पविराम (,)',
+      'प्रश्नचिह्न (?)',
+      'विस्मयचिह्न (!)',
     ],
   },
 ];
@@ -194,10 +184,6 @@ export const RULE_TOOLTIPS = Object.fromEntries(
   RULES_SECTIONS.map((s) => [s.categoryCode, s.tooltip])
 );
 
-/**
- * Lookup: parse a rule citation string and return matching tooltip.
- * Handles formats like "वर्णविन्यास नियम: 3(क)(ई)" or "शुद्ध/अशुद्ध तालिका: ..."
- */
 /** Keyword map shared by tooltip and category lookups. */
 const RULE_KEYWORDS = {
   HrasvaDirgha: ['ह्रस्व', 'दीर्घ', 'hrasva', 'dirgha'],
@@ -219,7 +205,7 @@ export function getCategoryForRule(ruleText) {
   if (!ruleText) return null;
 
   for (const section of RULES_SECTIONS) {
-    if (ruleText.includes(section.code) || ruleText.includes(section.title)) {
+    if (ruleText.includes(section.title)) {
       return section.categoryCode;
     }
   }
@@ -235,7 +221,6 @@ export function getCategoryForRule(ruleText) {
 
 /**
  * Lookup: parse a rule citation string and return matching tooltip.
- * Handles formats like "वर्णविन्यास नियम: 3(क)(ई)" or "शुद्ध/अशुद्ध तालिका: ..."
  */
 export function getTooltipForRule(ruleText) {
   const cat = getCategoryForRule(ruleText);

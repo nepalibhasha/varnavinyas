@@ -36,10 +36,30 @@ impl Rule {
             Rule::ChihnaNiyam(_) => "चिह्न नियम",
         }
     }
+
+    /// Human-readable description of the rule.
+    pub fn description(&self) -> &'static str {
+        match self {
+            Rule::VarnaVinyasNiyam(code) => match *code {
+                c if c.starts_with("3(क)") => "ह्रस्व/दीर्घ स्वर नियम",
+                c if c.starts_with("3(ख)") => "चन्द्रबिन्दु/शिरबिन्दु नियम",
+                c if c.starts_with("3(ग)") => "श/ष/स प्रयोग नियम",
+                c if c.starts_with("3(घ)") => "ऋ/कृ प्रयोग नियम",
+                c if c.starts_with("3(ङ)") => "हलन्त नियम",
+                c if c.starts_with("3(इ)") => "य/ए भेद नियम",
+                c if c.starts_with("3(उ)") => "क्ष/छ भेद नियम",
+                "3(ई)" => "शुद्ध-अशुद्ध शब्द सूची",
+                _ => "वर्णविन्यास नियम",
+            },
+            Rule::Vyakaran(_) => "व्याकरण नियम",
+            Rule::ShuddhaAshuddha(_) => "शुद्ध-अशुद्ध शब्द सूची",
+            Rule::ChihnaNiyam(_) => "विराम चिह्न नियम",
+        }
+    }
 }
 
 impl std::fmt::Display for Rule {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}: {}", self.source_name(), self.code())
+        write!(f, "{}", self.description())
     }
 }

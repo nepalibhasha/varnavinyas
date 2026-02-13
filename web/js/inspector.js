@@ -90,6 +90,9 @@ export function showInspector(word, start, end) {
     const originLabel = ORIGIN_LABELS[analysis.origin] || analysis.origin;
     const originClass = `origin-${analysis.origin}`;
     html += ` <span class="origin-badge ${originClass}">${escapeHtml(originLabel)}</span>`;
+    if (analysis.source_language) {
+      html += ` <span class="source-lang">${escapeHtml(analysis.source_language)}</span>`;
+    }
     const statusIcon = analysis.is_correct ? 'correct' : 'incorrect';
     const statusLabel = analysis.is_correct ? '\u0936\u0941\u0926\u094D\u0927' : '\u0905\u0936\u0941\u0926\u094D\u0927';
     html += ` <span class="analysis-status ${statusIcon}">${statusLabel}</span>`;
