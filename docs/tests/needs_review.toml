@@ -1,0 +1,269 @@
+# Varnavinyas Needs-Review Test Dataset
+# Reference: docs/Notices-pages-77-99.pdf
+# Nepal Academy Orthography Standard (नेपाली वर्णविन्यास)
+#
+# These entries are disputed, ambiguous, or context-dependent.
+# Each has an `issue` field explaining what needs manual verification.
+# Resolve incrementally — move to gold.toml once verified.
+
+# =============================================================================
+# Shuddha-table entries with multiple correct forms
+# =============================================================================
+
+[[shuddha_table]]
+incorrect = "उपरोक्त"
+correct = "उपर्युक्त/उपर्युक्त"
+rule = "standard lists two acceptable correct forms"
+section = "Section 4, शुद्ध-अशुद्ध table"
+page = 18
+issue = """The शुद्ध-अशुद्ध table lists two correct forms for उपरोक्त separated
+by a slash. One is उपर्युक्त (उपरि+युक्त). The second form needs manual
+verification from the PDF — it may be उपयुक्त (उप+युक्त, 'suitable') or a
+variant rendering of उपर्युक्त. Note: उपरोक्त itself may be valid sandhi
+(उपरि+उक्त with गुण sandhi इ+उ=ओ). Verify both correct forms on p18."""
+
+# =============================================================================
+# Hrasva/Dirgha disputes
+# =============================================================================
+
+[[hrasva_dirgha]]
+incorrect = "दुध"
+correct = "दूध"
+rule = "compensatory lengthening: दुग्ध → दूध"
+section = "Section 3(क), Rule 12"
+page = 5
+issue = """Rule 12 says single-meaning tadbhav words take hrasva, but the exam Q3
+and slides Session 4 both list दुध → दूध (dirgha). This may be a compensatory
+lengthening exception where the lost conjunct triggers dirgha. The standard
+discusses both forms on p5. Verify whether दूध is explicitly listed as an
+exception or if the standard prefers दुध."""
+
+[[hrasva_dirgha]]
+incorrect = "बुढो"
+correct = "बूढो"
+rule = "compensatory lengthening: वृद्ध → बूढो"
+section = "Section 3(क), Rule 12"
+page = 5
+issue = """Same ambiguity as दुध/दूध. The exam Q3 lists बुढो → बूढो (dirgha),
+and Session 4 HRASVA list includes बुढो. The standard may treat this as a
+compensatory lengthening exception. Verify on p5 whether बूढो is an explicit
+exception to the single-meaning hrasva rule."""
+
+[[hrasva_dirgha]]
+incorrect = "सभापती"
+correct = "सभापति"
+rule = "masculine ending may take hrasva"
+section = "Section 3(क) or Section 3(ई)"
+page = 7
+issue = """The exam Q3 marks this as a 'trick' — सभापती IS correct for some
+contexts (feminine/honorific). The direction depends on gender/honorific context.
+Verify whether the standard gives a definitive rule or leaves it context-dependent."""
+
+# =============================================================================
+# Chandrabindu disputes
+# =============================================================================
+
+[[chandrabindu]]
+incorrect = "मुख्याई"
+correct = "मुख्याईँ"
+rule = "chandrabindu placement on final vowel"
+section = "Section 3(ख)"
+page = 9
+issue = """Exam Q3 lists मुख्याई → मुख्याईँ but the chandrabindu placement
+on ईँ is unusual. Verify on p9 whether this specific form appears and what
+rule governs chandrabindu on this suffix."""
+
+[[chandrabindu]]
+incorrect = "भएछु"
+correct = "भएँछु"
+rule = "chandrabindu placement in verb conjugation"
+section = "Section 3(ख)"
+page = 9
+issue = """Session 5 lists भएछु → भएँछु, but other forms like भएछुँ are also
+plausible. The exact chandrabindu placement (on ए or on उ) needs verification.
+Check p9 for the standard's preferred form."""
+
+[[chandrabindu]]
+incorrect = "साँस्कृतिक"
+correct = "सांस्कृतिक"
+rule = "tatsam should use shirbindu, not chandrabindu"
+section = "Section 3(ख)"
+page = 9
+issue = """Session 5 says सांस्कृतिक is standard (tatsam = shirbindu). But
+साँस्कृतिक is very common in practice. The annotation says 'both common.'
+Verify whether the standard explicitly prefers one form."""
+
+# =============================================================================
+# Panchham varna vs shirbindu disputes
+# =============================================================================
+
+[[panchham_varna]]
+incorrect = "सञ्चालन"
+correct = "संचालन"
+rule = "shirbindu preferred over panchham varna for tatsam"
+section = "Section 3(ख)"
+page = 9
+issue = """Session 5 lists संचालन → सञ्चालन as an error direction (sanchalan
+uses shirbindu, not panchham). But traditional tatsam spelling uses panchham
+varna (सञ्चालन). Verify p8-9 for the Academy's current position on
+shirbindu vs panchham varna."""
+
+[[panchham_varna]]
+incorrect = "सम्पूर्ण"
+correct = "संपूर्ण"
+rule = "shirbindu preferred over halanta-म"
+section = "Section 3(ख)"
+page = 9
+issue = """Session 5 annotates 'both exist; context-dependent.' The standard
+may allow both सम्पूर्ण and संपूर्ण. Verify p8-9 for the Academy's preferred
+form and whether context determines the choice."""
+
+# =============================================================================
+# श/ष/स disputes
+# =============================================================================
+
+[[sha_sha_sa]]
+incorrect = "इन्स्टिच्यूट"
+correct = "इन्स्टिच्युट"
+rule = "Academy standard uses hrasva युट, not dirgha यूट; dirgha form's acceptability unknown"
+section = "Section 4, शुद्ध-अशुद्ध table"
+page = 18
+issue = """RESOLVED by OCR p18: The शुद्ध-अशुद्ध table lists इन्ष्टिच्युट (wrong)
+→ इन्स्टिच्युट (correct). So इन्स्टिच्युट IS the standard form — NO dirgha ऊ.
+Session 6 had the wrong direction. This pair (इन्ष्टिच्युट → इन्स्टिच्युट)
+has been added to gold.toml. The remaining question is whether इन्स्टिच्यूट
+(with dirgha) is also acceptable in practice."""
+
+# =============================================================================
+# Word form disputes
+# =============================================================================
+
+[[word_form]]
+incorrect = "व्यहोरा"
+correct = "बेहोरा"
+rule = "preferred word form"
+section = "Section 4, शुद्ध-अशुद्ध table"
+page = 18
+issue = """PARTIALLY RESOLVED by OCR p18: The table lists ब्यहोरा (not व्यहोरा)
+as अशुद्ध → बेहोरा as शुद्ध. The ब्यहोरा → बेहोरा pair has been added to
+gold.toml. This entry remains for the variant व्यहोरा (used in exam Q9) —
+whether व्यहोरा is also considered अशुद्ध or is a separate acceptable form."""
+
+[[word_form]]
+incorrect = "सुसुचित"
+correct = "सुसूचित"
+rule = "correct form from multiple choice"
+section = "Section 4"
+page = 18
+issue = """Exam Q5 gives सुसूचित as correct among options (शुसूचित, सुसुचित,
+सुशूचित). Verify presence in the शुद्ध-अशुद्ध table on p18. The word
+itself is uncommon."""
+
+[[word_form]]
+incorrect = "गायीका"
+correct = "गाईका"
+rule = "vowel form in feminine noun"
+section = "Section 3(क) or Section 3(ई)"
+page = 7
+issue = """Paragraph fixture lists गायीका → गाईका. The vowel change (य → इ)
+and dirgha/hrasva choice need verification. Neither form may appear in the
+standard directly."""
+
+[[word_form]]
+incorrect = "विदेशियो"
+correct = ""
+rule = "unknown — no answer key provided"
+section = "Exam Q5(च)"
+page = 18
+issue = """Exam Q5(च) gives four options (विदेशियो, विदेसियो, विदेशिय,
+विदेषियो) but no answer is marked correct. The correct form may be
+विदेशीयो or another variant. No answer key was extracted."""
+
+# =============================================================================
+# य/ए disputes
+# =============================================================================
+
+[[ya_e]]
+incorrect = "यकीन"
+correct = "यकिन"
+rule = "Academy standard uses hrasva इ (एकिन→यकिन on p18); dirgha यकीन status unknown"
+section = "Section 4, शुद्ध-अशुद्ध table"
+page = 18
+issue = """PARTIALLY RESOLVED by OCR p18: The शुद्ध-अशुद्ध table lists एकिन
+(wrong) → यकिन (correct) with HRASVA इ. This contradicts the assumption that
+यकीन (with dirgha) is correct. The pair एकिन → यकिन has been added to
+gold.toml per the standard. This entry remains to track whether यकीन (dirgha,
+closer to Urdu/Hindi source) is also acceptable."""
+
+[[ya_e]]
+incorrect = "गरियेको"
+correct = "गरिएको"
+rule = "ए form preferred over ये in passive participle"
+section = "Section 3(छ)"
+page = 12
+issue = """Session 7 lists गरिएको → गरियेको without clear direction arrow.
+The Academy may prefer गरिएको (ए form) over गरियेको (ये form). Verify
+p12 for the standard's position on ए vs ये in verb forms."""
+
+# =============================================================================
+# Padayog (word joining/separation) disputes
+# =============================================================================
+
+[[padayog]]
+incorrect = "घर भित्र"
+correct = "घरभित्र"
+rule = "padayog: postposition joins with noun"
+section = "Section 3(ज) — padayog"
+page = 14
+issue = """Session 8 lists 'घरभित्र → घर भित्र' with annotation 'should be
+one word? context-dependent.' The standard's padayog rules on p14 may
+specify when भित्र joins vs separates. Needs manual verification."""
+
+[[padayog]]
+incorrect = "एकता बद्ध"
+correct = "एकताबद्ध"
+rule = "padayog: bound compound"
+section = "Section 3(ज) — padayog"
+page = 14
+issue = """Session 8 lists 'एकताबद्ध → एकता बद्ध' without clear direction.
+The standard compound rule may prefer joined form. Verify p14 for padayog
+rules on -बद्ध compounds."""
+
+# =============================================================================
+# OCR anomalies from p18 table
+# =============================================================================
+
+[[shuddha_table]]
+incorrect = "एकाइ"
+correct = "एकाइ"
+rule = "unknown — OCR shows identical अशुद्ध and शुद्ध forms"
+section = "Section 4, शुद्ध-अशुद्ध table"
+page = 18
+issue = """OCR reads एकाइ for both the अशुद्ध and शुद्ध columns. This is likely
+an OCR error. The शुद्ध form may be एकाई (with dirgha ई) or a different
+rendering. Verify from the original PDF on p18."""
+
+# =============================================================================
+# Miscellaneous unverified
+# =============================================================================
+
+[[unverified]]
+incorrect = "दहिचाहीँ"
+correct = ""
+rule = "unknown — no correction provided in source"
+section = "Paragraph fixture"
+page = 5
+issue = """The paragraph fixture marks दहिचाहीँ as '[context]' with no
+correction provided. This may be correct as-is or may need chandrabindu
+or hrasva/dirgha adjustment. No Academy reference found."""
+
+[[unverified]]
+incorrect = "जातिय"
+correct = "जातीय"
+rule = "tatsam suffix -ईय takes dirgha"
+section = "Section 3(ई)"
+page = 7
+issue = """Exam Q3 marks 'जातीय → जातिय' as a trick — जातीय IS correct.
+This is listed here because the exam direction arrow is misleading.
+The pair is actually: जातिय (wrong) → जातीय (correct). Verify p7 for
+the -ईय suffix rule."""

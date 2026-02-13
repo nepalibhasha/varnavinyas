@@ -149,7 +149,39 @@ pub fn split(word: &str) -> Vec<(String, String, SandhiResult)> {
              }
         }
 
-        // Strategy 5: Ayadi Sandhi Reconstruction
+        // Strategy 5: Visarga -> Sibilant Reconstruction (satva sandhi)
+        // ः + च/छ → श्+च/छ, ः + ट/ठ → ष्+ट/ठ, ः + त/थ → स्+त/थ
+        // Reverse: if raw_left ends in श्, ष्, or स् followed by the matching stop
+        // at the start of raw_right, try reconstructing visarga form.
+        // e.g. "निश्चय" split at "निश्" | "चय" → try "निः" + "चय"
+        // Also handles: "निश" | "्चय" → skip (halanta at start of right is not useful)
+        // We check: raw_left ends in sibilant+halanta, raw_right starts with matching stop.
+        {
+            let sibilant_map: &[(char, &[char])] = &[
+                ('श', &['च', 'छ']),   // palatal
+                ('ष', &['ट', 'ठ']),   // retroflex
+                ('स', &['त', 'थ']),   // dental
+            ];
+            for &(sibilant, stops) in sibilant_map {
+                let suffix = format!("{sibilant}्");
+                if let Some(base) = raw_left.strip_suffix(&*suffix) {
+                    if let Some(first_char) = raw_right.chars().next() {
+                        if stops.contains(&first_char) {
+                            let left_candidate = format!("{base}ः");
+                            if lex.contains(&left_candidate) && lex.contains(raw_right) {
+                                if let Ok(res) = apply(&left_candidate, raw_right) {
+                                    if res.output == word {
+                                        results.push((left_candidate, raw_right.to_string(), res));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Strategy 6: Ayadi Sandhi Reconstruction
         // ए+vowel→अय, ऐ+vowel→आय, ओ+vowel→अव, औ+vowel→आव
         // Reverse: if raw_left ends in य, try ए/े; if ends in ाय, try ऐ/ै;
         //          if raw_left ends in व, try ओ/ो; if ends in ाव, try औ/ौ.
@@ -224,7 +256,7 @@ pub fn split(word: &str) -> Vec<(String, String, SandhiResult)> {
             }
         }
 
-        // Strategy 6: Guna/Vriddhi matra reconstruction.
+        // Strategy 7: Guna/Vriddhi matra reconstruction.
         // When a sandhi merges अ/आ with another vowel, the result appears as a
         // matra on the preceding consonant: सूर्य+उदय → सूर्योदय (ो matra).
         // Splitting at "सूर्य"|"ोदय" gives raw_right starting with a matra.

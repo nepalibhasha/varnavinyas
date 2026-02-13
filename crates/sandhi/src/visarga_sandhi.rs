@@ -12,13 +12,42 @@ pub fn apply_visarga_sandhi(first: &str, second: &str) -> Option<SandhiResult> {
     let second_chars: Vec<char> = second.chars().collect();
     let first_of_second = *second_chars.first()?;
 
-    // Visarga retained before sibilants (स, श, ष) and unvoiced stops
-    if matches!(first_of_second, 'स' | 'श' | 'ष' | 'क' | 'ख' | 'च' | 'छ' | 'ट' | 'ठ' | 'त' | 'थ' | 'प' | 'फ') {
+    // Visarga → sibilant before palatal/retroflex/dental stops (satva sandhi)
+    // ः + च/छ → श् + च/छ  (e.g., निः + चय → निश्चय)
+    // ः + ट/ठ → ष् + ट/ठ  (e.g., निः + ठुर → निष्ठुर)
+    // ः + त/थ → स् + त/थ  (e.g., नमः + ते → नमस्ते)
+    if matches!(first_of_second, 'च' | 'छ') {
+        let result = format!("{prefix}श्{second}");
+        return Some(SandhiResult {
+            output: result,
+            sandhi_type: SandhiType::VisargaSandhi,
+            rule_citation: "विसर्ग सन्धि: ः → श् before palatal (च/छ)",
+        });
+    }
+    if matches!(first_of_second, 'ट' | 'ठ') {
+        let result = format!("{prefix}ष्{second}");
+        return Some(SandhiResult {
+            output: result,
+            sandhi_type: SandhiType::VisargaSandhi,
+            rule_citation: "विसर्ग सन्धि: ः → ष् before retroflex (ट/ठ)",
+        });
+    }
+    if matches!(first_of_second, 'त' | 'थ') {
+        let result = format!("{prefix}स्{second}");
+        return Some(SandhiResult {
+            output: result,
+            sandhi_type: SandhiType::VisargaSandhi,
+            rule_citation: "विसर्ग सन्धि: ः → स् before dental (त/थ)",
+        });
+    }
+
+    // Visarga retained before sibilants (स, श, ष) and guttural/labial stops
+    if matches!(first_of_second, 'स' | 'श' | 'ष' | 'क' | 'ख' | 'प' | 'फ') {
         let result = format!("{first}{second}");
         return Some(SandhiResult {
             output: result,
             sandhi_type: SandhiType::VisargaSandhi,
-            rule_citation: "विसर्ग सन्धि: विसर्ग retained before स/श/ष/unvoiced stops",
+            rule_citation: "विसर्ग सन्धि: विसर्ग retained before स/श/ष/guttural/labial stops",
         });
     }
 

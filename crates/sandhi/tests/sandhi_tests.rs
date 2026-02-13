@@ -88,3 +88,44 @@ fn gemination_mahat_tva() {
     assert_eq!(result.output, "महत्त्व");
     assert_eq!(result.sandhi_type, SandhiType::ConsonantSandhi);
 }
+
+// Visarga → sibilant (satva sandhi)
+#[test]
+fn visarga_to_palatal_sibilant() {
+    // निः + चय → निश्चय
+    let result = apply("निः", "चय").unwrap();
+    assert_eq!(result.output, "निश्चय");
+    assert_eq!(result.sandhi_type, SandhiType::VisargaSandhi);
+}
+
+#[test]
+fn visarga_to_dental_sibilant() {
+    // नमः + ते → नमस्ते
+    let result = apply("नमः", "ते").unwrap();
+    assert_eq!(result.output, "नमस्ते");
+    assert_eq!(result.sandhi_type, SandhiType::VisargaSandhi);
+}
+
+#[test]
+fn visarga_to_retroflex_sibilant() {
+    // निः + ठुर → निष्ठुर
+    let result = apply("निः", "ठुर").unwrap();
+    assert_eq!(result.output, "निष्ठुर");
+    assert_eq!(result.sandhi_type, SandhiType::VisargaSandhi);
+}
+
+// Consonant satva: निस् + चल → निश्चल
+#[test]
+fn consonant_nis_chal() {
+    let result = apply("निस्", "चल").unwrap();
+    assert_eq!(result.output, "निश्चल");
+    assert_eq!(result.sandhi_type, SandhiType::ConsonantSandhi);
+}
+
+// Consonant satva: दुस् + चरित्र → दुश्चरित्र
+#[test]
+fn consonant_dus_charitr() {
+    let result = apply("दुस्", "चरित्र").unwrap();
+    assert_eq!(result.output, "दुश्चरित्र");
+    assert_eq!(result.sandhi_type, SandhiType::ConsonantSandhi);
+}
