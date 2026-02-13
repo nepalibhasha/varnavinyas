@@ -143,6 +143,23 @@ impl MorphAnalyzer for RuleBasedAnalyzer {
 }
 
 #[cfg(feature = "vyakaran-mvp")]
+pub fn transform_negative(word: &str) -> Option<String> {
+    if let Some(stem) = word.strip_suffix("छ") {
+        if !stem.is_empty() {
+            return Some(format!("{stem}दैन"));
+        }
+    }
+
+    if let Some(stem) = word.strip_suffix("यो") {
+        if !stem.is_empty() {
+            return Some(format!("{stem}एन"));
+        }
+    }
+
+    None
+}
+
+#[cfg(feature = "vyakaran-mvp")]
 const CASE_SUFFIXES: &[(&str, Case)] = &[
     ("देखि", Case::Ablative),
     ("बाट", Case::Ablative),
@@ -158,6 +175,9 @@ const CASE_SUFFIXES: &[(&str, Case)] = &[
 
 #[cfg(feature = "vyakaran-mvp")]
 const PLURAL_SUFFIXES: &[&str] = &["हरू", "हरु"];
+
+#[cfg(feature = "vyakaran-mvp")]
+const NONFINITE_VERB_ENDINGS: &[&str] = &["दा", "ई", "एर", "नु", "दै"];
 
 #[cfg(feature = "vyakaran-mvp")]
 fn analyze_nominal(word: &str) -> Option<MorphAnalysis> {
@@ -237,7 +257,29 @@ fn nominal_lemma_from_stem(stem: &str, case: Option<Case>) -> String {
 }
 
 #[cfg(feature = "vyakaran-mvp")]
+fn is_nonfinite_verbal_stem(stem: &str) -> bool {
+    NONFINITE_VERB_ENDINGS
+        .iter()
+        .any(|ending| stem.ends_with(ending) && stem.len() > ending.len())
+}
+
+#[cfg(feature = "vyakaran-mvp")]
 fn analyze_verbal(word: &str) -> Option<MorphAnalysis> {
+    // Na- prefix: non-finite negative forms (e.g., नगर्दा, नखाई).
+    if let Some(stem) = word.strip_prefix("न") {
+        if !stem.is_empty() && is_nonfinite_verbal_stem(stem) {
+            return Some(MorphAnalysis {
+                lemma: stem.to_string(),
+                prefix: Some("न".to_string()),
+                suffix: None,
+                features: Features {
+                    tense: Some(Tense::Unknown),
+                    ..Default::default()
+                },
+            });
+        }
+    }
+
     // Infinitive: -नु
     if let Some(stem) = word.strip_suffix("नु") {
         if !stem.is_empty() {

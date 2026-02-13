@@ -28,3 +28,30 @@ fn detects_progressive_present() {
             .any(|a| a.features.tense == Some(Tense::Present) && a.suffix.as_deref() == Some("छ"))
     );
 }
+
+#[cfg(feature = "vyakaran-mvp")]
+#[test]
+fn detects_na_prefix_in_nonfinite_forms() {
+    let analyzer = RuleBasedAnalyzer;
+    let analyses = analyzer.analyze("नगर्दा").expect("analysis should succeed");
+
+    assert!(
+        analyses
+            .iter()
+            .any(|a| { a.prefix.as_deref() == Some("न") && a.lemma == "गर्दा" })
+    );
+
+    let analyses = analyzer.analyze("नखाई").expect("analysis should succeed");
+    assert!(
+        analyses
+            .iter()
+            .any(|a| { a.prefix.as_deref() == Some("न") && a.lemma == "खाई" })
+    );
+}
+
+#[cfg(feature = "vyakaran-mvp")]
+#[test]
+fn transforms_present_positive_to_negative() {
+    let out = varnavinyas_vyakaran::transform_negative("गर्छ");
+    assert_eq!(out.as_deref(), Some("गर्दैन"));
+}
