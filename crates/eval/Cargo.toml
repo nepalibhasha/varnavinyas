@@ -7,8 +7,12 @@ repository.workspace = true
 publish = false
 
 [dependencies]
+varnavinyas-akshar = { workspace = true }
+varnavinyas-kosha = { workspace = true }
 varnavinyas-parikshak = { workspace = true }
 varnavinyas-prakriya = { workspace = true }
+varnavinyas-sandhi = { workspace = true }
+varnavinyas-shabda = { workspace = true, features = ["iterative-decompose"] }
 toml = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }

@@ -2130,6 +2130,7 @@ dependencies = [
  "varnavinyas-lipi",
  "varnavinyas-parikshak",
  "varnavinyas-prakriya",
+ "varnavinyas-sandhi",
  "varnavinyas-shabda",
  "wasm-bindgen",
 ]
@@ -2142,8 +2143,12 @@ dependencies = [
  "serde",
  "thiserror 2.0.18",
  "toml 0.8.23",
+ "varnavinyas-akshar",
+ "varnavinyas-kosha",
  "varnavinyas-parikshak",
  "varnavinyas-prakriya",
+ "varnavinyas-sandhi",
+ "varnavinyas-shabda",
 ]
 
 [[package]]

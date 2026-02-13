@@ -1,14 +1,27 @@
 use crate::{apply, SandhiResult};
+use varnavinyas_akshar::split_aksharas;
 use varnavinyas_kosha::kosha;
 
 /// Split a word at potential sandhi boundaries using general brute-force strategy.
 ///
+/// The caller should pass the **morphological root** (after stripping
+/// agglutinative suffixes like case markers and plural markers) so that
+/// sandhi analysis operates on the stem, not inflected forms.
+///
 /// Algorithm:
-/// 1. Iterate over all valid character boundaries in the word.
-/// 2. For each split (left, right), try to reconstruct original morphemes
+/// 1. Skip words shorter than 3 aksharas — short stems are atomic roots,
+///    not sandhi compounds (e.g., "राम" is a name, not "रा + आम").
+/// 2. Iterate over all valid character boundaries in the word.
+/// 3. For each split (left, right), try to reconstruct original morphemes
 ///    that would result in `word` when combined via sandhi.
-/// 3. Validate candidates against the kosha lexicon.
+/// 4. Validate candidates against the kosha lexicon.
+/// 5. Filter results where either part has fewer than 2 aksharas.
 pub fn split(word: &str) -> Vec<(String, String, SandhiResult)> {
+    // Guard: stems shorter than 3 aksharas are atomic roots, not compounds.
+    if split_aksharas(word).len() < 3 {
+        return Vec::new();
+    }
+
     let mut results = Vec::new();
     let lex = kosha();
 
@@ -233,6 +246,14 @@ pub fn split(word: &str) -> Vec<(String, String, SandhiResult)> {
             }
         }
     }
+
+    // Filter out degenerate splits where either part has fewer than 2 aksharas.
+    // e.g. "रा + आम → राम" is technically valid दीर्घ sandhi but linguistically
+    // meaningless — "राम" is a single morpheme, not a compound.
+    // Meaningful sandhi components are almost always multi-syllabic words.
+    results.retain(|(left, right, _)| {
+        split_aksharas(left).len() >= 2 && split_aksharas(right).len() >= 2
+    });
 
     // Deduplicate results
     results.sort_by(|a, b| a.0.cmp(&b.0));

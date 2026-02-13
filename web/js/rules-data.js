@@ -4,6 +4,7 @@
  * Each section maps to a category_code used in diagnostics.
  * `tooltip` is the one-line hover summary; `summary` is the full explanation.
  */
+import { escapeHtml } from './utils.js';
 
 export const RULES_SECTIONS = [
   {
@@ -138,12 +139,15 @@ export const RULES_SECTIONS = [
       'नेपाली वर्णविन्यासमा सन्धि — स्वर सन्धि, विसर्ग सन्धि, र व्यञ्जन सन्धि — संस्कृत व्याकरणको नियमअनुसार गर्ने। तत्सम शब्दमा सन्धि कायम, तद्भवमा प्रचलनअनुसार।',
     examples: [
       { wrong: 'अत्याधिक', correct: 'अत्यधिक' },
-      { wrong: 'सदैव', correct: 'सदैव' },
+      { wrong: 'कवि + इन्द्र', correct: 'कवीन्द्र' },
+      { wrong: 'देव + ऋषि', correct: 'देवर्षि' },
+      { wrong: 'वाक् + दान', correct: 'वाग्दान' },
+      { wrong: 'अन्तः + तल', correct: 'अन्तःतल' },
     ],
     subRules: [
-      '3(घ)-1: स्वर सन्धि',
+      '3(घ)-1: स्वर सन्धि (दीर्घ, गुण, वृद्धि, यण्, अयादि)',
       '3(घ)-2: विसर्ग सन्धि',
-      '3(घ)-3: व्यञ्जन सन्धि',
+      '3(घ)-3: व्यञ्जन सन्धि (स्वरीकरण, अनुनासिकीकरण, समीकरण)',
     ],
   },
   {
@@ -236,4 +240,20 @@ export function getCategoryForRule(ruleText) {
 export function getTooltipForRule(ruleText) {
   const cat = getCategoryForRule(ruleText);
   return cat ? (RULE_TOOLTIPS[cat] || null) : null;
+}
+
+/**
+ * Wrap a rule citation in a tooltip-enabled span.
+ * Shared by checker.js and inspector.js.
+ */
+export function wrapRuleTooltip(ruleText, categoryCode) {
+  const cat = categoryCode || getCategoryForRule(ruleText);
+  const tooltip = (cat && RULE_TOOLTIPS[cat]) || getTooltipForRule(ruleText);
+  if (tooltip && cat) {
+    return `<span class="rule-ref" data-tooltip="${escapeHtml(tooltip)}" data-category="${escapeHtml(cat)}">${escapeHtml(ruleText)}</span>`;
+  }
+  if (tooltip) {
+    return `<span class="rule-ref" data-tooltip="${escapeHtml(tooltip)}">${escapeHtml(ruleText)}</span>`;
+  }
+  return escapeHtml(ruleText);
 }

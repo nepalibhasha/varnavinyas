@@ -9,6 +9,8 @@ import init, {
   derive,
   analyze_word,
   decompose_word,
+  sandhi_apply,
+  sandhi_split,
 } from '../pkg/varnavinyas_bindings_wasm.js';
 
 let initialized = false;
@@ -102,4 +104,20 @@ export function analyzeWord(word) {
  */
 export function decomposeWord(word) {
   return JSON.parse(decompose_word(word));
+}
+
+/**
+ * Apply sandhi: join two morphemes.
+ * Returns { output, sandhi_type, rule_citation } or { error: "..." }
+ */
+export function sandhiApply(first, second) {
+  return JSON.parse(sandhi_apply(first, second));
+}
+
+/**
+ * Split a word at sandhi boundaries.
+ * Returns [{ left, right, output, sandhi_type, rule_citation }, ...]
+ */
+export function sandhiSplit(word) {
+  return JSON.parse(sandhi_split(word));
 }

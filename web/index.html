@@ -16,36 +16,18 @@
   </div>
 
   <header class="header">
-    <h1 class="header-title">वर्णविन्यास</h1>
-    <p class="header-subtitle">Nepali Orthography Toolkit</p>
+    <div class="header-inner">
+      <div>
+        <h1 class="header-title">वर्णविन्यास</h1>
+        <p class="header-subtitle">Nepali Orthography Toolkit</p>
+      </div>
+      <button class="btn nav-rules-btn" id="nav-rules-btn">📖 नियम सन्दर्भ</button>
+    </div>
   </header>
 
-  <nav class="tabs" role="tablist">
-    <button class="tab active" role="tab" aria-selected="true" data-tab="checker">
-      <span class="tab-icon">✓</span>
-      हिज्जे जाँच
-      <span class="tab-label">Spell Checker</span>
-    </button>
-    <button class="tab" role="tab" aria-selected="false" data-tab="transliterator">
-      <span class="tab-icon">अ</span>
-      लिप्यन्तरण
-      <span class="tab-label">Transliterator</span>
-    </button>
-    <button class="tab" role="tab" aria-selected="false" data-tab="deriver">
-      <span class="tab-icon">→</span>
-      व्युत्पत्ति
-      <span class="tab-label">Deriver</span>
-    </button>
-    <button class="tab" role="tab" aria-selected="false" data-tab="reference">
-      <span class="tab-icon">📖</span>
-      नियम सन्दर्भ
-      <span class="tab-label">Rules Reference</span>
-    </button>
-  </nav>
-
   <main class="main">
-    <!-- Spell Checker Tab -->
-    <section id="tab-checker" class="tab-panel active" role="tabpanel">
+    <!-- Editor + Inspector View -->
+    <section id="view-editor" class="view active">
       <div class="checker-layout">
         <div class="checker-editor-col">
           <div class="category-filters" id="category-filters"></div>
@@ -63,93 +45,20 @@
             <button class="btn btn-sm" id="fix-all-btn" disabled>सबै सच्याउनुहोस्</button>
           </div>
         </div>
-        <div class="checker-diag-col">
+        <div class="checker-panel-col" id="panel-col">
           <h3 class="diag-header">त्रुटि विवरण <span class="diag-label">Diagnostics</span></h3>
           <div class="diagnostics-list" id="diagnostics-list">
             <p class="diag-empty">पाठ लेख्नुहोस् वा नमूना पाठ प्रयोग गर्नुहोस्।</p>
           </div>
+          <div id="panel-content"></div>
         </div>
       </div>
     </section>
 
-    <!-- Transliterator Tab -->
-    <section id="tab-transliterator" class="tab-panel" role="tabpanel" hidden>
-      <div class="translit-layout">
-        <div class="translit-controls">
-          <button class="btn btn-direction" id="translit-direction">
-            <span id="translit-from-label">देवनागरी</span>
-            <span class="direction-arrow">→</span>
-            <span id="translit-to-label">IAST</span>
-          </button>
-          <button class="btn btn-sm" id="translit-swap">↔ Swap</button>
-        </div>
-        <div class="translit-panels">
-          <div class="translit-panel">
-            <label class="translit-panel-label" for="translit-input" id="translit-input-label">देवनागरी</label>
-            <textarea
-              class="translit-textarea"
-              id="translit-input"
-              placeholder="यहाँ लेख्नुहोस्…"
-              spellcheck="false"
-            ></textarea>
-          </div>
-          <div class="translit-panel">
-            <div class="translit-panel-header">
-              <label class="translit-panel-label" id="translit-output-label">IAST</label>
-              <button class="btn btn-sm" id="translit-copy">Copy</button>
-            </div>
-            <textarea
-              class="translit-textarea readonly"
-              id="translit-output"
-              readonly
-              placeholder="रूपान्तरित पाठ यहाँ देखिनेछ…"
-            ></textarea>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Deriver Tab -->
-    <section id="tab-deriver" class="tab-panel" role="tabpanel" hidden>
-      <div class="deriver-layout">
-        <div class="deriver-input-section">
-          <label class="deriver-label" for="deriver-input">शब्द प्रविष्ट गर्नुहोस्</label>
-          <input
-            type="text"
-            class="deriver-input"
-            id="deriver-input"
-            placeholder="जस्तै: अत्याधिक, राजनैतिक, प्रसाशन…"
-            spellcheck="false"
-          >
-        </div>
-        <div class="deriver-result" id="deriver-result" hidden>
-          <div class="deriver-summary" id="deriver-summary"></div>
-          <div class="deriver-steps-container" id="deriver-steps-container">
-            <h4 class="steps-title">नियम चरणहरू <span class="steps-label">Rule Steps</span></h4>
-            <table class="steps-table" id="steps-table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>नियम</th>
-                  <th>विवरण</th>
-                  <th>पहिले</th>
-                  <th>पछि</th>
-                </tr>
-              </thead>
-              <tbody id="steps-tbody"></tbody>
-            </table>
-          </div>
-        </div>
-        <div class="deriver-empty" id="deriver-empty">
-          <p>शब्द लेख्नुहोस् र व्युत्पत्ति हेर्नुहोस्।</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Rules Reference Tab -->
-    <section id="tab-reference" class="tab-panel" role="tabpanel" hidden>
+    <!-- Rules Reference View -->
+    <section id="view-reference" class="view" hidden>
       <div class="reference-layout">
-        <button class="btn btn-sm ref-back-btn" id="ref-back-btn" hidden>
+        <button class="btn btn-sm ref-back-btn" id="ref-back-btn">
           <span class="ref-back-arrow">&larr;</span> फिर्ता जानुहोस् <span class="ref-back-label">Go Back</span>
         </button>
         <h2 class="reference-heading">नियम सन्दर्भ <span class="reference-heading-label">Rules Reference</span></h2>

@@ -179,6 +179,69 @@ pub fn decompose_word(word: &str) -> String {
     serde_json::to_string(&js).unwrap_or_else(|_| "{}".to_string())
 }
 
+/// A sandhi apply result serialized for JavaScript consumers.
+#[derive(Serialize)]
+struct JsSandhiResult {
+    output: String,
+    sandhi_type: String,
+    rule_citation: String,
+}
+
+/// A sandhi split entry serialized for JavaScript consumers.
+#[derive(Serialize)]
+struct JsSandhiSplit {
+    left: String,
+    right: String,
+    output: String,
+    sandhi_type: String,
+    rule_citation: String,
+}
+
+/// Apply sandhi: join two morphemes.
+/// Returns JSON: `{ output, sandhi_type, rule_citation }` or `{ "error": "..." }`.
+#[wasm_bindgen]
+pub fn sandhi_apply(first: &str, second: &str) -> String {
+    match varnavinyas_sandhi::apply(first, second) {
+        Ok(res) => {
+            let js = JsSandhiResult {
+                output: res.output,
+                sandhi_type: sandhi_type_to_string(res.sandhi_type),
+                rule_citation: res.rule_citation.to_string(),
+            };
+            serde_json::to_string(&js).unwrap_or_else(|_| "{}".to_string())
+        }
+        Err(e) => {
+            serde_json::json!({ "error": e.to_string() }).to_string()
+        }
+    }
+}
+
+/// Split a word at sandhi boundaries.
+/// Returns JSON array: `[{ left, right, output, sandhi_type, rule_citation }, ...]`.
+#[wasm_bindgen]
+pub fn sandhi_split(word: &str) -> String {
+    let results = varnavinyas_sandhi::split(word);
+    let js_results: Vec<JsSandhiSplit> = results
+        .into_iter()
+        .map(|(left, right, res)| JsSandhiSplit {
+            left,
+            right,
+            output: res.output,
+            sandhi_type: sandhi_type_to_string(res.sandhi_type),
+            rule_citation: res.rule_citation.to_string(),
+        })
+        .collect();
+    serde_json::to_string(&js_results).unwrap_or_else(|_| "[]".to_string())
+}
+
+fn sandhi_type_to_string(st: varnavinyas_sandhi::SandhiType) -> String {
+    match st {
+        varnavinyas_sandhi::SandhiType::VowelSandhi => "VowelSandhi".into(),
+        varnavinyas_sandhi::SandhiType::VisargaSandhi => "VisargaSandhi".into(),
+        varnavinyas_sandhi::SandhiType::ConsonantSandhi => "ConsonantSandhi".into(),
+    }
+}
+
 fn origin_to_string(origin: varnavinyas_shabda::Origin) -> String {
     match origin {
         varnavinyas_shabda::Origin::Tatsam => "tatsam".into(),

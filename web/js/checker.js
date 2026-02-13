@@ -4,12 +4,10 @@
  * All category keying uses `d.category_code` (stable Rust enum variant name),
  * while `d.category` is the human-readable Nepali label.
  */
-import { checkText, analyzeWord } from './wasm-bridge.js';
-import { debounce, escapeHtml, CATEGORY_COLORS, CATEGORY_LABELS, ORIGIN_LABELS } from './utils.js';
-import { getTooltipForRule, getCategoryForRule, RULE_TOOLTIPS } from './rules-data.js';
-
-/** Feature flag for word analysis panel. Set to true to enable. */
-const FEATURE_ANALYSIS = true;
+import { checkText } from './wasm-bridge.js';
+import { debounce, escapeHtml, CATEGORY_COLORS, CATEGORY_LABELS } from './utils.js';
+import { wrapRuleTooltip } from './rules-data.js';
+import { initInspector, showInspector, hideInspector, isInspectorActive } from './inspector.js';
 
 let diagnostics = [];
 let hiddenCategories = new Set();
@@ -21,6 +19,7 @@ const diagnosticsList = document.getElementById('diagnostics-list');
 const errorCount = document.getElementById('error-count');
 const fixAllBtn = document.getElementById('fix-all-btn');
 const categoryFilters = document.getElementById('category-filters');
+const panelCol = document.getElementById('panel-col');
 
 /**
  * Initialize the spell checker module.
@@ -30,6 +29,15 @@ export function initChecker() {
   editorInput.addEventListener('scroll', syncScroll);
   editorInput.addEventListener('click', onEditorClick);
   fixAllBtn.addEventListener('click', fixAll);
+
+  // Initialize the inspector on the panel column
+  const panelContent = document.getElementById('panel-content');
+  if (panelContent) {
+    initInspector(panelContent, {
+      onFix: handleInspectorFix,
+      onBack: handleInspectorBack,
+    });
+  }
 }
 
 const debouncedCheck = debounce(() => runCheck(), 300);
@@ -115,12 +123,12 @@ function renderDiagnostics() {
     (d) => !hiddenCategories.has(d.category_code)
   ).length;
 
-  errorCount.textContent = `${visibleCount} त्रुटि`;
+  errorCount.textContent = `${visibleCount} \u0924\u094D\u0930\u0941\u091F\u093F`;
   fixAllBtn.disabled = visibleCount === 0;
 
   if (diagnostics.length === 0) {
     diagnosticsList.innerHTML =
-      '<p class="diag-empty">कुनै त्रुटि भेटिएन।</p>';
+      '<p class="diag-empty">\u0915\u0941\u0928\u0948 \u0924\u094D\u0930\u0941\u091F\u093F \u092D\u0947\u091F\u093F\u090F\u0928\u0964</p>';
     return;
   }
 
@@ -135,12 +143,12 @@ function renderDiagnostics() {
         <span class="diag-badge" data-category="${code}">${escapeHtml(label)}</span>
         <div class="diag-correction">
           <span class="diag-incorrect">${escapeHtml(d.incorrect)}</span>
-          <span class="diag-arrow">→</span>
+          <span class="diag-arrow">\u2192</span>
           <span class="diag-correct">${escapeHtml(d.correction)}</span>
         </div>
         <div class="diag-explanation">${escapeHtml(d.explanation)}</div>
         <div class="diag-rule">${wrapRuleTooltip(d.rule, d.category_code)}</div>
-        <button class="btn btn-sm btn-primary diag-fix" data-index="${i}">सच्याउनुहोस्</button>
+        <button class="btn btn-sm btn-primary diag-fix" data-index="${i}">\u0938\u091A\u094D\u092F\u093E\u0909\u0928\u0941\u0939\u094B\u0938\u094D</button>
       </div>`;
     })
     .join('');
@@ -220,38 +228,41 @@ function setActiveCard(index) {
 }
 
 /**
- * Handle click in editor — find diagnostic at cursor position, or analyze clicked word.
+ * Handle click in editor — show inspector for clicked word, or highlight diagnostic.
  */
 function onEditorClick() {
   const pos = editorInput.selectionStart;
+  const text = editorInput.value;
+
+  // Check if click is on a diagnostic
   const idx = diagnostics.findIndex(
     (d) => pos >= d.charStart && pos < d.charEnd && !hiddenCategories.has(d.category_code)
   );
   if (idx >= 0) {
     activeCardIndex = idx;
     renderDiagnostics();
-    // Scroll card into view
     const card = diagnosticsList.querySelector(`[data-index="${idx}"]`);
     if (card) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
-  // Feature-flagged: analyze word at cursor
-  if (FEATURE_ANALYSIS) {
-    const word = getWordAtCursor(editorInput.value, pos);
-    if (word) {
-      renderAnalysisPanel(word);
-    }
+  // Show inspector for clicked word
+  const wordInfo = getWordAtCursor(text, pos);
+  if (wordInfo) {
+    // Hide diagnostics panel content, show inspector
+    hideDiagnosticsPanel();
+    showInspector(wordInfo.word, wordInfo.start, wordInfo.end);
+  } else if (isInspectorActive()) {
+    // Clicked whitespace — restore diagnostics
+    hideInspector();
+    restoreDiagnosticsPanel();
   }
 }
 
 /**
- * Extract the Devanagari word at a given cursor position.
+ * Extract the Devanagari word at a given cursor position, with start/end indices.
  */
 function getWordAtCursor(text, pos) {
   if (!text || pos < 0 || pos > text.length) return null;
-  // Walk left and right to find word boundaries.
-  // Includes Devanagari letters, matras, signs (0900-0963) but excludes
-  // danda/double-danda (0964-0965) and digits (0966-096F).
   const isDevanagariWord = (c) => {
     if (!c) return false;
     const cp = c.charCodeAt(0);
@@ -262,76 +273,42 @@ function getWordAtCursor(text, pos) {
   while (start > 0 && isDevanagariWord(text[start - 1])) start--;
   while (end < text.length && isDevanagariWord(text[end])) end++;
   if (start === end) return null;
-  return text.slice(start, end);
+  return { word: text.slice(start, end), start, end };
 }
 
 /**
- * Render the word analysis panel below the diagnostics.
+ * Hide the diagnostics panel elements (diag header + list).
  */
-function renderAnalysisPanel(word) {
-  let panel = document.getElementById('analysis-panel');
-  if (!panel) {
-    panel = document.createElement('div');
-    panel.id = 'analysis-panel';
-    panel.className = 'analysis-panel';
-    diagnosticsList.parentElement.appendChild(panel);
-  }
-
-  try {
-    const analysis = analyzeWord(word);
-    const originLabel = ORIGIN_LABELS[analysis.origin] || analysis.origin;
-    const originClass = `origin-${analysis.origin}`;
-    const statusIcon = analysis.is_correct ? 'correct' : 'incorrect';
-    const statusLabel = analysis.is_correct ? 'शुद्ध' : 'अशुद्ध';
-
-    let html = `
-      <div class="analysis-header">
-        <span class="analysis-word">${escapeHtml(analysis.word)}</span>
-        <span class="origin-badge ${originClass}">${escapeHtml(originLabel)}</span>
-        <span class="analysis-status ${statusIcon}">${statusLabel}</span>
-      </div>`;
-
-    if (analysis.correction) {
-      html += `
-      <div class="analysis-correction">
-        <span class="diag-incorrect">${escapeHtml(analysis.word)}</span>
-        <span class="diag-arrow">\u2192</span>
-        <span class="diag-correct">${escapeHtml(analysis.correction)}</span>
-      </div>`;
-    }
-
-    if (analysis.rule_notes && analysis.rule_notes.length > 0) {
-      html += '<div class="analysis-notes">';
-      for (const note of analysis.rule_notes) {
-        html += `
-        <div class="analysis-note">
-          <span class="analysis-note-rule">${wrapRuleTooltip(note.rule)}</span>
-          <span class="analysis-note-text">${escapeHtml(note.explanation)}</span>
-        </div>`;
-      }
-      html += '</div>';
-    }
-
-    panel.innerHTML = html;
-    panel.hidden = false;
-  } catch {
-    panel.hidden = true;
-  }
+function hideDiagnosticsPanel() {
+  const header = panelCol?.querySelector('.diag-header');
+  if (header) header.style.display = 'none';
+  if (diagnosticsList) diagnosticsList.style.display = 'none';
 }
 
 /**
- * Wrap a rule citation in a tooltip-enabled span.
+ * Restore the diagnostics panel elements.
  */
-function wrapRuleTooltip(ruleText, categoryCode) {
-  const cat = categoryCode || getCategoryForRule(ruleText);
-  const tooltip = (cat && RULE_TOOLTIPS[cat]) || getTooltipForRule(ruleText);
-  if (tooltip && cat) {
-    return `<span class="rule-ref" data-tooltip="${escapeHtml(tooltip)}" data-category="${escapeHtml(cat)}">${escapeHtml(ruleText)}</span>`;
-  }
-  if (tooltip) {
-    return `<span class="rule-ref" data-tooltip="${escapeHtml(tooltip)}">${escapeHtml(ruleText)}</span>`;
-  }
-  return escapeHtml(ruleText);
+function restoreDiagnosticsPanel() {
+  const header = panelCol?.querySelector('.diag-header');
+  if (header) header.style.display = '';
+  if (diagnosticsList) diagnosticsList.style.display = '';
+}
+
+/**
+ * Handle fix from inspector — apply correction, restore diagnostics, re-run check.
+ */
+function handleInspectorFix(start, end, correction) {
+  const text = editorInput.value;
+  editorInput.value = text.slice(0, start) + correction + text.slice(end);
+  restoreDiagnosticsPanel();
+  runCheck();
+}
+
+/**
+ * Handle back from inspector — restore diagnostics panel.
+ */
+function handleInspectorBack() {
+  restoreDiagnosticsPanel();
 }
 
 /**

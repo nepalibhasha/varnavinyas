@@ -1,5 +1,6 @@
 use crate::origin::{Origin, classify};
 use crate::tables;
+use varnavinyas_kosha::kosha;
 
 /// Morphological decomposition of a word.
 #[derive(Debug, Clone)]
@@ -29,6 +30,7 @@ pub fn decompose(word: &str) -> Morpheme {
     let mut remaining = word.to_string();
     let mut prefixes = Vec::new();
     let mut suffixes = Vec::new();
+    let lex = kosha();
 
     // Strip known prefixes (including sandhi-ed forms)
     // For consonant assimilation like उत् + ल → उल्ल:
@@ -38,7 +40,7 @@ pub fn decompose(word: &str) -> Morpheme {
             // Short prefixes (≤1 Devanagari char, e.g., अ, आ) require longer roots
             // to prevent over-decomposition (e.g., आगो → prefix अ + root गो).
             let min_root = if sandhi_form.chars().count() <= 1 { 4 } else { 2 };
-            if rest.chars().count() >= min_root {
+            if rest.chars().count() >= min_root && lex.contains(rest) {
                 prefixes.push(prefix.to_string());
                 remaining = rest.to_string();
                 break; // Only strip one prefix for now

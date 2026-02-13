@@ -87,6 +87,15 @@ body {
   padding: 1.5rem 1rem 0.75rem;
 }
 
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
 .header-title {
   font-size: 1.75rem;
   font-weight: 700;
@@ -101,52 +110,10 @@ body {
   margin-top: 0.15rem;
 }
 
-/* === Tabs === */
-.tabs {
-  display: flex;
-  justify-content: center;
-  gap: 0.25rem;
-  padding: 0.5rem 1rem;
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-surface);
-}
-
-.tab {
-  font-family: var(--font-devanagari);
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.6rem 1.25rem;
-  border: none;
-  background: transparent;
-  color: var(--color-text-secondary);
-  font-size: 0.95rem;
-  font-weight: 500;
-  cursor: pointer;
-  border-radius: var(--radius) var(--radius) 0 0;
-  border-bottom: 2px solid transparent;
-  transition: all var(--transition);
-}
-
-.tab:hover {
-  color: var(--color-text);
-  background: var(--color-bg);
-}
-
-.tab.active {
-  color: var(--color-primary);
-  border-bottom-color: var(--color-primary);
-}
-
-.tab-icon {
-  font-size: 1rem;
-}
-
-.tab-label {
-  font-family: var(--font-latin);
-  font-size: 0.7rem;
-  color: var(--color-text-secondary);
-  margin-left: 0.15rem;
+.nav-rules-btn {
+  font-size: 0.9rem;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 /* === Main === */
@@ -158,8 +125,8 @@ body {
   padding: 1.25rem 1rem;
 }
 
-.tab-panel { display: none; }
-.tab-panel.active { display: block; }
+.view { display: none; }
+.view.active { display: block; }
 
 /* === Buttons === */
 .btn {
@@ -304,7 +271,7 @@ body {
 }
 
 /* Diagnostics panel */
-.checker-diag-col {
+.checker-panel-col {
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -432,17 +399,57 @@ body {
 
 .diag-card.active .diag-fix { display: inline-flex; }
 
-/* === Word Analysis Panel === */
-.analysis-panel,
-.deriver-analysis {
-  margin-top: 1rem;
-  padding: 0.75rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
+/* === Word Inspector === */
+.inspector-container {
   animation: fadeIn 0.2s ease;
 }
 
+.panel-back-btn {
+  margin-bottom: 0.75rem;
+}
+
+.inspector-word-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.inspector-word {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.inspector-fix-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0;
+}
+
+.inspector-section {
+  margin-bottom: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.inspector-section-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+}
+
+.inspector-section-label {
+  font-family: var(--font-latin);
+  font-size: 0.65rem;
+  font-weight: 400;
+  color: var(--color-text-secondary);
+  margin-left: 0.2rem;
+}
+
+/* === Word Analysis (shared by inspector) === */
 .analysis-header {
   display: flex;
   align-items: center;
@@ -550,6 +557,18 @@ body {
   border: 1px solid #99f6e4;
 }
 
+.morpheme-case {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border: 1px solid #93c5fd;
+}
+
+.morpheme-plural {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+}
+
 .morpheme-sep {
   align-self: center;
   color: var(--color-text-secondary);
@@ -566,141 +585,44 @@ body {
   margin-top: 0.15rem;
 }
 
-/* === Transliterator === */
-.translit-layout {
-  max-width: 900px;
-  margin: 0 auto;
-}
-
-.translit-controls {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-}
-
-.btn-direction {
-  font-size: 1.1rem;
-  padding: 0.5rem 1.5rem;
+/* === Sandhi type badges (shared by inspector) === */
+.sandhi-type-badge {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
   font-weight: 600;
+  color: white;
+  background: var(--cat-default);
 }
 
-.direction-arrow {
-  margin: 0 0.4rem;
-  color: var(--color-primary);
-}
+.sandhi-type-vowel { background: #059669; }
+.sandhi-type-visarga { background: #3b82f6; }
+.sandhi-type-consonant { background: #d97706; }
 
-.translit-panels {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-.translit-panel {
-  display: flex;
-  flex-direction: column;
-}
-
-.translit-panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.translit-panel-label {
-  font-size: 0.85rem;
-  font-weight: 600;
+.sandhi-citation {
+  font-family: var(--font-latin);
+  font-size: 0.75rem;
   color: var(--color-text-secondary);
+}
+
+.sandhi-split-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 1rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
   margin-bottom: 0.35rem;
-  display: block;
 }
 
-.translit-textarea {
-  font-family: var(--font-devanagari);
-  width: 100%;
-  min-height: 300px;
-  padding: 1rem;
-  font-size: 1.1rem;
-  line-height: 1.8;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  background: var(--color-surface);
-  color: var(--color-text);
-  resize: vertical;
-  outline: none;
-  transition: border-color var(--transition);
-}
-
-.translit-textarea:focus { border-color: var(--color-primary); }
-.translit-textarea.readonly { background: var(--color-bg); color: var(--color-text-secondary); }
-
-/* === Deriver === */
-.deriver-layout {
-  max-width: 700px;
-  margin: 0 auto;
-}
-
-.deriver-input-section { margin-bottom: 1.5rem; }
-
-.deriver-label {
-  display: block;
-  font-size: 0.9rem;
+.sandhi-split-parts {
+  font-size: 1.05rem;
   font-weight: 600;
-  color: var(--color-text-secondary);
-  margin-bottom: 0.4rem;
 }
 
-.deriver-input {
-  font-family: var(--font-devanagari);
-  width: 100%;
-  padding: 0.75rem 1rem;
-  font-size: 1.35rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  background: var(--color-surface);
-  outline: none;
-  transition: border-color var(--transition);
-}
-
-.deriver-input:focus { border-color: var(--color-primary); }
-
-.deriver-result { animation: fadeIn 0.2s ease; }
-
-@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
-
-.deriver-summary {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  margin-bottom: 1rem;
-  font-size: 1.2rem;
-}
-
-.deriver-summary .indicator {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.deriver-summary .indicator.correct { background: var(--color-success); }
-.deriver-summary .indicator.incorrect { background: var(--color-error); }
-
-.deriver-summary .word-input { color: var(--color-text-secondary); }
-.deriver-summary .word-arrow { color: var(--color-text-secondary); font-size: 0.9rem; }
-.deriver-summary .word-output { font-weight: 700; }
-
-.deriver-empty {
-  text-align: center;
-  padding: 3rem 0;
-  color: var(--color-text-secondary);
-}
-
+/* === Steps table (shared by inspector) === */
 .steps-title {
   font-size: 0.95rem;
   font-weight: 600;
@@ -744,7 +666,9 @@ body {
   color: var(--color-primary);
 }
 
-/* === Rules Reference Tab === */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+/* === Rules Reference === */
 .reference-layout {
   max-width: 800px;
   margin: 0 auto;
@@ -880,7 +804,7 @@ body {
   border-radius: var(--radius-sm);
 }
 
-/* Back button on reference tab */
+/* Back button on reference view */
 .ref-back-btn {
   margin-bottom: 0.75rem;
 }
@@ -962,23 +886,21 @@ body {
 
 /* === Responsive === */
 @media (max-width: 768px) {
-  .tabs { gap: 0; }
-  .tab { padding: 0.5rem 0.75rem; font-size: 0.85rem; }
-  .tab-label { display: none; }
+  .header-inner {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
 
   .checker-layout {
     grid-template-columns: 1fr;
   }
 
-  .checker-diag-col {
+  .checker-panel-col {
     max-height: 300px;
   }
 
-  .translit-panels {
-    grid-template-columns: 1fr;
-  }
-
-  .translit-textarea { min-height: 200px; }
+  .inspector-word-header { flex-direction: column; align-items: flex-start; }
+  .inspector-fix-section { flex-direction: column; align-items: flex-start; }
 
   .ref-card-header { flex-direction: column; align-items: flex-start; }
   .ref-examples { font-size: 0.8rem; }

@@ -1,17 +1,15 @@
 /**
- * App entry point — WASM init, tab routing, sample text, rule navigation.
+ * App entry point — WASM init, view switching, sample text, rule navigation.
  */
 import { initialize } from './wasm-bridge.js';
 import { initChecker, setText } from './checker.js';
-import { initTransliterator } from './transliterator.js';
-import { initDeriver } from './deriver.js';
 import { initReference, highlightCard } from './reference.js';
 
 const SAMPLE_TEXT =
   'नेपाल एक सुन्दर देश हो। यहाँको प्रसाशन राम्रो हुनुपर्छ। अत्याधिक खर्च गर्नु हुँदैन। राजनैतिक स्थिरता आवश्यक छ।';
 
-/** Stores the tab to return to when the user clicks "back" from reference. */
-let returnState = null;
+/** Stores the scroll position to return to when the user clicks "back" from reference. */
+let returnScrollY = null;
 
 async function main() {
   // Initialize WASM
@@ -31,12 +29,10 @@ async function main() {
 
   // Initialize modules
   initChecker();
-  initTransliterator();
-  initDeriver();
   initReference();
 
-  // Set up tab routing
-  initTabs();
+  // Set up view switching
+  initViewSwitching();
 
   // Set up rule-ref click navigation
   initRuleNavigation();
@@ -45,53 +41,54 @@ async function main() {
   setText(SAMPLE_TEXT);
 }
 
-function initTabs() {
-  const tabs = document.querySelectorAll('.tab');
-  const panels = document.querySelectorAll('.tab-panel');
-
-  tabs.forEach((tab) => {
-    tab.addEventListener('click', () => {
-      const target = tab.dataset.tab;
-      switchToTab(target);
-      // Clear return state when user navigates tabs manually
-      if (target !== 'reference') {
-        hideBackButton();
-      }
+/**
+ * Initialize view switching: header rules button and back button.
+ */
+function initViewSwitching() {
+  const rulesBtn = document.getElementById('nav-rules-btn');
+  if (rulesBtn) {
+    rulesBtn.addEventListener('click', () => {
+      returnScrollY = window.scrollY;
+      switchToView('reference');
     });
-  });
+  }
+
+  const backBtn = document.getElementById('ref-back-btn');
+  if (backBtn) {
+    backBtn.addEventListener('click', goBack);
+  }
 }
 
 /**
- * Switch to a tab by name. Used by tab buttons and rule navigation.
+ * Switch to a view by name ('editor' or 'reference').
  */
-function switchToTab(tabName) {
-  const tabs = document.querySelectorAll('.tab');
-  const panels = document.querySelectorAll('.tab-panel');
-
-  tabs.forEach((t) => {
-    const isTarget = t.dataset.tab === tabName;
-    t.classList.toggle('active', isTarget);
-    t.setAttribute('aria-selected', isTarget ? 'true' : 'false');
+function switchToView(name) {
+  const views = document.querySelectorAll('.view');
+  views.forEach((v) => {
+    const isTarget = v.id === `view-${name}`;
+    v.classList.toggle('active', isTarget);
+    v.hidden = !isTarget;
   });
 
-  panels.forEach((p) => {
-    const isTarget = p.id === `tab-${tabName}`;
-    p.classList.toggle('active', isTarget);
-    p.hidden = !isTarget;
-  });
+  // Show/hide the rules button based on current view
+  const rulesBtn = document.getElementById('nav-rules-btn');
+  if (rulesBtn) {
+    rulesBtn.hidden = name === 'reference';
+  }
 }
 
 /**
- * Get the currently active tab name.
+ * Get the currently active view name.
  */
-function getActiveTab() {
-  const active = document.querySelector('.tab.active');
-  return active ? active.dataset.tab : null;
+function getActiveView() {
+  const active = document.querySelector('.view.active');
+  if (!active) return null;
+  return active.id.replace('view-', '');
 }
 
 /**
  * Set up delegated click handler for .rule-ref elements.
- * Clicking navigates to the reference tab and scrolls to the matching card.
+ * Clicking navigates to the reference view and scrolls to the matching card.
  */
 function initRuleNavigation() {
   document.addEventListener('click', (e) => {
@@ -101,52 +98,34 @@ function initRuleNavigation() {
     const categoryCode = ruleRef.dataset.category;
     if (!categoryCode) return;
 
-    // Don't navigate if already on reference tab
-    const currentTab = getActiveTab();
-    if (currentTab === 'reference') {
+    // Don't navigate if already on reference view
+    const currentView = getActiveView();
+    if (currentView === 'reference') {
       highlightCard(categoryCode);
       return;
     }
 
     // Save return state
-    returnState = { tab: currentTab, scrollY: window.scrollY };
+    returnScrollY = window.scrollY;
 
-    // Switch to reference tab and scroll to the card
-    switchToTab('reference');
-    showBackButton();
+    // Switch to reference view and scroll to the card
+    switchToView('reference');
 
     // Small delay to let the panel render before scrolling
     requestAnimationFrame(() => {
       highlightCard(categoryCode);
     });
   });
-
-  // Back button handler
-  const backBtn = document.getElementById('ref-back-btn');
-  if (backBtn) {
-    backBtn.addEventListener('click', goBack);
-  }
-}
-
-function showBackButton() {
-  const btn = document.getElementById('ref-back-btn');
-  if (btn) btn.hidden = false;
-}
-
-function hideBackButton() {
-  const btn = document.getElementById('ref-back-btn');
-  if (btn) btn.hidden = true;
-  returnState = null;
 }
 
 function goBack() {
-  if (!returnState) return;
-  const { tab, scrollY } = returnState;
-  switchToTab(tab);
-  hideBackButton();
-  requestAnimationFrame(() => {
-    window.scrollTo({ top: scrollY, behavior: 'auto' });
-  });
+  switchToView('editor');
+  if (returnScrollY != null) {
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: returnScrollY, behavior: 'auto' });
+    });
+  }
+  returnScrollY = null;
 }
 
 main();
