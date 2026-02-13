@@ -144,9 +144,11 @@ impl MorphAnalyzer for RuleBasedAnalyzer {
 
 #[cfg(feature = "vyakaran-mvp")]
 pub fn transform_negative(word: &str) -> Option<String> {
-    if let Some(stem) = word.strip_suffix("छ") {
-        if !stem.is_empty() {
-            return Some(format!("{stem}दैन"));
+    for &(pos, neg) in PRESENT_POS_TO_NEG_ENDINGS {
+        if let Some(stem) = word.strip_suffix(pos) {
+            if !stem.is_empty() {
+                return Some(format!("{stem}{neg}"));
+            }
         }
     }
 
@@ -178,6 +180,24 @@ const PLURAL_SUFFIXES: &[&str] = &["हरू", "हरु"];
 
 #[cfg(feature = "vyakaran-mvp")]
 const NONFINITE_VERB_ENDINGS: &[&str] = &["दा", "ई", "एर", "नु", "दै"];
+
+#[cfg(feature = "vyakaran-mvp")]
+const PRESENT_POS_TO_NEG_ENDINGS: &[(&str, &str)] = &[
+    ("छन्", "दैनन्"),
+    ("छौं", "दैनौं"),
+    ("छौ", "दैनौ"),
+    ("छु", "दिन"),
+    ("छ", "दैन"),
+];
+
+#[cfg(feature = "vyakaran-mvp")]
+const PRESENT_NEGATIVE_ENDINGS: &[(&str, Person)] = &[
+    ("दैनन्", Person::Third),
+    ("दैनौं", Person::First),
+    ("दैनौ", Person::Second),
+    ("दिन", Person::First),
+    ("दैन", Person::Third),
+];
 
 #[cfg(feature = "vyakaran-mvp")]
 fn analyze_nominal(word: &str) -> Option<MorphAnalysis> {
@@ -297,6 +317,8 @@ fn analyze_verbal(word: &str) -> Option<MorphAnalysis> {
 
     // Progressive markers: ...दै + present ending.
     for &(ending, person) in &[
+        ("छन्", Person::Third),
+        ("छौं", Person::First),
         ("छु", Person::First),
         ("छौ", Person::Second),
         ("छ", Person::Third),
@@ -315,7 +337,22 @@ fn analyze_verbal(word: &str) -> Option<MorphAnalysis> {
         }
     }
 
-    // Simple present negative cue.
+    // Simple present negative cues.
+    for &(ending, person) in PRESENT_NEGATIVE_ENDINGS {
+        if word.ends_with(ending) {
+            return Some(MorphAnalysis {
+                lemma: word.to_string(),
+                prefix: None,
+                suffix: Some(ending.to_string()),
+                features: Features {
+                    tense: Some(Tense::Present),
+                    person: Some(person),
+                    ..Default::default()
+                },
+            });
+        }
+    }
+
     if word.ends_with("छैन") {
         return Some(MorphAnalysis {
             lemma: word.to_string(),

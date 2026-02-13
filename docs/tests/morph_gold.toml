@@ -51,3 +51,25 @@ tense = "Present"
 word = "गएन"
 suffix = "एन"
 tense = "Past"
+
+[[morph]]
+word = "गर्दिन"
+suffix = "दिन"
+tense = "Present"
+person = "First"
+
+[[morph]]
+word = "गर्दैनन्"
+suffix = "दैनन्"
+tense = "Present"
+person = "Third"
+
+[[morph]]
+word = "नगर्दा"
+lemma = "गर्दा"
+tense = "Unknown"
+
+[[morph]]
+word = "नखाई"
+lemma = "खाई"
+tense = "Unknown"

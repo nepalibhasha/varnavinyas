@@ -1,5 +1,5 @@
 #[cfg(feature = "vyakaran-mvp")]
-use varnavinyas_vyakaran::{Case, MorphAnalyzer, Number, RuleBasedAnalyzer, Tense};
+use varnavinyas_vyakaran::{Case, MorphAnalyzer, Number, Person, RuleBasedAnalyzer, Tense};
 
 #[cfg(feature = "vyakaran-mvp")]
 #[test]
@@ -54,4 +54,41 @@ fn detects_na_prefix_in_nonfinite_forms() {
 fn transforms_present_positive_to_negative() {
     let out = varnavinyas_vyakaran::transform_negative("गर्छ");
     assert_eq!(out.as_deref(), Some("गर्दैन"));
+}
+
+#[cfg(feature = "vyakaran-mvp")]
+#[test]
+fn transforms_multiple_present_person_endings_to_negative() {
+    assert_eq!(
+        varnavinyas_vyakaran::transform_negative("गर्छु").as_deref(),
+        Some("गर्दिन")
+    );
+    assert_eq!(
+        varnavinyas_vyakaran::transform_negative("गर्छौ").as_deref(),
+        Some("गर्दैनौ")
+    );
+    assert_eq!(
+        varnavinyas_vyakaran::transform_negative("गर्छन्").as_deref(),
+        Some("गर्दैनन्")
+    );
+}
+
+#[cfg(feature = "vyakaran-mvp")]
+#[test]
+fn detects_person_in_present_negative_endings() {
+    let analyzer = RuleBasedAnalyzer;
+
+    let first = analyzer.analyze("गर्दिन").expect("analysis should succeed");
+    assert!(first.iter().any(|a| {
+        a.suffix.as_deref() == Some("दिन")
+            && a.features.tense == Some(Tense::Present)
+            && a.features.person == Some(Person::First)
+    }));
+
+    let third = analyzer.analyze("गर्दैनन्").expect("analysis should succeed");
+    assert!(third.iter().any(|a| {
+        a.suffix.as_deref() == Some("दैनन्")
+            && a.features.tense == Some(Tense::Present)
+            && a.features.person == Some(Person::Third)
+    }));
 }
