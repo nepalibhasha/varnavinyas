@@ -11,3 +11,7 @@ expect_variant_or_ambiguous_min = 1
 [[sentence]]
 text = "नेपाल राम्रो देश हो।"
 expect_variant_or_ambiguous_min = 0
+
+[[sentence]]
+text = "रामले गयो।"
+expect_variant_or_ambiguous_min = 1
