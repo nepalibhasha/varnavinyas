@@ -13,6 +13,20 @@ use crate::tokenizer::tokenize_analyzed;
 #[cfg(feature = "grammar-pass")]
 const QUANTIFIER_WORDS: &[&str] = &["धेरै", "सबै", "केही", "अनेक", "धेरैजसो"];
 
+#[cfg(feature = "grammar-pass")]
+const INTRANSITIVE_VERB_FORMS: &[&str] = &[
+    "छ",
+    "थियो",
+    "गयो",
+    "जान्छ",
+    "आयो",
+    "आउँछ",
+    "बस्यो",
+    "हिँड्यो",
+    "सुत्यो",
+    "पुग्यो",
+];
+
 /// Runtime options for `check_text_with_options`.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct CheckOptions {
@@ -197,6 +211,19 @@ fn add_grammar_diagnostics(
             });
         }
 
+        if has_ergative_suffix(token) && sentence_has_intransitive_predicate(tokens, idx) {
+            diagnostics.push(Diagnostic {
+                span,
+                incorrect: full.clone(),
+                correction: token.stem.clone(),
+                rule: Rule::Vyakaran("ergative-le-intransitive"),
+                explanation: "सामान्य अकर्मक क्रियासँग कर्तामा ले प्रायः प्रयोग हुँदैन।".to_string(),
+                category: DiagnosticCategory::ShuddhaTable,
+                kind: DiagnosticKind::Variant,
+                confidence: 0.68,
+            });
+        }
+
         // Optional samasa hint: expose high-confidence split as variant guidance.
         let candidates = varnavinyas_samasa::analyze_compound(&full);
         if let Some(top) = candidates.first() {
@@ -229,6 +256,24 @@ fn strip_plural_suffix(word: &str) -> Option<&str> {
 #[cfg(feature = "grammar-pass")]
 fn is_quantifier(word: &str) -> bool {
     QUANTIFIER_WORDS.contains(&word)
+}
+
+#[cfg(feature = "grammar-pass")]
+fn has_ergative_suffix(token: &AnalyzedToken) -> bool {
+    token.suffix.as_deref() == Some("ले")
+}
+
+#[cfg(feature = "grammar-pass")]
+fn sentence_has_intransitive_predicate(tokens: &[AnalyzedToken], subject_idx: usize) -> bool {
+    tokens
+        .iter()
+        .skip(subject_idx + 1)
+        .any(|tok| is_intransitive_verb_form(&token_full_form(tok)))
+}
+
+#[cfg(feature = "grammar-pass")]
+fn is_intransitive_verb_form(word: &str) -> bool {
+    INTRANSITIVE_VERB_FORMS.contains(&word)
 }
 
 #[cfg(feature = "grammar-pass")]

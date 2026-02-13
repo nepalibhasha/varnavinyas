@@ -28,3 +28,18 @@ fn grammar_pass_flags_plural_after_quantifier() {
         "Expected quantifier-plural heuristic diagnostic, got: {diags:?}"
     );
 }
+
+#[cfg(feature = "grammar-pass")]
+#[test]
+fn grammar_pass_flags_ergative_with_intransitive_predicate() {
+    let text = "रामले गयो।";
+    let diags = check_text_with_options(text, CheckOptions { grammar: true });
+
+    assert!(
+        diags.iter().any(|d| {
+            d.rule == varnavinyas_prakriya::Rule::Vyakaran("ergative-le-intransitive")
+                && matches!(d.kind, DiagnosticKind::Variant)
+        }),
+        "Expected ergative/intransitive heuristic diagnostic, got: {diags:?}"
+    );
+}
