@@ -29,14 +29,14 @@ const EXPECTED_SPLITS: &[(&str, &str, &str)] = &[
 
 /// Words that must NOT produce any sandhi split.
 const NO_SPLIT_EXPECTED: &[&str] = &[
-    "राम",      // name (2 aksharas, atomic)
-    "काम",      // noun (2 aksharas)
-    "नाम",      // noun (2 aksharas)
-    "आम",       // noun (< 3 aksharas)
-    "देश",      // noun (2 aksharas)
-    "प्रेम",    // noun (2 aksharas)
-    "नेपाल",    // name
-    "रामसँग",   // after stripping सँग, root=राम (2 aksharas)
+    "राम",   // name (2 aksharas, atomic)
+    "काम",   // noun (2 aksharas)
+    "नाम",   // noun (2 aksharas)
+    "आम",    // noun (< 3 aksharas)
+    "देश",    // noun (2 aksharas)
+    "प्रेम",   // noun (2 aksharas)
+    "नेपाल",  // name
+    "रामसँग", // after stripping सँग, root=राम (2 aksharas)
 ];
 
 /// Run sandhi split using the morphology-first pipeline.
@@ -56,9 +56,7 @@ fn known_correct_splits_found() {
 
     for &(word, exp_left, exp_right) in EXPECTED_SPLITS {
         let results = pipeline_split(word);
-        let has_match = results
-            .iter()
-            .any(|(l, r)| l == exp_left && r == exp_right);
+        let has_match = results.iter().any(|(l, r)| l == exp_left && r == exp_right);
         if has_match {
             found += 1;
             println!("  ✓ {} → {} + {}", word, exp_left, exp_right);
@@ -66,17 +64,15 @@ fn known_correct_splits_found() {
             missed.push((word, exp_left, exp_right, results));
             println!(
                 "  ✗ {} → expected {} + {} but got {:?}",
-                word, exp_left, exp_right,
+                word,
+                exp_left,
+                exp_right,
                 pipeline_split(word)
             );
         }
     }
 
-    println!(
-        "\nKnown splits: {}/{} found",
-        found,
-        EXPECTED_SPLITS.len()
-    );
+    println!("\nKnown splits: {}/{} found", found, EXPECTED_SPLITS.len());
     // Note: misses are due to splitter reconstruction coverage, not the guard.
     // The 3-akshara guard + 2-akshara per-part filter is working correctly.
     // Track this count to detect regressions as we improve reconstruction.
@@ -121,11 +117,7 @@ fn headword_sandhi_census() {
         .lines()
         .filter_map(|line| {
             let word = line.split('\t').next()?.trim();
-            if word.is_empty() {
-                None
-            } else {
-                Some(word)
-            }
+            if word.is_empty() { None } else { Some(word) }
         })
         .collect();
 
@@ -178,8 +170,7 @@ fn headword_sandhi_census() {
 
     // Print POS distribution of split words
     println!("\n--- POS distribution of split words ---");
-    let mut pos_counts: std::collections::HashMap<String, usize> =
-        std::collections::HashMap::new();
+    let mut pos_counts: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
     for (word, _) in &split_words {
         let pos = lex
             .lookup(word)

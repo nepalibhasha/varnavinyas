@@ -114,7 +114,7 @@ pub static PREFIX_FORMS: &[(&str, &str, &str)] = &[
     // 15 bytes
     ("प्रति", "प्रति", ""),
     // 12 bytes
-    ("पुनः", "पुनर", ""),  // पुनः before vowel → पुनर
+    ("पुनः", "पुनर", ""), // पुनः before vowel → पुनर
     ("पुनः", "पुनः", ""),
     ("निर्", "निर्", ""),
     ("निस्", "निस्", ""),
@@ -125,9 +125,9 @@ pub static PREFIX_FORMS: &[(&str, &str, &str)] = &[
     ("अभि", "अभि", ""),
     ("अधि", "अधि", ""),
     ("दुर्", "दुः", ""),
-    ("सम्", "सङ्", ""),   // सम् before gutturals → सङ्
-    ("उत्", "उल्", ""),   // उत् + ल → उल्ल
-    ("उत्", "उच्", ""),   // उत् + च → उच्च
+    ("सम्", "सङ्", ""), // सम् before gutturals → सङ्
+    ("उत्", "उल्", ""), // उत् + ल → उल्ल
+    ("उत्", "उच्", ""), // उत् + च → उच्च
     ("उत्", "उत्", ""),
     ("सम्", "सम्", ""),
     ("अनु", "अनु", ""),
@@ -139,20 +139,31 @@ pub static PREFIX_FORMS: &[(&str, &str, &str)] = &[
     ("प्र", "प्र", ""),
     // 6 bytes
     ("सम्", "सं", ""),
-    ("अप", "अप", ""),     // medium risk: can over-strip (अपना, अवश्य)
-    ("अव", "अव", ""),     // medium risk: see above
+    ("अप", "अप", ""), // medium risk: can over-strip (अपना, अवश्य)
+    ("अव", "अव", ""), // medium risk: see above
     ("उप", "उप", ""),
     ("वि", "वि", ""),
     // 3 bytes
-    ("आ", "आ", ""),     // short prefix: ≤1 Devanagari char, requires 4+ char root
-    ("अ", "अ", ""),     // short prefix: ≤1 Devanagari char, requires 4+ char root
+    ("आ", "आ", ""), // short prefix: ≤1 Devanagari char, requires 4+ char root
+    ("अ", "अ", ""), // short prefix: ≤1 Devanagari char, requires 4+ char root
 ];
 
 /// Case markers (postpositions) for iterative decomposition.
 /// Sorted by descending byte length.
 #[cfg(feature = "iterative-decompose")]
 pub static CASE_MARKERS: &[&str] = &[
-    "भित्र", "प्रति", "देखि", "लाई", "बाट", "सँग", "तिर", "का", "की", "ले", "को", "मा",
+    "भित्र",
+    "प्रति",
+    "देखि",
+    "लाई",
+    "बाट",
+    "सँग",
+    "तिर",
+    "का",
+    "की",
+    "ले",
+    "को",
+    "मा",
 ];
 
 /// Plural markers for iterative decomposition.

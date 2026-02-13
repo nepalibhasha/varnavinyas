@@ -74,7 +74,7 @@ pub fn check_text(text: &str) -> Vec<Diagnostic> {
     for token in &tokens {
         if let Some(mut diag) = check_word(&token.stem) {
             diag.span = (token.start, token.end);
-            
+
             // Fix: If a suffix was detached, reattach it to the diagnostic strings.
             // The span covers the full token (stem+suffix), so the correction
             // must also be the full form to avoid data loss on replacement.

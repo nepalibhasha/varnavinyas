@@ -86,11 +86,16 @@ pub fn panchham_of(v: Varga) -> Option<char> {
 /// Get the voiced counterpart of a voiceless stop (position 1→3, 2→4).
 pub fn voiced_counterpart(c: char) -> Option<char> {
     match c {
-        'क' => Some('ग'), 'ख' => Some('घ'),
-        'च' => Some('ज'), 'छ' => Some('झ'),
-        'ट' => Some('ड'), 'ठ' => Some('ढ'),
-        'त' => Some('द'), 'थ' => Some('ध'),
-        'प' => Some('ब'), 'फ' => Some('भ'),
+        'क' => Some('ग'),
+        'ख' => Some('घ'),
+        'च' => Some('ज'),
+        'छ' => Some('झ'),
+        'ट' => Some('ड'),
+        'ठ' => Some('ढ'),
+        'त' => Some('द'),
+        'थ' => Some('ध'),
+        'प' => Some('ब'),
+        'फ' => Some('भ'),
         _ => None,
     }
 }
@@ -184,17 +189,24 @@ mod tests {
 
     #[test]
     fn test_voiceless() {
-        for c in ['क', 'ख', 'च', 'छ', 'ट', 'ठ', 'त', 'थ', 'प', 'फ', 'श', 'ष', 'स'] {
+        for c in [
+            'क', 'ख', 'च', 'छ', 'ट', 'ठ', 'त', 'थ', 'प', 'फ', 'श', 'ष', 'स',
+        ] {
             assert!(is_voiceless(c), "expected voiceless for {c}");
         }
-        for c in ['ग', 'घ', 'ज', 'झ', 'ड', 'ढ', 'द', 'ध', 'ब', 'भ', 'म', 'य', 'र', 'ह'] {
+        for c in [
+            'ग', 'घ', 'ज', 'झ', 'ड', 'ढ', 'द', 'ध', 'ब', 'भ', 'म', 'य', 'र', 'ह',
+        ] {
             assert!(!is_voiceless(c), "unexpected voiceless for {c}");
         }
     }
 
     #[test]
     fn test_voiced() {
-        for c in ['ग', 'घ', 'ङ', 'ज', 'झ', 'ञ', 'ड', 'ढ', 'ण', 'द', 'ध', 'न', 'ब', 'भ', 'म', 'य', 'र', 'ल', 'व', 'ह'] {
+        for c in [
+            'ग', 'घ', 'ङ', 'ज', 'झ', 'ञ', 'ड', 'ढ', 'ण', 'द', 'ध', 'न', 'ब', 'भ', 'म', 'य', 'र',
+            'ल', 'व', 'ह',
+        ] {
             assert!(is_voiced(c), "expected voiced for {c}");
         }
         for c in ['क', 'ख', 'च', 'छ', 'ट', 'ठ', 'त', 'थ', 'प', 'फ'] {

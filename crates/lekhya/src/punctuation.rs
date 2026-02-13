@@ -170,7 +170,11 @@ fn check_period_as_sentence_end(text: &str, diagnostics: &mut Vec<LekhyaDiagnost
             if has_devanagari_before {
                 // Check what follows
                 let is_eof = period_end >= bytes.len();
-                let next_char = if !is_eof { Some(bytes[period_end]) } else { None };
+                let next_char = if !is_eof {
+                    Some(bytes[period_end])
+                } else {
+                    None
+                };
 
                 let is_newline = matches!(next_char, Some(b'\n' | b'\r'));
                 let is_space = matches!(next_char, Some(b' '));
@@ -233,9 +237,7 @@ fn is_likely_abbreviation(text: &str, pos: usize) -> bool {
 
     // Common sentence-ending verbs that are short but definitely NOT abbreviations.
     // If the word is one of these, it's a full stop error, not an abbreviation.
-    let common_enders = [
-        "हो", "छ", "हुन्", "छन्", "थियो", "थिन्", "भयो", "गर्यो",
-    ];
+    let common_enders = ["हो", "छ", "हुन्", "छन्", "थियो", "थिन्", "भयो", "गर्यो"];
     if common_enders.contains(&word) {
         return false;
     }
@@ -244,9 +246,11 @@ fn is_likely_abbreviation(text: &str, pos: usize) -> bool {
     // BUT exclude numbers — digits are never abbreviations.
     // e.g. "५." is "5.", not an abbreviation.
     let char_count = word.chars().count();
-    char_count > 0 
-        && char_count <= 3 
-        && word.chars().all(|c| is_devanagari_char(c) && !c.is_numeric())
+    char_count > 0
+        && char_count <= 3
+        && word
+            .chars()
+            .all(|c| is_devanagari_char(c) && !c.is_numeric())
 }
 
 /// Y3: Detect "..." that should be ऐजन बिन्दु (ellipsis).

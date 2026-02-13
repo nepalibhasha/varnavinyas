@@ -65,4 +65,3 @@ pub fn apply(first: &str, second: &str) -> Result<SandhiResult, SandhiError> {
         second: second.to_string(),
     })
 }
-

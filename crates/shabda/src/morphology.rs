@@ -39,7 +39,11 @@ pub fn decompose(word: &str) -> Morpheme {
         if let Some(rest) = remaining.strip_prefix(sandhi_form) {
             // Short prefixes (≤1 Devanagari char, e.g., अ, आ) require longer roots
             // to prevent over-decomposition (e.g., आगो → prefix अ + root गो).
-            let min_root = if sandhi_form.chars().count() <= 1 { 4 } else { 2 };
+            let min_root = if sandhi_form.chars().count() <= 1 {
+                4
+            } else {
+                2
+            };
             if rest.chars().count() >= min_root && lex.contains(rest) {
                 prefixes.push(prefix.to_string());
                 remaining = rest.to_string();

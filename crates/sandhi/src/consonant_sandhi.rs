@@ -39,14 +39,12 @@ pub fn apply_consonant_sandhi(first: &str, second: &str) -> Option<SandhiResult>
             if !second_chars.is_empty() && varnavinyas_akshar::is_panchham(second_chars[0]) {
                 if let Some(v) = varnavinyas_akshar::varga(base_consonant) {
                     if let Some(nasal) = varnavinyas_akshar::panchham_of(v) {
-                        let prefix: String =
-                            first_chars[..first_chars.len() - 2].iter().collect();
+                        let prefix: String = first_chars[..first_chars.len() - 2].iter().collect();
                         let result = format!("{prefix}{nasal}्{second}");
                         return Some(SandhiResult {
                             output: result,
                             sandhi_type: SandhiType::ConsonantSandhi,
-                            rule_citation:
-                                "व्यञ्जन सन्धि: stop→nasal before nasal (panchham assimilation)",
+                            rule_citation: "व्यञ्जन सन्धि: stop→nasal before nasal (panchham assimilation)",
                         });
                     }
                 }
@@ -64,8 +62,7 @@ pub fn apply_consonant_sandhi(first: &str, second: &str) -> Option<SandhiResult>
                     return Some(SandhiResult {
                         output: result,
                         sandhi_type: SandhiType::ConsonantSandhi,
-                        rule_citation:
-                            "व्यञ्जन सन्धि: voiceless→voiced before voiced consonant",
+                        rule_citation: "व्यञ्जन सन्धि: voiceless→voiced before voiced consonant",
                     });
                 }
             }

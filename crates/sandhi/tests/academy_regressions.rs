@@ -38,9 +38,14 @@ fn guna_vriddhi_split() {
     for (word, exp_left, exp_right) in &cases {
         let results = split(word);
         assert!(
-            results.iter().any(|(l, r, _)| l == exp_left && r == exp_right),
+            results
+                .iter()
+                .any(|(l, r, _)| l == exp_left && r == exp_right),
             "{word}: expected {exp_left} + {exp_right}, got {:?}",
-            results.iter().map(|(l, r, _)| format!("{l} + {r}")).collect::<Vec<_>>()
+            results
+                .iter()
+                .map(|(l, r, _)| format!("{l} + {r}"))
+                .collect::<Vec<_>>()
         );
     }
 }

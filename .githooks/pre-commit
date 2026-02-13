@@ -1,0 +1,17 @@
+#!/bin/sh
+# Pre-commit hook: auto-format Rust code with cargo fmt.
+# If formatting changes any files, they are re-staged automatically.
+#
+# To install: git config core.hooksPath .githooks
+
+# Only run if Rust files are staged
+if git diff --cached --name-only --diff-filter=ACM | grep -q '\.rs$'; then
+    cargo fmt --all -- --check >/dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo "Running cargo fmt..."
+        cargo fmt --all
+        # Re-stage the formatted files
+        git diff --cached --name-only --diff-filter=ACM | grep '\.rs$' | xargs git add
+        echo "Formatted and re-staged Rust files."
+    fi
+fi

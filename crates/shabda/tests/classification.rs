@@ -119,7 +119,10 @@ fn prefix_forms_sorted_descending_by_byte_length() {
         assert!(
             a_len >= b_len,
             "PREFIX_FORMS not sorted: {:?} ({}B) before {:?} ({}B)",
-            window[0].1, a_len, window[1].1, b_len
+            window[0].1,
+            a_len,
+            window[1].1,
+            b_len
         );
     }
 }
@@ -134,7 +137,10 @@ fn suffixes_sorted_descending_by_byte_length() {
         assert!(
             a_len >= b_len,
             "SUFFIXES not sorted: {:?} ({}B) before {:?} ({}B)",
-            window[0], a_len, window[1], b_len
+            window[0],
+            a_len,
+            window[1],
+            b_len
         );
     }
 }

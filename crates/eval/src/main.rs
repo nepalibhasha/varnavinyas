@@ -34,7 +34,7 @@ impl CategoryResult {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("{}", "Varnavinyas Evaluation Harness".bold().cyan());
-    
+
     // Path relative to workspace root (CWD when running `cargo run`)
     let path = Path::new("docs/tests/gold.toml");
     if !path.exists() {
@@ -102,7 +102,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "{:<20} | {:>4} | {:>4} | {:>4} | {:>8}",
         "Category", "TP", "FN", "FP", "Accuracy"
     );
-    println!("{:-<20}-+-{:-<4}-+-{:-<4}-+-{:-<4}-+-{:-<8}", "", "", "", "", "");
+    println!(
+        "{:-<20}-+-{:-<4}-+-{:-<4}-+-{:-<4}-+-{:-<8}",
+        "", "", "", "", ""
+    );
 
     for res in &results {
         let acc = res.accuracy();
@@ -120,20 +123,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
     }
 
-    println!("{:-<20}-+-{:-<4}-+-{:-<4}-+-{:-<4}-+-{:-<8}", "", "", "", "", "");
+    println!(
+        "{:-<20}-+-{:-<4}-+-{:-<4}-+-{:-<4}-+-{:-<8}",
+        "", "", "", "", ""
+    );
     let grand_acc = if grand_total > 0 {
         (grand_tp as f64 / grand_total as f64) * 100.0
     } else {
         0.0
     };
-    
+
     println!(
         "{:<20} | {:>4} | {:>4} | {:>4} | {:>8}",
-        "TOTAL".bold(), grand_tp, grand_fn, grand_fp, format!("{:.1}%", grand_acc).bold()
+        "TOTAL".bold(),
+        grand_tp,
+        grand_fn,
+        grand_fp,
+        format!("{:.1}%", grand_acc).bold()
     );
 
     println!();
-    
+
     if grand_acc < 80.0 {
         println!("{}", "Warning: Overall accuracy below 80%".yellow());
     } else {

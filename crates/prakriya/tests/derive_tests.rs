@@ -254,4 +254,3 @@ fn ramailo_dirgha_corrected() {
     assert_eq!(p.output, "रमाइलो");
     assert!(!p.is_correct);
 }
-

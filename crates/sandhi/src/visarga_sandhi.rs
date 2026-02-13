@@ -60,7 +60,7 @@ pub fn apply_visarga_sandhi(first: &str, second: &str) -> Option<SandhiResult> {
         // Usually in Nepali: मनः + अनुकूल -> मनोनुकूल.
         // We handle this under the general "voiced" rule below if we treat vowels as voiced?
         // Actually, let's keep the R rule for now as it handles पुनरागमन.
-        
+
         let second_remainder: String;
         let ra_form: String;
 
@@ -92,9 +92,9 @@ pub fn apply_visarga_sandhi(first: &str, second: &str) -> Option<SandhiResult> {
         // If prefix ends in consonant (implicit 'a'), then it is अः
         // Rule: अः + voiced consonant → ओ
         // Exception: पुनः (punar) and अन्तः (antar) always become र
-        let is_implicit_a = !varnavinyas_akshar::is_matra(*last_char_of_prefix) 
-                            && !varnavinyas_akshar::is_svar(*last_char_of_prefix)
-                            && *last_char_of_prefix != '्'; // halanta shouldn't precede visarga
+        let is_implicit_a = !varnavinyas_akshar::is_matra(*last_char_of_prefix)
+            && !varnavinyas_akshar::is_svar(*last_char_of_prefix)
+            && *last_char_of_prefix != '्'; // halanta shouldn't precede visarga
 
         let is_punah_antah = prefix == "पुन" || prefix == "अन्त";
 

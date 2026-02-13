@@ -111,13 +111,19 @@ fn has_tatsam_markers(word: &str, chars: &[char]) -> bool {
     }
 
     // Conjuncts: क्ष, ज्ञ
-    if word.contains("क्ष") || word.contains("ज्ञ") || word.contains("क्त") || word.contains("त्म") {
+    if word.contains("क्ष") || word.contains("ज्ञ") || word.contains("क्त") || word.contains("त्म")
+    {
         return true;
     }
 
     // श्र (common tatsam conjunct, but not exclusive)
     // Additional tatsam conjuncts
-    if word.contains("त्र") || word.contains("त्त") || word.contains("द्ध") || word.contains("द्य") || word.contains("द्व") {
+    if word.contains("त्र")
+        || word.contains("त्त")
+        || word.contains("द्ध")
+        || word.contains("द्य")
+        || word.contains("द्व")
+    {
         return true;
     }
 

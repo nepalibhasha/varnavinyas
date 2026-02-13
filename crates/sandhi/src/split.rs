@@ -1,4 +1,4 @@
-use crate::{apply, SandhiResult};
+use crate::{SandhiResult, apply};
 use varnavinyas_akshar::split_aksharas;
 use varnavinyas_kosha::kosha;
 
@@ -32,11 +32,11 @@ pub fn split(word: &str) -> Vec<(String, String, SandhiResult)> {
         // Strategy 1: Simple concatenation (Visarga retained, or no change)
         // Check if raw_left and raw_right are valid words
         if lex.contains(raw_left) && lex.contains(raw_right) {
-             if let Ok(res) = apply(raw_left, raw_right) {
-                 if res.output == word {
-                     results.push((raw_left.to_string(), raw_right.to_string(), res));
-                 }
-             }
+            if let Ok(res) = apply(raw_left, raw_right) {
+                if res.output == word {
+                    results.push((raw_left.to_string(), raw_right.to_string(), res));
+                }
+            }
         }
 
         // Strategy 2: Vowel reconstruction on the right side.
@@ -76,10 +76,12 @@ pub fn split(word: &str) -> Vec<(String, String, SandhiResult)> {
         // If left ends in ्य, try replacing with ि/ी and prepending vowel to right.
         if let Some(base) = raw_left.strip_suffix("्य") {
             let left_candidates = [format!("{}ि", base), format!("{}ी", base)];
-            
+
             for left in left_candidates {
-                if !lex.contains(&left) { continue; }
-                
+                if !lex.contains(&left) {
+                    continue;
+                }
+
                 // Try prepending vowels to right
                 for v in vowels {
                     let right = format!("{v}{raw_right}");
@@ -97,10 +99,12 @@ pub fn split(word: &str) -> Vec<(String, String, SandhiResult)> {
         // If left ends in ्व, try replacing with ु/ू and prepending vowel to right.
         if let Some(base) = raw_left.strip_suffix("्व") {
             let left_candidates = [format!("{}ु", base), format!("{}ू", base)];
-            
+
             for left in left_candidates {
-                if !lex.contains(&left) { continue; }
-                
+                if !lex.contains(&left) {
+                    continue;
+                }
+
                 for v in vowels {
                     let right = format!("{v}{raw_right}");
                     if lex.contains(&right) {
@@ -122,7 +126,7 @@ pub fn split(word: &str) -> Vec<(String, String, SandhiResult)> {
         if raw_right.starts_with('र') {
             let left_candidate = format!("{}ः", raw_left);
             let right_candidate = format!("अ{}", &raw_right['र'.len_utf8()..]);
-            
+
             if lex.contains(&left_candidate) && lex.contains(&right_candidate) {
                 if let Ok(res) = apply(&left_candidate, &right_candidate) {
                     if res.output == word {
@@ -137,16 +141,16 @@ pub fn split(word: &str) -> Vec<(String, String, SandhiResult)> {
         // right starts with 'र्'. Try stripping 'र्'.
         // left: append 'ः'.
         if let Some(remainder) = raw_right.strip_prefix("र्") {
-             let left_candidate = format!("{}ः", raw_left);
-             let right_candidate = remainder.to_string();
-             
-             if lex.contains(&left_candidate) && lex.contains(&right_candidate) {
+            let left_candidate = format!("{}ः", raw_left);
+            let right_candidate = remainder.to_string();
+
+            if lex.contains(&left_candidate) && lex.contains(&right_candidate) {
                 if let Ok(res) = apply(&left_candidate, &right_candidate) {
                     if res.output == word {
                         results.push((left_candidate, right_candidate, res));
                     }
                 }
-             }
+            }
         }
 
         // Strategy 5: Visarga -> Sibilant Reconstruction (satva sandhi)
@@ -158,9 +162,9 @@ pub fn split(word: &str) -> Vec<(String, String, SandhiResult)> {
         // We check: raw_left ends in sibilant+halanta, raw_right starts with matching stop.
         {
             let sibilant_map: &[(char, &[char])] = &[
-                ('श', &['च', 'छ']),   // palatal
-                ('ष', &['ट', 'ठ']),   // retroflex
-                ('स', &['त', 'थ']),   // dental
+                ('श', &['च', 'छ']), // palatal
+                ('ष', &['ट', 'ठ']), // retroflex
+                ('स', &['त', 'थ']), // dental
             ];
             for &(sibilant, stops) in sibilant_map {
                 let suffix = format!("{sibilant}्");
@@ -190,7 +194,9 @@ pub fn split(word: &str) -> Vec<(String, String, SandhiResult)> {
         if let Some(base) = raw_left.strip_suffix("ाय") {
             let left_candidates = [format!("{base}ै"), format!("{base}ऐ")];
             for left in left_candidates {
-                if !lex.contains(&left) { continue; }
+                if !lex.contains(&left) {
+                    continue;
+                }
                 for v in vowels {
                     let right = format!("{v}{raw_right}");
                     if lex.contains(&right) {
@@ -207,7 +213,9 @@ pub fn split(word: &str) -> Vec<(String, String, SandhiResult)> {
         else if let Some(base) = raw_left.strip_suffix('य') {
             let left_candidates = [format!("{base}े"), format!("{base}ए")];
             for left in left_candidates {
-                if !lex.contains(&left) { continue; }
+                if !lex.contains(&left) {
+                    continue;
+                }
                 for v in vowels {
                     let right = format!("{v}{raw_right}");
                     if lex.contains(&right) {
@@ -225,7 +233,9 @@ pub fn split(word: &str) -> Vec<(String, String, SandhiResult)> {
         if let Some(base) = raw_left.strip_suffix("ाव") {
             let left_candidates = [format!("{base}ौ"), format!("{base}औ")];
             for left in left_candidates {
-                if !lex.contains(&left) { continue; }
+                if !lex.contains(&left) {
+                    continue;
+                }
                 for v in vowels {
                     let right = format!("{v}{raw_right}");
                     if lex.contains(&right) {
@@ -242,7 +252,9 @@ pub fn split(word: &str) -> Vec<(String, String, SandhiResult)> {
         else if let Some(base) = raw_left.strip_suffix('व') {
             let left_candidates = [format!("{base}ो"), format!("{base}ओ")];
             for left in left_candidates {
-                if !lex.contains(&left) { continue; }
+                if !lex.contains(&left) {
+                    continue;
+                }
                 for v in vowels {
                     let right = format!("{v}{raw_right}");
                     if lex.contains(&right) {

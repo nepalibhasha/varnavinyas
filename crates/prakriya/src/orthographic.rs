@@ -320,7 +320,10 @@ pub fn rule_halanta(input: &str) -> Option<Prakriya> {
                 &output,
                 vec![Step::new(
                     Rule::VarnaVinyasNiyam(rule_citation),
-                    format!("Tatsam suffix ends in halanta: {} -> {}", wrong_suffix, correct_suffix),
+                    format!(
+                        "Tatsam suffix ends in halanta: {} -> {}",
+                        wrong_suffix, correct_suffix
+                    ),
                     input,
                     &output,
                 )],

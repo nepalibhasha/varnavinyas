@@ -12,26 +12,77 @@ use crate::structural;
 static PATTERN_RULES: LazyLock<Vec<PatternRule>> = LazyLock::new(|| {
     let mut rules = vec![
         // Structural (100–120)
-        PatternRule { spec: structural::SPEC_SHRI, apply: structural::rule_shri_correction },
-        PatternRule { spec: structural::SPEC_REDUNDANT_SUFFIX, apply: structural::rule_redundant_suffix },
-        PatternRule { spec: structural::SPEC_PANCHHAM, apply: structural::rule_panchham_varna },
+        PatternRule {
+            spec: structural::SPEC_SHRI,
+            apply: structural::rule_shri_correction,
+        },
+        PatternRule {
+            spec: structural::SPEC_REDUNDANT_SUFFIX,
+            apply: structural::rule_redundant_suffix,
+        },
+        PatternRule {
+            spec: structural::SPEC_PANCHHAM,
+            apply: structural::rule_panchham_varna,
+        },
         // Hrasva/Dirgha (200–260)
-        PatternRule { spec: hrasva_dirgha::SPEC_SUFFIX_NU, apply: hrasva_dirgha::rule_suffix_nu_hrasva },
-        PatternRule { spec: hrasva_dirgha::SPEC_SUFFIX_ELI, apply: hrasva_dirgha::rule_suffix_eli_hrasva },
-        PatternRule { spec: hrasva_dirgha::SPEC_SUFFIX_PRESERVES, apply: hrasva_dirgha::rule_suffix_preserves_dirgha },
-        PatternRule { spec: hrasva_dirgha::SPEC_TADBHAV, apply: hrasva_dirgha::rule_tadbhav_hrasva },
-        PatternRule { spec: hrasva_dirgha::SPEC_DIRGHA_ENDINGS, apply: hrasva_dirgha::rule_dirgha_endings },
-        PatternRule { spec: hrasva_dirgha::SPEC_KINSHIP, apply: hrasva_dirgha::rule_kinship_tadbhav },
-        PatternRule { spec: hrasva_dirgha::SPEC_KOSHA_BACKED, apply: hrasva_dirgha::kosha_backed_dirgha_correction },
+        PatternRule {
+            spec: hrasva_dirgha::SPEC_SUFFIX_NU,
+            apply: hrasva_dirgha::rule_suffix_nu_hrasva,
+        },
+        PatternRule {
+            spec: hrasva_dirgha::SPEC_SUFFIX_ELI,
+            apply: hrasva_dirgha::rule_suffix_eli_hrasva,
+        },
+        PatternRule {
+            spec: hrasva_dirgha::SPEC_SUFFIX_PRESERVES,
+            apply: hrasva_dirgha::rule_suffix_preserves_dirgha,
+        },
+        PatternRule {
+            spec: hrasva_dirgha::SPEC_TADBHAV,
+            apply: hrasva_dirgha::rule_tadbhav_hrasva,
+        },
+        PatternRule {
+            spec: hrasva_dirgha::SPEC_DIRGHA_ENDINGS,
+            apply: hrasva_dirgha::rule_dirgha_endings,
+        },
+        PatternRule {
+            spec: hrasva_dirgha::SPEC_KINSHIP,
+            apply: hrasva_dirgha::rule_kinship_tadbhav,
+        },
+        PatternRule {
+            spec: hrasva_dirgha::SPEC_KOSHA_BACKED,
+            apply: hrasva_dirgha::kosha_backed_dirgha_correction,
+        },
         // Orthographic (300–330)
-        PatternRule { spec: orthographic::SPEC_CHANDRABINDU, apply: orthographic::rule_chandrabindu },
-        PatternRule { spec: orthographic::SPEC_SIBILANT, apply: orthographic::rule_sibilant },
-        PatternRule { spec: orthographic::SPEC_RI_KRI, apply: orthographic::rule_ri_kri },
-        PatternRule { spec: orthographic::SPEC_HALANTA, apply: orthographic::rule_halanta },
+        PatternRule {
+            spec: orthographic::SPEC_CHANDRABINDU,
+            apply: orthographic::rule_chandrabindu,
+        },
+        PatternRule {
+            spec: orthographic::SPEC_SIBILANT,
+            apply: orthographic::rule_sibilant,
+        },
+        PatternRule {
+            spec: orthographic::SPEC_RI_KRI,
+            apply: orthographic::rule_ri_kri,
+        },
+        PatternRule {
+            spec: orthographic::SPEC_HALANTA,
+            apply: orthographic::rule_halanta,
+        },
         // Orthographic kosha-backed (340–360)
-        PatternRule { spec: orthographic::SPEC_AADHI_VRIDDHI, apply: orthographic::rule_aadhi_vriddhi },
-        PatternRule { spec: orthographic::SPEC_YA_E, apply: orthographic::rule_ya_e },
-        PatternRule { spec: orthographic::SPEC_KSHA_CHHYA, apply: orthographic::rule_ksha_chhya },
+        PatternRule {
+            spec: orthographic::SPEC_AADHI_VRIDDHI,
+            apply: orthographic::rule_aadhi_vriddhi,
+        },
+        PatternRule {
+            spec: orthographic::SPEC_YA_E,
+            apply: orthographic::rule_ya_e,
+        },
+        PatternRule {
+            spec: orthographic::SPEC_KSHA_CHHYA,
+            apply: orthographic::rule_ksha_chhya,
+        },
     ];
     rules.sort_by_key(|r| r.spec.priority);
     rules
@@ -113,11 +164,7 @@ mod tests {
         let rules = &*PATTERN_RULES;
         for (i, a) in rules.iter().enumerate() {
             for b in rules.iter().skip(i + 1) {
-                assert_ne!(
-                    a.spec.id, b.spec.id,
-                    "Duplicate rule id: {}",
-                    a.spec.id,
-                );
+                assert_ne!(a.spec.id, b.spec.id, "Duplicate rule id: {}", a.spec.id,);
             }
         }
     }

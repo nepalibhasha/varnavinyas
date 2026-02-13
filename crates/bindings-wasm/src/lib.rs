@@ -210,9 +210,7 @@ pub fn sandhi_apply(first: &str, second: &str) -> String {
             };
             serde_json::to_string(&js).unwrap_or_else(|_| "{}".to_string())
         }
-        Err(e) => {
-            serde_json::json!({ "error": e.to_string() }).to_string()
-        }
+        Err(e) => serde_json::json!({ "error": e.to_string() }).to_string(),
     }
 }
 

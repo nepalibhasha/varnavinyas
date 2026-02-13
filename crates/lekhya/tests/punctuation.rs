@@ -56,14 +56,26 @@ fn mixed_text() {
 fn regression_smart_quotes_after_parens() {
     let text = "(\"नेपाल\")";
     let diags = check_punctuation(text);
-    
+
     // We expect 2 diagnostics: opening and closing quote
-    let opening = diags.iter().find(|d| d.span.0 == 1).expect("Opening quote not flagged");
-    assert_eq!(opening.expected, "\u{201C}", "Expected opening quote “ after (");
-    
+    let opening = diags
+        .iter()
+        .find(|d| d.span.0 == 1)
+        .expect("Opening quote not flagged");
+    assert_eq!(
+        opening.expected, "\u{201C}",
+        "Expected opening quote “ after ("
+    );
+
     let closing_pos = text.rfind('"').unwrap();
-    let closing = diags.iter().find(|d| d.span.0 == closing_pos).expect("Closing quote not flagged");
-    assert_eq!(closing.expected, "\u{201D}", "Expected closing quote ” before )");
+    let closing = diags
+        .iter()
+        .find(|d| d.span.0 == closing_pos)
+        .expect("Closing quote not flagged");
+    assert_eq!(
+        closing.expected, "\u{201D}",
+        "Expected closing quote ” before )"
+    );
 }
 
 /// Regression: Sentence ending in a number should still correct '.' to '।'.
@@ -73,8 +85,11 @@ fn regression_number_sentence_end() {
     // "जम्मा ५. " -> Trailing space triggers abbreviation check logic
     let text = "जम्मा ५. ";
     let diags = check_punctuation(text);
-    
+
     // We expect 1 diagnostic: "." -> "।"
-    assert!(!diags.is_empty(), "Missed correction for sentence ending in number");
+    assert!(
+        !diags.is_empty(),
+        "Missed correction for sentence ending in number"
+    );
     assert_eq!(diags[0].expected, "।");
 }

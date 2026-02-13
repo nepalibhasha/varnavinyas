@@ -125,7 +125,7 @@ fn suffix_preservation_in_correction() {
     let diags = check_text(text);
     assert_eq!(diags.len(), 1);
     let diag = &diags[0];
-    
+
     // The critical check:
     assert_eq!(diag.incorrect, "बिज्ञानमा");
     assert_eq!(diag.correction, "विज्ञानमा");
