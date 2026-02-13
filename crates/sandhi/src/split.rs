@@ -289,9 +289,30 @@ pub fn split(word: &str) -> Vec<(String, String, SandhiResult)> {
         split_aksharas(left).len() >= 2 && split_aksharas(right).len() >= 2
     });
 
-    // Deduplicate results
-    results.sort_by(|a, b| a.0.cmp(&b.0));
+    // Deduplicate results by (left, right) pair
+    results.sort_by(|a, b| (&a.0, &a.1).cmp(&(&b.0, &b.1)));
     results.dedup_by(|a, b| a.0 == b.0 && a.1 == b.1);
 
     results
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn no_duplicate_splits() {
+        let results = split("विधान");
+        // Check no duplicate (left, right) pairs
+        for i in 0..results.len() {
+            for j in (i + 1)..results.len() {
+                assert!(
+                    !(results[i].0 == results[j].0 && results[i].1 == results[j].1),
+                    "Duplicate: {} + {}",
+                    results[i].0,
+                    results[i].1
+                );
+            }
+        }
+    }
 }

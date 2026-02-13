@@ -224,8 +224,17 @@ function renderMorphologySection(word) {
 
 function renderSandhiSection(word) {
   try {
-    const results = sandhiSplit(word);
-    if (!results || results.length === 0) return '';
+    const raw = sandhiSplit(word);
+    if (!raw || raw.length === 0) return '';
+
+    // Deduplicate by (left, right) pair
+    const seen = new Set();
+    const results = raw.filter((r) => {
+      const key = `${r.left}\0${r.right}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
 
     const rows = results.map((r) => {
       const typeLabel = SANDHI_TYPE_LABELS[r.sandhi_type] || r.sandhi_type;

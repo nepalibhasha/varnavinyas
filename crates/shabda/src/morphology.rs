@@ -92,7 +92,7 @@ pub fn decompose(word: &str) -> Morpheme {
         if !skip_derivational {
             for &sfx in tables::SUFFIXES.iter() {
                 if let Some(rest) = remaining.strip_suffix(sfx) {
-                    if rest.chars().count() >= min_root_chars {
+                    if rest.chars().count() >= min_root_chars && lex.contains(rest) {
                         suffixes.push(sfx.to_string());
                         remaining = rest.to_string();
                         break;
@@ -108,7 +108,7 @@ pub fn decompose(word: &str) -> Morpheme {
         let min_root_chars = if prefixes.is_empty() { 1 } else { 4 };
         for &suffix in tables::SUFFIXES.iter() {
             if let Some(rest) = remaining.strip_suffix(suffix) {
-                if rest.chars().count() >= min_root_chars {
+                if rest.chars().count() >= min_root_chars && lex.contains(rest) {
                     suffixes.push(suffix.to_string());
                     remaining = rest.to_string();
                     break; // Only strip one suffix for now
