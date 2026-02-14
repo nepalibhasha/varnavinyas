@@ -130,6 +130,11 @@ impl Drop for TestKoshaResetGuard {
 ///
 /// This is available only for tests (or with `test-seam` feature) and resets
 /// automatically when the closure exits.
+///
+/// Note: this helper intentionally leaks the constructed `Kosha` instance via
+/// `Box::leak` to satisfy `'static` storage in the thread-local override.
+/// This is acceptable for short-lived test execution, but should not be used in
+/// long-running loops in production-like processes.
 #[cfg(any(test, feature = "test-seam"))]
 pub fn with_test_kosha<R>(
     words_data: &'static str,
