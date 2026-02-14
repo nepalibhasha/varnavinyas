@@ -60,6 +60,8 @@ tower-lsp = { version = "0.20", features = ["proposed"] }
 tokio = { version = "1", features = ["io-std", "rt-multi-thread", "macros"] }
 wasm-bindgen = "0.2"
 uniffi = "0.28"
+tsify = "0.4"
+serde-wasm-bindgen = "0.6"
 
 # Dev
 toml = "0.8"

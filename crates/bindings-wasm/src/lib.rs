@@ -1,8 +1,10 @@
 use serde::Serialize;
+use tsify::Tsify;
 use wasm_bindgen::prelude::*;
 
 /// A diagnostic serialized for JavaScript consumers.
-#[derive(Serialize)]
+#[derive(Serialize, Tsify)]
+#[tsify(into_wasm_abi)]
 struct JsDiagnostic {
     span_start: usize,
     span_end: usize,
@@ -53,23 +55,20 @@ pub fn check_text_with_options(text: &str, grammar: bool) -> String {
         text,
         varnavinyas_parikshak::CheckOptions { grammar },
     );
-    let js_diags: Vec<JsDiagnostic> = diags
-        .into_iter()
-        .map(|d| JsDiagnostic {
-            span_start: d.span.0,
-            span_end: d.span.1,
-            incorrect: d.incorrect,
-            correction: d.correction,
-            rule: d.rule.to_string(),
-            rule_code: d.rule.code().to_string(),
-            explanation: d.explanation,
-            category: d.category.to_string(),
-            category_code: d.category.as_code().to_string(),
-            kind: d.kind.as_code().to_string(),
-            confidence: d.confidence,
-        })
-        .collect();
+    let js_diags: Vec<JsDiagnostic> = diags.into_iter().map(diagnostic_to_js).collect();
     serde_json::to_string(&js_diags).unwrap_or_else(|_| "[]".to_string())
+}
+
+/// Check full text with optional grammar-pass diagnostics and return typed JsValue.
+#[wasm_bindgen]
+pub fn check_text_value(text: &str, grammar: bool) -> Result<JsValue, JsError> {
+    let diags = varnavinyas_parikshak::check_text_with_options(
+        text,
+        varnavinyas_parikshak::CheckOptions { grammar },
+    );
+    let js_diags: Vec<JsDiagnostic> = diags.into_iter().map(diagnostic_to_js).collect();
+    serde_wasm_bindgen::to_value(&js_diags)
+        .map_err(|e| JsError::new(&format!("failed to serialize diagnostics: {e}")))
 }
 
 /// Check a single word. Returns a JSON diagnostic or "null".
@@ -77,19 +76,7 @@ pub fn check_text_with_options(text: &str, grammar: bool) -> String {
 pub fn check_word(word: &str) -> String {
     match varnavinyas_parikshak::check_word(word) {
         Some(d) => {
-            let js = JsDiagnostic {
-                span_start: d.span.0,
-                span_end: d.span.1,
-                incorrect: d.incorrect,
-                correction: d.correction,
-                rule: d.rule.to_string(),
-                rule_code: d.rule.code().to_string(),
-                explanation: d.explanation,
-                category: d.category.to_string(),
-                category_code: d.category.as_code().to_string(),
-                kind: d.kind.as_code().to_string(),
-                confidence: d.confidence,
-            };
+            let js = diagnostic_to_js(d);
             serde_json::to_string(&js).unwrap_or_else(|_| "null".to_string())
         }
         None => "null".to_string(),
@@ -275,6 +262,22 @@ fn origin_source_to_string(source: varnavinyas_shabda::OriginSource) -> String {
         varnavinyas_shabda::OriginSource::Override => "override".into(),
         varnavinyas_shabda::OriginSource::Kosha => "kosha".into(),
         varnavinyas_shabda::OriginSource::Heuristic => "heuristic".into(),
+    }
+}
+
+fn diagnostic_to_js(d: varnavinyas_parikshak::Diagnostic) -> JsDiagnostic {
+    JsDiagnostic {
+        span_start: d.span.0,
+        span_end: d.span.1,
+        incorrect: d.incorrect,
+        correction: d.correction,
+        rule: d.rule.to_string(),
+        rule_code: d.rule.code().to_string(),
+        explanation: d.explanation,
+        category: d.category.to_string(),
+        category_code: d.category.as_code().to_string(),
+        kind: d.kind.as_code().to_string(),
+        confidence: d.confidence,
     }
 }
 
