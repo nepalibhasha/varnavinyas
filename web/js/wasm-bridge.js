@@ -5,11 +5,16 @@
 import init, {
   check_text,
   check_text_with_options,
+  check_text_value,
   check_word,
+  check_word_value,
   transliterate as wasmTransliterate,
   derive,
+  derive_value,
   analyze_word,
+  analyze_word_value,
   decompose_word,
+  decompose_word_value,
   sandhi_apply,
   sandhi_split,
 } from '../pkg/varnavinyas_bindings_wasm.js';
@@ -51,9 +56,16 @@ export function byteOffsetToCharIndex(text, byteOffset) {
  */
 export function checkText(text, options = {}) {
   const { grammar = false } = options;
-  const raw = grammar
-    ? JSON.parse(check_text_with_options(text, grammar))
-    : JSON.parse(check_text(text));
+
+  let raw;
+  try {
+    raw = check_text_value(text, grammar);
+  } catch (_err) {
+    raw = grammar
+      ? JSON.parse(check_text_with_options(text, grammar))
+      : JSON.parse(check_text(text));
+  }
+
   return raw.map((d) => ({
     ...d,
     charStart: byteOffsetToCharIndex(text, d.span_start),
@@ -66,7 +78,13 @@ export function checkText(text, options = {}) {
  * Returns a diagnostic object or null.
  */
 export function checkWord(word) {
-  const raw = JSON.parse(check_word(word));
+  let raw;
+  try {
+    raw = check_word_value(word);
+  } catch (_err) {
+    raw = JSON.parse(check_word(word));
+  }
+
   if (!raw) return null;
   return {
     ...raw,
@@ -91,7 +109,11 @@ export function transliterate(input, from, to) {
  * Returns { input, output, is_correct, steps: [{rule, description, before, after}] }
  */
 export function deriveWord(word) {
-  return JSON.parse(derive(word));
+  try {
+    return derive_value(word);
+  } catch (_err) {
+    return JSON.parse(derive(word));
+  }
 }
 
 /**
@@ -99,7 +121,11 @@ export function deriveWord(word) {
  * Returns { word, origin, is_correct, correction, rule_notes: [{rule, explanation}] }
  */
 export function analyzeWord(word) {
-  return JSON.parse(analyze_word(word));
+  try {
+    return analyze_word_value(word);
+  } catch (_err) {
+    return JSON.parse(analyze_word(word));
+  }
 }
 
 /**
@@ -107,7 +133,11 @@ export function analyzeWord(word) {
  * Returns { root, prefixes: string[], suffixes: string[], origin }
  */
 export function decomposeWord(word) {
-  return JSON.parse(decompose_word(word));
+  try {
+    return decompose_word_value(word);
+  } catch (_err) {
+    return JSON.parse(decompose_word(word));
+  }
 }
 
 /**
