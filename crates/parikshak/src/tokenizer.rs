@@ -150,8 +150,8 @@ pub fn tokenize_analyzed(text: &str) -> Vec<AnalyzedToken> {
                 if let Some(stem) = tok.text.strip_suffix(nip) {
                     // Guard 1: stem exists in kosha
                     // Guard 2: full word is NOT in kosha
-                    // Guard 3: risky single-char nipats (≤3 bytes) require stem to end in vowel/matra
-                    let is_risky = nip.len() <= 3;
+                    // Guard 3: risky short nipats (≤2 chars, e.g. "नि", "त", "ल") require stem to end in vowel/matra
+                    let is_risky = nip.chars().count() <= 2;
                     let vowel_ending = stem.chars().last().is_some_and(|c| {
                         varnavinyas_akshar::is_svar(c) || varnavinyas_akshar::is_matra(c)
                     });

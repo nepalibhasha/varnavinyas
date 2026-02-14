@@ -9,6 +9,9 @@ pub fn apply_visarga_sandhi(first: &str, second: &str) -> Option<SandhiResult> {
     }
 
     let prefix = &first[..first.len() - 'ः'.len_utf8()];
+    if prefix.is_empty() {
+        return None;
+    }
     let second_chars: Vec<char> = second.chars().collect();
     let first_of_second = *second_chars.first()?;
 

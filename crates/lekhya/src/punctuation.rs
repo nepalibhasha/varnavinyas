@@ -235,22 +235,21 @@ fn is_likely_abbreviation(text: &str, pos: usize) -> bool {
         .unwrap_or(0);
     let word = &prefix[word_start..];
 
-    // Common sentence-ending verbs that are short but definitely NOT abbreviations.
-    // If the word is one of these, it's a full stop error, not an abbreviation.
-    let common_enders = ["हो", "छ", "हुन्", "छन्", "थियो", "थिन्", "भयो", "गर्यो"];
-    if common_enders.contains(&word) {
-        return false;
+    // Use an allowlist for common Devanagari abbreviations.
+    // Blanket "1-3 chars means abbreviation" causes false negatives like:
+    // "म यहाँ हुँ. तिमी?" where "." should be flagged as "।".
+    //
+    // Keep this list conservative: false positive punctuation errors are cheaper
+    // than missing genuine sentence-ending period misuse in Nepali text.
+    let known_devanagari_abbreviations = ["डा", "श्री", "प्रा", "सं", "वि"];
+    if known_devanagari_abbreviations.contains(&word) {
+        return true;
     }
 
-    // If word is very short (1-3 chars) and fully Devanagari, treat as likely abbreviation.
-    // BUT exclude numbers — digits are never abbreviations.
-    // e.g. "५." is "5.", not an abbreviation.
-    let char_count = word.chars().count();
-    char_count > 0
-        && char_count <= 3
-        && word
-            .chars()
-            .all(|c| is_devanagari_char(c) && !c.is_numeric())
+    // ASCII abbreviations (e.g., Dr., U.N.) are handled by upstream context:
+    // this function is called only after confirming Devanagari context before '.',
+    // so default to "not abbreviation".
+    false
 }
 
 /// Y3: Detect "..." that should be ऐजन बिन्दु (ellipsis).
@@ -310,6 +309,14 @@ mod tests {
     fn abbreviation_dot_allowed() {
         let diags = check_punctuation("डा. राम");
         assert!(diags.is_empty(), "Abbreviation dot should be allowed");
+    }
+
+    #[test]
+    fn short_devanagari_word_dot_is_not_abbreviation() {
+        let diags = check_punctuation("म यहाँ हुँ. तिमी कहाँ छौ?");
+        assert_eq!(diags.len(), 1);
+        assert_eq!(diags[0].found, ".");
+        assert_eq!(diags[0].expected, "।");
     }
 
     #[test]
