@@ -87,109 +87,190 @@ pub fn analyze(input: &str) -> WordAnalysis {
 
 /// Generate explanatory notes for a word that is already correct.
 fn generate_correct_notes(word: &str, origin: Origin, notes: &mut Vec<RuleNote>) {
-    match origin {
-        Origin::Tatsam => {
+    for template in NOTE_TEMPLATES {
+        if template.origin == origin && marker_matches(word, template.marker) {
             notes.push(RuleNote {
-                rule: Rule::VarnaVinyasNiyam("3(क)"),
-                explanation: "तत्सम शब्द: संस्कृतको मूल वर्णविन्यास कायम राख्नुपर्छ".into(),
+                rule: template.rule,
+                explanation: template.explanation.to_string(),
             });
+        }
+    }
+}
 
-            // Tatsam-specific observations
-            if word.contains('ऋ') || word.contains('ृ') {
-                notes.push(RuleNote {
-                    rule: Rule::VarnaVinyasNiyam("3(ग)-ऋ"),
-                    explanation: "तत्सम शब्दमा ऋ/ृ संस्कृतबाट कायम".into(),
-                });
-            }
-            if word.contains('ष') {
-                notes.push(RuleNote {
-                    rule: Rule::VarnaVinyasNiyam("3(ग)(अ)"),
-                    explanation: "तत्सम शब्दमा मूर्धन्य ष कायम".into(),
-                });
-            }
-            if word.contains('श') {
-                notes.push(RuleNote {
-                    rule: Rule::VarnaVinyasNiyam("3(ग)(अ)"),
-                    explanation: "तत्सम शब्दमा तालव्य श कायम".into(),
-                });
-            }
-            if word.contains('ी') || word.contains('ई') {
-                notes.push(RuleNote {
-                    rule: Rule::VarnaVinyasNiyam("3(क)(ई)"),
-                    explanation: "तत्सम शब्दमा दीर्घ ई/ी संस्कृतबाट कायम".into(),
-                });
-            }
-            if word.contains('ू') || word.contains('ऊ') {
-                notes.push(RuleNote {
-                    rule: Rule::VarnaVinyasNiyam("3(क)(ऊ)"),
-                    explanation: "तत्सम शब्दमा दीर्घ ऊ/ू संस्कृतबाट कायम".into(),
-                });
-            }
-            if word.contains("क्ष") {
-                notes.push(RuleNote {
-                    rule: Rule::VarnaVinyasNiyam("3(छ)-क्ष"),
-                    explanation: "तत्सम शब्दमा क्ष संयुक्त व्यञ्जन कायम".into(),
-                });
-            }
-            if word.contains("ज्ञ") {
-                notes.push(RuleNote {
-                    rule: Rule::VarnaVinyasNiyam("3(छ)-ज्ञ"),
-                    explanation: "तत्सम शब्दमा ज्ञ संयुक्त व्यञ्जन कायम".into(),
-                });
-            }
-            // Panchham varna in correct tatsam words
-            if word.contains('ङ') || word.contains('ञ') || word.contains('ण') {
-                notes.push(RuleNote {
-                    rule: Rule::VarnaVinyasNiyam("3(ख)-पञ्चम"),
-                    explanation: "तत्सम शब्दमा स्पर्श व्यञ्जन अघि पञ्चम वर्ण प्रयोग (Academy 3(ख)(अ))"
-                        .into(),
-                });
-            }
-            // Halanta in correct tatsam words
-            if word.ends_with('्') {
-                notes.push(RuleNote {
-                    rule: Rule::VarnaVinyasNiyam("3(ङ)"),
-                    explanation: "तत्सम शब्दमा हलन्त चिह्न आवश्यक".into(),
-                });
-            }
-        }
-        Origin::Tadbhav => {
-            notes.push(RuleNote {
-                rule: Rule::VarnaVinyasNiyam("3(क)"),
-                explanation: "तद्भव शब्द: संस्कृतबाट परिवर्तित, नेपाली ध्वनि नियम लागू".into(),
-            });
+#[derive(Debug, Clone, Copy)]
+enum NoteMarker {
+    Always,
+    ContainsChar(char),
+    ContainsAny(&'static [char]),
+    ContainsStr(&'static str),
+    EndsWith(char),
+    DentyaSaOnly,
+}
 
-            if word.contains('ि') || word.contains('ु') {
-                notes.push(RuleNote {
-                    rule: Rule::VarnaVinyasNiyam("3(क)-12"),
-                    explanation: "तद्भव शब्दमा ह्रस्व स्वर प्रयोग हुन्छ".into(),
-                });
-            }
-            if word.contains('ँ') {
-                notes.push(RuleNote {
-                    rule: Rule::VarnaVinyasNiyam("3(ख)"),
-                    explanation: "तद्भव शब्दमा चन्द्रबिन्दु (ँ) प्रयोग हुन्छ".into(),
-                });
-            }
-        }
-        Origin::Deshaj => {
-            notes.push(RuleNote {
-                rule: Rule::VarnaVinyasNiyam("3(क)"),
-                explanation: "देशज शब्द: मूल नेपाली शब्द, ह्रस्व नियम लागू".into(),
-            });
-        }
-        Origin::Aagantuk => {
-            notes.push(RuleNote {
-                rule: Rule::VarnaVinyasNiyam("3(ग)(अ)-9"),
-                explanation: "आगन्तुक शब्द: विदेशी शब्दमा 'स' मात्र प्रयोग हुन्छ".into(),
-            });
+#[derive(Debug, Clone, Copy)]
+struct NoteTemplate {
+    origin: Origin,
+    marker: NoteMarker,
+    rule: Rule,
+    explanation: &'static str,
+}
 
-            if word.contains('स') && !word.contains('श') && !word.contains('ष') {
-                notes.push(RuleNote {
-                    rule: Rule::VarnaVinyasNiyam("3(ग)(अ)-9"),
-                    explanation: "आगन्तुक शब्दमा दन्त्य स को शुद्ध प्रयोग".into(),
-                });
-            }
+const NOTE_TEMPLATES: &[NoteTemplate] = &[
+    // Tatsam
+    NoteTemplate {
+        origin: Origin::Tatsam,
+        marker: NoteMarker::Always,
+        rule: Rule::VarnaVinyasNiyam("3(क)"),
+        explanation: "तत्सम शब्द: संस्कृतको मूल वर्णविन्यास कायम राख्नुपर्छ",
+    },
+    NoteTemplate {
+        origin: Origin::Tatsam,
+        marker: NoteMarker::ContainsAny(&['ऋ', 'ृ']),
+        rule: Rule::VarnaVinyasNiyam("3(ग)-ऋ"),
+        explanation: "तत्सम शब्दमा ऋ/ृ संस्कृतबाट कायम",
+    },
+    NoteTemplate {
+        origin: Origin::Tatsam,
+        marker: NoteMarker::ContainsChar('ष'),
+        rule: Rule::VarnaVinyasNiyam("3(ग)(अ)"),
+        explanation: "तत्सम शब्दमा मूर्धन्य ष कायम",
+    },
+    NoteTemplate {
+        origin: Origin::Tatsam,
+        marker: NoteMarker::ContainsChar('श'),
+        rule: Rule::VarnaVinyasNiyam("3(ग)(अ)"),
+        explanation: "तत्सम शब्दमा तालव्य श कायम",
+    },
+    NoteTemplate {
+        origin: Origin::Tatsam,
+        marker: NoteMarker::ContainsAny(&['ी', 'ई']),
+        rule: Rule::VarnaVinyasNiyam("3(क)(ई)"),
+        explanation: "तत्सम शब्दमा दीर्घ ई/ी संस्कृतबाट कायम",
+    },
+    NoteTemplate {
+        origin: Origin::Tatsam,
+        marker: NoteMarker::ContainsAny(&['ू', 'ऊ']),
+        rule: Rule::VarnaVinyasNiyam("3(क)(ऊ)"),
+        explanation: "तत्सम शब्दमा दीर्घ ऊ/ू संस्कृतबाट कायम",
+    },
+    NoteTemplate {
+        origin: Origin::Tatsam,
+        marker: NoteMarker::ContainsStr("क्ष"),
+        rule: Rule::VarnaVinyasNiyam("3(छ)-क्ष"),
+        explanation: "तत्सम शब्दमा क्ष संयुक्त व्यञ्जन कायम",
+    },
+    NoteTemplate {
+        origin: Origin::Tatsam,
+        marker: NoteMarker::ContainsStr("ज्ञ"),
+        rule: Rule::VarnaVinyasNiyam("3(छ)-ज्ञ"),
+        explanation: "तत्सम शब्दमा ज्ञ संयुक्त व्यञ्जन कायम",
+    },
+    NoteTemplate {
+        origin: Origin::Tatsam,
+        marker: NoteMarker::ContainsAny(&['ङ', 'ञ', 'ण']),
+        rule: Rule::VarnaVinyasNiyam("3(ख)-पञ्चम"),
+        explanation: "तत्सम शब्दमा स्पर्श व्यञ्जन अघि पञ्चम वर्ण प्रयोग (Academy 3(ख)(अ))",
+    },
+    NoteTemplate {
+        origin: Origin::Tatsam,
+        marker: NoteMarker::EndsWith('्'),
+        rule: Rule::VarnaVinyasNiyam("3(ङ)"),
+        explanation: "तत्सम शब्दमा हलन्त चिह्न आवश्यक",
+    },
+    // Tadbhav
+    NoteTemplate {
+        origin: Origin::Tadbhav,
+        marker: NoteMarker::Always,
+        rule: Rule::VarnaVinyasNiyam("3(क)"),
+        explanation: "तद्भव शब्द: संस्कृतबाट परिवर्तित, नेपाली ध्वनि नियम लागू",
+    },
+    NoteTemplate {
+        origin: Origin::Tadbhav,
+        marker: NoteMarker::ContainsAny(&['ि', 'ु']),
+        rule: Rule::VarnaVinyasNiyam("3(क)-12"),
+        explanation: "तद्भव शब्दमा ह्रस्व स्वर प्रयोग हुन्छ",
+    },
+    NoteTemplate {
+        origin: Origin::Tadbhav,
+        marker: NoteMarker::ContainsChar('ँ'),
+        rule: Rule::VarnaVinyasNiyam("3(ख)"),
+        explanation: "तद्भव शब्दमा चन्द्रबिन्दु (ँ) प्रयोग हुन्छ",
+    },
+    // Deshaj
+    NoteTemplate {
+        origin: Origin::Deshaj,
+        marker: NoteMarker::Always,
+        rule: Rule::VarnaVinyasNiyam("3(क)"),
+        explanation: "देशज शब्द: मूल नेपाली शब्द, ह्रस्व नियम लागू",
+    },
+    // Aagantuk
+    NoteTemplate {
+        origin: Origin::Aagantuk,
+        marker: NoteMarker::Always,
+        rule: Rule::VarnaVinyasNiyam("3(ग)(अ)-9"),
+        explanation: "आगन्तुक शब्द: विदेशी शब्दमा 'स' मात्र प्रयोग हुन्छ",
+    },
+    NoteTemplate {
+        origin: Origin::Aagantuk,
+        marker: NoteMarker::DentyaSaOnly,
+        rule: Rule::VarnaVinyasNiyam("3(ग)(अ)-9"),
+        explanation: "आगन्तुक शब्दमा दन्त्य स को शुद्ध प्रयोग",
+    },
+];
+
+fn marker_matches(word: &str, marker: NoteMarker) -> bool {
+    match marker {
+        NoteMarker::Always => true,
+        NoteMarker::ContainsChar(c) => word.contains(c),
+        NoteMarker::ContainsAny(chars) => chars.iter().any(|c| word.contains(*c)),
+        NoteMarker::ContainsStr(s) => word.contains(s),
+        NoteMarker::EndsWith(c) => word.ends_with(c),
+        NoteMarker::DentyaSaOnly => {
+            word.contains('स') && !word.contains('श') && !word.contains('ष')
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn tatsam_templates_emit_expected_notes() {
+        let mut notes = Vec::new();
+        generate_correct_notes("कृतीषशक्षज्ञण्", Origin::Tatsam, &mut notes);
+
+        assert_eq!(notes.len(), 9);
+        assert_eq!(notes[0].rule, Rule::VarnaVinyasNiyam("3(क)"));
+        assert_eq!(notes[1].rule, Rule::VarnaVinyasNiyam("3(ग)-ऋ"));
+        assert_eq!(notes[2].rule, Rule::VarnaVinyasNiyam("3(ग)(अ)"));
+        assert_eq!(notes[3].rule, Rule::VarnaVinyasNiyam("3(ग)(अ)"));
+        assert_eq!(notes[4].rule, Rule::VarnaVinyasNiyam("3(क)(ई)"));
+        assert_eq!(notes[5].rule, Rule::VarnaVinyasNiyam("3(छ)-क्ष"));
+        assert_eq!(notes[6].rule, Rule::VarnaVinyasNiyam("3(छ)-ज्ञ"));
+        assert_eq!(notes[7].rule, Rule::VarnaVinyasNiyam("3(ख)-पञ्चम"));
+        assert_eq!(notes[8].rule, Rule::VarnaVinyasNiyam("3(ङ)"));
+    }
+
+    #[test]
+    fn tadbhav_templates_emit_expected_notes() {
+        let mut notes = Vec::new();
+        generate_correct_notes("हिँड्नु", Origin::Tadbhav, &mut notes);
+
+        assert_eq!(notes.len(), 3);
+        assert_eq!(notes[0].rule, Rule::VarnaVinyasNiyam("3(क)"));
+        assert_eq!(notes[1].rule, Rule::VarnaVinyasNiyam("3(क)-12"));
+        assert_eq!(notes[2].rule, Rule::VarnaVinyasNiyam("3(ख)"));
+    }
+
+    #[test]
+    fn aagantuk_sa_note_requires_no_sha_or_ssa() {
+        let mut notes = Vec::new();
+        generate_correct_notes("साबुन", Origin::Aagantuk, &mut notes);
+        assert_eq!(notes.len(), 2);
+
+        let mut notes_with_sha = Vec::new();
+        generate_correct_notes("शहर", Origin::Aagantuk, &mut notes_with_sha);
+        assert_eq!(notes_with_sha.len(), 1);
     }
 }

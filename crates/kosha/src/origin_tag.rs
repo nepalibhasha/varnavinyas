@@ -13,6 +13,157 @@ pub enum OriginTag {
     Aagantuk,
 }
 
+struct TagEntry {
+    prefixes: &'static [&'static str],
+    origin: OriginTag,
+    source_language: &'static str,
+}
+
+// INVARIANT: ordered by longest/specific prefixes first to avoid overlaps
+// (e.g., "भो. ब" before "भो", "अङ्" before "अ").
+static TAG_TABLE: &[TagEntry] = &[
+    TagEntry {
+        prefixes: &["भो. ब", "भो.ब"],
+        origin: OriginTag::Tadbhav,
+        source_language: "भोट-बर्मेली",
+    },
+    TagEntry {
+        prefixes: &["अङ्", "अङ.", "अङ", "अड्"],
+        origin: OriginTag::Aagantuk,
+        source_language: "अङ्ग्रेजी",
+    },
+    TagEntry {
+        prefixes: &["भा. इ", "भा.इ"],
+        origin: OriginTag::Aagantuk,
+        source_language: "भारत-इरानेली",
+    },
+    TagEntry {
+        prefixes: &["फ्रा", "फ्रे"],
+        origin: OriginTag::Aagantuk,
+        source_language: "फ्रान्सेली",
+    },
+    TagEntry {
+        prefixes: &["पोर्त"],
+        origin: OriginTag::Aagantuk,
+        source_language: "पोर्तगाली",
+    },
+    TagEntry {
+        prefixes: &["जापा"],
+        origin: OriginTag::Aagantuk,
+        source_language: "जापानी",
+    },
+    TagEntry {
+        prefixes: &["चिनि"],
+        origin: OriginTag::Aagantuk,
+        source_language: "चिनियाँ",
+    },
+    TagEntry {
+        prefixes: &["स्पे"],
+        origin: OriginTag::Aagantuk,
+        source_language: "स्पेनिस",
+    },
+    TagEntry {
+        prefixes: &["ग्री"],
+        origin: OriginTag::Aagantuk,
+        source_language: "ग्रीक",
+    },
+    TagEntry {
+        prefixes: &["तामा"],
+        origin: OriginTag::Deshaj,
+        source_language: "तामाङ्गी",
+    },
+    TagEntry {
+        prefixes: &["धिमा"],
+        origin: OriginTag::Deshaj,
+        source_language: "धिमाल",
+    },
+    TagEntry {
+        prefixes: &["नेवा"],
+        origin: OriginTag::Deshaj,
+        source_language: "नेवारी",
+    },
+    TagEntry {
+        prefixes: &["मरा"],
+        origin: OriginTag::Tadbhav,
+        source_language: "मराठी",
+    },
+    TagEntry {
+        prefixes: &["उडि"],
+        origin: OriginTag::Tadbhav,
+        source_language: "उडिया",
+    },
+    TagEntry {
+        prefixes: &["प्रा"],
+        origin: OriginTag::Tadbhav,
+        source_language: "प्राकृत",
+    },
+    TagEntry {
+        prefixes: &["मै"],
+        origin: OriginTag::Tadbhav,
+        source_language: "मैथिली",
+    },
+    TagEntry {
+        prefixes: &["फा"],
+        origin: OriginTag::Aagantuk,
+        source_language: "फारसी",
+    },
+    TagEntry {
+        prefixes: &["तु"],
+        origin: OriginTag::Aagantuk,
+        source_language: "तुर्की",
+    },
+    TagEntry {
+        prefixes: &["था"],
+        origin: OriginTag::Aagantuk,
+        source_language: "थारू",
+    },
+    TagEntry {
+        prefixes: &["भो"],
+        origin: OriginTag::Tadbhav,
+        source_language: "भोजपुरी",
+    },
+    TagEntry {
+        prefixes: &["हि"],
+        origin: OriginTag::Tadbhav,
+        source_language: "हिन्दी",
+    },
+    TagEntry {
+        prefixes: &["मग"],
+        origin: OriginTag::Deshaj,
+        source_language: "मगराँती",
+    },
+    TagEntry {
+        prefixes: &["डो"],
+        origin: OriginTag::Deshaj,
+        source_language: "डोटेली",
+    },
+    TagEntry {
+        prefixes: &["दङ"],
+        origin: OriginTag::Deshaj,
+        source_language: "दङाली",
+    },
+    TagEntry {
+        prefixes: &["लि"],
+        origin: OriginTag::Deshaj,
+        source_language: "लिम्बू",
+    },
+    TagEntry {
+        prefixes: &["मो"],
+        origin: OriginTag::Deshaj,
+        source_language: "भोट-बर्मेली",
+    },
+    TagEntry {
+        prefixes: &["बा"],
+        origin: OriginTag::Deshaj,
+        source_language: "बालबोली",
+    },
+    TagEntry {
+        prefixes: &["अ.", "अ ", "अ"],
+        origin: OriginTag::Aagantuk,
+        source_language: "अरबी",
+    },
+];
+
 /// Extract the first origin tag from a headword's POS/metadata field.
 ///
 /// The field format varies:
@@ -40,111 +191,7 @@ pub fn parse_origin_tag(pos_field: &str) -> Option<OriginTag> {
 
 /// Map a bracket-interior tag string to an OriginTag.
 fn classify_tag(tag: &str) -> Option<OriginTag> {
-    // Normalize: strip trailing periods and whitespace
-    let normalized = tag.trim().trim_end_matches('.');
-
-    // Sanskrit origin tags:
-    // - "सं" or "सं." alone → Tatsam (direct Sanskrit, unchanged form)
-    // - "सं. X" with etymological root → Tadbhav (derived from Sanskrit X)
-    //   e.g., यहाँ [सं. इह], अकास [सं. आकाश], अगाडि [सं. अग्र+आडि]
-    if normalized == "सं" {
-        return Some(OriginTag::Tatsam);
-    }
-    if normalized.starts_with("सं.") || normalized.starts_with("सं ") {
-        // Check if there's an etymological root after "सं."
-        let after = normalized
-            .strip_prefix("सं.")
-            .or_else(|| normalized.strip_prefix("सं "))
-            .unwrap_or("")
-            .trim();
-        if after.is_empty() {
-            // Just [सं.] — true tatsam
-            return Some(OriginTag::Tatsam);
-        } else {
-            // [सं. इह] — has etymological root → tadbhav (derived from Sanskrit)
-            return Some(OriginTag::Tadbhav);
-        }
-    }
-
-    // Foreign / Aagantuk — exact match OR prefix + etymological root
-    // e.g., [अ.] or [अ. इकवाल], [फा.] or [फा. अङ्गुर]
-    static AAGANTUK_PREFIXES: &[&str] = &[
-        "अ.",   // Arabic (अरबी) — must check before अङ्/अड्
-        "अ ",   // Arabic without period
-        "अङ्",   // English (अङ्ग्रेजी)
-        "अङ.",  // English variant
-        "अङ",   // English (after period stripping: अङ. → अङ)
-        "अड्",   // English variant (अड्ग्रेजी)
-        "फा",   // Persian (फारसी)
-        "तु",    // Turkish (तुर्की)
-        "था",   // Tharu (थारू)
-        "फ्रा",  // French (फ्रान्सेली)
-        "फ्रे",   // French variant (फ्रेन्च)
-        "पोर्त", // Portuguese (पोर्तगाली)
-        "ग्री",  // Greek (ग्रीक)
-        "स्पे",   // Spanish (स्पेनिस)
-        "जापा", // Japanese (जापानी)
-        "चिनि", // Chinese (चिनियाँ)
-        "भा. इ",
-        "भा.इ", // Indo-Iranian (भारत-इरानेली)
-    ];
-    for prefix in AAGANTUK_PREFIXES {
-        if normalized == *prefix || normalized.starts_with(prefix) {
-            return Some(OriginTag::Aagantuk);
-        }
-    }
-    // Bare "अ" (no period, no trailing content) — Arabic
-    if normalized == "अ" {
-        return Some(OriginTag::Aagantuk);
-    }
-
-    // Tadbhav (related Indic languages / Prakrit) — exact or prefix
-    // e.g., [प्रा.] or [प्रा. अक्खआडा > सं. अक्षवाट]
-    static TADBHAV_PREFIXES: &[&str] = &[
-        "प्रा", // Prakrit (प्राकृत)
-        "हि",  // Hindi (हिन्दी)
-        "भो",  // Bhojpuri (भोजपुरी) — also भो. ब. (भोट-बर्मेली)
-        "मरा", // Marathi (मराठी)
-        "मै",   // Maithili (मैथिली)
-        "उडि", // Odia (उडिया)
-    ];
-    for prefix in TADBHAV_PREFIXES {
-        if normalized == *prefix || normalized.starts_with(prefix) {
-            return Some(OriginTag::Tadbhav);
-        }
-    }
-
-    // Deshaj (native / regional Nepali languages) — prefix match handles
-    // both bare tags [नेवा.] and tags with etymological roots [नेवा. अलःकै]
-    static DESHAJ_PREFIXES: &[&str] = &[
-        "नेवा",  // Newari (नेवारी)
-        "लि",   // Limbu (लिम्बू भाषा)
-        "मो",   // Tibeto-Burman (मो. ब = मोङ्गोल बर्मेली)
-        "मग",   // Magar (मगराँती)
-        "डो",   // Doteli (डोटेली)
-        "बा",   // Children's language (बा. बो = बालबोली)
-        "तामा", // Tamang (तामाङ्गी)
-        "दङ",   // Dangali (दङाली)
-        "धिमा", // Dhimal (धिमाल)
-    ];
-    for prefix in DESHAJ_PREFIXES {
-        if normalized == *prefix || normalized.starts_with(prefix) {
-            return Some(OriginTag::Deshaj);
-        }
-    }
-
-    // Etymological derivation tags: "X ८ सं. Y" means "X derived from Sanskrit Y"
-    // These are tadbhav (form has changed from the original)
-    if tag.contains("८ सं") || tag.contains("८सं") {
-        return Some(OriginTag::Tadbhav);
-    }
-    if tag.contains("८ अ") || tag.contains("८ फा") || tag.contains("८ पोर्त")
-    {
-        return Some(OriginTag::Aagantuk);
-    }
-
-    // Unknown or verb-root tags (√ ...) — no origin
-    None
+    parse_tag_metadata(tag).map(|(origin, _)| origin)
 }
 
 /// Extract the human-readable source language name from a headword's POS/tag field.
@@ -159,122 +206,61 @@ pub fn parse_source_language(pos_field: &str) -> Option<&'static str> {
 }
 
 fn source_language_from_tag(tag: &str) -> Option<&'static str> {
-    let n = tag.trim().trim_end_matches('.');
+    parse_tag_metadata(tag).map(|(_, source)| source)
+}
 
-    // Sanskrit (तत्सम and तद्भव both come from Sanskrit)
-    if n == "सं" || n.starts_with("सं.") || n.starts_with("सं ") {
-        return Some("संस्कृत");
-    }
+fn parse_tag_metadata(tag: &str) -> Option<(OriginTag, &'static str)> {
+    let normalized = tag.trim().trim_end_matches('.');
 
-    // Foreign languages (आगन्तुक)
-    // Arabic — must check before अङ्/अड्
-    if n == "अ" || n.starts_with("अ.") || n.starts_with("अ ") {
-        return Some("अरबी");
+    // Sanskrit origin tags:
+    // - "सं" or "सं." alone → Tatsam (direct Sanskrit, unchanged form)
+    // - "सं. X" with etymological root → Tadbhav (derived from Sanskrit X)
+    if normalized == "सं" {
+        return Some((OriginTag::Tatsam, "संस्कृत"));
     }
-    if n.starts_with("अङ्") || n.starts_with("अङ.") || n.starts_with("अङ") || n.starts_with("अड्")
-    {
-        return Some("अङ्ग्रेजी");
-    }
-    if n.starts_with("फा") {
-        return Some("फारसी");
-    }
-    if n.starts_with("तु") {
-        return Some("तुर्की");
-    }
-    if n.starts_with("था") {
-        return Some("थारू");
-    }
-    if n.starts_with("फ्रा") || n.starts_with("फ्रे") {
-        return Some("फ्रान्सेली");
-    }
-    if n.starts_with("पोर्त") {
-        return Some("पोर्तगाली");
-    }
-    if n.starts_with("ग्री") {
-        return Some("ग्रीक");
-    }
-    if n.starts_with("स्पे") {
-        return Some("स्पेनिस");
-    }
-    if n.starts_with("जापा") {
-        return Some("जापानी");
-    }
-    if n.starts_with("चिनि") {
-        return Some("चिनियाँ");
-    }
-    // भा. इ. (भारत-इरानेली) — Indo-Iranian
-    if n.starts_with("भा. इ") || n.starts_with("भा.इ") {
-        return Some("भारत-इरानेली");
+    if normalized.starts_with("सं.") || normalized.starts_with("सं ") {
+        let after = normalized
+            .strip_prefix("सं.")
+            .or_else(|| normalized.strip_prefix("सं "))
+            .unwrap_or("")
+            .trim();
+
+        if after.is_empty() {
+            return Some((OriginTag::Tatsam, "संस्कृत"));
+        } else {
+            return Some((OriginTag::Tadbhav, "संस्कृत"));
+        }
     }
 
-    // Indic languages (तद्भव)
-    if n.starts_with("प्रा") {
-        return Some("प्राकृत");
-    }
-    if n.starts_with("हि") {
-        return Some("हिन्दी");
-    }
-    // भो. ब. (भोट-बर्मेली) must be checked before भो. (भोजपुरी)
-    if n.starts_with("भो. ब") || n.starts_with("भो.ब") {
-        return Some("भोट-बर्मेली");
-    }
-    if n.starts_with("भो") {
-        return Some("भोजपुरी");
-    }
-    if n.starts_with("मरा") {
-        return Some("मराठी");
-    }
-    if n.starts_with("मै") {
-        return Some("मैथिली");
-    }
-    if n.starts_with("उडि") {
-        return Some("उडिया");
+    if let Some(entry) = match_tag_table(normalized) {
+        return Some((entry.origin, entry.source_language));
     }
 
-    // Regional languages (देशज)
-    if n.starts_with("नेवा") {
-        return Some("नेवारी");
-    }
-    if n.starts_with("लि") {
-        return Some("लिम्बू");
-    }
-    if n.starts_with("मो") {
-        return Some("भोट-बर्मेली");
-    }
-    if n.starts_with("मग") {
-        return Some("मगराँती");
-    }
-    if n.starts_with("डो") {
-        return Some("डोटेली");
-    }
-    if n.starts_with("बा") {
-        return Some("बालबोली");
-    }
-    if n.starts_with("तामा") {
-        return Some("तामाङ्गी");
-    }
-    if n.starts_with("दङ") {
-        return Some("दङाली");
-    }
-    if n.starts_with("धिमा") {
-        return Some("धिमाल");
-    }
-
-    // Derivation chains: "X ८ सं. Y" etc.
+    // Etymological derivation tags: "X ८ सं. Y" means derived from Sanskrit.
     if tag.contains("८ सं") || tag.contains("८सं") {
-        return Some("संस्कृत");
+        return Some((OriginTag::Tadbhav, "संस्कृत"));
     }
     if tag.contains("८ अ") {
-        return Some("अरबी");
+        return Some((OriginTag::Aagantuk, "अरबी"));
     }
     if tag.contains("८ फा") {
-        return Some("फारसी");
+        return Some((OriginTag::Aagantuk, "फारसी"));
     }
     if tag.contains("८ पोर्त") {
-        return Some("पोर्तुगाली");
+        // Keep legacy spelling for compatibility with existing output behavior.
+        return Some((OriginTag::Aagantuk, "पोर्तुगाली"));
     }
 
     None
+}
+
+fn match_tag_table(normalized: &str) -> Option<&'static TagEntry> {
+    TAG_TABLE.iter().find(|entry| {
+        entry
+            .prefixes
+            .iter()
+            .any(|prefix| normalized == *prefix || normalized.starts_with(prefix))
+    })
 }
 
 #[cfg(test)]
@@ -343,6 +329,18 @@ mod tests {
             parse_origin_tag("[कपास ८ सं. कर्पास]"),
             Some(OriginTag::Tadbhav)
         );
+    }
+
+    #[test]
+    fn test_overlap_prefers_bho_b_before_bho() {
+        assert_eq!(parse_origin_tag("ना. [भो. ब.]"), Some(OriginTag::Tadbhav));
+        assert_eq!(parse_source_language("ना. [भो. ब.]"), Some("भोट-बर्मेली"));
+    }
+
+    #[test]
+    fn test_overlap_prefers_ang_before_a() {
+        assert_eq!(parse_origin_tag("ना. [अङ्.]"), Some(OriginTag::Aagantuk));
+        assert_eq!(parse_source_language("ना. [अङ्.]"), Some("अङ्ग्रेजी"));
     }
 
     // --- parse_source_language tests ---
