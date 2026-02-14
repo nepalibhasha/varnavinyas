@@ -188,7 +188,8 @@ pub fn decompose_word_value(word: &str) -> Result<JsValue, JsError> {
 }
 
 /// A sandhi apply result serialized for JavaScript consumers.
-#[derive(Serialize)]
+#[derive(Serialize, Tsify)]
+#[tsify(into_wasm_abi)]
 struct JsSandhiResult {
     output: String,
     sandhi_type: String,
@@ -196,7 +197,8 @@ struct JsSandhiResult {
 }
 
 /// A sandhi split entry serialized for JavaScript consumers.
-#[derive(Serialize)]
+#[derive(Serialize, Tsify)]
+#[tsify(into_wasm_abi)]
 struct JsSandhiSplit {
     left: String,
     right: String,
@@ -211,14 +213,20 @@ struct JsSandhiSplit {
 pub fn sandhi_apply(first: &str, second: &str) -> String {
     match varnavinyas_sandhi::apply(first, second) {
         Ok(res) => {
-            let js = JsSandhiResult {
-                output: res.output,
-                sandhi_type: sandhi_type_to_string(res.sandhi_type),
-                rule_citation: res.rule_citation.to_string(),
-            };
+            let js = sandhi_result_to_js(res);
             serde_json::to_string(&js).unwrap_or_else(|_| "{}".to_string())
         }
         Err(e) => serde_json::json!({ "error": e.to_string() }).to_string(),
+    }
+}
+
+/// Apply sandhi and return typed JsValue.
+#[wasm_bindgen]
+pub fn sandhi_apply_value(first: &str, second: &str) -> Result<JsValue, JsError> {
+    match varnavinyas_sandhi::apply(first, second) {
+        Ok(res) => serde_wasm_bindgen::to_value(&sandhi_result_to_js(res))
+            .map_err(|e| JsError::new(&format!("failed to serialize sandhi apply result: {e}"))),
+        Err(e) => Err(JsError::new(&e.to_string())),
     }
 }
 
@@ -229,15 +237,43 @@ pub fn sandhi_split(word: &str) -> String {
     let results = varnavinyas_sandhi::split(word);
     let js_results: Vec<JsSandhiSplit> = results
         .into_iter()
-        .map(|(left, right, res)| JsSandhiSplit {
-            left,
-            right,
-            output: res.output,
-            sandhi_type: sandhi_type_to_string(res.sandhi_type),
-            rule_citation: res.rule_citation.to_string(),
-        })
+        .map(|(left, right, res)| sandhi_split_to_js(left, right, res))
         .collect();
     serde_json::to_string(&js_results).unwrap_or_else(|_| "[]".to_string())
+}
+
+/// Split sandhi and return typed JsValue.
+#[wasm_bindgen]
+pub fn sandhi_split_value(word: &str) -> Result<JsValue, JsError> {
+    let results = varnavinyas_sandhi::split(word);
+    let js_results: Vec<JsSandhiSplit> = results
+        .into_iter()
+        .map(|(left, right, res)| sandhi_split_to_js(left, right, res))
+        .collect();
+    serde_wasm_bindgen::to_value(&js_results)
+        .map_err(|e| JsError::new(&format!("failed to serialize sandhi split result: {e}")))
+}
+
+fn sandhi_result_to_js(res: varnavinyas_sandhi::SandhiResult) -> JsSandhiResult {
+    JsSandhiResult {
+        output: res.output,
+        sandhi_type: sandhi_type_to_string(res.sandhi_type),
+        rule_citation: res.rule_citation.to_string(),
+    }
+}
+
+fn sandhi_split_to_js(
+    left: String,
+    right: String,
+    res: varnavinyas_sandhi::SandhiResult,
+) -> JsSandhiSplit {
+    JsSandhiSplit {
+        left,
+        right,
+        output: res.output,
+        sandhi_type: sandhi_type_to_string(res.sandhi_type),
+        rule_citation: res.rule_citation.to_string(),
+    }
 }
 
 fn sandhi_type_to_string(st: varnavinyas_sandhi::SandhiType) -> String {

@@ -16,7 +16,9 @@ import init, {
   decompose_word,
   decompose_word_value,
   sandhi_apply,
+  sandhi_apply_value,
   sandhi_split,
+  sandhi_split_value,
 } from '../pkg/varnavinyas_bindings_wasm.js';
 
 let initialized = false;
@@ -145,7 +147,11 @@ export function decomposeWord(word) {
  * Returns { output, sandhi_type, rule_citation } or { error: "..." }
  */
 export function sandhiApply(first, second) {
-  return JSON.parse(sandhi_apply(first, second));
+  try {
+    return sandhi_apply_value(first, second);
+  } catch (_err) {
+    return JSON.parse(sandhi_apply(first, second));
+  }
 }
 
 /**
@@ -153,5 +159,9 @@ export function sandhiApply(first, second) {
  * Returns [{ left, right, output, sandhi_type, rule_citation }, ...]
  */
 export function sandhiSplit(word) {
-  return JSON.parse(sandhi_split(word));
+  try {
+    return sandhi_split_value(word);
+  } catch (_err) {
+    return JSON.parse(sandhi_split(word));
+  }
 }
