@@ -27,7 +27,38 @@ fi
 
 # --- 2. WASM JS exports the expected functions ---
 echo "[2] WASM JS exports"
-for fn in check_text check_word transliterate derive; do
+CORE_EXPORTS="check_text check_word transliterate derive"
+TYPED_EXPORTS="check_text_value check_word_value derive_value analyze_word_value decompose_word_value sandhi_apply_value sandhi_split_value"
+
+missing_exports() {
+  local exports="$1"
+  local missing=""
+  for fn in $exports; do
+    if ! grep -q "export function ${fn}" pkg/varnavinyas_bindings_wasm.js 2>/dev/null; then
+      missing="$missing $fn"
+    fi
+  done
+  echo "$missing"
+}
+
+MISSING_TYPED=$(missing_exports "$TYPED_EXPORTS")
+if [ -n "${MISSING_TYPED// }" ]; then
+  if command -v wasm-pack >/dev/null 2>&1; then
+    echo "  INFO: typed exports missing in pkg; rebuilding web/pkg via web/build.sh"
+    BUILD_LOG=$(mktemp)
+    if ./build.sh >"$BUILD_LOG" 2>&1; then
+      pass "Rebuilt web/pkg before export checks"
+    else
+      fail "Failed to rebuild web/pkg via web/build.sh"
+      sed -n '1,40p' "$BUILD_LOG" >&2 || true
+    fi
+    rm -f "$BUILD_LOG"
+  else
+    fail "typed exports missing and wasm-pack unavailable to rebuild web/pkg"
+  fi
+fi
+
+for fn in $CORE_EXPORTS $TYPED_EXPORTS; do
   if grep -q "export function ${fn}" pkg/varnavinyas_bindings_wasm.js 2>/dev/null; then
     pass "export function ${fn} found"
   else
