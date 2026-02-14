@@ -1,18 +1,5 @@
 use crate::tables;
-use varnavinyas_kosha::OriginTag;
-
-/// Word origin classification.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum Origin {
-    /// तत्सम — direct Sanskrit borrowing, retains original form.
-    Tatsam,
-    /// तद्भव — modified Sanskrit, follows Nepali phonology.
-    Tadbhav,
-    /// देशज — native Nepali word.
-    Deshaj,
-    /// आगन्तुक — foreign loanword (English, Arabic, Hindi, etc.).
-    Aagantuk,
-}
+pub use varnavinyas_types::Origin;
 
 /// Provenance for origin classification.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -31,17 +18,6 @@ pub struct OriginDecision {
     pub origin: Origin,
     pub source: OriginSource,
     pub confidence: f32,
-}
-
-impl From<OriginTag> for Origin {
-    fn from(tag: OriginTag) -> Self {
-        match tag {
-            OriginTag::Tatsam => Origin::Tatsam,
-            OriginTag::Tadbhav => Origin::Tadbhav,
-            OriginTag::Deshaj => Origin::Deshaj,
-            OriginTag::Aagantuk => Origin::Aagantuk,
-        }
-    }
 }
 
 /// Classify a Nepali word by its origin.
@@ -76,7 +52,7 @@ pub fn classify_with_provenance(word: &str) -> OriginDecision {
     // 2. Kosha dictionary lookup (~26K words with origin tags)
     if let Some(tag) = varnavinyas_kosha::kosha().origin_of(word) {
         return OriginDecision {
-            origin: tag.into(),
+            origin: tag,
             source: OriginSource::Kosha,
             confidence: 0.95,
         };

@@ -4,6 +4,7 @@ members = [
     "crates/akshar",
     "crates/lipi",
     "crates/shabda",
+    "crates/types",
     "crates/sandhi",
     "crates/prakriya",
     "crates/kosha",
@@ -24,6 +25,7 @@ default-members = [
     "crates/akshar",
     "crates/lipi",
     "crates/shabda",
+    "crates/types",
     "crates/sandhi",
     "crates/prakriya",
     "crates/kosha",
@@ -68,6 +70,7 @@ criterion = { version = "0.5", features = ["html_reports"] }
 varnavinyas-akshar = { path = "crates/akshar" }
 varnavinyas-lipi = { path = "crates/lipi" }
 varnavinyas-shabda = { path = "crates/shabda" }
+varnavinyas-types = { path = "crates/types" }
 varnavinyas-sandhi = { path = "crates/sandhi" }
 varnavinyas-prakriya = { path = "crates/prakriya" }
 varnavinyas-kosha = { path = "crates/kosha" }

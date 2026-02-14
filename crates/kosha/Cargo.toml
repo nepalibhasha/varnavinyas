@@ -9,6 +9,7 @@ description = "FST-based Nepali lexicon for word validation and metadata lookup"
 [dependencies]
 fst = { workspace = true }
 thiserror = { workspace = true }
+varnavinyas-types = { workspace = true }
 
 [dev-dependencies]
 serde = { workspace = true }

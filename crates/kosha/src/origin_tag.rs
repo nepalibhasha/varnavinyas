@@ -3,15 +3,8 @@
 //! Maps abbreviation tags from the Nepali Brihat Shabdakosha (सङ्केतसूची)
 //! to the four-category origin classification used by the orthography rules.
 
-/// Origin classification (mirrors `shabda::Origin` but avoids circular dep).
-/// Converted to shabda::Origin at the shabda crate boundary.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum OriginTag {
-    Tatsam,
-    Tadbhav,
-    Deshaj,
-    Aagantuk,
-}
+/// Shared origin classification type.
+pub use varnavinyas_types::Origin as OriginTag;
 
 struct TagEntry {
     prefixes: &'static [&'static str],

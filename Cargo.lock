@@ -2162,6 +2162,7 @@ dependencies = [
  "serde",
  "thiserror 2.0.18",
  "toml 0.8.23",
+ "varnavinyas-types",
 ]
 
 [[package]]
@@ -2268,7 +2269,12 @@ dependencies = [
  "toml 0.8.23",
  "varnavinyas-akshar",
  "varnavinyas-kosha",
+ "varnavinyas-types",
 ]
+
+[[package]]
+name = "varnavinyas-types"
+version = "0.1.0"
 
 [[package]]
 name = "varnavinyas-vyakaran"

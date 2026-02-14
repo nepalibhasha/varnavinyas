@@ -12,6 +12,7 @@ iterative-decompose = []
 [dependencies]
 varnavinyas-akshar = { workspace = true }
 varnavinyas-kosha = { workspace = true }
+varnavinyas-types = { workspace = true }
 thiserror = { workspace = true }
 
 [dev-dependencies]
