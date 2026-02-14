@@ -24,7 +24,8 @@ struct JsDiagnostic {
 }
 
 /// A prakriya step serialized for JavaScript consumers.
-#[derive(Serialize)]
+#[derive(Serialize, Tsify)]
+#[tsify(into_wasm_abi)]
 struct JsStep {
     rule: String,
     description: String,
@@ -33,7 +34,8 @@ struct JsStep {
 }
 
 /// A prakriya result serialized for JavaScript consumers.
-#[derive(Serialize)]
+#[derive(Serialize, Tsify)]
+#[tsify(into_wasm_abi)]
 struct JsPrakriya {
     input: String,
     output: String,
@@ -83,6 +85,16 @@ pub fn check_word(word: &str) -> String {
     }
 }
 
+/// Check a single word and return typed JsValue (object or null).
+#[wasm_bindgen]
+pub fn check_word_value(word: &str) -> Result<JsValue, JsError> {
+    match varnavinyas_parikshak::check_word(word) {
+        Some(d) => serde_wasm_bindgen::to_value(&diagnostic_to_js(d))
+            .map_err(|e| JsError::new(&format!("failed to serialize diagnostic: {e}"))),
+        None => Ok(JsValue::NULL),
+    }
+}
+
 /// Transliterate text between scripts.
 /// `from` and `to` must be "Devanagari" or "Iast".
 #[wasm_bindgen]
@@ -97,27 +109,21 @@ pub fn transliterate(input: &str, from: &str, to: &str) -> Result<String, JsErro
 /// Returns a JSON object with input, output, is_correct, and steps.
 #[wasm_bindgen]
 pub fn derive(word: &str) -> String {
-    let p = varnavinyas_prakriya::derive(word);
-    let js = JsPrakriya {
-        input: p.input,
-        output: p.output,
-        is_correct: p.is_correct,
-        steps: p
-            .steps
-            .into_iter()
-            .map(|s| JsStep {
-                rule: s.rule.to_string(),
-                description: s.description,
-                before: s.before,
-                after: s.after,
-            })
-            .collect(),
-    };
+    let js = prakriya_to_js(varnavinyas_prakriya::derive(word));
     serde_json::to_string(&js).unwrap_or_else(|_| "{}".to_string())
 }
 
+/// Derive the correct form and return typed JsValue.
+#[wasm_bindgen]
+pub fn derive_value(word: &str) -> Result<JsValue, JsError> {
+    let js = prakriya_to_js(varnavinyas_prakriya::derive(word));
+    serde_wasm_bindgen::to_value(&js)
+        .map_err(|e| JsError::new(&format!("failed to serialize prakriya: {e}")))
+}
+
 /// A word analysis result serialized for JavaScript consumers.
-#[derive(Serialize)]
+#[derive(Serialize, Tsify)]
+#[tsify(into_wasm_abi)]
 struct JsWordAnalysis {
     word: String,
     origin: String,
@@ -131,7 +137,8 @@ struct JsWordAnalysis {
 }
 
 /// A rule note serialized for JavaScript consumers.
-#[derive(Serialize)]
+#[derive(Serialize, Tsify)]
+#[tsify(into_wasm_abi)]
 struct JsRuleNote {
     rule: String,
     rule_code: String,
@@ -142,30 +149,21 @@ struct JsRuleNote {
 /// Returns a JSON object with word, origin, is_correct, correction, and rule_notes.
 #[wasm_bindgen]
 pub fn analyze_word(word: &str) -> String {
-    let analysis = varnavinyas_prakriya::analyze(word);
-    let js = JsWordAnalysis {
-        word: analysis.word,
-        origin: origin_to_string(analysis.origin),
-        origin_source: origin_source_to_string(analysis.origin_source),
-        origin_confidence: analysis.origin_confidence,
-        source_language: analysis.source_language,
-        is_correct: analysis.is_correct,
-        correction: analysis.correction,
-        rule_notes: analysis
-            .rule_notes
-            .into_iter()
-            .map(|n| JsRuleNote {
-                rule: n.rule.to_string(),
-                rule_code: n.rule.code().to_string(),
-                explanation: n.explanation,
-            })
-            .collect(),
-    };
+    let js = word_analysis_to_js(varnavinyas_prakriya::analyze(word));
     serde_json::to_string(&js).unwrap_or_else(|_| "{}".to_string())
 }
 
+/// Analyze a word and return typed JsValue.
+#[wasm_bindgen]
+pub fn analyze_word_value(word: &str) -> Result<JsValue, JsError> {
+    let js = word_analysis_to_js(varnavinyas_prakriya::analyze(word));
+    serde_wasm_bindgen::to_value(&js)
+        .map_err(|e| JsError::new(&format!("failed to serialize analysis: {e}")))
+}
+
 /// A morpheme decomposition result serialized for JavaScript consumers.
-#[derive(Serialize)]
+#[derive(Serialize, Tsify)]
+#[tsify(into_wasm_abi)]
 struct JsMorpheme {
     root: String,
     prefixes: Vec<String>,
@@ -177,14 +175,16 @@ struct JsMorpheme {
 /// Returns a JSON object with root, prefixes, suffixes, and origin.
 #[wasm_bindgen]
 pub fn decompose_word(word: &str) -> String {
-    let m = varnavinyas_shabda::decompose(word);
-    let js = JsMorpheme {
-        root: m.root,
-        prefixes: m.prefixes,
-        suffixes: m.suffixes,
-        origin: origin_to_string(m.origin),
-    };
+    let js = morpheme_to_js(varnavinyas_shabda::decompose(word));
     serde_json::to_string(&js).unwrap_or_else(|_| "{}".to_string())
+}
+
+/// Decompose a word and return typed JsValue.
+#[wasm_bindgen]
+pub fn decompose_word_value(word: &str) -> Result<JsValue, JsError> {
+    let js = morpheme_to_js(varnavinyas_shabda::decompose(word));
+    serde_wasm_bindgen::to_value(&js)
+        .map_err(|e| JsError::new(&format!("failed to serialize morpheme: {e}")))
 }
 
 /// A sandhi apply result serialized for JavaScript consumers.
@@ -278,6 +278,54 @@ fn diagnostic_to_js(d: varnavinyas_parikshak::Diagnostic) -> JsDiagnostic {
         category_code: d.category.as_code().to_string(),
         kind: d.kind.as_code().to_string(),
         confidence: d.confidence,
+    }
+}
+
+fn prakriya_to_js(p: varnavinyas_prakriya::Prakriya) -> JsPrakriya {
+    JsPrakriya {
+        input: p.input,
+        output: p.output,
+        is_correct: p.is_correct,
+        steps: p
+            .steps
+            .into_iter()
+            .map(|s| JsStep {
+                rule: s.rule.to_string(),
+                description: s.description,
+                before: s.before,
+                after: s.after,
+            })
+            .collect(),
+    }
+}
+
+fn word_analysis_to_js(analysis: varnavinyas_prakriya::WordAnalysis) -> JsWordAnalysis {
+    JsWordAnalysis {
+        word: analysis.word,
+        origin: origin_to_string(analysis.origin),
+        origin_source: origin_source_to_string(analysis.origin_source),
+        origin_confidence: analysis.origin_confidence,
+        source_language: analysis.source_language,
+        is_correct: analysis.is_correct,
+        correction: analysis.correction,
+        rule_notes: analysis
+            .rule_notes
+            .into_iter()
+            .map(|n| JsRuleNote {
+                rule: n.rule.to_string(),
+                rule_code: n.rule.code().to_string(),
+                explanation: n.explanation,
+            })
+            .collect(),
+    }
+}
+
+fn morpheme_to_js(m: varnavinyas_shabda::Morpheme) -> JsMorpheme {
+    JsMorpheme {
+        root: m.root,
+        prefixes: m.prefixes,
+        suffixes: m.suffixes,
+        origin: origin_to_string(m.origin),
     }
 }
 
