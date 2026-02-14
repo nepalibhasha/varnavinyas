@@ -19,9 +19,11 @@ if ! command -v cargo &>/dev/null; then
 fi
 
 echo "Building WASM bindings..."
+# Use no-install mode to avoid implicit cargo install/network side effects in CI/sandboxes.
 wasm-pack build crates/bindings-wasm \
   --target web \
   --out-dir ../../web/pkg \
-  --release
+  --release \
+  --mode no-install
 
 echo "Done. Serve with: python3 -m http.server 8080 --directory web/"

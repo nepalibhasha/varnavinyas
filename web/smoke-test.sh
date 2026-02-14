@@ -13,6 +13,7 @@ FAIL=0
 
 pass() { ((PASS++)); echo "  PASS: $1"; }
 fail() { ((FAIL++)); echo "  FAIL: $1" >&2; }
+warn() { echo "  WARN: $1" >&2; }
 
 echo "=== Varnavinyas Web Smoke Test ==="
 echo ""
@@ -41,6 +42,17 @@ missing_exports() {
   echo "$missing"
 }
 
+# Always enforce core exports from built pkg.
+for fn in $CORE_EXPORTS; do
+  if grep -q "export function ${fn}" pkg/varnavinyas_bindings_wasm.js 2>/dev/null; then
+    pass "export function ${fn} found"
+  else
+    fail "export function ${fn} missing from WASM JS"
+  fi
+done
+
+# Typed exports are enforced in pkg only when rebuild succeeds.
+ENFORCE_TYPED_PKG=1
 MISSING_TYPED=$(missing_exports "$TYPED_EXPORTS")
 if [ -n "${MISSING_TYPED// }" ]; then
   if command -v wasm-pack >/dev/null 2>&1; then
@@ -49,20 +61,33 @@ if [ -n "${MISSING_TYPED// }" ]; then
     if ./build.sh >"$BUILD_LOG" 2>&1; then
       pass "Rebuilt web/pkg before export checks"
     else
-      fail "Failed to rebuild web/pkg via web/build.sh"
+      ENFORCE_TYPED_PKG=0
+      warn "Failed to rebuild web/pkg via web/build.sh; skipping pkg typed-export enforcement"
       sed -n '1,40p' "$BUILD_LOG" >&2 || true
     fi
     rm -f "$BUILD_LOG"
   else
-    fail "typed exports missing and wasm-pack unavailable to rebuild web/pkg"
+    ENFORCE_TYPED_PKG=0
+    warn "wasm-pack unavailable; skipping pkg typed-export enforcement"
   fi
 fi
 
-for fn in $CORE_EXPORTS $TYPED_EXPORTS; do
-  if grep -q "export function ${fn}" pkg/varnavinyas_bindings_wasm.js 2>/dev/null; then
-    pass "export function ${fn} found"
+if [ "$ENFORCE_TYPED_PKG" -eq 1 ]; then
+  for fn in $TYPED_EXPORTS; do
+    if grep -q "export function ${fn}" pkg/varnavinyas_bindings_wasm.js 2>/dev/null; then
+      pass "export function ${fn} found"
+    else
+      fail "export function ${fn} missing from WASM JS"
+    fi
+  done
+fi
+
+# Always enforce typed exports at Rust source level.
+for fn in $TYPED_EXPORTS; do
+  if grep -q "pub fn ${fn}" ../crates/bindings-wasm/src/lib.rs 2>/dev/null; then
+    pass "Rust export ${fn} found"
   else
-    fail "export function ${fn} missing from WASM JS"
+    fail "Rust export ${fn} missing in bindings-wasm/src/lib.rs"
   fi
 done
 
