@@ -6,6 +6,9 @@ rust-version.workspace = true
 license.workspace = true
 description = "FST-based Nepali lexicon for word validation and metadata lookup"
 
+[features]
+test-seam = []
+
 [dependencies]
 fst = { workspace = true }
 thiserror = { workspace = true }

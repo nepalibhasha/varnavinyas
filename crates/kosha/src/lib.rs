@@ -2,6 +2,8 @@ mod builder;
 mod kosha;
 pub mod origin_tag;
 
+#[cfg(any(test, feature = "test-seam"))]
+pub use kosha::with_test_kosha;
 pub use kosha::{Kosha, WordEntry, kosha};
 pub use origin_tag::{OriginTag, parse_source_language};
 

@@ -1,3 +1,5 @@
+#[cfg(any(test, feature = "test-seam"))]
+use std::cell::RefCell;
 use std::sync::LazyLock;
 
 use fst::Set;
@@ -14,6 +16,11 @@ static HEADWORDS_DATA: &str = include_str!("../../../data/headwords.tsv");
 /// Global singleton lexicon, built once on first access.
 static KOSHA: LazyLock<Kosha> =
     LazyLock::new(|| Kosha::from_static_data(WORDS_DATA, HEADWORDS_DATA));
+
+#[cfg(any(test, feature = "test-seam"))]
+thread_local! {
+    static TEST_KOSHA_OVERRIDE: RefCell<Option<&'static Kosha>> = const { RefCell::new(None) };
+}
 
 /// A metadata entry for a headword.
 #[derive(Debug, Clone)]
@@ -105,7 +112,95 @@ impl Kosha {
     }
 }
 
+#[cfg(any(test, feature = "test-seam"))]
+struct TestKoshaResetGuard {
+    previous: Option<&'static Kosha>,
+}
+
+#[cfg(any(test, feature = "test-seam"))]
+impl Drop for TestKoshaResetGuard {
+    fn drop(&mut self) {
+        TEST_KOSHA_OVERRIDE.with(|slot| {
+            slot.replace(self.previous);
+        });
+    }
+}
+
+/// Run a closure with a scoped test lexicon override.
+///
+/// This is available only for tests (or with `test-seam` feature) and resets
+/// automatically when the closure exits.
+#[cfg(any(test, feature = "test-seam"))]
+pub fn with_test_kosha<R>(
+    words_data: &'static str,
+    headwords_data: &'static str,
+    f: impl FnOnce() -> R,
+) -> R {
+    let custom = Box::leak(Box::new(Kosha::from_static_data(
+        words_data,
+        headwords_data,
+    )));
+    let previous = TEST_KOSHA_OVERRIDE.with(|slot| slot.replace(Some(custom)));
+    let _reset = TestKoshaResetGuard { previous };
+    f()
+}
+
 /// Get a reference to the global lexicon singleton.
 pub fn kosha() -> &'static Kosha {
+    #[cfg(any(test, feature = "test-seam"))]
+    {
+        if let Some(override_kosha) = TEST_KOSHA_OVERRIDE.with(|slot| *slot.borrow()) {
+            return override_kosha;
+        }
+    }
+
     &KOSHA
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_kosha_override_is_scoped() {
+        const WORD: &str = "टेस्टशब्दनिश्चित";
+        assert!(!kosha().contains(WORD));
+
+        with_test_kosha(
+            "टेस्टशब्दनिश्चित\n",
+            "टेस्टशब्दनिश्चित\tना.\n",
+            || {
+                assert!(kosha().contains(WORD));
+            },
+        );
+
+        assert!(!kosha().contains(WORD));
+    }
+
+    #[test]
+    fn test_kosha_override_supports_nesting() {
+        const WORD1: &str = "पहिलोनमूना";
+        const WORD2: &str = "दोस्रोनमूना";
+
+        with_test_kosha(
+            "पहिलोनमूना\n",
+            "पहिलोनमूना\tना.\n",
+            || {
+                assert!(kosha().contains(WORD1));
+                assert!(!kosha().contains(WORD2));
+
+                with_test_kosha(
+                    "दोस्रोनमूना\n",
+                    "दोस्रोनमूना\tना.\n",
+                    || {
+                        assert!(!kosha().contains(WORD1));
+                        assert!(kosha().contains(WORD2));
+                    },
+                );
+
+                assert!(kosha().contains(WORD1));
+                assert!(!kosha().contains(WORD2));
+            },
+        );
+    }
 }
