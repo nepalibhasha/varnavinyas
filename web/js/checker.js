@@ -52,6 +52,7 @@ const HEURISTIC_RULE_LABELS = {
   "quantifier-plural-redundancy": "बहुवचन",
   "ergative-le-intransitive": "ले-कारक",
   "genitive-mismatch-plural": "सम्बन्ध",
+  "section4-phrase-style": "शैली",
 };
 
 function syncScroll() {
@@ -71,11 +72,22 @@ function isGrammarEnabled() {
   return Boolean(grammarToggle?.checked);
 }
 
+function isHeuristicDiagnostic(diag) {
+  return !(diag.kind === "Error" && diag.confidence >= 0.8);
+}
+
+function getHeuristicRuleLabel(ruleCode) {
+  if (!ruleCode) return "heuristic";
+  if (HEURISTIC_RULE_LABELS[ruleCode]) return HEURISTIC_RULE_LABELS[ruleCode];
+  if (ruleCode.startsWith("section4-")) return "शैली";
+  return "heuristic";
+}
+
 function heuristicLabel(diag) {
-  if (diag.kind === "Error" && diag.confidence >= 0.8) {
+  if (!isHeuristicDiagnostic(diag)) {
     return null;
   }
-  return HEURISTIC_RULE_LABELS[diag.rule_code] || "heuristic";
+  return getHeuristicRuleLabel(diag.rule_code);
 }
 
 function runCheck() {
@@ -110,8 +122,6 @@ function renderGrammarCoverage() {
   if (!grammarCoverage) return;
 
   const enabled = isGrammarEnabled();
-  const ruleCodes = Object.keys(HEURISTIC_RULE_LABELS);
-
   if (!enabled) {
     grammarCoverage.innerHTML = `
       <div class="grammar-coverage-head">
@@ -132,25 +142,35 @@ function renderGrammarCoverage() {
     return;
   }
 
-  const counts = Object.fromEntries(ruleCodes.map((code) => [code, 0]));
-  const confidenceSums = Object.fromEntries(ruleCodes.map((code) => [code, 0]));
+  const byRule = new Map();
 
   for (const d of diagnostics) {
-    if (d.rule_code in counts) {
-      counts[d.rule_code] += 1;
-      const c = Number.isFinite(d.confidence) ? d.confidence : 0;
-      confidenceSums[d.rule_code] += c;
-    }
+    if (!isHeuristicDiagnostic(d)) continue;
+    const ruleCode = d.rule_code || "heuristic-unknown";
+    const current = byRule.get(ruleCode) || { count: 0, confidenceSum: 0 };
+    current.count += 1;
+    current.confidenceSum += Number.isFinite(d.confidence) ? d.confidence : 0;
+    byRule.set(ruleCode, current);
   }
 
-  const chips = ruleCodes
-    .map((code) => {
-      const count = counts[code];
-      const avg = count > 0 ? Math.round((confidenceSums[code] / count) * 100) : 0;
+  if (byRule.size === 0) {
+    grammarCoverage.innerHTML = `
+      <div class="grammar-coverage-head">
+        <span>Grammar Coverage</span>
+        <span class="grammar-coverage-label">Heuristics</span>
+      </div>
+      <p class="grammar-coverage-note">अहिलेसम्म कुनै heuristic/style सुझाव भेटिएन।</p>`;
+    return;
+  }
+
+  const chips = Array.from(byRule.entries())
+    .sort((a, b) => b[1].count - a[1].count || a[0].localeCompare(b[0]))
+    .map(([code, stats]) => {
+      const avg = Math.round((stats.confidenceSum / stats.count) * 100);
       return `
       <span class="grammar-coverage-chip">
-        ${escapeHtml(HEURISTIC_RULE_LABELS[code])}
-        <span class="grammar-coverage-count">${count}</span>
+        ${escapeHtml(getHeuristicRuleLabel(code))}
+        <span class="grammar-coverage-count">${stats.count}</span>
         <span class="grammar-coverage-avg">${avg}%</span>
       </span>`;
     })

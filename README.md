@@ -1,76 +1,94 @@
 # Varnavinyas (वर्णविन्यास)
 
-**The definitive open-source Nepali language orthography toolkit.**
+Open-source Nepali orthography toolkit based on Nepal Academy standards.
 
 *शुद्ध नेपाली, सबैका लागि।*  
 *(Correct Nepali, for everyone.)*
 
-Varnavinyas is a high-performance Rust library designed to digitize the Nepal Academy's official orthography standard (नेपाली वर्णविन्यास). It provides the foundational infrastructure for spell checkers, grammar tools, and linguistic analysis.
+Varnavinyas is a Rust workspace for spell checking, orthographic normalization, punctuation diagnostics, and linguistic analysis for Nepali text.
 
-## Features (Phase 0)
+## What It Includes
 
-*   **Character Analysis**: Devanagari character classification (Vowel, Consonant, Matra, etc.)
-*   **Syllable Segmentation**: Accurate splitting of text into Aksharas (syllables), handling complex conjuncts.
-*   **Transliteration**:
-    *   Devanagari ↔ IAST (International Alphabet of Sanskrit Transliteration)
-    *   Legacy Font Support (Preeti/Kantipur → Unicode)
-*   **Normalization**: Unicode NFC normalization for consistent text processing.
+- Orthography correction pipeline with rule-based and table-based fixes (`parikshak` + `prakriya` + `kosha`)
+- Punctuation checker aligned with Academy Section 5 conventions (`lekhya`)
+- Devanagari text utilities: akshara splitting, normalization, transliteration, legacy font conversion (`akshar`, `lipi`)
+- Sandhi, morphology/origin utilities, and evaluation harnesses (`sandhi`, `shabda`, `eval`)
+- Multiple interfaces:
+  - CLI (`crates/cli`)
+  - LSP server (`crates/lsp`)
+  - Web app with WASM bindings (`web/`, `crates/bindings-wasm`)
+  - Python/C/UniFFI bindings (`crates/bindings-python`, `crates/bindings-c`, `crates/bindings-uniffi`)
 
-## Architecture
+## Workspace Layout
 
-The project is organized as a Cargo workspace:
+- `crates/akshar`, `crates/lipi`, `crates/shabda`, `crates/types`, `crates/sandhi`, `crates/prakriya`: core libraries
+- `crates/kosha`: lexicon and headword metadata
+- `crates/lekhya`: punctuation diagnostics
+- `crates/parikshak`: end-to-end checker
+- `crates/vyakaran`, `crates/samasa`: grammar/samasa libraries
+- `crates/eval`: evaluation/test harnesses
+- `web/`: browser UI + rules reference + WASM bridge
+- `docs/tests/*.toml`: gold/eval fixtures
 
-*   **`crates/akshar`**: Core character utilities, segmentation, and normalization.
-*   **`crates/lipi`**: Transliteration and script conversion.
-*   **`docs/`**: Detailed documentation, including the Product Requirements Document (PRD) and roadmap.
-
-## Status
-
-Feature matrix and implementation status: [docs/STATUS.md](docs/STATUS.md).
-
-## Usage
+## Quick Start
 
 ### Prerequisites
 
-*   Rust 1.85.0 or higher
-*   Cargo
+- Rust 1.85.0+
+- Cargo
+- (Optional for web build) `wasm-pack` and `wasm-bindgen-cli`
 
-### Building
+### Build
 
 ```bash
 cargo build --workspace
 ```
 
-### Testing
-
-Run the full test suite, including gold-standard verification:
+### Test and Lint
 
 ```bash
-cargo test --workspace
+cargo fmt --all --check
+cargo clippy --workspace --all-targets -- -D warnings
+cargo test --workspace -q
 ```
 
-### Legacy Font Support
-
-To enable support for legacy fonts like Preeti and Kantipur, use the `legacy` feature:
+### Run Web App
 
 ```bash
-cargo test -p varnavinyas-lipi --features legacy
+bash web/build.sh
+python3 -m http.server 8080 --directory web/
 ```
+
+Open `http://localhost:8080`.
+
+### Web Smoke Test
+
+```bash
+bash web/smoke-test.sh
+```
+
+## Status
+
+Current feature matrix: `docs/STATUS.md`
 
 ## Documentation
 
-*   [**Vision**](docs/VISION.md): Why this project exists.
-*   [**PRD**](docs/PRD.md): Technical specifications and architecture.
-*   [**Roadmap**](docs/ROADMAP.md): Development phases and milestones.
-*   [**Rust Guide**](docs/RUST_GUIDE.md): Guide for contributors new to Rust.
+- `docs/VISION.md` — project motivation
+- `docs/PRD.md` — architecture and product requirements
+- `docs/ROADMAP.md` — phase planning
+- `docs/RUST_GUIDE.md` — onboarding for Rust contributors
+- `docs/Notices-pages-77-99.md` — Academy reference used for rules alignment
 
 ## Contributing
 
-*   [**Contributing Guide**](CONTRIBUTING.md): How technical and non-technical users can contribute.
-*   [**Code of Conduct**](CODE_OF_CONDUCT.md): Community participation standards.
-*   [**Security Policy**](SECURITY.md): Responsible vulnerability reporting.
-*   [**Support**](SUPPORT.md): Where to ask for help.
+Technical and non-technical contributions are welcome.
+
+- `CONTRIBUTING.md`
+- `CODE_OF_CONDUCT.md`
+- `SECURITY.md`
+- `SUPPORT.md`
+- Issue templates in `.github/ISSUE_TEMPLATE/` (including linguistic issue reporting)
 
 ## License
 
-MIT or Apache-2.0
+Dual-licensed under MIT or Apache-2.0 (`LICENSE-MIT`, `LICENSE-APACHE`).

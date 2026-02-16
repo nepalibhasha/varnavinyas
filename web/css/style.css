@@ -8,6 +8,7 @@
   --color-border: #e2e8f0;
   --color-text: #1a202c;
   --color-text-secondary: #64748b;
+  --color-muted: #64748b;
   --color-primary: #3b82f6;
   --color-primary-hover: #2563eb;
   --color-success: #22c55e;
@@ -960,7 +961,14 @@ body {
   border-bottom: 1px dotted var(--color-primary);
 }
 
-.rule-ref:hover::after {
+.rule-ref:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.rule-ref:hover::after,
+.rule-ref:focus-visible::after {
   content: attr(data-tooltip);
   position: absolute;
   bottom: 100%;
@@ -980,7 +988,8 @@ body {
   margin-bottom: 4px;
 }
 
-.rule-ref:hover::before {
+.rule-ref:hover::before,
+.rule-ref:focus-visible::before {
   content: '';
   position: absolute;
   bottom: 100%;
