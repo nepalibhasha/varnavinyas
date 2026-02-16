@@ -4,7 +4,7 @@ use crate::rule_spec::{DiagnosticKind, RuleCategory, RuleSpec};
 use crate::step::Step;
 use varnavinyas_akshar::{is_matra, is_svar, is_vyanjan};
 use varnavinyas_kosha::kosha;
-use varnavinyas_shabda::{Origin, classify};
+use varnavinyas_shabda::{Origin, OriginSource, classify, classify_with_provenance};
 
 pub const SPEC_CHANDRABINDU: RuleSpec = RuleSpec {
     id: "ortho-chandrabindu",
@@ -73,7 +73,9 @@ pub const SPEC_KSHA_CHHYA: RuleSpec = RuleSpec {
 /// - Tatsam: NEVER chandrabindu (ँ) → use shirbindu (ं)
 /// - Tadbhav/Aagantuk: NEVER shirbindu (ं) → use chandrabindu (ँ) for nasalization
 pub fn rule_chandrabindu(input: &str) -> Option<Prakriya> {
-    let origin = classify(input);
+    let origin_decision = classify_with_provenance(input);
+    let origin = origin_decision.origin;
+    let source = origin_decision.source;
 
     match origin {
         Origin::Tatsam => {
@@ -111,7 +113,7 @@ pub fn rule_chandrabindu(input: &str) -> Option<Prakriya> {
 
                         // Only replace with chandrabindu if NOT before a stop consonant
                         // (before stops, anusvara is a valid shorthand for panchham)
-                        if !before_stop {
+                        if !before_stop && should_replace_shirbindu(input, &chars, i, source) {
                             output_chars[i] = 'ँ';
                             changed = true;
                         }
@@ -144,7 +146,7 @@ pub fn rule_chandrabindu(input: &str) -> Option<Prakriya> {
                     if chars[i] == 'ं' {
                         let next = chars.get(i + 1).copied();
                         let before_stop = next.is_some_and(is_stop_consonant);
-                        if !before_stop {
+                        if !before_stop && should_replace_shirbindu(input, &chars, i, source) {
                             output_chars[i] = 'ँ';
                             changed = true;
                         }
@@ -559,6 +561,32 @@ fn is_stop_consonant(c: char) -> bool {
     )
 }
 
+/// Decide whether a non-tatsam ं → ँ replacement is safe.
+///
+/// For high-confidence origin decisions (override/kosha), we can apply directly.
+/// For heuristic-only origin decisions, require either:
+/// - a lexically plausible chandrabindu candidate in kosha, or
+/// - a clear first-person style ending (e.g., गरें, जान्छौं).
+fn should_replace_shirbindu(
+    _input: &str,
+    chars: &[char],
+    idx: usize,
+    origin_source: OriginSource,
+) -> bool {
+    if !matches!(origin_source, OriginSource::Heuristic) {
+        return true;
+    }
+
+    if idx + 1 == chars.len() && idx > 0 && matches!(chars[idx - 1], 'े' | 'ौ') {
+        return true;
+    }
+
+    let mut candidate_chars = chars.to_vec();
+    candidate_chars[idx] = 'ँ';
+    let candidate: String = candidate_chars.into_iter().collect();
+    kosha().contains(&candidate)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -687,5 +715,31 @@ mod tests {
     fn test_ksha_chhya_already_valid() {
         // क्षेत्र → None (in kosha)
         assert!(rule_ksha_chhya("क्षेत्र").is_none());
+    }
+
+    #[test]
+    fn test_chandrabindu_does_not_overflag_tatsam_shirbindu() {
+        assert!(rule_chandrabindu("अंश").is_none());
+        assert!(rule_chandrabindu("अंशु").is_none());
+        assert!(rule_chandrabindu("संसार").is_none());
+        // Tatsam words where Anusvara is before a stop consonant (classic pancham varna logic)
+        // These should also be ignored by the rule, as Shirbindu is valid here.
+        assert!(rule_chandrabindu("संघर्ष").is_none());
+        assert!(rule_chandrabindu("संघीय").is_none());
+    }
+
+    #[test]
+    fn test_chandrabindu_keeps_common_corrections() {
+        let p = rule_chandrabindu("बांस").expect("should correct बांस");
+        assert_eq!(p.output, "बाँस");
+
+        let p = rule_chandrabindu("हांस").expect("should correct हांस");
+        assert_eq!(p.output, "हाँस");
+
+        let p = rule_chandrabindu("गरें").expect("should correct गरें");
+        assert_eq!(p.output, "गरेँ");
+
+        let p = rule_chandrabindu("जान्छौं").expect("should correct जान्छौं");
+        assert_eq!(p.output, "जान्छौँ");
     }
 }
