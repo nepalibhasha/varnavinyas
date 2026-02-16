@@ -84,6 +84,7 @@ impl DiagnosticCategory {
             RuleCategory::AadhiVriddhi => DiagnosticCategory::ShuddhaTable,
             RuleCategory::YaE => DiagnosticCategory::YaE,
             RuleCategory::KshaChhya => DiagnosticCategory::KshaChhya,
+            RuleCategory::GyaGyan => DiagnosticCategory::ShuddhaTable,
             RuleCategory::Structural => DiagnosticCategory::ShuddhaTable,
         }
     }

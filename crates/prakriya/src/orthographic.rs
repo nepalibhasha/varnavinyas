@@ -69,6 +69,15 @@ pub const SPEC_KSHA_CHHYA: RuleSpec = RuleSpec {
     examples: &[("लछ्य", "लक्ष्य"), ("छेत्र", "क्षेत्र")],
 };
 
+pub const SPEC_GYA_GYAN: RuleSpec = RuleSpec {
+    id: "ortho-gya-gyan",
+    category: RuleCategory::GyaGyan,
+    kind: DiagnosticKind::Error,
+    priority: 365,
+    citation: Rule::VarnaVinyasNiyam("3(ग)(ऊ)"),
+    examples: &[("अग्यान", "अज्ञान"), ("प्रग्या", "प्रज्ञा")],
+};
+
 /// Academy 3(ख): chandrabindu vs shirbindu rules based on word origin.
 /// - Tatsam: NEVER chandrabindu (ँ) → use shirbindu (ं)
 /// - Tadbhav/Aagantuk: NEVER shirbindu (ं) → use chandrabindu (ँ) for nasalization
@@ -302,6 +311,56 @@ pub fn rule_ri_kri(input: &str) -> Option<Prakriya> {
 ///
 /// Future: verb roots (धातु), 2nd-person disrespect, 3rd-person plural forms.
 pub fn rule_halanta(input: &str) -> Option<Prakriya> {
+    let lex = kosha();
+
+    // Ajanta-side sanity: finite verb forms ending in "छ" should not carry trailing halanta.
+    // Examples: जान्छ् -> जान्छ, गर्छ् -> गर्छ.
+    // Keep conservative: only apply when halanta-less form exists in kosha.
+    if let Some(stem) = input.strip_suffix("छ्") {
+        let output = format!("{stem}छ");
+        if lex.contains(&output) && !lex.contains(input) {
+            return Some(Prakriya::corrected(
+                input,
+                &output,
+                vec![Step::new(
+                    Rule::VarnaVinyasNiyam("3(ङ)-अजन्त-5"),
+                    "समापक क्रियापदको अन्त्यमा हलन्त लेखिँदैन (…छ)",
+                    input,
+                    &output,
+                )],
+            ));
+        }
+    }
+
+    // Verb-form halanta patterns from Section 3(ङ):
+    // - 2nd-person disrespect endings (e.g., गर्छस्)
+    // - 3rd-person plural/honorific endings (e.g., जान्छन्)
+    //
+    // Keep this conservative: only fire when the halanta form exists in kosha.
+    const VERB_SUFFIXES: &[(&str, &str, &str)] = &[
+        ("छस", "छस्", "3(ङ)-2"),
+        ("छन", "छन्", "3(ङ)-3"),
+        ("इस", "इस्", "3(ङ)-2"),
+    ];
+
+    for (wrong_suffix, correct_suffix, rule_citation) in VERB_SUFFIXES {
+        if let Some(stem) = input.strip_suffix(wrong_suffix) {
+            let output = format!("{}{}", stem, correct_suffix);
+            if lex.contains(&output) {
+                return Some(Prakriya::corrected(
+                    input,
+                    &output,
+                    vec![Step::new(
+                        Rule::VarnaVinyasNiyam(rule_citation),
+                        format!("क्रियापदमा हलन्त: {} -> {}", wrong_suffix, correct_suffix),
+                        input,
+                        &output,
+                    )],
+                ));
+            }
+        }
+    }
+
     let origin = classify(input);
     if !matches!(origin, Origin::Tatsam) {
         return None;
@@ -309,8 +368,6 @@ pub fn rule_halanta(input: &str) -> Option<Prakriya> {
 
     // Check for Tatsam suffixes that require halanta: -मान, -वान, -वत -> -मान्, -वान्, -वत्
     // Examples: बुद्धिमान -> बुद्धिमान्, भगवान -> भगवान्, विधिवत -> विधिवत्
-    let lex = kosha();
-
     let suffixes = [
         ("मान", "मान्", "3(ङ)-मान्"),
         ("वान", "वान्", "3(ङ)-वान्"),
@@ -530,6 +587,48 @@ pub fn rule_ksha_chhya(input: &str) -> Option<Prakriya> {
     None
 }
 
+/// Academy 3(ग)(ऊ): ज्ञ / ग्याँ / ग्या distinction.
+///
+/// - Tatsam words use ज्ञ.
+/// - Nepali/loan words may use ग्याँ or ग्या.
+///
+/// This rule is intentionally kosha-backed to avoid aggressive rewrites.
+pub fn rule_gya_gyan(input: &str) -> Option<Prakriya> {
+    let kosha = varnavinyas_kosha::kosha();
+    if kosha.contains(input) {
+        return None;
+    }
+
+    if !input.contains("ज्ञ") && !input.contains("ग्या") && !input.contains("ग्याँ")
+    {
+        return None;
+    }
+
+    // Conservative direction only: common misspelling ग्याँ/ग्या in tatsam words.
+    // Map to ज्ञा and accept only if kosha confirms the candidate.
+    const SUBS: &[(&str, &str)] = &[("ग्याँ", "ज्ञा"), ("ग्या", "ज्ञा")];
+
+    for &(from, to) in SUBS {
+        if input.contains(from) {
+            let candidate = input.replace(from, to);
+            if candidate != input && kosha.contains(&candidate) {
+                return Some(Prakriya::corrected(
+                    input,
+                    &candidate,
+                    vec![Step::new(
+                        Rule::VarnaVinyasNiyam("3(ग)(ऊ)"),
+                        format!("ज्ञ/ग्याँ/ग्या भेद: {} → {}", from, to),
+                        input,
+                        &candidate,
+                    )],
+                ));
+            }
+        }
+    }
+
+    None
+}
+
 /// Check if a character is a stop consonant (sparsha vyanjana: ka-ma varga).
 fn is_stop_consonant(c: char) -> bool {
     matches!(
@@ -616,6 +715,33 @@ mod tests {
     #[test]
     fn test_halanta_skips_non_tatsam() {
         assert!(rule_halanta("नेपाल").is_none());
+    }
+
+    #[test]
+    fn test_halanta_verb_second_person_disrespect() {
+        let p = rule_halanta("गर्छस").expect("should correct गर्छस");
+        assert_eq!(p.output, "गर्छस्");
+    }
+
+    #[test]
+    fn test_halanta_verb_third_person_plural() {
+        let p = rule_halanta("जान्छन").expect("should correct जान्छन");
+        assert_eq!(p.output, "जान्छन्");
+    }
+
+    #[test]
+    fn test_halanta_verb_irregular_is() {
+        let p = rule_halanta("आइस").expect("should correct आइस");
+        assert_eq!(p.output, "आइस्");
+    }
+
+    #[test]
+    fn test_ajanta_terminal_chha_without_halanta() {
+        let p = rule_halanta("जान्छ्").expect("should correct जान्छ्");
+        assert_eq!(p.output, "जान्छ");
+
+        let p = rule_halanta("गर्छ्").expect("should correct गर्छ्");
+        assert_eq!(p.output, "गर्छ");
     }
 
     // --- Aadhi-vriddhi tests ---
@@ -715,6 +841,34 @@ mod tests {
     fn test_ksha_chhya_already_valid() {
         // क्षेत्र → None (in kosha)
         assert!(rule_ksha_chhya("क्षेत्र").is_none());
+    }
+
+    // --- Gya/Gyan distinction tests ---
+
+    #[test]
+    fn test_gya_gyan_gya_to_gya_nya() {
+        // अग्यान -> अज्ञान
+        let p = rule_gya_gyan("अग्यान").expect("should correct अग्यान");
+        assert_eq!(p.output, "अज्ञान");
+    }
+
+    #[test]
+    fn test_gya_gyan_another_gya_to_gya_nya() {
+        // प्रग्या -> प्रज्ञा
+        let p = rule_gya_gyan("प्रग्या").expect("should correct प्रग्या");
+        assert_eq!(p.output, "प्रज्ञा");
+    }
+
+    #[test]
+    fn test_gya_gyan_keeps_valid_loanword() {
+        // ग्यारेज is a valid loanword form
+        assert!(rule_gya_gyan("ग्यारेज").is_none());
+    }
+
+    #[test]
+    fn test_gya_gyan_keeps_valid_tatsam() {
+        // अज्ञान is valid tatsam form
+        assert!(rule_gya_gyan("अज्ञान").is_none());
     }
 
     #[test]

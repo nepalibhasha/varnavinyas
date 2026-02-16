@@ -229,6 +229,24 @@ fn o7_halanta_shrimaan() {
     assert_eq!(p.output, "श्रीमान्");
 }
 
+#[test]
+fn o7_halanta_verb_plural() {
+    let p = derive("जान्छन");
+    assert_eq!(p.output, "जान्छन्");
+}
+
+#[test]
+fn o7_halanta_verb_second_person() {
+    let p = derive("गर्छस");
+    assert_eq!(p.output, "गर्छस्");
+}
+
+#[test]
+fn o7_ajanta_terminal_chha_without_halanta() {
+    let p = derive("जान्छ्");
+    assert_eq!(p.output, "जान्छ");
+}
+
 // O7.4: क्ष/छ corrections via correction table
 #[test]
 fn o7_ksha_chhya_lakshya() {
@@ -246,6 +264,19 @@ fn o7_ksha_chhya_ichchha() {
 fn o7_ksha_chhya_kshetra() {
     let p = derive("छेत्र");
     assert_eq!(p.output, "क्षेत्र");
+}
+
+#[test]
+fn o7_gya_gyan_agyan() {
+    let p = derive("अग्यान");
+    assert_eq!(p.output, "अज्ञान");
+}
+
+#[test]
+fn o7_gya_gyan_keeps_loanword() {
+    let p = derive("ग्यारेज");
+    assert!(p.is_correct);
+    assert_eq!(p.output, "ग्यारेज");
 }
 
 #[test]

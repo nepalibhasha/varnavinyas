@@ -93,3 +93,65 @@ fn regression_number_sentence_end() {
     );
     assert_eq!(diags[0].expected, "।");
 }
+
+/// Section 5: निर्देशक supports :, -, and :-; bare ':' must not be forced to ':-'.
+#[test]
+fn regression_nirdeshak_colon_allowed() {
+    let diags = check_punctuation("नेपालका ठुला नदीहरू हुन्: कोसी, गण्डकी र कर्णाली।");
+    assert!(diags.is_empty(), "Colon form should be accepted for निर्देशक");
+}
+
+/// Section 5: सङ्क्षेप examples like "अ. दु. अ. आ." must not be flagged.
+#[test]
+fn regression_devanagari_abbreviation_chain_allowed() {
+    let text = "अ. दु. अ. आ.ले सबैलाई सचेत गराएको छ।";
+    let diags = check_punctuation(text);
+    assert!(
+        diags.is_empty(),
+        "Chained Devanagari abbreviations should be allowed, got: {diags:?}"
+    );
+}
+
+/// Section 5: compact dotted forms like "त्रि.वि." must not be flagged.
+#[test]
+fn regression_compact_devanagari_abbreviation_allowed() {
+    let text = "त्रि.वि.ले परीक्षाफल प्रकाशित गर्‍यो।";
+    let diags = check_punctuation(text);
+    assert!(
+        diags.is_empty(),
+        "Compact Devanagari abbreviations should be allowed, got: {diags:?}"
+    );
+}
+
+#[test]
+fn regression_tiryak_viram_spacing() {
+    let diags = check_punctuation("तिमी / उहाँ आउनुहुन्छ।");
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.expected == "/" && d.rule.contains("तिर्यक् विराम")),
+        "Expected slash spacing diagnostic, got: {diags:?}"
+    );
+}
+
+#[test]
+fn regression_aijan_spacing_pair() {
+    let diags = check_punctuation("राम , , श्याम");
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.expected == ",," && d.rule.contains("ऐजन")),
+        "Expected ऐजन spacing diagnostic, got: {diags:?}"
+    );
+}
+
+#[test]
+fn regression_unmatched_parentheses() {
+    let diags = check_punctuation("अहिले हरितगृह प्रभाव (तातोपन सञ्चित भइरहनु ले समस्या बढायो।");
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.found == "(" && d.rule.contains("कोष्ठक")),
+        "Expected unmatched '(' diagnostic, got: {diags:?}"
+    );
+}

@@ -9,7 +9,7 @@ pub enum PunctuationMark {
     PrashnaVachak,
     /// ! (विस्मयबोधक — exclamation mark)
     VismayBodhak,
-    /// :- (निर्देशक — colon-dash)
+    /// : / - / :- (निर्देशक — colon variants)
     Nirdeshak,
     /// ' ' (एकल उद्धरण — single quotes)
     EkalUddharan,
@@ -56,35 +56,14 @@ pub fn check_punctuation(text: &str) -> Vec<LekhyaDiagnostic> {
     check_period_as_sentence_end(text, &mut diagnostics);
     check_ellipsis(text, &mut diagnostics);
     check_quotes(text, &mut diagnostics);
-    check_nirdeshak(text, &mut diagnostics);
+    check_tiryak_viram_spacing(text, &mut diagnostics);
+    check_aijan_pair_spacing(text, &mut diagnostics);
+    check_parentheses_balance(text, &mut diagnostics);
     check_spacing(text, &mut diagnostics);
 
     // Sort by span start
     diagnostics.sort_by_key(|d| d.span.0);
     diagnostics
-}
-
-/// Y5: Detect bare `:` that should be `:-` (Nirdeshak) in Nepali.
-fn check_nirdeshak(text: &str, diagnostics: &mut Vec<LekhyaDiagnostic>) {
-    let bytes = text.as_bytes();
-    for (i, c) in text.char_indices() {
-        if c == ':' {
-            // Check if it's already :-
-            if i + 1 < bytes.len() && bytes[i + 1] == b'-' {
-                continue;
-            }
-
-            // Check context
-            if has_devanagari_before_pos(text, i) {
-                diagnostics.push(LekhyaDiagnostic {
-                    span: (i, i + 1),
-                    found: ":".to_string(),
-                    expected: ":-".to_string(),
-                    rule: "Section 5: निर्देशक — use colon-dash (:-), not just colon (:)",
-                });
-            }
-        }
-    }
 }
 
 /// Y6/Y7: Convert straight quotes to smart quotes in Devanagari context.
@@ -227,12 +206,10 @@ fn check_period_as_sentence_end(text: &str, diagnostics: &mut Vec<LekhyaDiagnost
 
 /// Helper for Y10: Check if the text before `pos` looks like an abbreviation.
 fn is_likely_abbreviation(text: &str, pos: usize) -> bool {
-    // Look back to find the start of the word
     let prefix = &text[..pos];
     let word_start = prefix
         .rfind(|c: char| c.is_whitespace())
-        .map(|i| i + 1)
-        .unwrap_or(0);
+        .map_or(0, |i| i + 1);
     let word = &prefix[word_start..];
 
     // Use an allowlist for common Devanagari abbreviations.
@@ -246,10 +223,91 @@ fn is_likely_abbreviation(text: &str, pos: usize) -> bool {
         return true;
     }
 
+    // Chained abbreviations such as:
+    // - "अ. दु. अ. आ."
+    // - "त्रि.वि."
+    //
+    // If current token is short Devanagari and either:
+    // 1) followed by another short token ending in '.', or
+    // 2) preceded by another abbreviation token,
+    // treat this period as abbreviation dot.
+    if is_short_devanagari_token(word) {
+        if follows_abbreviation_chain(text, pos) || preceded_by_abbreviation_chain(text, word_start)
+        {
+            return true;
+        }
+    }
+
     // ASCII abbreviations (e.g., Dr., U.N.) are handled by upstream context:
     // this function is called only after confirming Devanagari context before '.',
     // so default to "not abbreviation".
     false
+}
+
+fn is_short_devanagari_token(token: &str) -> bool {
+    let count = token.chars().count();
+    if count == 0 || count > 4 {
+        return false;
+    }
+    token.chars().all(is_devanagari_char)
+}
+
+fn follows_abbreviation_chain(text: &str, period_pos: usize) -> bool {
+    let bytes = text.as_bytes();
+    let mut i = period_pos + 1;
+
+    while i < bytes.len() && bytes[i].is_ascii_whitespace() {
+        i += 1;
+    }
+    if i >= bytes.len() {
+        return false;
+    }
+
+    let mut j = i;
+    while j < bytes.len() {
+        let Some(ch) = text[j..].chars().next() else {
+            break;
+        };
+        if !is_devanagari_char(ch) {
+            break;
+        }
+        j += ch.len_utf8();
+    }
+
+    if j == i {
+        return false;
+    }
+
+    let next_token = &text[i..j];
+    if !is_short_devanagari_token(next_token) {
+        return false;
+    }
+
+    j < bytes.len() && bytes[j] == b'.'
+}
+
+fn preceded_by_abbreviation_chain(text: &str, word_start: usize) -> bool {
+    let bytes = text.as_bytes();
+    if word_start == 0 {
+        return false;
+    }
+
+    let mut i = word_start;
+    while i > 0 && bytes[i - 1].is_ascii_whitespace() {
+        i -= 1;
+    }
+    if i == 0 || bytes[i - 1] != b'.' {
+        return false;
+    }
+
+    let prev_period_pos = i - 1;
+    let prev_prefix = &text[..prev_period_pos];
+    let prev_start = prev_prefix
+        .rfind(|c: char| c.is_whitespace())
+        .map_or(0, |idx| idx + 1);
+    let prev_word = &prev_prefix[prev_start..];
+
+    is_short_devanagari_token(prev_word)
 }
 
 /// Y3: Detect "..." that should be ऐजन बिन्दु (ellipsis).
@@ -274,6 +332,119 @@ fn check_ellipsis(text: &str, diagnostics: &mut Vec<LekhyaDiagnostic>) {
             }
         } else {
             i += 1;
+        }
+    }
+}
+
+/// Y12: In विकल्प form, slash should directly join alternatives (e.g., तिमी/उहाँ).
+/// Flag spaces around `/` in Devanagari context.
+fn check_tiryak_viram_spacing(text: &str, diagnostics: &mut Vec<LekhyaDiagnostic>) {
+    let chars: Vec<(usize, char)> = text.char_indices().collect();
+    for idx in 0..chars.len() {
+        let (slash_pos, c) = chars[idx];
+        if c != '/' {
+            continue;
+        }
+
+        let has_space_before = idx > 0 && chars[idx - 1].1.is_whitespace();
+        let has_space_after = idx + 1 < chars.len() && chars[idx + 1].1.is_whitespace();
+        if !(has_space_before || has_space_after) {
+            continue;
+        }
+
+        if !(has_devanagari_before_pos(text, slash_pos)
+            || has_devanagari_after_pos(text, slash_pos + c.len_utf8()))
+        {
+            continue;
+        }
+
+        let span_start = if has_space_before {
+            chars[idx - 1].0
+        } else {
+            slash_pos
+        };
+        let span_end = if has_space_after {
+            chars[idx + 1].0 + chars[idx + 1].1.len_utf8()
+        } else {
+            slash_pos + c.len_utf8()
+        };
+
+        diagnostics.push(LekhyaDiagnostic {
+            span: (span_start, span_end),
+            found: text[span_start..span_end].to_string(),
+            expected: "/".to_string(),
+            rule: "Section 5: तिर्यक् विराम (/) विकल्पमा शब्दसँगै लेखिन्छ",
+        });
+    }
+}
+
+/// Y11: ऐजन should be written as `,,` (no space between commas).
+fn check_aijan_pair_spacing(text: &str, diagnostics: &mut Vec<LekhyaDiagnostic>) {
+    let bytes = text.as_bytes();
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] != b',' {
+            i += 1;
+            continue;
+        }
+
+        let mut j = i + 1;
+        let mut had_space = false;
+        while j < bytes.len() && bytes[j].is_ascii_whitespace() {
+            had_space = true;
+            j += 1;
+        }
+
+        if had_space
+            && j < bytes.len()
+            && bytes[j] == b','
+            && (has_devanagari_before_pos(text, i) || has_devanagari_after_pos(text, j + 1))
+        {
+            diagnostics.push(LekhyaDiagnostic {
+                span: (i, j + 1),
+                found: text[i..j + 1].to_string(),
+                expected: ",,".to_string(),
+                rule: "Section 5: ऐजन चिह्नमा दुई अल्पविराम सँगै लेखिन्छ (,,)",
+            });
+            i = j + 1;
+            continue;
+        }
+
+        i += 1;
+    }
+}
+
+/// Y8: Basic parentheses sanity check — unmatched `(` or `)` in Devanagari context.
+fn check_parentheses_balance(text: &str, diagnostics: &mut Vec<LekhyaDiagnostic>) {
+    let mut stack: Vec<usize> = Vec::new();
+
+    for (i, c) in text.char_indices() {
+        match c {
+            '(' => stack.push(i),
+            ')' => {
+                if stack.pop().is_none()
+                    && (has_devanagari_before_pos(text, i) || has_devanagari_after_pos(text, i + 1))
+                {
+                    diagnostics.push(LekhyaDiagnostic {
+                        span: (i, i + 1),
+                        found: ")".to_string(),
+                        expected: "()".to_string(),
+                        rule: "Section 5: कोष्ठक चिह्न सन्तुलित रूपमा प्रयोग हुनुपर्छ",
+                    });
+                }
+            }
+            _ => {}
+        }
+    }
+
+    for start in stack {
+        if has_devanagari_before_pos(text, start) || has_devanagari_after_pos(text, start + 1) {
+            diagnostics.push(LekhyaDiagnostic {
+                span: (start, start + 1),
+                found: "(".to_string(),
+                expected: "()".to_string(),
+                rule: "Section 5: कोष्ठक चिह्न सन्तुलित रूपमा प्रयोग हुनुपर्छ",
+            });
         }
     }
 }
@@ -340,11 +511,24 @@ mod tests {
     }
 
     #[test]
-    fn nirdeshak_detected() {
+    fn nirdeshak_colon_is_allowed() {
         let diags = check_punctuation("उदाहरण:");
-        assert_eq!(diags.len(), 1);
-        assert_eq!(diags[0].found, ":");
-        assert_eq!(diags[0].expected, ":-");
+        assert!(diags.is_empty());
+    }
+
+    #[test]
+    fn abbreviation_chain_is_allowed() {
+        let diags = check_punctuation("अ. दु. अ. आ.ले सबैलाई सचेत गरायो।");
+        assert!(diags.is_empty(), "Abbreviation chain should be allowed");
+    }
+
+    #[test]
+    fn compact_abbreviation_chain_is_allowed() {
+        let diags = check_punctuation("त्रि.वि.ले नतिजा प्रकाशित गर्‍यो।");
+        assert!(
+            diags.is_empty(),
+            "Compact abbreviation chain should be allowed"
+        );
     }
 
     #[test]
@@ -361,6 +545,60 @@ mod tests {
         assert_eq!(diags.len(), 1);
         assert_eq!(diags[0].found, " ?");
         assert_eq!(diags[0].expected, "?");
+    }
+
+    #[test]
+    fn tiryak_viram_spacing_detected() {
+        let diags = check_punctuation("तिमी / उहाँ आउनुहुन्छ।");
+        assert!(
+            diags
+                .iter()
+                .any(|d| d.expected == "/" && d.rule.contains("तिर्यक् विराम")),
+            "Expected slash spacing diagnostic, got: {diags:?}"
+        );
+    }
+
+    #[test]
+    fn tiryak_viram_compact_ok() {
+        let diags = check_punctuation("तिमी/उहाँ आउनुहुन्छ।");
+        assert!(
+            !diags
+                .iter()
+                .any(|d| d.expected == "/" && d.rule.contains("तिर्यक् विराम"))
+        );
+    }
+
+    #[test]
+    fn aijan_pair_spacing_detected() {
+        let diags = check_punctuation("राम , , श्याम");
+        assert!(
+            diags
+                .iter()
+                .any(|d| d.expected == ",," && d.rule.contains("ऐजन")),
+            "Expected ऐजन spacing diagnostic, got: {diags:?}"
+        );
+    }
+
+    #[test]
+    fn unmatched_open_paren_detected() {
+        let diags = check_punctuation("नेपाल (सुन्दर देश हो।");
+        assert!(
+            diags
+                .iter()
+                .any(|d| d.found == "(" && d.rule.contains("कोष्ठक")),
+            "Expected unmatched '(' diagnostic, got: {diags:?}"
+        );
+    }
+
+    #[test]
+    fn unmatched_close_paren_detected() {
+        let diags = check_punctuation("नेपाल) सुन्दर देश हो।");
+        assert!(
+            diags
+                .iter()
+                .any(|d| d.found == ")" && d.rule.contains("कोष्ठक")),
+            "Expected unmatched ')' diagnostic, got: {diags:?}"
+        );
     }
 
     #[test]

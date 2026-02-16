@@ -37,6 +37,7 @@ pub enum RuleCategory {
     AadhiVriddhi,
     YaE,
     KshaChhya,
+    GyaGyan,
 }
 
 /// Metadata for a single pattern rule.

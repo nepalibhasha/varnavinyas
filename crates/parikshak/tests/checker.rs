@@ -1,4 +1,6 @@
-use varnavinyas_parikshak::{check_text, check_word};
+use varnavinyas_parikshak::{
+    CheckOptions, DiagnosticKind, check_text, check_text_with_options, check_word,
+};
 
 /// C1: Paragraph with known incorrect words produces diagnostics.
 #[test]
@@ -141,4 +143,117 @@ fn check_text_with_default_options_matches_check_text() {
         varnavinyas_parikshak::CheckOptions::default(),
     );
     assert_eq!(a.len(), b.len());
+}
+
+#[test]
+fn padayog_phrase_join_detected() {
+    let text = "म सँग पुस्तक छ।";
+    let diags = check_text(text);
+    let hit = diags
+        .iter()
+        .find(|d| d.incorrect == "म सँग")
+        .expect("Expected padayog diagnostic for 'म सँग'");
+    assert_eq!(hit.correction, "मसँग");
+}
+
+#[test]
+fn padayog_phrase_multiple_detected() {
+    let text = "आज्ञा अनुसार काम गर। तिमी भन्दा ऊ छिटो आयो।";
+    let diags = check_text(text);
+
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "आज्ञा अनुसार" && d.correction == "आज्ञाअनुसार"),
+        "Expected 'आज्ञा अनुसार' -> 'आज्ञाअनुसार', got: {diags:?}"
+    );
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "तिमी भन्दा" && d.correction == "तिमीभन्दा"),
+        "Expected 'तिमी भन्दा' -> 'तिमीभन्दा', got: {diags:?}"
+    );
+}
+
+#[test]
+fn section4_style_variants_are_opt_in() {
+    let text = "कार्यक्रमको सम्बन्धमा छलफल भयो।";
+
+    let off = check_text(text);
+    assert!(
+        off.iter()
+            .all(|d| d.rule != varnavinyas_prakriya::Rule::Vyakaran("section4-phrase-style")),
+        "Style variants should not appear in default mode, got: {off:?}"
+    );
+
+    let on = check_text_with_options(text, CheckOptions { grammar: true });
+    assert!(
+        on.iter().any(|d| {
+            d.rule == varnavinyas_prakriya::Rule::Vyakaran("section4-phrase-style")
+                && d.correction == "कार्यक्रमका सम्बन्धमा"
+                && matches!(d.kind, DiagnosticKind::Variant)
+        }),
+        "Expected style variant when grammar mode is enabled, got: {on:?}"
+    );
+}
+
+#[test]
+fn section4_sentence_style_variant_detected() {
+    let text = "यहाँको सहयोगप्रति म कृतघ्न छु।";
+    let diags = check_text_with_options(text, CheckOptions { grammar: true });
+
+    assert!(
+        diags.iter().any(|d| {
+            d.rule == varnavinyas_prakriya::Rule::Vyakaran("section4-phrase-style")
+                && d.correction == "यहाँको सहयोगप्रति म कृतज्ञ छु"
+                && matches!(d.kind, DiagnosticKind::Variant)
+        }),
+        "Expected कृतघ्न/कृतज्ञ style suggestion, got: {diags:?}"
+    );
+}
+
+#[test]
+fn section4_phrase_variant_marmahat() {
+    let text = "उनी मर्माहित भएको देखिन्थ्यो।";
+    let diags = check_text_with_options(text, CheckOptions { grammar: true });
+
+    assert!(
+        diags.iter().any(|d| {
+            d.rule == varnavinyas_prakriya::Rule::Vyakaran("section4-phrase-style")
+                && d.correction == "मर्माहत भएको"
+                && matches!(d.kind, DiagnosticKind::Variant)
+        }),
+        "Expected मर्माहित/मर्माहत style suggestion, got: {diags:?}"
+    );
+}
+
+#[test]
+fn section4_sentence_word_order_variant_detected() {
+    let text = "म अब कार्यक्रम सञ्चालन गर्न गइरहेको छु वा जाँदै छु।";
+    let diags = check_text_with_options(text, CheckOptions { grammar: true });
+
+    assert!(
+        diags.iter().any(|d| {
+            d.rule == varnavinyas_prakriya::Rule::Vyakaran("section4-phrase-style")
+                && d.correction == "म अब कार्यक्रम सञ्चालन गर्दै छु"
+                && matches!(d.kind, DiagnosticKind::Variant)
+        }),
+        "Expected sentence-style suggestion, got: {diags:?}"
+    );
+}
+
+#[test]
+fn section4_complex_sentence_variant_detected() {
+    let text = "स्थानीय जनशक्तिको श्रमदानबाट दश किलोमिटर लामो गाडी गुड्न सक्ने सडक निर्माण गरियो।";
+    let diags = check_text_with_options(text, CheckOptions { grammar: true });
+
+    assert!(
+        diags.iter().any(|d| {
+            d.rule == varnavinyas_prakriya::Rule::Vyakaran("section4-phrase-style")
+                && d.correction
+                    == "स्थानीय जनशक्तिको श्रमदानबाट गाडी गुड्न सक्ने दश किलोमिटर लामो सडक निर्माण गरियो"
+                && matches!(d.kind, DiagnosticKind::Variant)
+        }),
+        "Expected complex sentence style suggestion, got: {diags:?}"
+    );
 }

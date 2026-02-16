@@ -83,6 +83,10 @@ static PATTERN_RULES: LazyLock<Vec<PatternRule>> = LazyLock::new(|| {
             spec: orthographic::SPEC_KSHA_CHHYA,
             apply: orthographic::rule_ksha_chhya,
         },
+        PatternRule {
+            spec: orthographic::SPEC_GYA_GYAN,
+            apply: orthographic::rule_gya_gyan,
+        },
     ];
     rules.sort_by_key(|r| r.spec.priority);
     rules
@@ -216,6 +220,7 @@ mod tests {
             "ortho-aadhi-vriddhi",
             "ortho-ya-e",
             "ortho-ksha-chhya",
+            "ortho-gya-gyan",
         ];
 
         let registered: Vec<&str> = PATTERN_RULES.iter().map(|r| r.spec.id).collect();
