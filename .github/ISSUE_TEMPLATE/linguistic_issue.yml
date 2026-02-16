@@ -1,0 +1,49 @@
+name: Linguistic issue (नेपाली भाषा समस्या)
+description: Report a spelling/grammar/transliteration correctness issue
+labels: [linguistics]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        यो टेम्पलेट प्राविधिक नभएका योगदानकर्ताका लागि पनि हो।
+        This template is for non-technical contributors too.
+  - type: dropdown
+    id: issue_type
+    attributes:
+      label: Issue type / समस्या प्रकार
+      options:
+        - Spelling / हिज्जे
+        - Grammar / व्याकरण
+        - Transliteration / लिप्यन्तरण
+        - Punctuation / विराम चिह्न
+        - Other / अन्य
+    validations:
+      required: true
+  - type: textarea
+    id: wrong_text
+    attributes:
+      label: What looks wrong? / के गलत छ?
+      placeholder: गलत शब्द वा वाक्य यहाँ लेख्नुहोस्
+    validations:
+      required: true
+  - type: textarea
+    id: expected_text
+    attributes:
+      label: What should it be? / सही रूप के हो?
+      placeholder: सही शब्द वा वाक्य यहाँ लेख्नुहोस्
+    validations:
+      required: true
+  - type: textarea
+    id: reason
+    attributes:
+      label: Why do you think this is correct? / किन यस्तो हुनुपर्छ?
+      description: Citation, grammar rule, dictionary entry, or explanation
+  - type: textarea
+    id: source
+    attributes:
+      label: Source (optional) / स्रोत (वैकल्पिक)
+      description: Academy rule section, dictionary, textbook, etc.
+  - type: textarea
+    id: extra
+    attributes:
+      label: Extra context / थप विवरण

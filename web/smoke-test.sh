@@ -10,10 +10,19 @@ cd "$(dirname "$0")"
 
 PASS=0
 FAIL=0
+SERVER_PID=""
 
 pass() { ((PASS++)); echo "  PASS: $1"; }
 fail() { ((FAIL++)); echo "  FAIL: $1" >&2; }
 warn() { echo "  WARN: $1" >&2; }
+fatal() { fail "$1"; exit 1; }
+
+cleanup() {
+  if [ -n "${SERVER_PID}" ]; then
+    kill "${SERVER_PID}" 2>/dev/null || true
+  fi
+}
+trap cleanup EXIT
 
 echo "=== Varnavinyas Web Smoke Test ==="
 echo ""
@@ -51,8 +60,6 @@ for fn in $CORE_EXPORTS; do
   fi
 done
 
-# Typed exports are enforced in pkg only when rebuild succeeds.
-ENFORCE_TYPED_PKG=1
 MISSING_TYPED=$(missing_exports "$TYPED_EXPORTS")
 if [ -n "${MISSING_TYPED// }" ]; then
   if command -v wasm-pack >/dev/null 2>&1; then
@@ -61,26 +68,24 @@ if [ -n "${MISSING_TYPED// }" ]; then
     if ./build.sh >"$BUILD_LOG" 2>&1; then
       pass "Rebuilt web/pkg before export checks"
     else
-      ENFORCE_TYPED_PKG=0
-      warn "Failed to rebuild web/pkg via web/build.sh; skipping pkg typed-export enforcement"
+      warn "Failed to rebuild web/pkg via web/build.sh"
       sed -n '1,40p' "$BUILD_LOG" >&2 || true
+      rm -f "$BUILD_LOG"
+      fatal "Cannot validate typed exports because web/build.sh failed"
     fi
     rm -f "$BUILD_LOG"
   else
-    ENFORCE_TYPED_PKG=0
-    warn "wasm-pack unavailable; skipping pkg typed-export enforcement"
+    fatal "Typed exports are missing and wasm-pack is unavailable"
   fi
 fi
 
-if [ "$ENFORCE_TYPED_PKG" -eq 1 ]; then
-  for fn in $TYPED_EXPORTS; do
-    if grep -q "export function ${fn}" pkg/varnavinyas_bindings_wasm.js 2>/dev/null; then
-      pass "export function ${fn} found"
-    else
-      fail "export function ${fn} missing from WASM JS"
-    fi
-  done
-fi
+for fn in $TYPED_EXPORTS; do
+  if grep -q "export function ${fn}" pkg/varnavinyas_bindings_wasm.js 2>/dev/null; then
+    pass "export function ${fn} found"
+  else
+    fail "export function ${fn} missing from WASM JS"
+  fi
+done
 
 # Always enforce typed exports at Rust source level.
 for fn in $TYPED_EXPORTS; do
@@ -150,12 +155,18 @@ PORT=18080
 python3 -m http.server $PORT --directory . &>/dev/null &
 SERVER_PID=$!
 sleep 1
+if ! kill -0 "$SERVER_PID" 2>/dev/null; then
+  fatal "HTTP test server failed to start on port ${PORT}"
+fi
 
 serve_check() {
   local path=$1
   local label=$2
   local status
-  status=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${PORT}/${path}" 2>/dev/null || echo "000")
+  status=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${PORT}/${path}" 2>/dev/null || true)
+  if [ -z "${status}" ]; then
+    status="000"
+  fi
   if [ "$status" = "200" ]; then
     pass "HTTP 200 for ${label}"
   else
@@ -173,8 +184,6 @@ serve_check "js/reference.js" "reference.js"
 serve_check "js/rules-data.js" "rules-data.js"
 serve_check "pkg/varnavinyas_bindings_wasm.js" "WASM JS module"
 serve_check "pkg/varnavinyas_bindings_wasm_bg.wasm" "WASM binary"
-
-kill $SERVER_PID 2>/dev/null || true
 
 # --- Summary ---
 echo ""

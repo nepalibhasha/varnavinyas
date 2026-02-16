@@ -128,6 +128,11 @@ fn print_json(diagnostics: &[Diagnostic], text: &str, line_offsets: &[usize]) {
         })
         .collect();
 
-    // Unwrap is safe: our struct is always serializable
-    println!("{}", serde_json::to_string_pretty(&entries).unwrap());
+    match serde_json::to_string_pretty(&entries) {
+        Ok(json) => println!("{json}"),
+        Err(e) => {
+            eprintln!("error: failed to serialize diagnostics as JSON: {e}");
+            println!("[]");
+        }
+    }
 }

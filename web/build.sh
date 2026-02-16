@@ -18,6 +18,43 @@ if ! command -v cargo &>/dev/null; then
   exit 1
 fi
 
+EXPECTED_WASM_BINDGEN_VERSION="$(
+  awk '
+    $0 == "name = \"wasm-bindgen\"" {
+      getline
+      if ($1 == "version" && $2 == "=") {
+        gsub(/"/, "", $3)
+        print $3
+        exit
+      }
+    }
+  ' Cargo.lock
+)"
+
+if [ -z "${EXPECTED_WASM_BINDGEN_VERSION}" ]; then
+  echo "Error: could not determine wasm-bindgen version from Cargo.lock." >&2
+  exit 1
+fi
+
+if ! command -v wasm-bindgen &>/dev/null; then
+  echo "Error: wasm-bindgen-cli is not installed." >&2
+  echo "" >&2
+  echo "Install the exact version required by this workspace lockfile:" >&2
+  echo "  cargo install wasm-bindgen-cli --version ${EXPECTED_WASM_BINDGEN_VERSION}" >&2
+  exit 1
+fi
+
+INSTALLED_WASM_BINDGEN_VERSION="$(wasm-bindgen --version | awk '{print $2}')"
+if [ "${INSTALLED_WASM_BINDGEN_VERSION}" != "${EXPECTED_WASM_BINDGEN_VERSION}" ]; then
+  echo "Error: wasm-bindgen-cli version mismatch." >&2
+  echo "  Required: ${EXPECTED_WASM_BINDGEN_VERSION}" >&2
+  echo "  Found:    ${INSTALLED_WASM_BINDGEN_VERSION}" >&2
+  echo "" >&2
+  echo "Install matching CLI version:" >&2
+  echo "  cargo install -f wasm-bindgen-cli --version ${EXPECTED_WASM_BINDGEN_VERSION}" >&2
+  exit 1
+fi
+
 echo "Building WASM bindings..."
 # Use no-install mode to avoid implicit cargo install/network side effects in CI/sandboxes.
 wasm-pack build crates/bindings-wasm \

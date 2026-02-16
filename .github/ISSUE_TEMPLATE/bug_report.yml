@@ -1,0 +1,54 @@
+name: Bug report
+description: Report a software defect or incorrect behavior
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Please provide enough detail to reproduce it.
+  - type: input
+    id: summary
+    attributes:
+      label: Summary
+      description: One-line description of the problem
+      placeholder: checker crashes on specific input
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Numbered steps
+      placeholder: |
+        1. Run ...
+        2. Paste text ...
+        3. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: sample_input
+    attributes:
+      label: Minimal sample input
+      description: Text/word/sentence that reproduces the bug
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Rust version, browser (if web)
+      placeholder: macOS 15, rustc 1.85.0, Chrome 122
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional context

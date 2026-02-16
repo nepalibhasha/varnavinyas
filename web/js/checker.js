@@ -12,6 +12,7 @@ import { initInspector, showInspector, hideInspector, isInspectorActive } from '
 let diagnostics = [];
 let hiddenCategories = new Set();
 let activeCardIndex = -1;
+let runtimeErrorMessage = null;
 
 const editorInput = document.getElementById('editor-input');
 const editorBackdrop = document.getElementById('editor-backdrop');
@@ -79,6 +80,8 @@ function heuristicLabel(diag) {
 
 function runCheck() {
   const text = editorInput.value;
+  runtimeErrorMessage = null;
+
   if (!text.trim()) {
     diagnostics = [];
     renderBackdrop(text);
@@ -90,7 +93,9 @@ function runCheck() {
 
   try {
     diagnostics = checkText(text, { grammar: isGrammarEnabled() });
-  } catch {
+  } catch (err) {
+    console.error('checkText failed', err);
+    runtimeErrorMessage = 'जाँच प्रक्रिया असफल भयो। कृपया पृष्ठ रिफ्रेस गरेर फेरि प्रयास गर्नुहोस्।';
     diagnostics = [];
   }
 
@@ -114,6 +119,16 @@ function renderGrammarCoverage() {
         <span class="grammar-coverage-label">Heuristics</span>
       </div>
       <p class="grammar-coverage-note">व्याकरण जाँच बन्द छ।</p>`;
+    return;
+  }
+
+  if (runtimeErrorMessage) {
+    grammarCoverage.innerHTML = `
+      <div class="grammar-coverage-head">
+        <span>Grammar Coverage</span>
+        <span class="grammar-coverage-label">Heuristics</span>
+      </div>
+      <p class="grammar-coverage-note">${escapeHtml(runtimeErrorMessage)}</p>`;
     return;
   }
 
@@ -193,6 +208,13 @@ function renderBackdrop(text) {
  * Render the diagnostics panel.
  */
 function renderDiagnostics() {
+  if (runtimeErrorMessage) {
+    errorCount.textContent = 'जाँच त्रुटि';
+    fixAllBtn.disabled = true;
+    diagnosticsList.innerHTML = `<p class="diag-empty">${escapeHtml(runtimeErrorMessage)}</p>`;
+    return;
+  }
+
   const visibleCount = diagnostics.filter(
     (d) => !hiddenCategories.has(d.category_code)
   ).length;

@@ -64,6 +64,13 @@ cargo test -p varnavinyas-lipi --features legacy
 *   [**Roadmap**](docs/ROADMAP.md): Development phases and milestones.
 *   [**Rust Guide**](docs/RUST_GUIDE.md): Guide for contributors new to Rust.
 
+## Contributing
+
+*   [**Contributing Guide**](CONTRIBUTING.md): How technical and non-technical users can contribute.
+*   [**Code of Conduct**](CODE_OF_CONDUCT.md): Community participation standards.
+*   [**Security Policy**](SECURITY.md): Responsible vulnerability reporting.
+*   [**Support**](SUPPORT.md): Where to ask for help.
+
 ## License
 
 MIT or Apache-2.0
