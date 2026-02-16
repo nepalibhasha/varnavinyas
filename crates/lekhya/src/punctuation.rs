@@ -231,11 +231,11 @@ fn is_likely_abbreviation(text: &str, pos: usize) -> bool {
     // 1) followed by another short token ending in '.', or
     // 2) preceded by another abbreviation token,
     // treat this period as abbreviation dot.
-    if is_short_devanagari_token(word) {
-        if follows_abbreviation_chain(text, pos) || preceded_by_abbreviation_chain(text, word_start)
-        {
-            return true;
-        }
+    if is_short_devanagari_token(word)
+        && (follows_abbreviation_chain(text, pos)
+            || preceded_by_abbreviation_chain(text, word_start))
+    {
+        return true;
     }
 
     // ASCII abbreviations (e.g., Dr., U.N.) are handled by upstream context:
