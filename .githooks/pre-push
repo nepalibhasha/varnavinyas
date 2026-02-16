@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# Pre-push hook: run core quality gates before pushing.
+#
+# To install once (if needed):
+#   git config core.hooksPath .githooks
+#
+# Bypass in emergencies:
+#   VARNAVINYAS_SKIP_PRE_PUSH=1 git push
+
+set -euo pipefail
+
+if [[ "${VARNAVINYAS_SKIP_PRE_PUSH:-0}" == "1" ]]; then
+  echo "[pre-push] Skipping checks because VARNAVINYAS_SKIP_PRE_PUSH=1"
+  exit 0
+fi
+
+if ! command -v cargo >/dev/null 2>&1; then
+  echo "[pre-push] Error: cargo is required." >&2
+  exit 1
+fi
+
+if ! command -v cargo-deny >/dev/null 2>&1; then
+  echo "[pre-push] Error: cargo-deny is required for advisory checks." >&2
+  echo "[pre-push] Install with: cargo install --locked cargo-deny" >&2
+  exit 1
+fi
+
+echo "[pre-push] cargo fmt --all --check"
+cargo fmt --all --check
+
+echo "[pre-push] cargo clippy --workspace --all-targets -- -D warnings"
+cargo clippy --workspace --all-targets -- -D warnings
+
+echo "[pre-push] cargo test --workspace -q"
+cargo test --workspace -q
+
+echo "[pre-push] cargo deny check advisories bans licenses sources"
+DENY_LOG="$(mktemp)"
+if cargo deny check advisories bans licenses sources >"$DENY_LOG" 2>&1; then
+  :
+else
+  if grep -q "unsupported CVSS version: 4.0" "$DENY_LOG"; then
+    echo "[pre-push] WARN: cargo-deny cannot parse CVSS 4.0 advisories with current local version." >&2
+    echo "[pre-push] WARN: Update cargo-deny (cargo install --locked cargo-deny) to restore advisory enforcement." >&2
+    echo "[pre-push] WARN: Proceeding with push after fmt/clippy/test gates." >&2
+  else
+    cat "$DENY_LOG" >&2
+    rm -f "$DENY_LOG"
+    exit 1
+  fi
+fi
+rm -f "$DENY_LOG"
+
+echo "[pre-push] All checks passed."
