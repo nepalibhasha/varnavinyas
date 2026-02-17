@@ -60,7 +60,7 @@ pub fn rule_redundant_suffix(input: &str) -> Option<Prakriya> {
             output,
             vec![Step::new(
                 Rule::ShuddhaAshuddha("Section 4"),
-                "redundant -ता: abstract noun already complete",
+                "-ता अनावश्यक: abstract noun already complete",
                 input,
                 output,
             )],
@@ -69,8 +69,8 @@ pub fn rule_redundant_suffix(input: &str) -> Option<Prakriya> {
     None
 }
 
-/// Academy 3(ख)(अ): panchham varna rules for tatsam words.
-/// In tatsam words, anusvara (ं) before stop consonants → panchham varna:
+/// Academy 3(ख)(अ): panchham varna rules for तत्सम words.
+/// In तत्सम words, anusvara (ं) before stop consonants → panchham varna:
 /// - Before क/ख/ग/घ/क्ष → ङ् (e.g., संकेत→सङ्केत)
 /// - Before च/छ/ज/झ → ञ् (e.g., संचार→सञ्चार)
 /// - Before ट/ठ/ड/ढ/ण → ण् (e.g., कंटक→कण्टक)
@@ -79,7 +79,7 @@ pub fn rule_redundant_suffix(input: &str) -> Option<Prakriya> {
 pub fn rule_panchham_varna(input: &str) -> Option<Prakriya> {
     let origin = classify(input);
 
-    // Only for tatsam words (tadbhav/aagantuk write as-pronounced)
+    // Only for तत्सम words (तद्भव/आगन्तुक write as-pronounced)
     if !matches!(origin, Origin::Tatsam) {
         return None;
     }
@@ -97,7 +97,7 @@ pub fn rule_panchham_varna(input: &str) -> Option<Prakriya> {
         if chars[i] == 'ं' {
             if let Some(&next) = chars.get(i + 1) {
                 if let Some(panchham) = get_panchham_for(next) {
-                    // Replace ं with panchham varna + halanta
+                    // Replace ं with panchham varna + हलन्त
                     result.push(panchham);
                     result.push('्');
                     changed = true;

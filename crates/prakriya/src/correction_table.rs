@@ -44,7 +44,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "बाग्मती",
                 rule: Rule::ShuddhaAshuddha("Section 4"),
-                description: "proper noun from Sanskrit वाग्मती: conjunct ग्म required",
+                description: "व्यक्तिवाचक नाम from Sanskrit वाग्मती: conjunct ग्म अनिवार्य",
             },
         ),
         (
@@ -68,7 +68,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "धीरता",
                 rule: Rule::ShuddhaAshuddha("Section 4"),
-                description: "redundant -ता: धीर+ता=धीरता, or base form धैर्य",
+                description: "-ता अनावश्यक: धीर+ता=धीरता, or base form धैर्य",
             },
         ),
         (
@@ -84,7 +84,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "संसद्",
                 rule: Rule::VarnaVinyasNiyam("3(ङ)"),
-                description: "halanta required: Sanskrit stem ends in द् (संसद्)",
+                description: "हलन्त अनिवार्य: Sanskrit stem ends in द् (संसद्)",
             },
         ),
         (
@@ -92,7 +92,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "परिषद्",
                 rule: Rule::VarnaVinyasNiyam("3(ङ)"),
-                description: "halanta required: Sanskrit stem ends in द् (परिषद्)",
+                description: "हलन्त अनिवार्य: Sanskrit stem ends in द् (परिषद्)",
             },
         ),
         (
@@ -100,7 +100,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "सङ्घीय",
                 rule: Rule::VarnaVinyasNiyam("3(ख)-पञ्चम"),
-                description: "panchham varna ङ required before घ (not shirbindu ं)",
+                description: "panchham varna ङ अनिवार्य before घ (not शिरबिन्दु ं)",
             },
         ),
         (
@@ -124,7 +124,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "महत्त्व",
                 rule: Rule::ShuddhaAshuddha("Section 4"),
-                description: "double त required: महत् + त्व = महत्त्व",
+                description: "double त अनिवार्य: महत् + त्व = महत्त्व",
             },
         ),
         (
@@ -132,7 +132,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "पश्चात्ताप",
                 rule: Rule::ShuddhaAshuddha("Section 4"),
-                description: "double त required: पश्चात् + ताप = पश्चात्ताप",
+                description: "double त अनिवार्य: पश्चात् + ताप = पश्चात्ताप",
             },
         ),
         (
@@ -164,7 +164,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "हरू",
                 rule: Rule::VarnaVinyasNiyam("3(ई)"),
-                description: "plural suffix takes dirgha ऊ: हरू (not हरु)",
+                description: "plural suffix takes दीर्घ ऊ: हरू (not हरु)",
             },
         ),
         (
@@ -172,7 +172,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "रूप",
                 rule: Rule::ShuddhaAshuddha("Section 4"),
-                description: "tatsam रूप requires dirgha ऊ",
+                description: "तत्सम रूपमा दीर्घ ऊ हुन्छ",
             },
         ),
         (
@@ -180,7 +180,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "सुन्दरता",
                 rule: Rule::ShuddhaAshuddha("Section 4"),
-                description: "redundant -ता: use सुन्दरता (सुन्दर+ता) or सौन्दर्य",
+                description: "-ता अनावश्यक: use सुन्दरता (सुन्दर+ता) or सौन्दर्य",
             },
         ),
         (
@@ -188,7 +188,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "गुणस्तरीय",
                 rule: Rule::ShuddhaAshuddha("Section 4"),
-                description: "redundant -ता: गुणस्तरीय is already an adjective",
+                description: "-ता अनावश्यक: गुणस्तरीय is already an adjective",
             },
         ),
         (
@@ -196,7 +196,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "औचित्य",
                 rule: Rule::ShuddhaAshuddha("Section 4"),
-                description: "redundant -ता: औचित्य already abstract",
+                description: "-ता अनावश्यक: औचित्य already abstract",
             },
         ),
         (
@@ -204,7 +204,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "आतिथ्य",
                 rule: Rule::ShuddhaAshuddha("Section 4"),
-                description: "redundant -ता: आतिथ्य already abstract",
+                description: "-ता अनावश्यक: आतिथ्य already abstract",
             },
         ),
         (
@@ -212,7 +212,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "यथार्थ",
                 rule: Rule::ShuddhaAshuddha("Section 4"),
-                description: "redundant -ता: यथार्थ already functions as noun/adjective",
+                description: "-ता अनावश्यक: यथार्थ already functions as noun/adjective",
             },
         ),
         (
@@ -252,7 +252,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "भएकामा",
                 rule: Rule::ShuddhaAshuddha("Section 4"),
-                description: "postposition form: भएका+मा = भएकामा",
+                description: "नामयोगी form: भएका+मा = भएकामा",
             },
         ),
         (
@@ -300,7 +300,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "बेहोरा",
                 rule: Rule::ShuddhaAshuddha("Section 4"),
-                description: "standard form: बेहोरा",
+                description: "मानक रूप: बेहोरा",
             },
         ),
         (
@@ -308,7 +308,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "यकिन",
                 rule: Rule::ShuddhaAshuddha("Section 4"),
-                description: "standard form: यकिन (य not ए)",
+                description: "मानक रूप: यकिन (य not ए)",
             },
         ),
         (
@@ -316,7 +316,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "सुरुआत",
                 rule: Rule::ShuddhaAshuddha("Section 4"),
-                description: "standard form: सुरुआत (not सुरुवात)",
+                description: "मानक रूप: सुरुआत (not सुरुवात)",
             },
         ),
         (
@@ -324,7 +324,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "रजिस्टर",
                 rule: Rule::ShuddhaAshuddha("Section 4"),
-                description: "aagantuk: स not ष for English 'register'",
+                description: "आगन्तुक: स not ष for English 'register'",
             },
         ),
         (
@@ -332,7 +332,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "इन्स्टिच्युट",
                 rule: Rule::ShuddhaAshuddha("Section 4"),
-                description: "aagantuk: स not ष for English 'institute'",
+                description: "आगन्तुक: स not ष for English 'institute'",
             },
         ),
         (
@@ -340,7 +340,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "फाउन्डेसन",
                 rule: Rule::ShuddhaAshuddha("Section 4"),
-                description: "aagantuk: न not ण for English 'foundation'",
+                description: "आगन्तुक: न not ण for English 'foundation'",
             },
         ),
         (
@@ -356,7 +356,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "इन्डिया",
                 rule: Rule::ShuddhaAshuddha("Section 4"),
-                description: "aagantuk: न not ण for English 'India'",
+                description: "आगन्तुक: न not ण for English 'India'",
             },
         ),
         (
@@ -372,7 +372,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "सहिद",
                 rule: Rule::ShuddhaAshuddha("Section 4"),
-                description: "adapted loanword: स not श, hrasva इ not dirgha ई",
+                description: "रूपान्तरित आगन्तुक शब्द: स not श, ह्रस्व इ not दीर्घ ई",
             },
         ),
         // =================================================================
@@ -383,7 +383,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "मिठो",
                 rule: Rule::VarnaVinyasNiyam("3(क)-12"),
-                description: "tadbhav single-meaning word takes hrasva: मिष्ट → मिठो",
+                description: "तद्भव एकार्थक शब्दमा ह्रस्व हुन्छ: मिष्ट → मिठो",
             },
         ),
         (
@@ -391,7 +391,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "पिरो",
                 rule: Rule::VarnaVinyasNiyam("3(क)-12"),
-                description: "tadbhav single-meaning word takes hrasva",
+                description: "तद्भव एकार्थक शब्दमा ह्रस्व हुन्छ",
             },
         ),
         (
@@ -399,7 +399,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "तिथिमिति",
                 rule: Rule::VarnaVinyasNiyam("3(क)-12"),
-                description: "tadbhav compound: both components take hrasva",
+                description: "तद्भव समासिक शब्दमा दुवै पदमा ह्रस्व हुन्छ",
             },
         ),
         (
@@ -407,7 +407,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "मिलेको",
                 rule: Rule::VarnaVinyasNiyam("3(क)-12"),
-                description: "tadbhav verb root takes hrasva: मिल्नु → मिलेको",
+                description: "तद्भव क्रियामूलमा ह्रस्व हुन्छ: मिल्नु → मिलेको",
             },
         ),
         (
@@ -415,7 +415,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "दैनिकी",
                 rule: Rule::VarnaVinyasNiyam("3(क)-12"),
-                description: "medial vowel takes hrasva in tadbhav derivation",
+                description: "तद्भव व्युत्पत्तिमा शब्दमध्यको स्वर ह्रस्व हुन्छ",
             },
         ),
         (
@@ -423,7 +423,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "भाइ",
                 rule: Rule::VarnaVinyasNiyam("3(क)-12"),
-                description: "kinship tadbhav: भ्रातृ → भाइ (hrasva इ, not ई)",
+                description: "नातासम्बन्धी तद्भव: भ्रातृ → भाइ (ह्रस्व इ, not ई)",
             },
         ),
         (
@@ -431,7 +431,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "मुखमा",
                 rule: Rule::VarnaVinyasNiyam("3(क)"),
-                description: "tatsam मुख retains original hrasva उ (not दीर्घ ऊ)",
+                description: "तत्सम मुख retains original ह्रस्व उ (not दीर्घ ऊ)",
             },
         ),
         (
@@ -439,7 +439,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "पुतली",
                 rule: Rule::VarnaVinyasNiyam("3(क)-12, 3(ई)"),
-                description: "tadbhav takes hrasva उ",
+                description: "तद्भव शब्दमा ह्रस्व उ हुन्छ",
             },
         ),
         (
@@ -447,7 +447,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "अनुभूति",
                 rule: Rule::VarnaVinyasNiyam("3(क)"),
-                description: "tatsam ending: अनुभूति ends in hrasva इ",
+                description: "तत्सम ending: अनुभूति ends in ह्रस्व इ",
             },
         ),
         (
@@ -455,7 +455,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "हामी",
                 rule: Rule::VarnaVinyasNiyam("3(ई)-ऊ-7"),
-                description: "pronoun takes dirgha: हामी (not हामि)",
+                description: "सर्वनाममा दीर्घ हुन्छ: हामी (not हामि)",
             },
         ),
         (
@@ -463,7 +463,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "दिदी",
                 rule: Rule::VarnaVinyasNiyam("3(इ)-ऊ-3"),
-                description: "kinship tadbhav: initial vowel hrasva, final dirgha",
+                description: "नातासम्बन्धी तद्भव: initial vowel ह्रस्व, final दीर्घ",
             },
         ),
         (
@@ -471,7 +471,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "बहिनी",
                 rule: Rule::VarnaVinyasNiyam("3(इ)-ऊ-3"),
-                description: "kinship tadbhav: medial vowel hrasva, final dirgha",
+                description: "नातासम्बन्धी तद्भव: शब्दमध्यको स्वर ह्रस्व, final दीर्घ",
             },
         ),
         (
@@ -479,7 +479,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "भाउजू",
                 rule: Rule::VarnaVinyasNiyam("3(ई)"),
-                description: "feminine kinship takes dirgha: भाउजू (not भाउजु)",
+                description: "स्त्रीलिङ्गी नातासम्बन्धी शब्दमा दीर्घ हुन्छ: भाउजू (not भाउजु)",
             },
         ),
         (
@@ -487,7 +487,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "फुपू",
                 rule: Rule::VarnaVinyasNiyam("3(ई)"),
-                description: "feminine kinship takes dirgha: फुपू (not फुपु)",
+                description: "स्त्रीलिङ्गी नातासम्बन्धी शब्दमा दीर्घ हुन्छ: फुपू (not फुपु)",
             },
         ),
         (
@@ -495,7 +495,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "मितिनीले",
                 rule: Rule::VarnaVinyasNiyam("3(इ), 3(ई)"),
-                description: "kinship tadbhav: initial hrasva इ, final dirgha ई",
+                description: "नातासम्बन्धी तद्भव: initial ह्रस्व इ, final दीर्घ ई",
             },
         ),
         (
@@ -503,7 +503,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "खुर्सानी",
                 rule: Rule::VarnaVinyasNiyam("3(ई)"),
-                description: "feminine noun ending takes dirgha ई",
+                description: "स्त्रीलिङ्गी नामपदको अन्त्यमा दीर्घ ई हुन्छ",
             },
         ),
         (
@@ -511,7 +511,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "सम्धिनी",
                 rule: Rule::VarnaVinyasNiyam("3(ई)"),
-                description: "feminine noun ending takes dirgha ई",
+                description: "स्त्रीलिङ्गी नामपदको अन्त्यमा दीर्घ ई हुन्छ",
             },
         ),
         (
@@ -519,7 +519,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "पहाडी",
                 rule: Rule::VarnaVinyasNiyam("3(ई)"),
-                description: "adjectival/demonym ending takes dirgha ई",
+                description: "विशेषण/स्थानबोधक शब्दको अन्त्यमा दीर्घ ई हुन्छ",
             },
         ),
         (
@@ -527,7 +527,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "अगाडी",
                 rule: Rule::VarnaVinyasNiyam("3(ई)"),
-                description: "adverbial/postposition ending takes dirgha ई",
+                description: "अव्यय/नामयोगी शब्दको अन्त्यमा दीर्घ ई हुन्छ",
             },
         ),
         (
@@ -535,7 +535,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "भनी",
                 rule: Rule::VarnaVinyasNiyam("3(ई)"),
-                description: "absolutive (पूर्वकालिक क्रिया) takes dirgha ई",
+                description: "असमापक क्रियामा अन्त्यमा दीर्घ ई हुन्छ",
             },
         ),
         (
@@ -543,7 +543,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "स्विकार्नु",
                 rule: Rule::VarnaVinyasNiyam("3(क)-suffix-नु"),
-                description: "suffix -नु triggers hrasva: स्वीकार + नु = स्विकार्नु",
+                description: "प्रत्यय -नु ले ह्रस्व: स्वीकार + नु = स्विकार्नु",
             },
         ),
         (
@@ -551,7 +551,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "पुर्वेली",
                 rule: Rule::VarnaVinyasNiyam("3(क)-suffix-एली"),
-                description: "suffix -एली triggers hrasva: पूर्व + एली = पुर्वेली",
+                description: "प्रत्यय -एली ले ह्रस्व: पूर्व + एली = पुर्वेली",
             },
         ),
         (
@@ -559,7 +559,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "पूर्वी",
                 rule: Rule::VarnaVinyasNiyam("3(ई)-suffix-ई"),
-                description: "suffix -ई preserves dirgha: पूर्व + ई = पूर्वी",
+                description: "प्रत्यय -ई ले दीर्घ: पूर्व + ई = पूर्वी",
             },
         ),
         (
@@ -567,18 +567,18 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "पूर्वीय",
                 rule: Rule::VarnaVinyasNiyam("3(ई)-suffix-ईय"),
-                description: "suffix -ईय preserves dirgha: पूर्व + ईय = पूर्वीय",
+                description: "प्रत्यय -ईय ले दीर्घ: पूर्व + ईय = पूर्वीय",
             },
         ),
         // =================================================================
-        // chandrabindu entries (Section 3(ख))
+        // चन्द्रबिन्दु entries (Section 3(ख))
         // =================================================================
         (
             "सिँह",
             CorrectionEntry {
                 correct: "सिंह",
                 rule: Rule::VarnaVinyasNiyam("3(ख)"),
-                description: "tatsam uses shirbindu (ं), not chandrabindu (ँ)",
+                description: "तत्सम uses शिरबिन्दु (ं), not चन्द्रबिन्दु (ँ)",
             },
         ),
         (
@@ -586,7 +586,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "संवाद",
                 rule: Rule::VarnaVinyasNiyam("3(ख)"),
-                description: "tatsam uses shirbindu (ं), not chandrabindu (ँ)",
+                description: "तत्सम uses शिरबिन्दु (ं), not चन्द्रबिन्दु (ँ)",
             },
         ),
         (
@@ -594,7 +594,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "जान्छौँ",
                 rule: Rule::VarnaVinyasNiyam("3(ख)"),
-                description: "tadbhav verb requires chandrabindu for nasalization",
+                description: "तद्भव क्रियापदमा अनुनासिकका लागि चन्द्रबिन्दु हुन्छ",
             },
         ),
         (
@@ -602,7 +602,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "आउँछ",
                 rule: Rule::VarnaVinyasNiyam("3(ख)"),
-                description: "tadbhav verb requires chandrabindu for nasalization",
+                description: "तद्भव क्रियापदमा अनुनासिकका लागि चन्द्रबिन्दु हुन्छ",
             },
         ),
         (
@@ -610,7 +610,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "बगैँचामा",
                 rule: Rule::VarnaVinyasNiyam("3(ख)"),
-                description: "ब (not व) + chandrabindu required: बगैँचा",
+                description: "ब (not व) + चन्द्रबिन्दु अनिवार्य: बगैँचा",
             },
         ),
         (
@@ -618,7 +618,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "बगैँचा",
                 rule: Rule::VarnaVinyasNiyam("3(ख)"),
-                description: "chandrabindu required on बगैँचा",
+                description: "चन्द्रबिन्दु अनिवार्य on बगैँचा",
             },
         ),
         // =================================================================
@@ -629,7 +629,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "शासन",
                 rule: Rule::VarnaVinyasNiyam("3(ग)"),
-                description: "tatsam word uses श (not स): शासन",
+                description: "तत्सम word uses श (not स): शासन",
             },
         ),
         (
@@ -637,7 +637,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "शेष",
                 rule: Rule::VarnaVinyasNiyam("3(ग)"),
-                description: "tatsam word uses श (not स): शेष",
+                description: "तत्सम word uses श (not स): शेष",
             },
         ),
         (
@@ -645,7 +645,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "एशिया",
                 rule: Rule::VarnaVinyasNiyam("3(ग)"),
-                description: "proper noun uses श (not स): एशिया",
+                description: "व्यक्तिवाचक नाम uses श (not स): एशिया",
             },
         ),
         (
@@ -653,7 +653,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "विवेकशील",
                 rule: Rule::VarnaVinyasNiyam("3(ग), 3(ई)"),
-                description: "tatsam suffix -शील takes dirgha ई",
+                description: "तत्सम suffix -शील takes दीर्घ ई",
             },
         ),
         // =================================================================
@@ -664,7 +664,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "ऋषि",
                 rule: Rule::VarnaVinyasNiyam("3(ग)-ऋ"),
-                description: "tatsam uses ऋ (not रि): ऋषि",
+                description: "तत्सम uses ऋ (not रि): ऋषि",
             },
         ),
         (
@@ -672,7 +672,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "ऋतु",
                 rule: Rule::VarnaVinyasNiyam("3(ग)-ऋ"),
-                description: "tatsam uses ऋ (not रि): ऋतु",
+                description: "तत्सम uses ऋ (not रि): ऋतु",
             },
         ),
         (
@@ -680,7 +680,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "कृति",
                 rule: Rule::VarnaVinyasNiyam("3(ग)-कृ"),
-                description: "tatsam uses कृ (not क्रि): कृति",
+                description: "तत्सम uses कृ (not क्रि): कृति",
             },
         ),
         (
@@ -688,18 +688,18 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "ऋषिमुनि",
                 rule: Rule::VarnaVinyasNiyam("3(ग)-ऋ"),
-                description: "tatsam compound: ऋषि + मुनि (ऋ not रि)",
+                description: "तत्सम compound: ऋषि + मुनि (ऋ not रि)",
             },
         ),
         // =================================================================
-        // halanta entries (Section 3(ङ))
+        // हलन्त entries (Section 3(ङ))
         // =================================================================
         (
             "अर्थात",
             CorrectionEntry {
                 correct: "अर्थात्",
                 rule: Rule::VarnaVinyasNiyam("3(ङ)"),
-                description: "halanta required on अव्यय: अर्थात्",
+                description: "हलन्त अनिवार्य on अव्यय: अर्थात्",
             },
         ),
         (
@@ -707,7 +707,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "बुद्धिमान्",
                 rule: Rule::VarnaVinyasNiyam("3(ङ)"),
-                description: "halanta required: -मान् suffix (बुद्धिमान्)",
+                description: "-मान् प्रत्ययमा हलन्त अनिवार्य हुन्छ (बुद्धिमान्)",
             },
         ),
         (
@@ -715,7 +715,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "भगवान्",
                 rule: Rule::VarnaVinyasNiyam("3(ङ)"),
-                description: "halanta required: -वान् suffix (भगवान्)",
+                description: "-वान् प्रत्ययमा हलन्त अनिवार्य हुन्छ (भगवान्)",
             },
         ),
         (
@@ -723,7 +723,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "महान्",
                 rule: Rule::VarnaVinyasNiyam("3(ङ)"),
-                description: "halanta required: tatsam stem ends in न् (महान्)",
+                description: "हलन्त अनिवार्य: तत्सम stem ends in न् (महान्)",
             },
         ),
         (
@@ -731,7 +731,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "विद्वान्",
                 rule: Rule::VarnaVinyasNiyam("3(ङ)"),
-                description: "halanta required: -वान् suffix (विद्वान्)",
+                description: "-वान् प्रत्ययमा हलन्त अनिवार्य हुन्छ (विद्वान्)",
             },
         ),
         (
@@ -739,7 +739,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "श्रीमान्",
                 rule: Rule::VarnaVinyasNiyam("3(ङ)"),
-                description: "halanta required: -मान् suffix (श्रीमान्)",
+                description: "-मान् प्रत्ययमा हलन्त अनिवार्य हुन्छ (श्रीमान्)",
             },
         ),
         // =================================================================
@@ -750,7 +750,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "विद्या",
                 rule: Rule::VarnaVinyasNiyam("3(ग)-बव"),
-                description: "tatsam word uses व (not ब): विद्या",
+                description: "तत्सम word uses व (not ब): विद्या",
             },
         ),
         (
@@ -758,7 +758,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "विद्वान्",
                 rule: Rule::VarnaVinyasNiyam("3(ग)-बव"),
-                description: "tatsam word uses व (not ब) + halanta: विद्वान्",
+                description: "तत्सम word uses व (not ब) + हलन्त: विद्वान्",
             },
         ),
         (
@@ -766,7 +766,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "विदेश",
                 rule: Rule::VarnaVinyasNiyam("3(ग)-बव"),
-                description: "tatsam word uses व (not ब): विदेश",
+                description: "तत्सम word uses व (not ब): विदेश",
             },
         ),
         (
@@ -774,7 +774,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "विकास",
                 rule: Rule::VarnaVinyasNiyam("3(ग)-बव"),
-                description: "tatsam word uses व (not ब): विकास",
+                description: "तत्सम word uses व (not ब): विकास",
             },
         ),
         (
@@ -782,7 +782,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "विज्ञान",
                 rule: Rule::VarnaVinyasNiyam("3(ग)-बव"),
-                description: "tatsam word uses व (not ब): विज्ञान",
+                description: "तत्सम word uses व (not ब): विज्ञान",
             },
         ),
         // =================================================================
@@ -793,7 +793,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "यथार्थ",
                 rule: Rule::VarnaVinyasNiyam("3(छ)"),
-                description: "tatsam uses य (not ए): यथार्थ",
+                description: "तत्सम uses य (not ए): यथार्थ",
             },
         ),
         (
@@ -801,7 +801,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "एकता",
                 rule: Rule::VarnaVinyasNiyam("3(छ)"),
-                description: "tatsam uses ए (not य): एकता",
+                description: "तत्सम uses ए (not य): एकता",
             },
         ),
         // =================================================================
@@ -812,7 +812,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "लक्ष्य",
                 rule: Rule::VarnaVinyasNiyam("3(छ)-क्ष"),
-                description: "tatsam uses क्ष (not छ): लक्ष्य",
+                description: "तत्सम uses क्ष (not छ): लक्ष्य",
             },
         ),
         (
@@ -820,7 +820,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "इच्छा",
                 rule: Rule::VarnaVinyasNiyam("3(छ)-क्ष"),
-                description: "tatsam: इच्छा uses च्छ (not क्ष)",
+                description: "तत्सम: इच्छा uses च्छ (not क्ष)",
             },
         ),
         (
@@ -828,7 +828,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "क्षेत्र",
                 rule: Rule::VarnaVinyasNiyam("3(छ)-क्ष"),
-                description: "tatsam uses क्षे (not छे): क्षेत्र",
+                description: "तत्सम uses क्षे (not छे): क्षेत्र",
             },
         ),
         // =================================================================
@@ -839,7 +839,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "भनिन्",
                 rule: Rule::VarnaVinyasNiyam("3(क), 3(ङ)"),
-                description: "verb form takes hrasva + halanta: भनिन्",
+                description: "verb form takes ह्रस्व + हलन्त: भनिन्",
             },
         ),
         (
@@ -847,7 +847,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "संसारमा",
                 rule: Rule::VarnaVinyasNiyam("3(ख)"),
-                description: "shirbindu form: संसार (not halanta-न सन्सार)",
+                description: "शिरबिन्दु form: संसार (not हलन्त-न सन्सार)",
             },
         ),
     ];

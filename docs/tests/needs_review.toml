@@ -32,9 +32,9 @@ correct = "दूध"
 rule = "compensatory lengthening: दुग्ध → दूध"
 section = "Section 3(क), Rule 12"
 page = 5
-issue = """Rule 12 says single-meaning tadbhav words take hrasva, but the exam Q3
-and slides Session 4 both list दुध → दूध (dirgha). This may be a compensatory
-lengthening exception where the lost conjunct triggers dirgha. The standard
+issue = """Rule 12 says single-meaning तद्भव words take ह्रस्व, but the exam Q3
+and slides Session 4 both list दुध → दूध (दीर्घ). This may be a compensatory
+lengthening exception where the lost conjunct triggers दीर्घ. The standard
 discusses both forms on p5. Verify whether दूध is explicitly listed as an
 exception or if the standard prefers दुध."""
 
@@ -44,15 +44,15 @@ correct = "बूढो"
 rule = "compensatory lengthening: वृद्ध → बूढो"
 section = "Section 3(क), Rule 12"
 page = 5
-issue = """Same ambiguity as दुध/दूध. The exam Q3 lists बुढो → बूढो (dirgha),
+issue = """Same ambiguity as दुध/दूध. The exam Q3 lists बुढो → बूढो (दीर्घ),
 and Session 4 HRASVA list includes बुढो. The standard may treat this as a
 compensatory lengthening exception. Verify on p5 whether बूढो is an explicit
-exception to the single-meaning hrasva rule."""
+exception to the single-meaning ह्रस्व rule."""
 
 [[hrasva_dirgha]]
 incorrect = "सभापती"
 correct = "सभापति"
-rule = "masculine ending may take hrasva"
+rule = "masculine ending may take ह्रस्व"
 section = "Section 3(क) or Section 3(ई)"
 page = 7
 issue = """The exam Q3 marks this as a 'trick' — सभापती IS correct for some
@@ -66,52 +66,52 @@ Verify whether the standard gives a definitive rule or leaves it context-depende
 [[chandrabindu]]
 incorrect = "मुख्याई"
 correct = "मुख्याईँ"
-rule = "chandrabindu placement on final vowel"
+rule = "चन्द्रबिन्दु placement on final vowel"
 section = "Section 3(ख)"
 page = 9
-issue = """Exam Q3 lists मुख्याई → मुख्याईँ but the chandrabindu placement
+issue = """Exam Q3 lists मुख्याई → मुख्याईँ but the चन्द्रबिन्दु placement
 on ईँ is unusual. Verify on p9 whether this specific form appears and what
-rule governs chandrabindu on this suffix."""
+rule governs चन्द्रबिन्दु on this suffix."""
 
 [[chandrabindu]]
 incorrect = "भएछु"
 correct = "भएँछु"
-rule = "chandrabindu placement in verb conjugation"
+rule = "चन्द्रबिन्दु placement in verb conjugation"
 section = "Section 3(ख)"
 page = 9
 issue = """Session 5 lists भएछु → भएँछु, but other forms like भएछुँ are also
-plausible. The exact chandrabindu placement (on ए or on उ) needs verification.
+plausible. The exact चन्द्रबिन्दु placement (on ए or on उ) needs verification.
 Check p9 for the standard's preferred form."""
 
 [[chandrabindu]]
 incorrect = "साँस्कृतिक"
 correct = "सांस्कृतिक"
-rule = "tatsam should use shirbindu, not chandrabindu"
+rule = "तत्सम should use शिरबिन्दु, not चन्द्रबिन्दु"
 section = "Section 3(ख)"
 page = 9
-issue = """Session 5 says सांस्कृतिक is standard (tatsam = shirbindu). But
+issue = """Session 5 says सांस्कृतिक is standard (तत्सम = शिरबिन्दु). But
 साँस्कृतिक is very common in practice. The annotation says 'both common.'
 Verify whether the standard explicitly prefers one form."""
 
 # =============================================================================
-# Panchham varna vs shirbindu disputes
+# Panchham varna vs शिरबिन्दु disputes
 # =============================================================================
 
 [[panchham_varna]]
 incorrect = "सञ्चालन"
 correct = "संचालन"
-rule = "shirbindu preferred over panchham varna for tatsam"
+rule = "शिरबिन्दु preferred over panchham varna for तत्सम"
 section = "Section 3(ख)"
 page = 9
 issue = """Session 5 lists संचालन → सञ्चालन as an error direction (sanchalan
-uses shirbindu, not panchham). But traditional tatsam spelling uses panchham
+uses शिरबिन्दु, not panchham). But traditional तत्सम spelling uses panchham
 varna (सञ्चालन). Verify p8-9 for the Academy's current position on
-shirbindu vs panchham varna."""
+शिरबिन्दु vs panchham varna."""
 
 [[panchham_varna]]
 incorrect = "सम्पूर्ण"
 correct = "संपूर्ण"
-rule = "shirbindu preferred over halanta-म"
+rule = "शिरबिन्दु preferred over हलन्त-म"
 section = "Section 3(ख)"
 page = 9
 issue = """Session 5 annotates 'both exist; context-dependent.' The standard
@@ -125,14 +125,14 @@ form and whether context determines the choice."""
 [[sha_sha_sa]]
 incorrect = "इन्स्टिच्यूट"
 correct = "इन्स्टिच्युट"
-rule = "Academy standard uses hrasva युट, not dirgha यूट; dirgha form's acceptability unknown"
+rule = "Academy standard uses ह्रस्व युट, not दीर्घ यूट; दीर्घ form's acceptability unknown"
 section = "Section 4, शुद्ध-अशुद्ध table"
 page = 18
 issue = """RESOLVED by OCR p18: The शुद्ध-अशुद्ध table lists इन्ष्टिच्युट (wrong)
-→ इन्स्टिच्युट (correct). So इन्स्टिच्युट IS the standard form — NO dirgha ऊ.
+→ इन्स्टिच्युट (correct). So इन्स्टिच्युट IS the मानक रूप — NO दीर्घ ऊ.
 Session 6 had the wrong direction. This pair (इन्ष्टिच्युट → इन्स्टिच्युट)
 has been added to gold.toml. The remaining question is whether इन्स्टिच्यूट
-(with dirgha) is also acceptable in practice."""
+(with दीर्घ) is also acceptable in practice."""
 
 # =============================================================================
 # Word form disputes
@@ -166,7 +166,7 @@ rule = "vowel form in feminine noun"
 section = "Section 3(क) or Section 3(ई)"
 page = 7
 issue = """Paragraph fixture lists गायीका → गाईका. The vowel change (य → इ)
-and dirgha/hrasva choice need verification. Neither form may appear in the
+and दीर्घ/ह्रस्व choice need verification. Neither form may appear in the
 standard directly."""
 
 [[word_form]]
@@ -186,13 +186,13 @@ issue = """Exam Q5(च) gives four options (विदेशियो, विद�
 [[ya_e]]
 incorrect = "यकीन"
 correct = "यकिन"
-rule = "Academy standard uses hrasva इ (एकिन→यकिन on p18); dirgha यकीन status unknown"
+rule = "Academy standard uses ह्रस्व इ (एकिन→यकिन on p18); दीर्घ यकीन status unknown"
 section = "Section 4, शुद्ध-अशुद्ध table"
 page = 18
 issue = """PARTIALLY RESOLVED by OCR p18: The शुद्ध-अशुद्ध table lists एकिन
 (wrong) → यकिन (correct) with HRASVA इ. This contradicts the assumption that
-यकीन (with dirgha) is correct. The pair एकिन → यकिन has been added to
-gold.toml per the standard. This entry remains to track whether यकीन (dirgha,
+यकीन (with दीर्घ) is correct. The pair एकिन → यकिन has been added to
+gold.toml per the standard. This entry remains to track whether यकीन (दीर्घ,
 closer to Urdu/Hindi source) is also acceptable."""
 
 [[ya_e]]
@@ -212,7 +212,7 @@ p12 for the standard's position on ए vs ये in verb forms."""
 [[padayog]]
 incorrect = "घर भित्र"
 correct = "घरभित्र"
-rule = "padayog: postposition joins with noun"
+rule = "padayog: नामयोगी joins with noun"
 section = "Section 3(ज) — padayog"
 page = 14
 issue = """Session 8 lists 'घरभित्र → घर भित्र' with annotation 'should be
@@ -240,7 +240,7 @@ rule = "unknown — OCR shows identical अशुद्ध and शुद्ध f
 section = "Section 4, शुद्ध-अशुद्ध table"
 page = 18
 issue = """OCR reads एकाइ for both the अशुद्ध and शुद्ध columns. This is likely
-an OCR error. The शुद्ध form may be एकाई (with dirgha ई) or a different
+an OCR error. The शुद्ध form may be एकाई (with दीर्घ ई) or a different
 rendering. Verify from the original PDF on p18."""
 
 # =============================================================================
@@ -254,13 +254,13 @@ rule = "unknown — no correction provided in source"
 section = "Paragraph fixture"
 page = 5
 issue = """The paragraph fixture marks दहिचाहीँ as '[context]' with no
-correction provided. This may be correct as-is or may need chandrabindu
-or hrasva/dirgha adjustment. No Academy reference found."""
+correction provided. This may be correct as-is or may need चन्द्रबिन्दु
+or ह्रस्व/दीर्घ adjustment. No Academy reference found."""
 
 [[unverified]]
 incorrect = "जातिय"
 correct = "जातीय"
-rule = "tatsam suffix -ईय takes dirgha"
+rule = "तत्सम suffix -ईय takes दीर्घ"
 section = "Section 3(ई)"
 page = 7
 issue = """Exam Q3 marks 'जातीय → जातिय' as a trick — जातीय IS correct.

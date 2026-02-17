@@ -191,7 +191,7 @@ EXPECTED CORRECTIONS:
 खुर्सानि → खुर्सानी     (dirgha: feminine noun)
 मूखमा → मुखमा         (hrasva: tadbhav of मुख)
 नहालून् → [context]
-भनि → भनी            (dirgha: absolutive)
+भनि → भनी            (dirgha: असमापक क्रिया)
 भाई → भाइ            (hrasva: kinship tadbhav)
 गायीका → गाईका        (vowel form)
 सम्धिनि → सम्धिनी     (dirgha: feminine)

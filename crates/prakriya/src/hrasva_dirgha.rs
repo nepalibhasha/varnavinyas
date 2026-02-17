@@ -74,7 +74,7 @@ pub fn rule_suffix_nu_hrasva(input: &str) -> Option<Prakriya> {
     }
 
     // स्वीकार्नु → स्विकार्नु
-    // Only replace the LAST dirgha ई before the suffix, not all occurrences.
+    // Only replace the LAST दीर्घ ई before the suffix, not all occurrences.
     if !input.contains('ी') {
         return None;
     }
@@ -103,7 +103,7 @@ pub fn rule_suffix_nu_hrasva(input: &str) -> Option<Prakriya> {
             &output,
             vec![Step::new(
                 Rule::VarnaVinyasNiyam("3(क)-suffix-नु"),
-                "suffix -नु triggers hrasva on root vowel",
+                "प्रत्यय -नु ले ह्रस्व on root vowel",
                 input,
                 &output,
             )],
@@ -119,7 +119,7 @@ pub fn rule_suffix_eli_hrasva(input: &str) -> Option<Prakriya> {
     }
 
     // पूर्वेली → पुर्वेली
-    // Only replace the LAST dirgha ू before the suffix, not all occurrences.
+    // Only replace the LAST दीर्घ ू before the suffix, not all occurrences.
     if !input.contains('ू') {
         return None;
     }
@@ -147,7 +147,7 @@ pub fn rule_suffix_eli_hrasva(input: &str) -> Option<Prakriya> {
             &output,
             vec![Step::new(
                 Rule::VarnaVinyasNiyam("3(क)-suffix-एली"),
-                "suffix -एली triggers hrasva on root vowel",
+                "प्रत्यय -एली ले ह्रस्व on root vowel",
                 input,
                 &output,
             )],
@@ -156,19 +156,15 @@ pub fn rule_suffix_eli_hrasva(input: &str) -> Option<Prakriya> {
     None
 }
 
-/// Academy 3(क)(उ) rules 1-2: suffixes -ई/-ईय preserve dirgha in the stem.
+/// Academy 3(क)(उ) rules 1-2: suffixes -ई/-ईय preserve दीर्घ in the stem.
 /// Only fires for specific known stem patterns to avoid false positives.
 pub fn rule_suffix_preserves_dirgha(input: &str) -> Option<Prakriya> {
-    // Known incorrect→correct pairs where a dirgha-suffix stem lost its dirgha.
+    // Known incorrect→correct pairs where a दीर्घ-suffix stem lost its दीर्घ.
     // We only correct specific known patterns to avoid false positives.
     static KNOWN_CORRECTIONS: &[(&str, &str, &str)] = &[
         // (incorrect, correct, rule description)
-        ("पुर्वी", "पूर्वी", "suffix -ई preserves dirgha: पूर्व + ई = पूर्वी"),
-        (
-            "पुर्वीय",
-            "पूर्वीय",
-            "suffix -ईय preserves dirgha: पूर्व + ईय = पूर्वीय",
-        ),
+        ("पुर्वी", "पूर्वी", "प्रत्यय -ई ले दीर्घ: पूर्व + ई = पूर्वी"),
+        ("पुर्वीय", "पूर्वीय", "प्रत्यय -ईय ले दीर्घ: पूर्व + ईय = पूर्वीय"),
     ];
 
     for &(wrong, correct, desc) in KNOWN_CORRECTIONS {
@@ -189,26 +185,26 @@ pub fn rule_suffix_preserves_dirgha(input: &str) -> Option<Prakriya> {
     None
 }
 
-/// Academy 3(क) rules 3-12: tadbhav/deshaj/aagantuk words take hrasva.
-/// If a non-tatsam word has dirgha ई/ऊ where hrasva is expected, correct it.
+/// Academy 3(क) rules 3-12: तद्भव/deshaj/आगन्तुक words take ह्रस्व.
+/// If a non-तत्सम word has दीर्घ ई/ऊ where ह्रस्व is expected, correct it.
 pub fn rule_tadbhav_hrasva(input: &str) -> Option<Prakriya> {
     let origin = classify(input);
 
-    // Only apply to non-tatsam words
+    // Only apply to non-तत्सम words
     if matches!(origin, Origin::Tatsam) {
         return None;
     }
 
-    // Don't interfere with known dirgha patterns (feminine, kinship, tatsam suffixes, etc.)
-    // Those are handled by rule_dirgha_endings and rule_kinship_tadbhav
+    // Don't interfere with known दीर्घ patterns (feminine, नातासम्बन्धी, तत्सम suffixes, etc.)
+    // Those are handled by rule_dirgha_endings and rule_नातासम्बन्धी_tadbhav
     if is_feminine_dirgha_pattern(input)
-        || is_kinship_dirgha_pattern(input)
+        || is_नातासम्बन्धी_dirgha_pattern(input)
         || has_tatsam_suffix(input)
     {
         return None;
     }
 
-    // Tadbhav/Deshaj: word-initial and word-medial dirgha ई→इ, ऊ→उ
+    // Tadbhav/Deshaj: word-initial and word-medial दीर्घ ई→इ, ऊ→उ
     // (not word-final, which has separate rules)
     let chars: Vec<char> = input.chars().collect();
     if chars.len() < 2 {
@@ -218,17 +214,17 @@ pub fn rule_tadbhav_hrasva(input: &str) -> Option<Prakriya> {
     let mut changed = false;
     let mut output_chars = chars.clone();
 
-    // Check medial positions (not final) for unexpected dirgha
-    // Final position has its own rules (dirgha for feminine, etc.)
+    // Check medial positions (not final) for unexpected दीर्घ
+    // Final position has its own rules (दीर्घ for feminine, etc.)
     for i in 0..chars.len().saturating_sub(1) {
         match chars[i] {
             'ी' => {
-                // Medial dirgha matra ई→इ in non-tatsam words
+                // Medial दीर्घ matra ई→इ in non-तत्सम words
                 output_chars[i] = 'ि';
                 changed = true;
             }
             'ू' => {
-                // Medial dirgha matra ऊ→उ in non-tatsam words
+                // Medial दीर्घ matra ऊ→उ in non-तत्सम words
                 output_chars[i] = 'ु';
                 changed = true;
             }
@@ -249,9 +245,9 @@ pub fn rule_tadbhav_hrasva(input: &str) -> Option<Prakriya> {
     if changed {
         let output: String = output_chars.into_iter().collect();
 
-        // Only apply if the hrasva form is validated by the dictionary.
+        // Only apply if the ह्रस्व form is validated by the dictionary.
         // This prevents false positives on compounds containing legitimate
-        // dirgha stems (e.g. गाईप्रतिको — "गाई" is a valid word).
+        // दीर्घ stems (e.g. गाईप्रतिको — "गाई" is a valid word).
         let kosha = varnavinyas_kosha::kosha();
         if !kosha.contains(&output) {
             return None;
@@ -272,11 +268,11 @@ pub fn rule_tadbhav_hrasva(input: &str) -> Option<Prakriya> {
     None
 }
 
-/// Academy 3(क)(ऊ) rules 1-16: feminine nouns, -ई/-वती suffixes, profession/place names → dirgha.
+/// Academy 3(क)(ऊ) rules 1-16: feminine nouns, -ई/-वती suffixes, profession/place names → दीर्घ.
 pub fn rule_dirgha_endings(input: &str) -> Option<Prakriya> {
     let origin = classify(input);
 
-    // This rule primarily applies to tadbhav/deshaj feminine endings
+    // This rule primarily applies to तद्भव/deshaj feminine endings
     if matches!(origin, Origin::Tatsam) {
         return None;
     }
@@ -288,24 +284,24 @@ pub fn rule_dirgha_endings(input: &str) -> Option<Prakriya> {
 
     let last = *chars.last().unwrap();
 
-    // Common feminine/adjectival/postposition suffixes that require dirgha ई at end
+    // Common feminine/adjectival/नामयोगी suffixes that require दीर्घ ई at end
     static DIRGHA_II_ENDINGS: &[&str] = &[
         "नी",   // feminine suffix: बहिनी, सम्धिनी
         "डी",   // demonym/adjective: पहाडी
         "सानी", // feminine: खुर्सानी
     ];
 
-    // Postpositions and absolutives that require dirgha ई
+    // Postpositions and asamapaka verb forms that require final दीर्घ ई
     static DIRGHA_II_WORDS: &[&str] = &["अगाडी", "पछाडी", "माथी", "तली"];
 
-    // Check if word ends in hrasva इ where dirgha ई is required
+    // Check if word ends in ह्रस्व इ where दीर्घ ई is अनिवार्य
     if last == 'ि' {
-        // Absolutive (पूर्वकालिक क्रिया): verb forms ending in -ि should be -ी
+        // असमापक क्रिया: verb forms ending in -ि should be -ी
         // e.g., भनि→भनी, गरि→गरी
         // Only for short verb-like forms (2-4 chars)
         let char_count = chars.len();
         if (2..=4).contains(&char_count) {
-            // Check if it looks like an absolutive verb form
+            // Check if it looks like an asamapaka verb form
             let penult = chars[char_count - 2];
             if varnavinyas_akshar::is_vyanjan(penult) {
                 let mut output_chars = chars.clone();
@@ -316,7 +312,7 @@ pub fn rule_dirgha_endings(input: &str) -> Option<Prakriya> {
                     &output,
                     vec![Step::new(
                         Rule::VarnaVinyasNiyam("3(ई)"),
-                        "पूर्वकालिक क्रिया (absolutive) takes dirgha ई",
+                        "असमापक क्रियामा अन्त्यमा दीर्घ ई हुन्छ",
                         input,
                         &output,
                     )],
@@ -324,7 +320,7 @@ pub fn rule_dirgha_endings(input: &str) -> Option<Prakriya> {
             }
         }
 
-        // Feminine/demonym/postposition endings
+        // Feminine/demonym/नामयोगी endings
         for ending in DIRGHA_II_ENDINGS {
             let hrasva_ending = ending.replace('ी', "ि");
             if input.ends_with(&hrasva_ending) {
@@ -342,7 +338,7 @@ pub fn rule_dirgha_endings(input: &str) -> Option<Prakriya> {
             }
         }
 
-        // Check specific postposition/adverb words
+        // Check specific नामयोगी/adverb words
         for &correct_word in DIRGHA_II_WORDS {
             let hrasva_form = correct_word.replace('ी', "ि");
             if input == hrasva_form {
@@ -365,10 +361,10 @@ pub fn rule_dirgha_endings(input: &str) -> Option<Prakriya> {
     None
 }
 
-/// Dictionary-backed hrasva→dirgha correction at word-final position.
+/// Dictionary-backed ह्रस्व→दीर्घ correction at word-final position.
 ///
-/// Standalone rule: checks if a non-tatsam word ends in hrasva (ि/ु)
-/// and the dirgha form exists in the dictionary.
+/// Standalone rule: checks if a non-तत्सम word ends in ह्रस्व (ि/ु)
+/// and the दीर्घ form exists in the dictionary.
 pub fn kosha_backed_dirgha_correction(input: &str) -> Option<Prakriya> {
     let origin = classify(input);
     if matches!(origin, Origin::Tatsam) {
@@ -393,28 +389,28 @@ pub fn kosha_backed_dirgha_correction(input: &str) -> Option<Prakriya> {
     None
 }
 
-/// Inner implementation for dictionary-backed hrasva→dirgha correction.
+/// Inner implementation for dictionary-backed ह्रस्व→दीर्घ correction.
 fn kosha_backed_dirgha_impl(
     input: &str,
     chars: &[char],
-    hrasva: char,
-    dirgha: char,
+    ह्रस्व: char,
+    दीर्घ: char,
     vowel_label: &str,
 ) -> Option<Prakriya> {
-    debug_assert_eq!(*chars.last().unwrap(), hrasva);
+    debug_assert_eq!(*chars.last().unwrap(), ह्रस्व);
 
     let kosha = varnavinyas_kosha::kosha();
     if kosha.contains(input) {
-        // The hrasva form itself is a valid dictionary word — don't flag it
+        // The ह्रस्व form itself is a valid dictionary word — don't flag it
         return None;
     }
 
     let mut dirgha_chars: Vec<char> = chars.to_vec();
-    *dirgha_chars.last_mut().unwrap() = dirgha;
+    *dirgha_chars.last_mut().unwrap() = दीर्घ;
     let dirgha_form: String = dirgha_chars.into_iter().collect();
 
     if kosha.contains(&dirgha_form) {
-        let rule_ref = if dirgha == 'ी' {
+        let rule_ref = if दीर्घ == 'ी' {
             "3(क)(ई)"
         } else {
             "3(क)(ऊ)"
@@ -434,15 +430,15 @@ fn kosha_backed_dirgha_impl(
     None
 }
 
-/// Academy 3(क)(इ) rule 1: masculine kinship terms take hrasva at end.
-/// Exceptions: खसी, सम्धी, हात्ती, स्वामी are dirgha.
+/// Academy 3(क)(इ) rule 1: masculine नातासम्बन्धी terms take ह्रस्व at end.
+/// Exceptions: खसी, सम्धी, हात्ती, स्वामी are दीर्घ.
 pub fn rule_kinship_tadbhav(input: &str) -> Option<Prakriya> {
     let origin = classify(input);
     if !matches!(origin, Origin::Tadbhav | Origin::Deshaj) {
         return None;
     }
 
-    // Masculine kinship terms that MUST end in hrasva
+    // Masculine नातासम्बन्धी terms that MUST end in ह्रस्व
     // Academy 3(क)(इ)-1: दाजु, बाबु, भिनाजु, काका, मामा, etc.
     // These are typically: consonant + ु at end (not ू)
     static MASC_KINSHIP_DIRGHA_TO_HRASVA: &[(&str, &str)] = &[
@@ -467,7 +463,7 @@ pub fn rule_kinship_tadbhav(input: &str) -> Option<Prakriya> {
         }
     }
 
-    // Feminine kinship terms that MUST end in dirgha
+    // Feminine नातासम्बन्धी terms that MUST end in दीर्घ
     // Academy 3(ई): भाउजू, फुपू, सासू, etc.
     static FEM_KINSHIP_HRASVA_TO_DIRGHA: &[(&str, &str)] = &[
         ("भाउजु", "भाउजू"),
@@ -496,7 +492,7 @@ pub fn rule_kinship_tadbhav(input: &str) -> Option<Prakriya> {
     None
 }
 
-/// Check if word contains a tatsam-derived suffix where dirgha ई is expected.
+/// Check if word contains a तत्सम-derived suffix where दीर्घ ई is expected.
 fn has_tatsam_suffix(input: &str) -> bool {
     input.ends_with("ीकरण")
         || input.ends_with("ीकृत")
@@ -505,14 +501,14 @@ fn has_tatsam_suffix(input: &str) -> bool {
         || input.ends_with("ीन")
 }
 
-/// Check if the word matches a known feminine dirgha ending pattern.
+/// Check if the word matches a known feminine दीर्घ ending pattern.
 fn is_feminine_dirgha_pattern(input: &str) -> bool {
     // Words ending in ी that are correct feminine forms
     input.ends_with("नी") || input.ends_with("डी") || input.ends_with("ती") || input.ends_with("ली")
 }
 
-/// Check if the word is a kinship term (or suffixed form thereof) that has its own rules.
-fn is_kinship_dirgha_pattern(input: &str) -> bool {
+/// Check if the word is a नातासम्बन्धी term (or suffixed form thereof) that has its own rules.
+fn is_नातासम्बन्धी_dirgha_pattern(input: &str) -> bool {
     static KINSHIP_BASES: &[&str] = &[
         "दिदी",
         "बहिनी",
