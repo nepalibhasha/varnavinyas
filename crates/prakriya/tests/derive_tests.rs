@@ -285,3 +285,30 @@ fn ramailo_dirgha_corrected() {
     assert_eq!(p.output, "रमाइलो");
     assert!(!p.is_correct);
 }
+
+#[test]
+fn notice_examples_are_not_overcorrected() {
+    for word in ["क्षेत्रीय", "संज्ञा", "एसिया", "त्यता", "तापनि", "हरूवा"]
+    {
+        let p = derive(word);
+        assert!(
+            p.is_correct,
+            "Expected '{word}' to remain correct, got '{}'",
+            p.output
+        );
+    }
+}
+
+#[test]
+fn notice_example_wrong_eshiya_gets_corrected() {
+    let p = derive("एशिया");
+    assert_eq!(p.output, "एसिया");
+    assert!(!p.is_correct);
+}
+
+#[test]
+fn notice_section4_uparokta_gets_corrected() {
+    let p = derive("उपरोक्त");
+    assert_eq!(p.output, "उपर्युक्त");
+    assert!(!p.is_correct);
+}

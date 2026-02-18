@@ -52,6 +52,9 @@ pub fn rule_shri_correction(input: &str) -> Option<Prakriya> {
 pub fn rule_redundant_suffix(input: &str) -> Option<Prakriya> {
     // Words ending in -र्यता or -त्यता → remove -ता
     // e.g., सौन्दर्यता → सौन्दर्य, औचित्यता → औचित्य
+    if input.chars().count() < 6 {
+        return None;
+    }
     if input.ends_with("र्यता") || input.ends_with("त्यता") || input.ends_with("थ्यता")
     {
         let output = input.strip_suffix("ता").unwrap();
@@ -96,6 +99,15 @@ pub fn rule_panchham_varna(input: &str) -> Option<Prakriya> {
     while i < chars.len() {
         if chars[i] == 'ं' {
             if let Some(&next) = chars.get(i + 1) {
+                // ज्ञ (ज् + ञ) अघि शिरविन्दु नै रहने: संज्ञा, विज्ञ etc.
+                if next == 'ज'
+                    && chars.get(i + 2).copied() == Some('्')
+                    && chars.get(i + 3).copied() == Some('ञ')
+                {
+                    result.push(chars[i]);
+                    i += 1;
+                    continue;
+                }
                 if let Some(panchham) = get_panchham_for(next) {
                     // Replace ं with panchham varna + हलन्त
                     result.push(panchham);

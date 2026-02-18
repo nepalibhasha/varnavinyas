@@ -234,6 +234,10 @@ pub fn rule_sibilant(input: &str) -> Option<Prakriya> {
             // तद्भवमा श चाहिँ कतिपय रूपमा वैध हुन सक्छ।
             if input.contains('ष') {
                 let output = input.replace('ष', "स");
+                let lex = kosha();
+                if lex.contains(input) && !lex.contains(&output) {
+                    return None;
+                }
                 return Some(Prakriya::corrected(
                     input,
                     &output,
@@ -656,20 +660,18 @@ fn is_stop_consonant(c: char) -> bool {
 
 /// गैर-तत्सम ं → ँ रूपान्तरण सुरक्षित छ कि छैन निर्धारण गर्ने।
 ///
-/// override/kosha बाट उच्च-विश्वसनीयता वर्गीकरण आएमा सिधै लागू।
-/// heuristic मात्र हुँदा:
+/// rewrite सुरक्षित मान्न:
 /// - चन्द्रबिन्दु-रूप शब्दकोशमा भेटिनु, वा
 /// - गरें/जान्छौं जस्ता स्पष्ट क्रियारूप संकेत हुनु आवश्यक।
+///
+/// यसले उच्च-विश्वसनीयता origin वर्गीकरण भए पनि गैर-प्रमाणित
+/// candidate (जस्तै: भैंसी -> भैँसी) उत्पादन नगर्न मद्दत गर्छ।
 fn should_replace_shirbindu(
     _input: &str,
     chars: &[char],
     idx: usize,
-    origin_source: OriginSource,
+    _origin_source: OriginSource,
 ) -> bool {
-    if !matches!(origin_source, OriginSource::Heuristic) {
-        return true;
-    }
-
     if idx + 1 == chars.len() && idx > 0 && matches!(chars[idx - 1], 'े' | 'ौ') {
         return true;
     }
@@ -889,5 +891,10 @@ mod tests {
 
         let p = rule_chandrabindu("जान्छौं").expect("should correct जान्छौं");
         assert_eq!(p.output, "जान्छौँ");
+    }
+
+    #[test]
+    fn test_chandrabindu_does_not_rewrite_notice_example_bhainsi() {
+        assert!(rule_chandrabindu("भैंसी").is_none());
     }
 }

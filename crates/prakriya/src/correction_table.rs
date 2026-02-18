@@ -24,6 +24,14 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             },
         ),
         (
+            "उपरोक्त",
+            CorrectionEntry {
+                correct: "उपर्युक्त",
+                rule: Rule::ShuddhaAshuddha("Section 4"),
+                description: "मानक रूप: उपरोक्त होइन, उपर्युक्त",
+            },
+        ),
+        (
             "राजनैतिक",
             CorrectionEntry {
                 correct: "राजनीतिक",
@@ -523,14 +531,6 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             },
         ),
         (
-            "अगाडि",
-            CorrectionEntry {
-                correct: "अगाडी",
-                rule: Rule::VarnaVinyasNiyam("3(ई)"),
-                description: "अव्यय/नामयोगी शब्दको अन्त्यमा दीर्घ ई हुन्छ",
-            },
-        ),
-        (
             "भनि",
             CorrectionEntry {
                 correct: "भनी",
@@ -641,11 +641,11 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             },
         ),
         (
-            "एसिया",
+            "एशिया",
             CorrectionEntry {
-                correct: "एशिया",
+                correct: "एसिया",
                 rule: Rule::VarnaVinyasNiyam("3(ग)"),
-                description: "व्यक्तिवाचक नाममा श (स होइन): एशिया",
+                description: "आगन्तुक शब्दमा स (श होइन): एसिया",
             },
         ),
         (

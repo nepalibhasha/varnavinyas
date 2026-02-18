@@ -200,6 +200,7 @@ pub fn rule_tadbhav_hrasva(input: &str) -> Option<Prakriya> {
     if is_feminine_dirgha_pattern(input)
         || is_kinship_dirgha_pattern(input)
         || has_tatsam_suffix(input)
+        || input.contains("हरू")
     {
         return None;
     }
@@ -291,11 +292,37 @@ pub fn rule_dirgha_endings(input: &str) -> Option<Prakriya> {
         "सानी", // स्त्रीलिङ्गी: खुर्सानी
     ];
 
+    // Notice p73: यी मूल अव्यय/विभक्ति रूपहरू अन्त्यमा ह्रस्व नै रहने।
+    // असमापक-क्रिया heuristic ले यिनलाई दीर्घमा नबदलोस्।
+    static HRASVA_FINAL_I_EXCEPTIONS: &[&str] = &[
+        "अगाडि",
+        "पछाडि",
+        "माथि",
+        "अनि",
+        "पनि",
+        "मुनि",
+        "भोलि",
+        "फेरि",
+        "चोटि",
+        "बर्सेनि",
+        "देखि",
+        "लागि",
+        "जति",
+        "कति",
+        "उति",
+        "नाति",
+        "तापनि",
+    ];
+
     // अन्त्यमा दीर्घ ई चाहिने नामयोगी र असमापक क्रिया रूपहरू
-    static DIRGHA_II_WORDS: &[&str] = &["अगाडी", "पछाडी", "माथी", "तली"];
+    static DIRGHA_II_WORDS: &[&str] = &["तली"];
 
     // अन्त्यमा ह्रस्व इ आएर त्यहाँ दीर्घ ई अनिवार्य हुने अवस्था जाँच्ने
     if last == 'ि' {
+        if HRASVA_FINAL_I_EXCEPTIONS.contains(&input) {
+            return None;
+        }
+
         // असमापक क्रिया: -ि अन्त्य भएका रूप -ी हुनुपर्छ
         // जस्तै: भनि→भनी, गरि→गरी
         // २-४ वर्णका छोटा क्रियारूपमा मात्र
