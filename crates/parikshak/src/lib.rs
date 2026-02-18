@@ -2,7 +2,7 @@ mod checker;
 mod diagnostic;
 mod tokenizer;
 
-pub use checker::{CheckOptions, check_text, check_text_with_options, check_word};
+pub use checker::{CheckOptions, PunctuationMode, check_text, check_text_with_options, check_word};
 pub use diagnostic::{Diagnostic, DiagnosticCategory};
 pub use tokenizer::{AnalyzedToken, Token, tokenize, tokenize_analyzed};
 pub use varnavinyas_prakriya::DiagnosticKind;

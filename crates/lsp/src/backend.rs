@@ -37,8 +37,15 @@ impl Backend {
     /// Run diagnostics on a document and publish results.
     async fn update_diagnostics(&self, uri: Url, text: &str) {
         let line_index = LineIndex::new(text);
-        let raw_diagnostics = parikshak::check_text(text);
         let config = self.config.read().await;
+        let raw_diagnostics = parikshak::check_text_with_options(
+            text,
+            parikshak::CheckOptions {
+                grammar: false,
+                punctuation_mode: config.punctuation_mode.to_core(),
+                include_noop_heuristics: config.debug_include_noop_heuristics,
+            },
+        );
 
         let lsp_diags: Vec<tower_lsp::lsp_types::Diagnostic> = raw_diagnostics
             .iter()
@@ -47,7 +54,7 @@ impl Backend {
                 let range = line_index.byte_span_to_range(d.span);
                 tower_lsp::lsp_types::Diagnostic {
                     range,
-                    severity: Some(DiagnosticSeverity::WARNING),
+                    severity: Some(to_lsp_severity(d.kind)),
                     source: Some("varnavinyas".to_string()),
                     code: Some(NumberOrString::String(d.rule.description().to_string())),
                     message: format!(
@@ -267,7 +274,7 @@ impl LanguageServer for Backend {
                 kind: Some(CodeActionKind::QUICKFIX),
                 diagnostics: Some(vec![tower_lsp::lsp_types::Diagnostic {
                     range: diag_range,
-                    severity: Some(DiagnosticSeverity::WARNING),
+                    severity: Some(to_lsp_severity(diag.kind)),
                     source: Some("varnavinyas".to_string()),
                     code: Some(NumberOrString::String(diag.rule.description().to_string())),
                     message: format!(
@@ -293,6 +300,15 @@ impl LanguageServer for Backend {
 
     async fn shutdown(&self) -> Result<()> {
         Ok(())
+    }
+}
+
+fn to_lsp_severity(kind: parikshak::DiagnosticKind) -> DiagnosticSeverity {
+    match kind {
+        parikshak::DiagnosticKind::Error => DiagnosticSeverity::WARNING,
+        parikshak::DiagnosticKind::Variant | parikshak::DiagnosticKind::Ambiguous => {
+            DiagnosticSeverity::INFORMATION
+        }
     }
 }
 

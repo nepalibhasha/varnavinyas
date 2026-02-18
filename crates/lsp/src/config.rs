@@ -1,11 +1,31 @@
 use serde::Deserialize;
-use varnavinyas_parikshak::DiagnosticCategory;
+use varnavinyas_parikshak::{DiagnosticCategory, PunctuationMode};
 
 /// LSP server configuration, synced from client settings.
 #[derive(Debug, Clone, Default, Deserialize)]
 #[serde(default)]
 pub struct Config {
     pub categories: EnabledCategories,
+    pub punctuation_mode: PunctuationModeSetting,
+    pub debug_include_noop_heuristics: bool,
+}
+
+/// How Section 5 punctuation diagnostics should be classified.
+#[derive(Debug, Clone, Copy, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "kebab-case")]
+pub enum PunctuationModeSetting {
+    #[default]
+    Strict,
+    NormalizedEditorial,
+}
+
+impl PunctuationModeSetting {
+    pub fn to_core(self) -> PunctuationMode {
+        match self {
+            Self::Strict => PunctuationMode::Strict,
+            Self::NormalizedEditorial => PunctuationMode::NormalizedEditorial,
+        }
+    }
 }
 
 /// Per-category enable/disable toggles. All default to true.
@@ -99,5 +119,17 @@ mod tests {
                 .categories
                 .is_enabled(DiagnosticCategory::Chandrabindu)
         );
+    }
+
+    #[test]
+    fn default_punctuation_mode_is_strict() {
+        let config = Config::default();
+        assert_eq!(config.punctuation_mode, PunctuationModeSetting::Strict);
+    }
+
+    #[test]
+    fn default_debug_noop_heuristics_is_off() {
+        let config = Config::default();
+        assert!(!config.debug_include_noop_heuristics);
     }
 }

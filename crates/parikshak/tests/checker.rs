@@ -1,5 +1,5 @@
 use varnavinyas_parikshak::{
-    CheckOptions, DiagnosticKind, check_text, check_text_with_options, check_word,
+    CheckOptions, DiagnosticKind, PunctuationMode, check_text, check_text_with_options, check_word,
 };
 
 /// C1: Paragraph with known incorrect words produces diagnostics.
@@ -116,6 +116,39 @@ fn punctuation_in_check_text() {
         1,
         "Should detect period misuse, got: {punct_diags:?}"
     );
+    assert!(
+        punct_diags
+            .iter()
+            .all(|d| matches!(d.kind, DiagnosticKind::Error)),
+        "Default punctuation mode should emit errors, got: {punct_diags:?}"
+    );
+}
+
+#[test]
+fn punctuation_normalized_editorial_emits_variant() {
+    let text = "नेपाल राम्रो देश हो.";
+    let diags = check_text_with_options(
+        text,
+        CheckOptions {
+            punctuation_mode: PunctuationMode::NormalizedEditorial,
+            ..Default::default()
+        },
+    );
+    let punct_diags: Vec<_> = diags
+        .iter()
+        .filter(|d| d.category == varnavinyas_parikshak::DiagnosticCategory::Punctuation)
+        .collect();
+    assert_eq!(
+        punct_diags.len(),
+        1,
+        "Should detect punctuation even in normalized-editorial mode, got: {punct_diags:?}"
+    );
+    assert!(
+        punct_diags
+            .iter()
+            .all(|d| matches!(d.kind, DiagnosticKind::Variant)),
+        "Normalized-editorial punctuation should be style variants, got: {punct_diags:?}"
+    );
 }
 
 /// Regression test: ensure suffix is preserved in correction string.
@@ -186,7 +219,13 @@ fn section4_style_variants_are_opt_in() {
         "Style variants should not appear in default mode, got: {off:?}"
     );
 
-    let on = check_text_with_options(text, CheckOptions { grammar: true });
+    let on = check_text_with_options(
+        text,
+        CheckOptions {
+            grammar: true,
+            ..Default::default()
+        },
+    );
     assert!(
         on.iter().any(|d| {
             d.rule == varnavinyas_prakriya::Rule::Vyakaran("section4-phrase-style")
@@ -200,7 +239,13 @@ fn section4_style_variants_are_opt_in() {
 #[test]
 fn section4_sentence_style_variant_detected() {
     let text = "यहाँको सहयोगप्रति म कृतघ्न छु।";
-    let diags = check_text_with_options(text, CheckOptions { grammar: true });
+    let diags = check_text_with_options(
+        text,
+        CheckOptions {
+            grammar: true,
+            ..Default::default()
+        },
+    );
 
     assert!(
         diags.iter().any(|d| {
@@ -215,7 +260,13 @@ fn section4_sentence_style_variant_detected() {
 #[test]
 fn section4_phrase_variant_marmahat() {
     let text = "उनी मर्माहित भएको देखिन्थ्यो।";
-    let diags = check_text_with_options(text, CheckOptions { grammar: true });
+    let diags = check_text_with_options(
+        text,
+        CheckOptions {
+            grammar: true,
+            ..Default::default()
+        },
+    );
 
     assert!(
         diags.iter().any(|d| {
@@ -230,7 +281,13 @@ fn section4_phrase_variant_marmahat() {
 #[test]
 fn section4_sentence_word_order_variant_detected() {
     let text = "म अब कार्यक्रम सञ्चालन गर्न गइरहेको छु वा जाँदै छु।";
-    let diags = check_text_with_options(text, CheckOptions { grammar: true });
+    let diags = check_text_with_options(
+        text,
+        CheckOptions {
+            grammar: true,
+            ..Default::default()
+        },
+    );
 
     assert!(
         diags.iter().any(|d| {
@@ -245,7 +302,13 @@ fn section4_sentence_word_order_variant_detected() {
 #[test]
 fn section4_complex_sentence_variant_detected() {
     let text = "स्थानीय जनशक्तिको श्रमदानबाट दश किलोमिटर लामो गाडी गुड्न सक्ने सडक निर्माण गरियो।";
-    let diags = check_text_with_options(text, CheckOptions { grammar: true });
+    let diags = check_text_with_options(
+        text,
+        CheckOptions {
+            grammar: true,
+            ..Default::default()
+        },
+    );
 
     assert!(
         diags.iter().any(|d| {

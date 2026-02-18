@@ -2,9 +2,11 @@ use std::io::Read;
 use std::process::ExitCode;
 
 use serde::Serialize;
-use varnavinyas_parikshak::{CheckOptions, Diagnostic, check_text_with_options};
+use varnavinyas_parikshak::{
+    CheckOptions, Diagnostic, DiagnosticKind, PunctuationMode, check_text_with_options,
+};
 
-use crate::OutputFormat;
+use crate::{OutputFormat, PunctuationModeArg};
 
 /// JSON-serializable diagnostic output.
 #[derive(Serialize)]
@@ -20,7 +22,15 @@ struct JsonDiagnostic {
     confidence: f32,
 }
 
-pub fn run(input: Option<String>, explain: bool, grammar: bool, format: OutputFormat) -> ExitCode {
+pub fn run(
+    input: Option<String>,
+    explain: bool,
+    grammar: bool,
+    punctuation_mode: PunctuationModeArg,
+    debug_include_noop_heuristics: bool,
+    fail_on_suggestions: bool,
+    format: OutputFormat,
+) -> ExitCode {
     let (source_name, text) = match read_input(input) {
         Ok(v) => v,
         Err(e) => {
@@ -29,7 +39,14 @@ pub fn run(input: Option<String>, explain: bool, grammar: bool, format: OutputFo
         }
     };
 
-    let diagnostics = check_text_with_options(&text, CheckOptions { grammar });
+    let diagnostics = check_text_with_options(
+        &text,
+        CheckOptions {
+            grammar,
+            punctuation_mode: to_core_punctuation_mode(punctuation_mode),
+            include_noop_heuristics: debug_include_noop_heuristics,
+        },
+    );
 
     let line_offsets = build_line_offsets(&text);
 
@@ -42,10 +59,27 @@ pub fn run(input: Option<String>, explain: bool, grammar: bool, format: OutputFo
         }
     }
 
-    if diagnostics.is_empty() {
-        ExitCode::SUCCESS
-    } else {
+    if has_blocking_diagnostics(&diagnostics, fail_on_suggestions) {
         ExitCode::from(1)
+    } else {
+        ExitCode::SUCCESS
+    }
+}
+
+fn has_blocking_diagnostics(diagnostics: &[Diagnostic], fail_on_suggestions: bool) -> bool {
+    if fail_on_suggestions {
+        !diagnostics.is_empty()
+    } else {
+        diagnostics
+            .iter()
+            .any(|d| matches!(d.kind, DiagnosticKind::Error))
+    }
+}
+
+fn to_core_punctuation_mode(mode: PunctuationModeArg) -> PunctuationMode {
+    match mode {
+        PunctuationModeArg::Strict => PunctuationMode::Strict,
+        PunctuationModeArg::NormalizedEditorial => PunctuationMode::NormalizedEditorial,
     }
 }
 
@@ -100,8 +134,14 @@ fn print_text(
     for diag in diagnostics {
         let (line, col) = byte_to_line_col(diag.span.0, text, line_offsets);
         println!(
-            "{source}:{line}:{col}: {} \u{2192} {}",
-            diag.incorrect, diag.correction
+            "{source}:{line}:{col}: {}{} \u{2192} {}",
+            if matches!(diag.kind, DiagnosticKind::Error) {
+                ""
+            } else {
+                "[suggestion] "
+            },
+            diag.incorrect,
+            diag.correction
         );
         if explain {
             println!("  [{}] {}", diag.category, diag.explanation);

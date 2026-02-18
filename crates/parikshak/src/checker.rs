@@ -27,6 +27,9 @@ const INTRANSITIVE_VERB_FORMS: &[&str] = &[
     "पुग्यो",
 ];
 
+#[cfg(feature = "grammar-pass")]
+const MIN_SUFFIX_HEURISTIC_CONFIDENCE: f32 = 0.80;
+
 /// Baseline padayog/padabiyog phrase corrections from Section 3(घ).
 /// This set is intentionally conservative and deterministic.
 const PADAYOG_PHRASE_CORRECTIONS: &[(&str, &str, &str)] = &[
@@ -157,12 +160,24 @@ const STYLE_VARIANT_CORRECTIONS: &[(&str, &str, &str)] = &[
 ];
 
 /// Runtime options for `check_text_with_options`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum PunctuationMode {
+    #[default]
+    Strict,
+    NormalizedEditorial,
+}
+
+/// Runtime options for `check_text_with_options`.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct CheckOptions {
     /// Enable optional grammar-aware heuristics.
     ///
     /// This only has effect when compiled with the `grammar-pass` feature.
     pub grammar: bool,
+    /// How Section 5 punctuation diagnostics should be classified.
+    pub punctuation_mode: PunctuationMode,
+    /// Debug-only: include heuristic diagnostics that do not change text.
+    pub include_noop_heuristics: bool,
 }
 
 /// Check a single word and return a diagnostic if it's incorrect.
@@ -267,6 +282,15 @@ pub fn check_text_with_options(text: &str, options: CheckOptions) -> Vec<Diagnos
     }
 
     // Punctuation checks
+    let punctuation_kind = match options.punctuation_mode {
+        PunctuationMode::Strict => DiagnosticKind::Error,
+        PunctuationMode::NormalizedEditorial => DiagnosticKind::Variant,
+    };
+    let punctuation_confidence = match options.punctuation_mode {
+        PunctuationMode::Strict => 1.0,
+        PunctuationMode::NormalizedEditorial => 0.72,
+    };
+
     for lekhya_diag in check_punctuation(text) {
         diagnostics.push(Diagnostic {
             span: lekhya_diag.span,
@@ -275,13 +299,27 @@ pub fn check_text_with_options(text: &str, options: CheckOptions) -> Vec<Diagnos
             rule: Rule::ChihnaNiyam("Section 5"),
             explanation: lekhya_diag.rule.to_string(),
             category: DiagnosticCategory::Punctuation,
-            kind: DiagnosticKind::Error,
-            confidence: 1.0,
+            kind: punctuation_kind,
+            confidence: punctuation_confidence,
         });
+    }
+
+    if !options.include_noop_heuristics {
+        diagnostics.retain(|d| !is_noop_heuristic_diagnostic(d));
     }
 
     diagnostics.sort_by_key(|d| d.span.0);
     diagnostics
+}
+
+fn is_noop_heuristic_diagnostic(d: &Diagnostic) -> bool {
+    if d.incorrect != d.correction {
+        return false;
+    }
+    if !matches!(d.kind, DiagnosticKind::Variant | DiagnosticKind::Ambiguous) {
+        return false;
+    }
+    matches!(d.rule, Rule::Vyakaran(_))
 }
 
 fn add_padayog_phrase_diagnostics(
@@ -443,53 +481,63 @@ fn add_grammar_diagnostics(
 
         if has_plural_suffix(&full) && idx > 0 && is_quantifier(&token_full_form(&tokens[idx - 1]))
         {
-            let singular = strip_plural_suffix(&full).unwrap_or(&full).to_string();
-            push_best_grammar_variant(
-                diagnostics,
-                Diagnostic {
-                    span,
-                    incorrect: full.clone(),
-                    correction: singular,
-                    rule: Rule::Vyakaran("quantifier-plural-redundancy"),
-                    explanation: "परिमाणबोधक शब्दपछि बहुवचन -हरु/-हरू प्रायः अनावश्यक हुन्छ।".to_string(),
-                    category: DiagnosticCategory::ShuddhaTable,
-                    kind: DiagnosticKind::Variant,
-                    confidence: 0.62,
-                },
-            );
+            let confidence = 0.62;
+            if confidence >= MIN_SUFFIX_HEURISTIC_CONFIDENCE {
+                let singular = strip_plural_suffix(&full).unwrap_or(&full).to_string();
+                push_best_grammar_variant(
+                    diagnostics,
+                    Diagnostic {
+                        span,
+                        incorrect: full.clone(),
+                        correction: singular,
+                        rule: Rule::Vyakaran("quantifier-plural-redundancy"),
+                        explanation: "परिमाणबोधक शब्दपछि बहुवचन -हरु/-हरू प्रायः अनावश्यक हुन्छ।"
+                            .to_string(),
+                        category: DiagnosticCategory::ShuddhaTable,
+                        kind: DiagnosticKind::Variant,
+                        confidence,
+                    },
+                );
+            }
         }
 
         if has_ergative_suffix(token) && sentence_has_intransitive_predicate(tokens, idx) {
-            push_best_grammar_variant(
-                diagnostics,
-                Diagnostic {
-                    span,
-                    incorrect: full.clone(),
-                    correction: token.stem.clone(),
-                    rule: Rule::Vyakaran("ergative-le-intransitive"),
-                    explanation: "सामान्य अकर्मक क्रियासँग कर्तामा ले प्रायः प्रयोग हुँदैन।".to_string(),
-                    category: DiagnosticCategory::ShuddhaTable,
-                    kind: DiagnosticKind::Variant,
-                    confidence: 0.68,
-                },
-            );
+            let confidence = 0.68;
+            if confidence >= MIN_SUFFIX_HEURISTIC_CONFIDENCE {
+                push_best_grammar_variant(
+                    diagnostics,
+                    Diagnostic {
+                        span,
+                        incorrect: full.clone(),
+                        correction: token.stem.clone(),
+                        rule: Rule::Vyakaran("ergative-le-intransitive"),
+                        explanation: "सामान्य अकर्मक क्रियासँग कर्तामा ले प्रायः प्रयोग हुँदैन।".to_string(),
+                        category: DiagnosticCategory::ShuddhaTable,
+                        kind: DiagnosticKind::Variant,
+                        confidence,
+                    },
+                );
+            }
         }
 
         if let Some(suggested_suffix) = suggested_genitive_suffix(token, tokens.get(idx + 1)) {
-            push_best_grammar_variant(
-                diagnostics,
-                Diagnostic {
-                    span,
-                    incorrect: full.clone(),
-                    correction: format!("{}{}", token.stem, suggested_suffix),
-                    rule: Rule::Vyakaran("genitive-mismatch-plural"),
-                    explanation: "बहुवचन संज्ञा अघि सामान्यतया सम्बन्ध सूचक का प्रयोग उपयुक्त हुन्छ।"
-                        .to_string(),
-                    category: DiagnosticCategory::ShuddhaTable,
-                    kind: DiagnosticKind::Variant,
-                    confidence: 0.64,
-                },
-            );
+            let confidence = 0.64;
+            if confidence >= MIN_SUFFIX_HEURISTIC_CONFIDENCE {
+                push_best_grammar_variant(
+                    diagnostics,
+                    Diagnostic {
+                        span,
+                        incorrect: full.clone(),
+                        correction: format!("{}{}", token.stem, suggested_suffix),
+                        rule: Rule::Vyakaran("genitive-mismatch-plural"),
+                        explanation: "बहुवचन संज्ञा अघि सामान्यतया सम्बन्ध सूचक का प्रयोग उपयुक्त हुन्छ।"
+                            .to_string(),
+                        category: DiagnosticCategory::ShuddhaTable,
+                        kind: DiagnosticKind::Variant,
+                        confidence,
+                    },
+                );
+            }
         }
 
         // Optional samasa hint: expose high-confidence split as variant guidance.
@@ -642,5 +690,40 @@ mod grammar_variant_refine_tests {
         );
 
         assert_eq!(diagnostics.len(), 2);
+    }
+}
+
+#[cfg(test)]
+mod noop_heuristic_tests {
+    use super::*;
+
+    #[test]
+    fn filters_noop_grammar_variant() {
+        let d = Diagnostic {
+            span: (0, 6),
+            incorrect: "सुनारलाई".to_string(),
+            correction: "सुनारलाई".to_string(),
+            rule: Rule::Vyakaran("morph-ambiguity"),
+            explanation: "x".to_string(),
+            category: DiagnosticCategory::ShuddhaTable,
+            kind: DiagnosticKind::Variant,
+            confidence: 0.55,
+        };
+        assert!(is_noop_heuristic_diagnostic(&d));
+    }
+
+    #[test]
+    fn keeps_non_noop_diagnostic() {
+        let d = Diagnostic {
+            span: (0, 3),
+            incorrect: "हरु".to_string(),
+            correction: "हरू".to_string(),
+            rule: Rule::VarnaVinyasNiyam("3(ई)"),
+            explanation: "x".to_string(),
+            category: DiagnosticCategory::HrasvaDirgha,
+            kind: DiagnosticKind::Error,
+            confidence: 1.0,
+        };
+        assert!(!is_noop_heuristic_diagnostic(&d));
     }
 }

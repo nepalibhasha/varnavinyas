@@ -62,20 +62,26 @@ pub fn check_text(text: &str) -> Vec<PyDiagnostic> {
 #[pyfunction]
 #[pyo3(signature = (text, grammar=false))]
 pub fn check_text_with_options(text: &str, grammar: bool) -> Vec<PyDiagnostic> {
-    parikshak_core::check_text_with_options(text, parikshak_core::CheckOptions { grammar })
-        .into_iter()
-        .map(|d| PyDiagnostic {
-            span_start: d.span.0,
-            span_end: d.span.1,
-            incorrect: d.incorrect,
-            correction: d.correction,
-            rule: d.rule.into(),
-            explanation: d.explanation,
-            category: d.category.to_string(),
-            kind: d.kind.as_code().to_string(),
-            confidence: d.confidence,
-        })
-        .collect()
+    parikshak_core::check_text_with_options(
+        text,
+        parikshak_core::CheckOptions {
+            grammar,
+            ..Default::default()
+        },
+    )
+    .into_iter()
+    .map(|d| PyDiagnostic {
+        span_start: d.span.0,
+        span_end: d.span.1,
+        incorrect: d.incorrect,
+        correction: d.correction,
+        rule: d.rule.into(),
+        explanation: d.explanation,
+        category: d.category.to_string(),
+        kind: d.kind.as_code().to_string(),
+        confidence: d.confidence,
+    })
+    .collect()
 }
 
 #[pymodule]

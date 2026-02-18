@@ -55,7 +55,10 @@ pub fn check_text(text: &str) -> String {
 pub fn check_text_with_options(text: &str, grammar: bool) -> String {
     let diags = varnavinyas_parikshak::check_text_with_options(
         text,
-        varnavinyas_parikshak::CheckOptions { grammar },
+        varnavinyas_parikshak::CheckOptions {
+            grammar,
+            ..Default::default()
+        },
     );
     let js_diags: Vec<JsDiagnostic> = diags.into_iter().map(diagnostic_to_js).collect();
     serde_json::to_string(&js_diags).unwrap_or_else(|_| "[]".to_string())
@@ -66,7 +69,10 @@ pub fn check_text_with_options(text: &str, grammar: bool) -> String {
 pub fn check_text_value(text: &str, grammar: bool) -> Result<JsValue, JsError> {
     let diags = varnavinyas_parikshak::check_text_with_options(
         text,
-        varnavinyas_parikshak::CheckOptions { grammar },
+        varnavinyas_parikshak::CheckOptions {
+            grammar,
+            ..Default::default()
+        },
     );
     let js_diags: Vec<JsDiagnostic> = diags.into_iter().map(diagnostic_to_js).collect();
     serde_wasm_bindgen::to_value(&js_diags)

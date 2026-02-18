@@ -37,7 +37,13 @@ fn grammar_pass_sentence_expectations() {
     println!("\n=== Grammar Pass Evaluation ===");
 
     for entry in &gold.sentence {
-        let diags = check_text_with_options(&entry.text, CheckOptions { grammar: true });
+        let diags = check_text_with_options(
+            &entry.text,
+            CheckOptions {
+                grammar: true,
+                ..Default::default()
+            },
+        );
 
         let grammar_diags: Vec<_> = diags
             .iter()
