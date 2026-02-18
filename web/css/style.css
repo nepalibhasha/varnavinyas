@@ -299,6 +299,14 @@ body {
   margin: 0;
 }
 
+.mode-note {
+  display: inline-block;
+  max-width: 22rem;
+  line-height: 1.25;
+  font-size: 0.76rem;
+  color: #64748b;
+}
+
 .grammar-coverage {
   margin-top: 0.35rem;
   border: 1px solid var(--color-border);
@@ -442,6 +450,7 @@ body {
 .diag-badge[data-category="Sandhi"] { background: var(--cat-sandhi); }
 .diag-badge[data-category="Punctuation"] { background: var(--cat-punctuation); }
 .diag-badge:not([data-category]) { background: var(--cat-default); }
+.diag-badge-suggestion { background: #64748b; }
 
 .diag-meta {
   display: flex;

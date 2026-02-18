@@ -22,6 +22,8 @@ const fixAllBtn = document.getElementById('fix-all-btn');
 const categoryFilters = document.getElementById('category-filters');
 const panelCol = document.getElementById('panel-col');
 const grammarToggle = document.getElementById('grammar-toggle');
+const punctuationStrictToggle = document.getElementById('punctuation-strict-toggle');
+const punctuationModeNote = document.getElementById('punctuation-mode-note');
 const grammarCoverage = document.getElementById('grammar-coverage');
 
 /**
@@ -33,6 +35,11 @@ export function initChecker() {
   editorInput.addEventListener('click', onEditorClick);
   fixAllBtn.addEventListener('click', fixAll);
   grammarToggle?.addEventListener('change', () => runCheck());
+  punctuationStrictToggle?.addEventListener('change', () => {
+    renderPunctuationModeNote();
+    runCheck();
+  });
+  renderPunctuationModeNote();
 
   // Initialize the inspector on the panel column
   const panelContent = document.getElementById('panel-content');
@@ -72,8 +79,26 @@ function isGrammarEnabled() {
   return Boolean(grammarToggle?.checked);
 }
 
+function isPunctuationStrictEnabled() {
+  return punctuationStrictToggle?.checked !== false;
+}
+
+function isPunctuationStyleDiagnostic(diag) {
+  return diag.category_code === "Punctuation" && !isPunctuationStrictEnabled();
+}
+
 function isHeuristicDiagnostic(diag) {
+  if (isPunctuationStyleDiagnostic(diag)) {
+    return true;
+  }
   return !(diag.kind === "Error" && diag.confidence >= 0.8);
+}
+
+function renderPunctuationModeNote() {
+  if (!punctuationModeNote) return;
+  punctuationModeNote.textContent = isPunctuationStrictEnabled()
+    ? "कडा मोड: विरामचिह्न त्रुटि रूपमा देखाइन्छ।"
+    : "शैली मोड: विरामचिह्न सुझाव हुन्, अनिवार्य गल्ती होइनन्।";
 }
 
 function getHeuristicRuleLabel(ruleCode) {
@@ -86,6 +111,9 @@ function getHeuristicRuleLabel(ruleCode) {
 function heuristicLabel(diag) {
   if (!isHeuristicDiagnostic(diag)) {
     return null;
+  }
+  if (isPunctuationStyleDiagnostic(diag)) {
+    return "विराम शैली";
   }
   return getHeuristicRuleLabel(diag.rule_code);
 }
@@ -146,6 +174,7 @@ function renderGrammarCoverage() {
 
   for (const d of diagnostics) {
     if (!isHeuristicDiagnostic(d)) continue;
+    if (isPunctuationStyleDiagnostic(d)) continue;
     const ruleCode = d.rule_code || "heuristic-unknown";
     const current = byRule.get(ruleCode) || { count: 0, confidenceSum: 0 };
     current.count += 1;
@@ -235,12 +264,18 @@ function renderDiagnostics() {
     return;
   }
 
-  const visibleCount = diagnostics.filter(
+  const visibleDiagnostics = diagnostics.filter(
     (d) => !hiddenCategories.has(d.category_code)
+  );
+  const visibleErrorCount = visibleDiagnostics.filter(
+    (d) => !isHeuristicDiagnostic(d)
   ).length;
+  const visibleSuggestionCount = visibleDiagnostics.length - visibleErrorCount;
 
-  errorCount.textContent = `${visibleCount} \u0924\u094D\u0930\u0941\u091F\u093F`;
-  fixAllBtn.disabled = visibleCount === 0;
+  errorCount.textContent = visibleSuggestionCount > 0
+    ? `${visibleErrorCount} त्रुटि, ${visibleSuggestionCount} शैली सुझाव`
+    : `${visibleErrorCount} \u0924\u094D\u0930\u0941\u091F\u093F`;
+  fixAllBtn.disabled = visibleDiagnostics.length === 0;
 
   if (diagnostics.length === 0) {
     diagnosticsList.innerHTML =
@@ -253,29 +288,44 @@ function renderDiagnostics() {
       const hidden = hiddenCategories.has(d.category_code) ? ' hidden' : '';
       const active = i === activeCardIndex ? ' active' : '';
       const code = escapeHtml(d.category_code);
-      const label = CATEGORY_LABELS[d.category_code] || d.category;
       const tagLabel = heuristicLabel(d);
       const isHeuristic = Boolean(tagLabel);
+      const label = isHeuristic
+        ? "सुझाव"
+        : (CATEGORY_LABELS[d.category_code] || d.category);
       const heuristicClass = isHeuristic ? " heuristic" : "";
       const heuristicTag = isHeuristic
         ? `<span class="diag-heuristic-tag">${escapeHtml(tagLabel)}</span>`
+        : "";
+      const badgeClass = isHeuristic
+        ? "diag-badge diag-badge-suggestion"
+        : "diag-badge";
+      const badgeAttr = isHeuristic ? "" : ` data-category="${code}"`;
+      const hasChange = d.incorrect !== d.correction;
+      const correctionRow = hasChange
+        ? `<div class="diag-correction">
+          <span class="diag-incorrect">${escapeHtml(d.incorrect)}</span>
+          <span class="diag-arrow">\u2192</span>
+          <span class="diag-correct">${escapeHtml(d.correction)}</span>
+        </div>`
+        : `<div class="diag-correction">
+          <span class="diag-incorrect">${escapeHtml(d.incorrect)}</span>
+        </div>`;
+      const fixButton = hasChange
+        ? `<button class="btn btn-sm btn-primary diag-fix" data-index="${i}">\u0938\u091A\u094D\u092F\u093E\u0909\u0928\u0941\u0939\u094B\u0938\u094D</button>`
         : "";
       const confidence = Number.isFinite(d.confidence) ? Math.round(d.confidence * 100) : 0;
       return `
       <div class="diag-card${hidden}${active}${heuristicClass}" data-index="${i}" data-category="${code}">
         <div class="diag-meta">
-          <span class="diag-badge" data-category="${code}">${escapeHtml(label)}</span>
+          <span class="${badgeClass}"${badgeAttr}>${escapeHtml(label)}</span>
           ${heuristicTag}
           <span class="diag-confidence">${confidence}%</span>
         </div>
-        <div class="diag-correction">
-          <span class="diag-incorrect">${escapeHtml(d.incorrect)}</span>
-          <span class="diag-arrow">\u2192</span>
-          <span class="diag-correct">${escapeHtml(d.correction)}</span>
-        </div>
+        ${correctionRow}
         <div class="diag-explanation">${escapeHtml(d.explanation)}</div>
         <div class="diag-rule">${wrapRuleTooltip(d.rule, d.category_code)}</div>
-        <button class="btn btn-sm btn-primary diag-fix" data-index="${i}">\u0938\u091A\u094D\u092F\u093E\u0909\u0928\u0941\u0939\u094B\u0938\u094D</button>
+        ${fixButton}
       </div>`;
     })
     .join('');

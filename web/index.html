@@ -47,6 +47,13 @@
                 <input type="checkbox" id="grammar-toggle">
                 <span>व्याकरण जाँच</span>
               </label>
+              <label class="grammar-toggle" for="punctuation-strict-toggle">
+                <input type="checkbox" id="punctuation-strict-toggle" checked>
+                <span>कडा विरामचिह्न जाँच</span>
+              </label>
+              <span id="punctuation-mode-note" class="mode-note">
+                कडा मोड: विरामचिह्न त्रुटि रूपमा देखाइन्छ।
+              </span>
             </div>
             <button class="btn btn-sm" id="fix-all-btn" disabled>सबै सच्याउनुहोस्</button>
           </div>
@@ -59,7 +66,7 @@
           </div>
         </div>
         <div class="checker-panel-col" id="panel-col">
-          <h3 class="diag-header">त्रुटि विवरण <span class="diag-label">Diagnostics</span></h3>
+          <h3 class="diag-header">जाँच विवरण <span class="diag-label">Diagnostics</span></h3>
           <div class="diagnostics-list" id="diagnostics-list">
             <p class="diag-empty">पाठ लेख्नुहोस् वा नमूना पाठ प्रयोग गर्नुहोस्।</p>
           </div>
