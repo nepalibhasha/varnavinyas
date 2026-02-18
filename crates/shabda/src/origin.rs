@@ -1,18 +1,18 @@
 use crate::tables;
 pub use varnavinyas_types::Origin;
 
-/// Provenance for origin classification.
+/// शब्दउत्पत्ति वर्गीकरणको स्रोत (provenance)।
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum OriginSource {
-    /// From the local override table.
+    /// स्थानीय override तालिकाबाट।
     Override,
-    /// From kosha dictionary origin tags.
+    /// शब्दकोश origin tag बाट।
     Kosha,
-    /// From heuristic fallback rules.
+    /// heuristic fallback नियमबाट।
     Heuristic,
 }
 
-/// Origin decision with provenance metadata.
+/// शब्दउत्पत्ति निर्णय र provenance metadata।
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct OriginDecision {
     pub origin: Origin,
@@ -20,17 +20,17 @@ pub struct OriginDecision {
     pub confidence: f32,
 }
 
-/// Classify a Nepali word by its origin.
+/// नेपाली शब्दलाई उत्पत्तिका आधारमा वर्गीकृत गर्ने।
 ///
-/// Three-tier lookup:
-/// 1. Override table (small, for edge cases where dictionary/heuristic fails)
-/// 2. Kosha dictionary lookup (~26K words with origin tags from Brihat Shabdakosha)
-/// 3. Heuristic classification (phonological pattern matching)
+/// त्रिस्तरीय lookup:
+/// 1. Override तालिका (dictionary/heuristic ले छुटाउन सक्ने किनाराका केस)
+/// 2. Kosha lookup (~26K शब्द, Brihat Shabdakosha origin tag सहित)
+/// 3. Heuristic वर्गीकरण (ध्वन्यात्मक ढाँचा)
 pub fn classify(word: &str) -> Origin {
     classify_with_provenance(word).origin
 }
 
-/// Classify a word with provenance and confidence metadata.
+/// provenance र confidence सहित वर्गीकरण।
 pub fn classify_with_provenance(word: &str) -> OriginDecision {
     if word.is_empty() {
         return OriginDecision {
@@ -40,7 +40,7 @@ pub fn classify_with_provenance(word: &str) -> OriginDecision {
         };
     }
 
-    // 1. Override table (small set of manually verified edge cases)
+    // 1. Override तालिका (हातैले प्रमाणीकरण गरिएका किनाराका केस)
     if let Some(origin) = tables::lookup_origin(word) {
         return OriginDecision {
             origin,
@@ -49,7 +49,7 @@ pub fn classify_with_provenance(word: &str) -> OriginDecision {
         };
     }
 
-    // 2. Kosha dictionary lookup (~26K words with origin tags)
+    // 2. Kosha lookup (~26K शब्दमा origin tag)
     if let Some(tag) = varnavinyas_kosha::kosha().origin_of(word) {
         return OriginDecision {
             origin: tag,
@@ -58,7 +58,7 @@ pub fn classify_with_provenance(word: &str) -> OriginDecision {
         };
     }
 
-    // 3. Heuristic classification
+    // 3. Heuristic वर्गीकरण
     OriginDecision {
         origin: classify_heuristic(word),
         source: OriginSource::Heuristic,
@@ -69,40 +69,40 @@ pub fn classify_with_provenance(word: &str) -> OriginDecision {
 fn classify_heuristic(word: &str) -> Origin {
     let chars: Vec<char> = word.chars().collect();
 
-    // Aagantuk indicators: foreign consonant clusters, nukta forms
+    // आगन्तुक संकेत: विदेशी व्यञ्जन समूह, नुक्ता रूप
     if has_aagantuk_markers(&chars) {
         return Origin::Aagantuk;
     }
 
-    // Tatsam markers: ऋ, ष, क्ष, ज्ञ, visarga, specific conjuncts
+    // तत्सम संकेत: ऋ, ष, क्ष, ज्ञ, विसर्ग, विशेष संयुक्ताक्षर
     if has_tatsam_markers(word, &chars) {
         return Origin::Tatsam;
     }
 
-    // Tadbhav patterns: simplified phonology
+    // तद्भव ढाँचा: सरल ध्वनि-रूपान्तरण
     if has_tadbhav_markers(word, &chars) {
         return Origin::Tadbhav;
     }
 
-    // Default: Deshaj (native Nepali)
+    // Default: देशज (मूल नेपाली)
     Origin::Deshaj
 }
 
 fn has_aagantuk_markers(chars: &[char]) -> bool {
-    // Nukta forms (क़ ख़ ग़ ज़ ड़ ढ़ फ़)
+    // नुक्ता रूप (क़ ख़ ग़ ज़ ड़ ढ़ फ़)
     for c in chars {
         if matches!(
             c,
-            '\u{0958}'..='\u{095F}' // Precomposed nukta consonants
+            '\u{0958}'..='\u{095F}' // precomposed नुक्ता व्यञ्जन
         ) {
             return true;
         }
     }
 
-    // Check for nukta combining character
+    // combining नुक्ता चिह्न जाँच्ने
     for window in chars.windows(2) {
         if window[1] == '\u{093C}' {
-            // ़ (nukta) following consonant
+            // व्यञ्जनपछि आउने ़ (नुक्ता)
             return true;
         }
     }
@@ -111,29 +111,28 @@ fn has_aagantuk_markers(chars: &[char]) -> bool {
 }
 
 fn has_tatsam_markers(word: &str, chars: &[char]) -> bool {
-    // Direct tatsam vowel: ऋ
+    // प्रत्यक्ष तत्सम स्वर: ऋ
     if chars.contains(&'ऋ') || chars.contains(&'ृ') {
         return true;
     }
 
-    // ष (retroflex sibilant) — strong tatsam marker
+    // ष (मूर्धन्य सिबिलेन्ट) — प्रबल तत्सम संकेत
     if chars.contains(&'ष') {
         return true;
     }
 
-    // Visarga ः
+    // विसर्ग ः
     if chars.contains(&'ः') {
         return true;
     }
 
-    // Conjuncts: क्ष, ज्ञ
+    // संयुक्ताक्षर: क्ष, ज्ञ
     if word.contains("क्ष") || word.contains("ज्ञ") || word.contains("क्त") || word.contains("त्म")
     {
         return true;
     }
 
-    // श्र (common tatsam conjunct, but not exclusive)
-    // Additional tatsam conjuncts
+    // श्र/त्र/त्त/द्ध/द्य/द्व जस्ता तत्सम-उन्मुख संयुक्ताक्षर
     if word.contains("त्र")
         || word.contains("त्त")
         || word.contains("द्ध")
@@ -146,16 +145,15 @@ fn has_tatsam_markers(word: &str, chars: &[char]) -> bool {
     false
 }
 
-/// Look up the source language for a word (e.g., "फारसी", "अरबी", "संस्कृत").
+/// शब्दको स्रोत भाषा खोज्ने (जस्तै: "फारसी", "अरबी", "संस्कृत")।
 ///
-/// Uses the kosha dictionary's origin tags. Returns `None` if the word has no
-/// recognized language tag or is not a known headword.
+/// kosha को origin tag प्रयोग हुन्छ। शब्दमा मान्य भाषा tag नभए `None`।
 pub fn source_language(word: &str) -> Option<&'static str> {
     varnavinyas_kosha::kosha().source_language_of(word)
 }
 
 fn has_tadbhav_markers(word: &str, chars: &[char]) -> bool {
-    // Common tadbhav endings: -ो, -ा with simplified consonants
+    // तद्भवमा देखिने प्रचलित अन्त्य: -ो, -ा
     let last = chars.last().copied().unwrap_or('\0');
     let second_last = if chars.len() >= 2 {
         chars[chars.len() - 2]
@@ -163,14 +161,14 @@ fn has_tadbhav_markers(word: &str, chars: &[char]) -> bool {
         '\0'
     };
 
-    // Common tadbhav verb endings
+    // तद्भव क्रियामा देखिने प्रचलित अन्त्य
     if word.ends_with("नु") || word.ends_with("ने") || word.ends_with("को") {
         return true;
     }
 
-    // Tadbhav diminutives/informal endings
+    // तद्भवको बोलिचालि/लघुरूप अन्त्य
     if last == 'ो' || (second_last != '\0' && matches!(last, 'ो' | 'ा')) {
-        // Words ending in -ठो, -ठा etc. are often tadbhav
+        // -ठो/-ठा अन्त्य धेरैजसो तद्भव रूप हुन्छ
         if matches!(second_last, 'ठ' | 'ड' | 'ढ') {
             return true;
         }

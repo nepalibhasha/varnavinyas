@@ -1,6 +1,6 @@
 #[test]
 fn diagnostics_avoid_non_standard_terms() {
-    // Guard user-facing diagnostic wording against non-standard coined labels.
+    // प्रयोगकर्ताले देख्ने नियम-विवरणमा गैर-मानक/मनगढन्ते पद नआउन दिने।
     let correction_table = include_str!("../src/correction_table.rs");
     let gold = include_str!("../../../docs/tests/gold.toml");
 

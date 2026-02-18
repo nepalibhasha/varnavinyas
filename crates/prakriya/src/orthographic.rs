@@ -78,9 +78,9 @@ pub const SPEC_GYA_GYAN: RuleSpec = RuleSpec {
     examples: &[("अग्यान", "अज्ञान"), ("प्रग्या", "प्रज्ञा")],
 };
 
-/// Academy 3(ख): चन्द्रबिन्दु vs शिरबिन्दु rules based on word origin.
-/// - Tatsam: NEVER चन्द्रबिन्दु (ँ) → use शिरबिन्दु (ं)
-/// - Tadbhav/Aagantuk: NEVER शिरबिन्दु (ं) → use चन्द्रबिन्दु (ँ) for nasalization
+/// Academy 3(ख): शब्दउत्पत्तिअनुसार चन्द्रबिन्दु/शिरबिन्दु प्रयोग।
+/// - तत्सम: चन्द्रबिन्दु (ँ) होइन, शिरबिन्दु (ं)।
+/// - तद्भव/आगन्तुक: अनुनासिकमा शिरबिन्दु (ं) होइन, चन्द्रबिन्दु (ँ)।
 pub fn rule_chandrabindu(input: &str) -> Option<Prakriya> {
     let origin_decision = classify_with_provenance(input);
     let origin = origin_decision.origin;
@@ -88,7 +88,7 @@ pub fn rule_chandrabindu(input: &str) -> Option<Prakriya> {
 
     match origin {
         Origin::Tatsam => {
-            // Tatsam words should NOT have चन्द्रबिन्दु (ँ) — use शिरबिन्दु (ं)
+            // तत्सम शब्दमा चन्द्रबिन्दु (ँ) भए शिरबिन्दु (ं) मा रूपान्तरण गर्ने।
             if input.contains('ँ') {
                 let output = input.replace('ँ', "ं");
                 return Some(Prakriya::corrected(
@@ -104,11 +104,10 @@ pub fn rule_chandrabindu(input: &str) -> Option<Prakriya> {
             }
         }
         Origin::Tadbhav | Origin::Deshaj => {
-            // Tadbhav/Deshaj words should NOT have शिरबिन्दु (ं) for nasalization —
-            // use चन्द्रबिन्दु (ँ).
-            // BUT: शिरबिन्दु is valid in तद्भव when it represents a panchham varna
-            // simplification (e.g., संसार is तद्भव but ं is valid before स).
-            // So only flag anusvara (ं) when it's NOT before a stop consonant.
+            // तद्भव/देशजमा अनुनासिकका लागि चन्द्रबिन्दु (ँ) चाहिन्छ।
+            // तर पञ्चम-वर्णको सटिक संकेतका रूपमा केही अवस्थामा शिरबिन्दु (ं) वैध हुन्छ
+            // (जस्तै: संसारमा स अघि ं वैध मानिन्छ)।
+            // त्यसैले स्पर्श व्यञ्जनअघि आएको ं लाई नबदल्ने।
             if input.contains('ं') {
                 let chars: Vec<char> = input.chars().collect();
                 let mut output_chars = chars.clone();
@@ -116,12 +115,11 @@ pub fn rule_chandrabindu(input: &str) -> Option<Prakriya> {
 
                 for i in 0..chars.len() {
                     if chars[i] == 'ं' {
-                        // Check what follows the anusvara
+                        // ं पछि कुन वर्ण छ भन्ने जाँच
                         let next = chars.get(i + 1).copied();
                         let before_stop = next.is_some_and(is_stop_consonant);
 
-                        // Only replace with चन्द्रबिन्दु if NOT before a stop consonant
-                        // (before stops, anusvara is a valid shorthand for panchham)
+                        // स्पर्श व्यञ्जनअघि नभए मात्र ं → ँ रूपान्तरण
                         if !before_stop && should_replace_shirbindu(input, &chars, i, source) {
                             output_chars[i] = 'ँ';
                             changed = true;
@@ -145,7 +143,7 @@ pub fn rule_chandrabindu(input: &str) -> Option<Prakriya> {
             }
         }
         Origin::Aagantuk => {
-            // Aagantuk words also use चन्द्रबिन्दु for nasalization
+            // आगन्तुक शब्दमा पनि अनुनासिकका लागि चन्द्रबिन्दु प्रयोग हुन्छ।
             if input.contains('ं') {
                 let chars: Vec<char> = input.chars().collect();
                 let mut output_chars = chars.clone();
@@ -182,17 +180,16 @@ pub fn rule_chandrabindu(input: &str) -> Option<Prakriya> {
     None
 }
 
-/// Academy 3(ग)(अ): sibilant rules based on word origin.
-/// - Aagantuk: ष→स, श→स (only स is used in foreign words)
-/// - Tadbhav: ष→स (retroflex sibilant becomes dental)
-/// - Tatsam: preserve original श/ष/स
+/// Academy 3(ग)(अ): शब्दउत्पत्तिअनुसार श/ष/स प्रयोग।
+/// - आगन्तुक: सामान्यतः स (ष→स अनिवार्य, श→स सन्दर्भअनुसार)।
+/// - तद्भव/देशज: ष→स।
+/// - तत्सम: मूल श/ष/स कायम।
 pub fn rule_sibilant(input: &str) -> Option<Prakriya> {
     let origin = classify(input);
 
     match origin {
         Origin::Aagantuk => {
-            // Aagantuk words should only use स (dental sibilant)
-            // Replace ष and श with स
+            // आगन्तुक शब्दमा स को प्रयोग प्राथमिक हुन्छ।
             let mut output = input.to_string();
             let mut changed = false;
 
@@ -200,9 +197,9 @@ pub fn rule_sibilant(input: &str) -> Option<Prakriya> {
                 output = output.replace('ष', "स");
                 changed = true;
             }
-            // Note: श→स in आगन्तुक is contextual.
-            // Some व्यक्तिवाचक नामs retain श (e.g., एशिया).
-            // Only apply ष→स which is more universal.
+            // ध्यान: आगन्तुकमा श→स सधैं अनिवार्य हुँदैन।
+            // केही व्यक्तिवाचक नाममा श कायम रहन्छ (जस्तै: एशिया)।
+            // त्यसैले यहाँ सार्वत्रिक ष→स मात्र लागू।
 
             if changed {
                 return Some(Prakriya::corrected(
@@ -217,7 +214,7 @@ pub fn rule_sibilant(input: &str) -> Option<Prakriya> {
                 ));
             }
 
-            // Also check: ण→न in आगन्तुक (foreign words don't use retroflex nasal)
+            // आगन्तुकमा ण→न पनि जाँच्ने।
             if input.contains('ण') {
                 let output = input.replace('ण', "न");
                 return Some(Prakriya::corrected(
@@ -233,8 +230,8 @@ pub fn rule_sibilant(input: &str) -> Option<Prakriya> {
             }
         }
         Origin::Tadbhav | Origin::Deshaj => {
-            // Tadbhav words: ष→स (retroflex becomes dental)
-            // But तद्भव can legitimately have श (palatal sibilant)
+            // तद्भव/देशजमा ष→स लागू हुन्छ।
+            // तद्भवमा श चाहिँ कतिपय रूपमा वैध हुन सक्छ।
             if input.contains('ष') {
                 let output = input.replace('ष', "स");
                 return Some(Prakriya::corrected(
@@ -250,7 +247,7 @@ pub fn rule_sibilant(input: &str) -> Option<Prakriya> {
             }
         }
         Origin::Tatsam => {
-            // Tatsam preserves original sibilants — no change
+            // तत्सममा मूल श/ष/स जोगाइने; परिवर्तन हुँदैन।
         }
     }
 
@@ -258,16 +255,16 @@ pub fn rule_sibilant(input: &str) -> Option<Prakriya> {
 }
 
 pub fn rule_ri_kri(input: &str) -> Option<Prakriya> {
-    // Only apply ऋ/कृ rules to words that classify as तत्सम.
-    // Foreign words like क्रिकेट must not be mutated.
+    // ऋ/कृ नियम तत्सम वर्गीकृत शब्दमा मात्र लागू।
+    // क्रिकेटजस्ता आगन्तुक शब्दमा रूपान्तरण नगर्ने।
     let origin = classify(input);
     if !matches!(origin, Origin::Tatsam) {
         return None;
     }
 
-    // Pattern: रि at start of तत्सम word → ऋ
+    // ढाँचा: तत्सम शब्दको सुरुको रि → ऋ
     if let Some(rest) = input.strip_prefix("रि") {
-        // Known patterns: रिषि→ऋषि, रितु→ऋतु
+        // ज्ञात रूप: रिषि→ऋषि, रितु→ऋतु
         if rest.starts_with('ष') || rest.starts_with('त') {
             let output = format!("ऋ{rest}");
             return Some(Prakriya::corrected(
@@ -275,7 +272,7 @@ pub fn rule_ri_kri(input: &str) -> Option<Prakriya> {
                 &output,
                 vec![Step::new(
                     Rule::VarnaVinyasNiyam("3(ग)-ऋ"),
-                    "तत्सम uses ऋ (not रि)",
+                    "तत्सम शब्दमा ऋ हुन्छ (रि होइन)",
                     input,
                     &output,
                 )],
@@ -283,7 +280,7 @@ pub fn rule_ri_kri(input: &str) -> Option<Prakriya> {
         }
     }
 
-    // Pattern: क्रि in तत्सम → कृ
+    // ढाँचा: तत्सममा क्रि → कृ
     if input.contains("क्रि") {
         let output = input.replace("क्रि", "कृ");
         if output != input {
@@ -292,7 +289,7 @@ pub fn rule_ri_kri(input: &str) -> Option<Prakriya> {
                 &output,
                 vec![Step::new(
                     Rule::VarnaVinyasNiyam("3(ग)-कृ"),
-                    "तत्सम uses कृ (not क्रि)",
+                    "तत्सम शब्दमा कृ हुन्छ (क्रि होइन)",
                     input,
                     &output,
                 )],
@@ -303,19 +300,17 @@ pub fn rule_ri_kri(input: &str) -> Option<Prakriya> {
     None
 }
 
-/// Academy 3(ङ): हलन्त rules for तत्सम suffix patterns.
+/// Academy 3(ङ): तत्सम प्रत्ययमा हलन्त प्रयोगका नियम।
 ///
-/// Detects तत्सम words ending in -मान, -वान, -वत that require हलन्त
-/// (-मान्, -वान्, -वत्). Other हलन्त corrections (महान→महान्, etc.)
-/// live in the correction table (Phase A).
-///
-/// Future: verb roots (धातु), 2nd-person disrespect, 3rd-person plural forms.
+/// -मान, -वान, -वत अन्त्य भएका तत्सम रूपहरूमा हलन्त अनिवार्य हुन्छ
+/// (-मान्, -वान्, -वत्)।
+/// अन्य केही हलन्त सुधार (जस्तै महान→महान्) correction table मा राखिएका छन्।
 pub fn rule_halanta(input: &str) -> Option<Prakriya> {
     let lex = kosha();
 
-    // Ajanta-side sanity: finite verb forms ending in "छ" should not carry trailing हलन्त.
-    // Examples: जान्छ् -> जान्छ, गर्छ् -> गर्छ.
-    // Keep conservative: only apply when हलन्त-less form exists in kosha.
+    // अजन्त-पक्ष: ...छ मा अन्त्य हुने समापक क्रियापदमा हलन्त आउँदैन।
+    // जस्तै: जान्छ् -> जान्छ, गर्छ् -> गर्छ।
+    // अनावश्यक सुधार नहोस् भनेर शब्दकोश-प्रमाणित अवस्थामा मात्र लागू।
     if let Some(stem) = input.strip_suffix("छ्") {
         let output = format!("{stem}छ");
         if lex.contains(&output) && !lex.contains(input) {
@@ -332,11 +327,10 @@ pub fn rule_halanta(input: &str) -> Option<Prakriya> {
         }
     }
 
-    // Verb-form हलन्त patterns from Section 3(ङ):
-    // - 2nd-person disrespect endings (e.g., गर्छस्)
-    // - 3rd-person plural/honorific endings (e.g., जान्छन्)
-    //
-    // Keep this conservative: only fire when the हलन्त form exists in kosha.
+    // 3(ङ) अनुसार क्रियापद हलन्त ढाँचा:
+    // - दोस्रो पुरुष हेपार्थ (जस्तै: गर्छस्)
+    // - तेस्रो पुरुष बहुवचन/आदरसूचक (जस्तै: जान्छन्)
+    // शब्दकोशमा हलन्त-रूप भेटिँदा मात्र लागू।
     const VERB_SUFFIXES: &[(&str, &str, &str)] = &[
         ("छस", "छस्", "3(ङ)-2"),
         ("छन", "छन्", "3(ङ)-3"),
@@ -366,8 +360,8 @@ pub fn rule_halanta(input: &str) -> Option<Prakriya> {
         return None;
     }
 
-    // Check for Tatsam suffixes that require हलन्त: -मान, -वान, -वत -> -मान्, -वान्, -वत्
-    // Examples: बुद्धिमान -> बुद्धिमान्, भगवान -> भगवान्, विधिवत -> विधिवत्
+    // हलन्त चाहिने तत्सम प्रत्यय ढाँचा: -मान/-वान/-वत -> -मान्/-वान्/-वत्
+    // जस्तै: बुद्धिमान -> बुद्धिमान्, भगवान -> भगवान्, विधिवत -> विधिवत्
     let suffixes = [
         ("मान", "मान्", "3(ङ)-मान्"),
         ("वान", "वान्", "3(ङ)-वान्"),
@@ -378,9 +372,9 @@ pub fn rule_halanta(input: &str) -> Option<Prakriya> {
         if let Some(stem) = input.strip_suffix(wrong_suffix) {
             let output = format!("{}{}", stem, correct_suffix);
 
-            // Guard: if the input is in kosha but the हलन्त form is NOT,
-            // this is a root noun (e.g. सम्मान), not a suffix pattern.
-            // Only correct when the हलन्त form also exists (बुद्धिमान→बुद्धिमान्).
+            // Guard: इनपुट शब्द शब्दकोशमा छ तर हलन्त-रूप छैन भने
+            // यो प्रत्ययरूप होइन, मूल नामपद हुन सक्छ (जस्तै: सम्मान)।
+            // त्यसैले हलन्त-रूप पनि वैध हुँदा मात्र सुधार गर्ने।
             if lex.contains(input) && !lex.contains(&output) {
                 return None;
             }
@@ -391,7 +385,7 @@ pub fn rule_halanta(input: &str) -> Option<Prakriya> {
                 vec![Step::new(
                     Rule::VarnaVinyasNiyam(rule_citation),
                     format!(
-                        "Tatsam suffix ends in हलन्त: {} -> {}",
+                        "तत्सम प्रत्ययमा हलन्त हुन्छ: {} -> {}",
                         wrong_suffix, correct_suffix
                     ),
                     input,
@@ -501,7 +495,7 @@ pub fn rule_aadhi_vriddhi(input: &str) -> Option<Prakriya> {
 
 /// Academy 3(इ): ए/य distinction.
 ///
-/// Tatsam words use य (यज्ञ, यथार्थ). एक-derived words use ए (एक, एकता).
+/// तत्सम words use य (यज्ञ, यथार्थ). एक-derived words use ए (एक, एकता).
 /// Swaps initial ए↔य and validates against kosha.
 pub fn rule_ya_e(input: &str) -> Option<Prakriya> {
     let chars: Vec<char> = input.chars().collect();
@@ -589,7 +583,7 @@ pub fn rule_ksha_chhya(input: &str) -> Option<Prakriya> {
 
 /// Academy 3(ग)(ऊ): ज्ञ / ग्याँ / ग्या distinction.
 ///
-/// - Tatsam words use ज्ञ.
+/// - तत्सम words use ज्ञ.
 /// - Nepali/loan words may use ग्याँ or ग्या.
 ///
 /// This rule is intentionally kosha-backed to avoid aggressive rewrites.
@@ -629,7 +623,7 @@ pub fn rule_gya_gyan(input: &str) -> Option<Prakriya> {
     None
 }
 
-/// Check if a character is a stop consonant (sparsha vyanjana: ka-ma varga).
+/// वर्ण स्पर्श-व्यञ्जन (क-वर्गदेखि म-वर्ग) हो कि होइन जाँच्ने।
 fn is_stop_consonant(c: char) -> bool {
     matches!(
         c,
@@ -660,12 +654,12 @@ fn is_stop_consonant(c: char) -> bool {
     )
 }
 
-/// Decide whether a non-तत्सम ं → ँ replacement is safe.
+/// गैर-तत्सम ं → ँ रूपान्तरण सुरक्षित छ कि छैन निर्धारण गर्ने।
 ///
-/// For high-confidence origin decisions (override/kosha), we can apply directly.
-/// For heuristic-only origin decisions, require either:
-/// - a lexically plausible चन्द्रबिन्दु candidate in kosha, or
-/// - a clear first-person style ending (e.g., गरें, जान्छौं).
+/// override/kosha बाट उच्च-विश्वसनीयता वर्गीकरण आएमा सिधै लागू।
+/// heuristic मात्र हुँदा:
+/// - चन्द्रबिन्दु-रूप शब्दकोशमा भेटिनु, वा
+/// - गरें/जान्छौं जस्ता स्पष्ट क्रियारूप संकेत हुनु आवश्यक।
 fn should_replace_shirbindu(
     _input: &str,
     chars: &[char],

@@ -1,729 +1,729 @@
-# Varnavinyas Gold Test Dataset
-# Verified against: docs/Notices-pages-77-99.pdf
-# Nepal Academy Orthography Standard (नेपाली वर्णविन्यास)
+# वर्णविन्यास परीक्षण डेटासेट
+# प्रमाणीकरण सन्दर्भ: docs/Notices-pages-77-99.pdf
+# नेपाल प्रज्ञा-प्रतिष्ठान वर्णविन्यास मानक (नेपाली वर्णविन्यास)
 #
-# Every entry has been cross-referenced with the primary source.
-# Page numbers refer to pages within the PDF (1-indexed from the PDF's first page).
+# प्रत्येक प्रविष्टि प्राथमिक स्रोतसँग मिलान गरिएको छ.
+# पृष्ठ संख्या pdf भित्रका पृष्ठअनुसार छन् (पहिलो पृष्ठबाट १-आधारित)।
 #
-# Categories:
-#   hrasva_dirgha  — ह्रस्व/दीर्घ vowel length errors
-#   चन्द्रबिन्दु   — चन्द्रबिन्दु/शिरबिन्दु nasalization errors
-#   sha_sha_sa     — श/ष/स sibilant confusion
-#   ri_kri         — ऋ/कृ vowel errors in तत्सम words
-#   हलन्त        — हलन्त (virama) omission/addition
-#   ya_e           — य/ए confusion
-#   ksha_chhya     — क्ष/छ्य confusion
-#   sandhi         — sandhi / morphophonemic errors
-#   shuddha_table  — from Section 4 शुद्ध-अशुद्ध table directly
+# वर्गहरू:
+#   hrasva_dirgha  — ह्रस्व/दीर्घ स्वर-लम्बाइ त्रुटि
+#   चन्द्रबिन्दु   — चन्द्रबिन्दु/शिरबिन्दु अनुनासिकता त्रुटि
+#   sha_sha_sa     — श/ष/स सिबिलेन्ट भ्रम
+#   ri_kri         — ऋ/कृ सम्बन्धी तत्सम त्रुटि
+#   हलन्त        — हलन्त (विराम) लोप/अतिरिक्त प्रयोग
+#   ya_e           — य/ए भ्रम
+#   ksha_chhya     — क्ष/छ्य भ्रम
+#   सन्धि         — सन्धि / रूपध्वन्यात्मक त्रुटि
+#   shuddha_table  — खण्ड 4 को शुद्ध-अशुद्ध तालिकाबाट सिधै
 
 # =============================================================================
-# Section 4: शुद्ध-अशुद्ध table (Page 18)
+# खण्ड 4: शुद्ध-अशुद्ध तालिका (पृष्ठ 18)
 # =============================================================================
 
 [[shuddha_table]]
 incorrect = "अत्याधिक"
 correct = "अत्यधिक"
-rule = "vowel sandhi: अति + अधिक = अत्यधिक (not अत्याधिक)"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "स्वर सन्धि: अति + अधिक = अत्यधिक (अत्याधिक होइन)"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
-# NOTE: उपरोक्त moved to needs_review.toml — standard lists two correct forms
+# टिप्पणी: उपरोक्त उदाहरण `needs_review.toml` मा सारिएको छ; मानकले दुई सही रूप दिन्छ
 
 [[shuddha_table]]
 incorrect = "राजनैतिक"
 correct = "राजनीतिक"
-rule = "राजनीति + क = राजनीतिक (not राजनैतिक)"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "राजनीति + क = राजनीतिक (राजनैतिक होइन)"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
 [[shuddha_table]]
 incorrect = "उल्लेखित"
 correct = "उल्लिखित"
-rule = "उत् + लिखित = उल्लिखित (not उल्लेखित)"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "उत् + लिखित = उल्लिखित (उल्लेखित होइन)"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
 [[shuddha_table]]
 incorrect = "बागमती"
 correct = "बाग्मती/वाग्मती"
-rule = "व्यक्तिवाचक नाम from Sanskrit वाग्मती (वाक्+मती): conjunct ग्म अनिवार्य"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "व्यक्तिवाचक नाम संस्कृतबाट वाग्मती (वाक्+मती): संयुक्ताक्षर ग्म अनिवार्य"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
 [[shuddha_table]]
 incorrect = "पुनरावलोकन"
 correct = "पुनरवलोकन"
-rule = "पुनर् + अवलोकन = पुनरवलोकन (not पुनरावलोकन)"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "पुनर् + अवलोकन = पुनरवलोकन (पुनरावलोकन होइन)"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
 [[shuddha_table]]
 incorrect = "व्यवहारिक"
 correct = "व्यावहारिक"
-rule = "इक suffix triggers आदिवृद्धि: व्यवहार + इक = व्यावहारिक (अ→आ)"
-section = "Section 4, शुद्ध-अशुद्ध table + Section 3(क) इक-प्रत्यय"
+rule = "इक प्रत्यय लाग्दा आदिवृद्धि: व्यवहार + इक = व्यावहारिक (अ→आ)"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका + खण्ड ३(क) इक-प्रत्यय"
 page = 18
 
 [[shuddha_table]]
 incorrect = "धैर्यता"
 correct = "धीरता/धैर्य"
-rule = "suffix -ता redundant: धीर+ता=धीरता, or use base form धैर्य (not धैर्यता)"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "प्रत्यय -ता अनावश्यक: धीर+ता=धीरता, वा आधाररूप धैर्य"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
 [[shuddha_table]]
 incorrect = "प्रसाशन"
 correct = "प्रशासन"
-rule = "प्र + शासन = प्रशासन (श not स, correct vowel order)"
-section = "Section 4, शुद्ध-अशुद्ध table + Section 3(ग)"
+rule = "प्र + शासन = प्रशासन (श होइन स, स्वरक्रम सही)"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका + खण्ड ३(ग)"
 page = 18
 
-# --- Halanta अनिवार्य (p18) ---
+# --- हलन्त अनिवार्य (पृष्ठ 18) ---
 
 [[shuddha_table]]
 incorrect = "संसद"
 correct = "संसद्"
-rule = "हलन्त अनिवार्य: Sanskrit stem ends in द् (संसद्)"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "हलन्त अनिवार्य: संस्कृत मूलको अन्त्य द् (संसद्)"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
 [[shuddha_table]]
 incorrect = "परिषद"
 correct = "परिषद्"
-rule = "हलन्त अनिवार्य: Sanskrit stem ends in द् (परिषद्)"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "हलन्त अनिवार्य: संस्कृत मूलको अन्त्य द् (परिषद्)"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
-# --- Panchham varna (p18) ---
+# --- पञ्चम वर्ण (पृष्ठ 18) ---
 
 [[shuddha_table]]
 incorrect = "संघीय"
 correct = "सङ्घीय"
-rule = "panchham varna ङ अनिवार्य before घ (not शिरबिन्दु ं)"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "पञ्चम वर्ण ङ अनिवार्य अघि घ (शिरबिन्दु ं होइन)"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
-# --- Visarga sandhi (p18) ---
+# --- विसर्ग सन्धि (पृष्ठ 18) ---
 
 [[shuddha_table]]
 incorrect = "पुनर्स्थापना"
 correct = "पुनःस्थापना"
-rule = "visarga retained: पुनः + स्थापना (not पुनर्)"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "विसर्ग कायम: पुनः + स्थापना (पुनर् होइन)"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
 [[shuddha_table]]
 incorrect = "पुनर्संरचना"
 correct = "पुनःसंरचना"
-rule = "visarga retained: पुनः + संरचना (not पुनर्)"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "विसर्ग कायम: पुनः + संरचना (पुनर् होइन)"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
-# --- Gemination / consonant doubling (p18) ---
+# --- द्वित्व / व्यञ्जन दोहोरो (पृष्ठ 18) ---
 
 [[shuddha_table]]
 incorrect = "महत्व"
 correct = "महत्त्व"
-rule = "double त अनिवार्य: महत् + त्व = महत्त्व"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "दोहोरो त अनिवार्य: महत् + त्व = महत्त्व"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
 [[shuddha_table]]
 incorrect = "पश्चाताप"
 correct = "पश्चात्ताप"
-rule = "double त अनिवार्य: पश्चात् + ताप = पश्चात्ताप"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "दोहोरो त अनिवार्य: पश्चात् + ताप = पश्चात्ताप"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
 [[shuddha_table]]
 incorrect = "मुद्धा"
 correct = "मुद्दा"
-rule = "wrong gemination: द्द (not द्ध). Alt incorrect: मुधा"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "गलत द्वित्व: द्द (द्ध होइन). वैकल्पिक गलत: मुधा"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
-# --- श्रृ → शृ correction (p18) ---
+# --- श्रृ → शृ सुधार (पृष्ठ 18) ---
 
 [[shuddha_table]]
 incorrect = "श्रृङ्गार"
 correct = "शृङ्गार"
-rule = "शृ not श्रृ: श + ृ = शृ (no र involved). Alt incorrect: श्रृंगार, श्रिंगार"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "शृ होइन श्रृ: श + ृ = शृ (रको संलग्नता हुँदैन). वैकल्पिक गलत: श्रृंगार, श्रिंगार"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
 [[shuddha_table]]
 incorrect = "श्रृङ्खला"
 correct = "शृङ्खला"
-rule = "शृ not श्रृ: श + ृ = शृ (no र involved). Alt incorrect: श्रृंखला, श्रिंखला"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "शृ होइन श्रृ: श + ृ = शृ (रको संलग्नता हुँदैन). वैकल्पिक गलत: श्रृंखला, श्रिंखला"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
-# --- Hrasva/Dirgha from table (p18) ---
+# --- तालिकाबाट ह्रस्व/दीर्घ (पृष्ठ 18) ---
 
 [[shuddha_table]]
 incorrect = "हरु"
 correct = "हरू"
-rule = "plural suffix takes दीर्घ ऊ: हरू (not हरु). Alt incorrect: हरू is never ह्रस्व"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "बहुवचन प्रत्ययमा दीर्घ ऊ हुन्छ: हरू (हरु होइन). वैकल्पिक गलत: हरू कहिल्यै हुँदैन ह्रस्व"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
 [[shuddha_table]]
 incorrect = "रुप"
 correct = "रूप"
-rule = "तत्सम रूप मा दीर्घ ऊ. Alt incorrect: रुपमा, रुपान्तर (all need रूप)"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "तत्सम रूप मा दीर्घ ऊ. वैकल्पिक गलत: रुपमा, रुपान्तर (सबैमा चाहिने रूप)"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
-# --- Redundant suffix -ता (p18) ---
+# --- अनावश्यक प्रत्यय -ता (पृष्ठ 18) ---
 
 [[shuddha_table]]
 incorrect = "सौन्दर्यता"
 correct = "सुन्दरता/सौन्दर्य"
-rule = "-ता अनावश्यक: सौन्दर्य already abstract. Use सुन्दरता (सुन्दर+ता) or सौन्दर्य"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "-ता अनावश्यक: सौन्दर्य आफैं भाववाचक रूप हो; सुन्दरता (सुन्दर+ता) वा सौन्दर्य प्रयोग गर्नुपर्छ"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
 [[shuddha_table]]
 incorrect = "गुणस्तरीयता"
 correct = "गुणस्तरीय"
-rule = "-ता अनावश्यक: गुणस्तरीय is already an adjective, no -ता needed"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "-ता अनावश्यक: गुणस्तरीय आफैं विशेषण हो, -ता चाहिँदैन"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
 [[shuddha_table]]
 incorrect = "औचित्यता"
 correct = "औचित्य"
-rule = "-ता अनावश्यक: औचित्य already abstract (उचित+य). Alt incorrect: औचित्यता, ओचित्यता"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "-ता अनावश्यक: औचित्य आफैं भाववाचक रूप (उचित+य). वैकल्पिक गलत: औचित्यता, ओचित्यता"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
 [[shuddha_table]]
 incorrect = "आतिथ्यता"
 correct = "आतिथ्य"
-rule = "-ता अनावश्यक: आतिथ्य already abstract (अतिथि+य)"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "-ता अनावश्यक: आतिथ्य आफैं भाववाचक रूप (अतिथि+य)"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
 [[shuddha_table]]
 incorrect = "यथार्थता"
 correct = "यथार्थ"
-rule = "-ता अनावश्यक: यथार्थ already functions as noun/adjective"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "-ता अनावश्यक: यथार्थ आफैं नामपद/विशेषणका रूपमा चल्छ"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
-# --- Vowel/sandhi errors (p18) ---
+# --- स्वर/सन्धि त्रुटि (पृष्ठ 18) ---
 
 [[shuddha_table]]
 incorrect = "कार्यबाही"
 correct = "कारबाही"
-rule = "कार+बाही (no र्य): कारबाही. Alt incorrect: कार्यवाही (also common mistake)"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "कार+बाही (र्य बिना): कारबाही. वैकल्पिक गलत: कार्यवाही (यो पनि प्रचलित त्रुटि)"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
 [[shuddha_table]]
 incorrect = "वृक्षारोपण"
 correct = "वृक्षरोपण"
-rule = "वृक्ष+रोपण = वृक्षरोपण (no आ insertion). Alt incorrect: ब्रिक्षारोपण"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "वृक्ष+रोपण = वृक्षरोपण (अतिरिक्त आ हुँदैन). वैकल्पिक गलत: ब्रिक्षारोपण"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
 [[shuddha_table]]
 incorrect = "गत्यावरोध"
 correct = "गत्यवरोध"
-rule = "गति+अवरोध = गत्यवरोध (यण् sandhi, no आ). Alt incorrect: गत्यावरोध्"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "गति+अवरोध = गत्यवरोध (यण् सन्धि, अतिरिक्त आ हुँदैन). वैकल्पिक गलत: गत्यावरोध्"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
 [[shuddha_table]]
 incorrect = "सामाग्री"
 correct = "सामग्री"
-rule = "no extra आ: सामग्री (सम्+ग्री). Alt incorrect: सामिग्री"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "अतिरिक्त आ हुँदैन: सामग्री (सम्+ग्री). वैकल्पिक गलत: सामिग्री"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
 [[shuddha_table]]
 incorrect = "भएकोमा"
 correct = "भएकामा"
-rule = "नामयोगी form: भएका+मा = भएकामा (not भएको+मा)"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "नामयोगी रूप: भएका+मा = भएकामा (भएको+मा होइन)"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
-# --- आदिवृद्धि / suffix errors (p18) ---
+# --- आदिवृद्धि / प्रत्यय त्रुटि (पृष्ठ 18) ---
 
 [[shuddha_table]]
 incorrect = "एनकानुन"
 correct = "ऐनकानुन"
-rule = "आदिवृद्धि: ऐन (इ→ऐ) + कानुन = ऐनकानुन. Alt incorrect: एैनकानुन"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "आदिवृद्धि: ऐन (इ→ऐ) + कानुन = ऐनकानुन. वैकल्पिक गलत: एैनकानुन"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
 [[shuddha_table]]
 incorrect = "सामाजीकरण"
 correct = "सामाजिकीकरण"
-rule = "सामाजिक+ईकरण = सामाजिकीकरण (suffix -ईकरण, not -ीकरण on base)"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "सामाजिक+ईकरण = सामाजिकीकरण (प्रत्यय -ईकरण, होइन -ीकरण आधार शब्दमा)"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
 [[shuddha_table]]
 incorrect = "औद्योगीकरण"
 correct = "औद्योगिकीकरण"
-rule = "औद्योगिक+ईकरण = औद्योगिकीकरण (suffix -ईकरण, not -ीकरण on base)"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "औद्योगिक+ईकरण = औद्योगिकीकरण (प्रत्यय -ईकरण, होइन -ीकरण आधार शब्दमा)"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
-# --- Consonant / structural errors (p18) ---
+# --- व्यञ्जन / संरचनात्मक त्रुटि (पृष्ठ 18) ---
 
 [[shuddha_table]]
 incorrect = "असक्षम"
 correct = "अक्षम"
-rule = "अ+क्षम = अक्षम (no extra स). Alt incorrect: अशक्षम"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "अ+क्षम = अक्षम (अतिरिक्त स हुँदैन). वैकल्पिक गलत: अशक्षम"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
 [[shuddha_table]]
 incorrect = "सपाङ्ग"
 correct = "साङ्ग"
-rule = "स+अङ्ग = साङ्ग (दीर्घ sandhi) = 'complete'. NB: सपाङ्ग (स+अपाङ्ग) = 'with disability' — different word"
-section = "Section 4, शुद्ध-अशुद्ध table + Section 4(ख) sandhi"
+rule = "स+अङ्ग = साङ्ग (दीर्घ सन्धि) = पूर्ण. टिप्पणी: सपाङ्ग (स+अपाङ्ग) फरक शब्द हो"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका + खण्ड ३(ख) सन्धि"
 page = 18
 
-# --- Word form corrections (p18) ---
+# --- शब्द-रूप सुधार (पृष्ठ 18) ---
 
 [[shuddha_table]]
 incorrect = "ब्यहोरा"
 correct = "बेहोरा"
-rule = "मानक रूप: बेहोरा. Alt incorrect: व्यहोरा (also common misspelling)"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "मानक रूप: बेहोरा. वैकल्पिक गलत: व्यहोरा (यो पनि प्रचलित त्रुटि)"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
 [[shuddha_table]]
 incorrect = "एकिन"
 correct = "यकिन"
-rule = "मानक रूप: यकिन (य not ए). Note: standard uses ह्रस्व इ (not यकीन with दीर्घ)"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "मानक रूप: यकिन (य होइन ए). टिप्पणी: मानकमा ह्रस्व इ हुन्छ (यकीनमा दीर्घ होइन)"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
 [[shuddha_table]]
 incorrect = "सुरुवात"
 correct = "सुरुआत"
-rule = "मानक रूप: सुरुआत (not सुरुवात). Alt incorrect: शुरुवात, शुरुआत"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "मानक रूप: सुरुआत (सुरुवात होइन). वैकल्पिक गलत: शुरुवात, शुरुआत"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
-# --- Aagantuk (foreign loanword) transliteration (p18) ---
-# Rule: foreign words use स/न (not ष/ण) unless from Sanskrit
+# --- आगन्तुक (विदेशी आगन्तुक शब्द) रूपान्तरण (पृष्ठ 18) ---
+# नियम: विदेशी शब्दमा स/न प्रयोग हुन्छ (ष/ण होइन), संस्कृत-उत्पन्न अपवाद बाहेक
 
 [[shuddha_table]]
 incorrect = "रजिष्टर"
 correct = "रजिस्टर"
-rule = "आगन्तुक: स not ष for English 'register'. Alt incorrect: रेजिष्टर, रजिस्ट्रर"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "आगन्तुक: स होइन ष अङ्ग्रेजी 'register'. वैकल्पिक गलत: रेजिष्टर, रजिस्ट्रर"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
 [[shuddha_table]]
 incorrect = "इन्ष्टिच्युट"
 correct = "इन्स्टिच्युट"
-rule = "आगन्तुक: स not ष for English 'institute'. NB: no दीर्घ ऊ (not इन्स्टिच्यूट)"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "आगन्तुक: स होइन ष अङ्ग्रेजी 'institute'. टिप्पणी: दीर्घ ऊ हुँदैन (इन्स्टिच्यूट होइन)"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
 [[shuddha_table]]
 incorrect = "फाउण्डेसन"
 correct = "फाउन्डेसन"
-rule = "आगन्तुक: न not ण for English 'foundation'. Alt incorrect: फाउण्डेशन, फाउन्डेषन"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "आगन्तुक: न होइन ण अङ्ग्रेजी 'foundation'. वैकल्पिक गलत: फाउण्डेशन, फाउन्डेषन"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
 [[shuddha_table]]
 incorrect = "झण्डा"
 correct = "झन्डा"
-rule = "न not ण before ड: झन्डा. Alt incorrect: झण्ढा"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "न होइन ण अघि ड: झन्डा. वैकल्पिक गलत: झण्ढा"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
 [[shuddha_table]]
 incorrect = "इण्डिया"
 correct = "इन्डिया"
-rule = "आगन्तुक: न not ण for English 'India'. Alt incorrect: इंडिया"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "आगन्तुक: न होइन ण अङ्ग्रेजी 'India'. वैकल्पिक गलत: इंडिया"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
 [[shuddha_table]]
 incorrect = "इंग्ल्याण्ड"
 correct = "इङ्ग्ल्यान्ड"
-rule = "panchham ङ before ग + न not ण for 'England'. Alt incorrect: इंग्ल्यान्ड, इंग्लैण्ड"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "पञ्चम वर्ण ङ अघि ग + न हुन्छ, ण होइन ('England' का लागि). वैकल्पिक गलत: इंग्ल्यान्ड, इंग्लैण्ड"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
 [[shuddha_table]]
 incorrect = "शहीद"
 correct = "सहिद"
-rule = "रूपान्तरित आगन्तुक शब्द: स not श, ह्रस्व इ not दीर्घ ई. Arabic 'shahid' → सहिद in Nepali"
-section = "Section 4, शुद्ध-अशुद्ध table"
+rule = "रूपान्तरित आगन्तुक शब्द: स हुन्छ, श होइन; ह्रस्व इ हुन्छ, दीर्घ ई होइन. अरबी 'shahid' → सहिद (नेपालीमा)"
+section = "खण्ड ४, शुद्ध-अशुद्ध तालिका"
 page = 18
 
 # =============================================================================
-# Section 3(क): Hrasva/Dirgha rules (Pages 5-8)
+# खण्ड 3(क): ह्रस्व/दीर्घ नियम (पृष्ठ 5-8)
 # =============================================================================
 
-# --- Tadbhav एकार्थक शब्दs take ह्रस्व (p5, Rule 12) ---
+# --- तद्भव एकार्थक शब्दमा ह्रस्व (पृष्ठ 5, नियम १२) ---
 
 [[hrasva_dirgha]]
 incorrect = "मीठो"
 correct = "मिठो"
-rule = "तद्भव एकार्थक शब्द takes ह्रस्व: मिष्ट → मिठो"
-section = "Section 3(क), Rule 12 — तद्भव ह्रस्व"
+rule = "तद्भव एकार्थक शब्दमा ह्रस्व हुन्छ: मिष्ट → मिठो"
+section = "खण्ड ३(क), नियम १२ — तद्भव ह्रस्व"
 page = 5
 
 [[hrasva_dirgha]]
 incorrect = "पीरो"
 correct = "पिरो"
-rule = "तद्भव एकार्थक शब्द takes ह्रस्व"
-section = "Section 3(क), Rule 12 — तद्भव ह्रस्व"
+rule = "तद्भव एकार्थक शब्दमा ह्रस्व हुन्छ"
+section = "खण्ड ३(क), नियम १२ — तद्भव ह्रस्व"
 page = 5
 
 [[hrasva_dirgha]]
 incorrect = "तिथीमीति"
 correct = "तिथिमिति"
-rule = "तद्भव compound: both components take ह्रस्व"
-section = "Section 3(क), Rule 12 — तद्भव ह्रस्व"
+rule = "तद्भव समासिक शब्दमा दुवै पदमा ह्रस्व हुन्छ"
+section = "खण्ड ३(क), नियम १२ — तद्भव ह्रस्व"
 page = 5
 
 [[hrasva_dirgha]]
 incorrect = "मीलेको"
 correct = "मिलेको"
-rule = "तद्भव verb root takes ह्रस्व: मिल्नु → मिलेको"
-section = "Section 3(क), Rule 12 — तद्भव ह्रस्व"
+rule = "तद्भव क्रियामूलमा ह्रस्व हुन्छ: मिल्नु → मिलेको"
+section = "खण्ड ३(क), नियम १२ — तद्भव ह्रस्व"
 page = 5
 
 [[hrasva_dirgha]]
 incorrect = "दैनीकी"
 correct = "दैनिकी"
-rule = "शब्दमध्यको स्वर takes ह्रस्व in तद्भव derivation"
-section = "Section 3(क), Rule 12 — तद्भव ह्रस्व"
+rule = "तद्भव व्युत्पत्तिमा शब्दमध्यको स्वर ह्रस्व हुन्छ"
+section = "खण्ड ३(क), नियम १२ — तद्भव ह्रस्व"
 page = 6
 
 [[hrasva_dirgha]]
 incorrect = "भाई"
 correct = "भाइ"
-rule = "नातासम्बन्धी तद्भव: भ्रातृ → भाइ (ह्रस्व इ, not ई)"
-section = "Section 3(क), Rule 12 — तद्भव ह्रस्व"
+rule = "नातागोता तद्भव शब्दमा ह्रस्व इ हुन्छ: भ्रातृ → भाइ"
+section = "खण्ड ३(क), नियम १२ — तद्भव ह्रस्व"
 page = 5
 
 [[hrasva_dirgha]]
 incorrect = "मूखमा"
 correct = "मुखमा"
-rule = "तत्सम मुख retains original ह्रस्व उ (not दीर्घ ऊ)"
-section = "Section 3(क) — तत्सम vowel preservation"
+rule = "तत्सम शब्द मुख मा मूल ह्रस्व उ नै रहन्छ (दीर्घ ऊ होइन)"
+section = "खण्ड ३(क) — तत्सम स्वर जोगिने नियम"
 page = 5
 
 [[hrasva_dirgha]]
 incorrect = "पूतली"
 correct = "पुतली"
-rule = "तद्भव takes ह्रस्व उ; feminine ली takes दीर्घ ई"
-section = "Section 3(क), Rule 12 + Section 3(ई)"
+rule = "तद्भवमा ह्रस्व उ हुन्छ; स्त्रीलिङ्गी लीमा दीर्घ ई हुन्छ"
+section = "खण्ड ३(क), नियम १२ + खण्ड ३(ई)"
 page = 5
 
 [[hrasva_dirgha]]
 incorrect = "अनुभूती"
 correct = "अनुभूति"
-rule = "तत्सम ending: अनुभूति ends in ह्रस्व इ (तत्सम form)"
-section = "Section 3(क) — तत्सम ending"
+rule = "तत्सम शब्द अनुभूति को अन्त्य ह्रस्व इमा हुन्छ"
+section = "खण्ड ३(क) — तत्सम अन्त्य"
 page = 5
 
-# --- Pronouns take दीर्घ (p7) ---
+# --- सर्वनाममा दीर्घ (पृष्ठ 7) ---
 
 [[hrasva_dirgha]]
 incorrect = "हामि"
 correct = "हामी"
-rule = "pronoun takes दीर्घ: हामी (not हामि)"
-section = "Section 3(ई), Rule ऊ-7 — pronoun दीर्घ"
+rule = "सर्वनाममा दीर्घ हुन्छ: हामी (हामि होइन)"
+section = "खण्ड ३(ई), नियम ऊ-७ — सर्वनाम दीर्घ"
 page = 7
 
-# --- Kinship तद्भव (p7) ---
+# --- नातागोता तद्भव (पृष्ठ 7) ---
 
 [[hrasva_dirgha]]
 incorrect = "दीदी"
 correct = "दिदी"
-rule = "नातासम्बन्धी तद्भव: initial vowel ह्रस्व, final दीर्घ"
-section = "Section 3(इ), Rule ऊ-3 — नातासम्बन्धी तद्भव"
+rule = "नातागोता तद्भव शब्दमा सुरुको स्वर ह्रस्व र अन्त्य दीर्घ हुन्छ"
+section = "खण्ड ३(इ), नियम ऊ-३ — नातासम्बन्धी तद्भव"
 page = 7
 
 [[hrasva_dirgha]]
 incorrect = "बहीनी"
 correct = "बहिनी"
-rule = "नातासम्बन्धी तद्भव: शब्दमध्यको स्वर ह्रस्व, final दीर्घ"
-section = "Section 3(इ), Rule ऊ-3 — नातासम्बन्धी तद्भव"
+rule = "नातागोता तद्भव शब्दमा शब्दमध्यको स्वर ह्रस्व र अन्त्य दीर्घ हुन्छ"
+section = "खण्ड ३(इ), नियम ऊ-३ — नातासम्बन्धी तद्भव"
 page = 7
 
 [[hrasva_dirgha]]
 incorrect = "भाउजु"
 correct = "भाउजू"
-rule = "feminine नातासम्बन्धी takes दीर्घ: भाउजू (not भाउजु)"
-section = "Section 3(ई) — feminine नातासम्बन्धी दीर्घ"
+rule = "स्त्रीलिङ्गी नातागोता शब्दमा दीर्घ हुन्छ: भाउजू (भाउजु होइन)"
+section = "खण्ड ३(ई) — स्त्रीलिङ्गी नातासम्बन्धी दीर्घ"
 page = 7
 
 [[hrasva_dirgha]]
 incorrect = "फुपु"
 correct = "फुपू"
-rule = "feminine नातासम्बन्धी takes दीर्घ: फुपू (not फुपु)"
-section = "Section 3(ई) — feminine नातासम्बन्धी दीर्घ"
+rule = "स्त्रीलिङ्गी नातागोता शब्दमा दीर्घ हुन्छ: फुपू (फुपु होइन)"
+section = "खण्ड ३(ई) — स्त्रीलिङ्गी नातासम्बन्धी दीर्घ"
 page = 7
 
 [[hrasva_dirgha]]
 incorrect = "मीतिनिले"
 correct = "मितिनीले"
-rule = "नातासम्बन्धी तद्भव: initial ह्रस्व इ, final दीर्घ ई"
-section = "Section 3(इ) + Section 3(ई) — नातासम्बन्धी mixed"
+rule = "नातागोता तद्भव शब्दमा सुरुमा ह्रस्व इ र अन्त्यमा दीर्घ ई हुन्छ"
+section = "खण्ड ३(इ) + खण्ड ३(ई) — नातासम्बन्धी मिश्रित"
 page = 7
 
-# --- Feminine nouns take दीर्घ (p7) ---
+# --- स्त्रीलिङ्गी नामपदमा दीर्घ (पृष्ठ 7) ---
 
 [[hrasva_dirgha]]
 incorrect = "खुर्सानि"
 correct = "खुर्सानी"
-rule = "feminine noun ending takes दीर्घ ई"
-section = "Section 3(ई) — feminine noun दीर्घ"
+rule = "स्त्रीलिङ्गी नामपदको अन्त्यमा दीर्घ ई हुन्छ"
+section = "खण्ड ३(ई) — स्त्रीलिङ्गी नामपद दीर्घ"
 page = 7
 
 [[hrasva_dirgha]]
 incorrect = "सम्धिनि"
 correct = "सम्धिनी"
-rule = "feminine noun ending takes दीर्घ ई"
-section = "Section 3(ई) — feminine noun दीर्घ"
+rule = "स्त्रीलिङ्गी नामपदको अन्त्यमा दीर्घ ई हुन्छ"
+section = "खण्ड ३(ई) — स्त्रीलिङ्गी नामपद दीर्घ"
 page = 7
 
 [[hrasva_dirgha]]
 incorrect = "पहाडि"
 correct = "पहाडी"
-rule = "विशेषण/स्थानबोधक ending takes दीर्घ ई"
-section = "Section 3(ई) — adjectival दीर्घ"
+rule = "विशेषण तथा स्थानबोधक शब्दको अन्त्यमा दीर्घ ई हुन्छ"
+section = "खण्ड ३(ई) — विशेषणात्मक दीर्घ"
 page = 7
 
 [[hrasva_dirgha]]
 incorrect = "अगाडि"
 correct = "अगाडी"
-rule = "अव्यय/नामयोगी ending takes दीर्घ ई"
-section = "Section 3(ई) — नामयोगी दीर्घ"
+rule = "अव्यय/नामयोगी शब्दको अन्त्यमा दीर्घ ई हुन्छ"
+section = "खण्ड ३(ई) — नामयोगी दीर्घ"
 page = 7
 
 [[hrasva_dirgha]]
 incorrect = "भनि"
 correct = "भनी"
 rule = "असमापक क्रियामा अन्त्यमा दीर्घ ई हुन्छ"
-section = "Section 3(ई) — असमापक क्रिया दीर्घ"
+section = "खण्ड ३(ई) — असमापक क्रिया दीर्घ"
 page = 7
 
-# --- Suffix-derived ह्रस्व/दीर्घ (p6-7) ---
+# --- प्रत्यय-आधारित ह्रस्व/दीर्घ (पृष्ठ 6-7) ---
 
 [[hrasva_dirgha]]
 incorrect = "स्वीकार्नु"
 correct = "स्विकार्नु"
 rule = "प्रत्यय -नु ले ह्रस्व: स्वीकार + नु = स्विकार्नु"
-section = "Section 3(क), प्रत्यय rule — -नु ले ह्रस्व"
+section = "खण्ड ३(क), प्रत्यय नियम — -नु ले ह्रस्व"
 page = 7
 
 [[hrasva_dirgha]]
 incorrect = "पूर्वेली"
 correct = "पुर्वेली"
 rule = "प्रत्यय -एली ले ह्रस्व: पूर्व + एली = पुर्वेली"
-section = "Section 3(क), प्रत्यय rule — -एली ले ह्रस्व"
+section = "खण्ड ३(क), प्रत्यय नियम — -एली ले ह्रस्व"
 page = 7
 
-# --- Suffix-derived दीर्घ preserved (p7) ---
+# --- प्रत्यय-आधारित दीर्घ जोगिने रूप (पृष्ठ 7) ---
 
 [[hrasva_dirgha]]
 incorrect = "पुर्वी"
 correct = "पूर्वी"
 rule = "प्रत्यय -ई ले दीर्घ: पूर्व + ई = पूर्वी"
-section = "Section 3(ई), प्रत्यय rule — -ई ले दीर्घ"
+section = "खण्ड ३(ई), प्रत्यय नियम — -ई ले दीर्घ"
 page = 7
 
 [[hrasva_dirgha]]
 incorrect = "पुर्वीय"
 correct = "पूर्वीय"
 rule = "प्रत्यय -ईय ले दीर्घ: पूर्व + ईय = पूर्वीय"
-section = "Section 3(ई), प्रत्यय rule — -ईय ले दीर्घ"
+section = "खण्ड ३(ई), प्रत्यय नियम — -ईय ले दीर्घ"
 page = 7
 
 # =============================================================================
-# Section 3(ख): Chandrabindu / Shirbindu (Pages 8-9)
+# खण्ड 3(ख): चन्द्रबिन्दु / शिरबिन्दु (पृष्ठ 8-9)
 # =============================================================================
 
 [[chandrabindu]]
 incorrect = "सिँह"
 correct = "सिंह"
-rule = "तत्सम uses शिरबिन्दु (ं), not चन्द्रबिन्दु (ँ)"
-section = "Section 3(ख) — तत्सम शिरबिन्दु"
+rule = "तत्सम शब्दमा शिरबिन्दु (ं) प्रयोग हुन्छ, चन्द्रबिन्दु (ँ) होइन"
+section = "खण्ड ३(ख) — तत्सम शिरबिन्दु"
 page = 9
 
 [[chandrabindu]]
 incorrect = "सँवाद"
 correct = "संवाद"
-rule = "तत्सम uses शिरबिन्दु (ं), not चन्द्रबिन्दु (ँ)"
-section = "Section 3(ख) — तत्सम शिरबिन्दु"
+rule = "तत्सम शब्दमा शिरबिन्दु (ं) प्रयोग हुन्छ, चन्द्रबिन्दु (ँ) होइन"
+section = "खण्ड ३(ख) — तत्सम शिरबिन्दु"
 page = 9
 
 [[chandrabindu]]
 incorrect = "जान्छौ"
 correct = "जान्छौँ"
-rule = "तद्भव verb मा चन्द्रबिन्दु for nasalization"
-section = "Section 3(ख) — तद्भव चन्द्रबिन्दु"
+rule = "तद्भव क्रियापदमा अनुनासिकका लागि चन्द्रबिन्दु हुन्छ"
+section = "खण्ड ३(ख) — तद्भव चन्द्रबिन्दु"
 page = 9
 
 [[chandrabindu]]
 incorrect = "आउछ"
 correct = "आउँछ"
-rule = "तद्भव verb मा चन्द्रबिन्दु for nasalization"
-section = "Section 3(ख) — तद्भव चन्द्रबिन्दु"
+rule = "तद्भव क्रियापदमा अनुनासिकका लागि चन्द्रबिन्दु हुन्छ"
+section = "खण्ड ३(ख) — तद्भव चन्द्रबिन्दु"
 page = 9
 
 [[chandrabindu]]
 incorrect = "वगैचामा"
 correct = "बगैँचामा"
-rule = "ब (not व) + चन्द्रबिन्दु अनिवार्य: बगैँचा"
-section = "Section 3(ख) — चन्द्रबिन्दु + consonant correction"
+rule = "ब (व होइन) + चन्द्रबिन्दु अनिवार्य: बगैँचा"
+section = "खण्ड ३(ख) — चन्द्रबिन्दु + व्यञ्जन सुधार"
 page = 9
 
 [[chandrabindu]]
 incorrect = "बगैचा"
 correct = "बगैँचा"
-rule = "चन्द्रबिन्दु अनिवार्य on बगैँचा"
-section = "Section 3(ख) — तद्भव चन्द्रबिन्दु"
+rule = "बगैँचा शब्दमा चन्द्रबिन्दु अनिवार्य हुन्छ"
+section = "खण्ड ३(ख) — तद्भव चन्द्रबिन्दु"
 page = 9
 
 # =============================================================================
-# Section 3(ग): श/ष/स rules (Pages 10-11)
+# खण्ड 3(ग): श/ष/स नियम (पृष्ठ 10-11)
 # =============================================================================
 
 [[sha_sha_sa]]
 incorrect = "सासन"
 correct = "शासन"
-rule = "तत्सम word uses श (not स): शासन"
-section = "Section 3(ग) — तत्सम श"
+rule = "तत्सम शब्दमा श (स होइन): शासन"
+section = "खण्ड ३(ग) — तत्सम श"
 page = 10
 
 [[sha_sha_sa]]
 incorrect = "सेष"
 correct = "शेष"
-rule = "तत्सम word uses श (not स): शेष"
-section = "Section 3(ग) — तत्सम श"
+rule = "तत्सम शब्दमा श (स होइन): शेष"
+section = "खण्ड ३(ग) — तत्सम श"
 page = 10
 
 [[sha_sha_sa]]
 incorrect = "एसिया"
 correct = "एशिया"
-rule = "व्यक्तिवाचक नाम uses श (not स): एशिया"
-section = "Section 3(ग) — श in व्यक्तिवाचक नामs"
+rule = "व्यक्तिवाचक नाममा श (स होइन): एशिया"
+section = "खण्ड ३(ग) — व्यक्तिवाचक नाममा श"
 page = 10
 
 [[sha_sha_sa]]
 incorrect = "विवेकशिल"
 correct = "विवेकशील"
-rule = "तत्सम suffix -शील takes दीर्घ ई"
-section = "Section 3(ग) + Section 3(ई) — तत्सम श + दीर्घ"
+rule = "तत्सम प्रत्यय -शील मा दीर्घ ई हुन्छ"
+section = "खण्ड ३(ग) + खण्ड ३(ई) — तत्सम श + दीर्घ"
 page = 10
 
 # =============================================================================
-# Section 3(ग): ऋ/कृ rules (Page 13)
+# खण्ड 3(ग): ऋ/कृ नियम (पृष्ठ 13)
 # =============================================================================
 
 [[ri_kri]]
 incorrect = "रिषि"
 correct = "ऋषि"
-rule = "तत्सम uses ऋ (not रि): ऋषि"
-section = "Section 3(ग) — तत्सम ऋ"
+rule = "तत्सम शब्दमा ऋ (रि होइन): ऋषि"
+section = "खण्ड ३(ग) — तत्सम ऋ"
 page = 13
 
 [[ri_kri]]
 incorrect = "रितु"
 correct = "ऋतु"
-rule = "तत्सम uses ऋ (not रि): ऋतु"
-section = "Section 3(ग) — तत्सम ऋ"
+rule = "तत्सम शब्दमा ऋ (रि होइन): ऋतु"
+section = "खण्ड ३(ग) — तत्सम ऋ"
 page = 13
 
 [[ri_kri]]
 incorrect = "क्रिति"
 correct = "कृति"
-rule = "तत्सम uses कृ (not क्रि): कृति"
-section = "Section 3(ग) — तत्सम कृ"
+rule = "तत्सम शब्दमा कृ (क्रि होइन): कृति"
+section = "खण्ड ३(ग) — तत्सम कृ"
 page = 13
 
 [[ri_kri]]
 incorrect = "रिषिमुनि"
 correct = "ऋषिमुनि"
-rule = "तत्सम compound: ऋषि + मुनि (ऋ not रि, final इ ह्रस्व)"
-section = "Section 3(ग) — तत्सम ऋ in compound"
+rule = "तत्सम समास: ऋषि + मुनि (ऋ, रि होइन; अन्त्यमा ह्रस्व इ)"
+section = "खण्ड ३(ग) — समासमा तत्सम ऋ"
 page = 13
 
 # =============================================================================
-# Section 3(ङ): Halanta rules (Pages 15-16)
+# खण्ड 3(ङ): हलन्त नियम (पृष्ठ 15-16)
 # =============================================================================
 
 [[halanta]]
 incorrect = "अर्थात"
 correct = "अर्थात्"
-rule = "हलन्त अनिवार्य on अव्यय: अर्थात् (not अर्थात)"
-section = "Section 3(ङ) — हलन्त on avyaya"
+rule = "अव्यय अर्थात् मा हलन्त अनिवार्य हुन्छ (अर्थात होइन)"
+section = "खण्ड ३(ङ) — हलन्त अव्ययमा"
 page = 15
 
 # =============================================================================
-# Section 3(छ): य/ए rules (Pages 11-12)
+# खण्ड 3(छ): य/ए नियम (पृष्ठ 11-12)
 # =============================================================================
 
 [[ya_e]]
 incorrect = "एथार्थ"
 correct = "यथार्थ"
-rule = "तत्सम uses य (not ए): यथार्थ"
-section = "Section 3(छ) — य/ए distinction"
+rule = "तत्सम शब्दमा य (ए होइन): यथार्थ"
+section = "खण्ड ३(छ) — य/ए भेद"
 page = 12
 
 [[ya_e]]
 incorrect = "यकता"
 correct = "एकता"
-rule = "तत्सम uses ए (not य): एकता"
-section = "Section 3(छ) — य/ए distinction"
+rule = "तत्सम शब्दमा ए (य होइन): एकता"
+section = "खण्ड ३(छ) — य/ए भेद"
 page = 12
 
 # =============================================================================
-# Section 3(छ): क्ष/छ्य rules (Pages 11-12)
+# खण्ड 3(छ): क्ष/छ्य नियम (पृष्ठ 11-12)
 # =============================================================================
 
 [[ksha_chhya]]
 incorrect = "लछ्य"
 correct = "लक्ष्य"
-rule = "तत्सम uses क्ष (not छ): लक्ष्य"
-section = "Section 3(छ) — क्ष/छ्य distinction"
+rule = "तत्सम शब्दमा क्ष (छ होइन): लक्ष्य"
+section = "खण्ड ३(छ) — क्ष/छ्य भेद"
 page = 12
 
 [[ksha_chhya]]
 incorrect = "इक्षा"
 correct = "इच्छा"
-rule = "तत्सम: इच्छा uses च्छ (not क्ष)"
-section = "Section 3(छ) — क्ष/छ्य distinction"
+rule = "तत्सम शब्द इच्छा मा च्छ हुन्छ (क्ष होइन)"
+section = "खण्ड ३(छ) — क्ष/छ्य भेद"
 page = 12
 
 [[ksha_chhya]]
 incorrect = "छेत्र"
 correct = "क्षेत्र"
-rule = "तत्सम uses क्षे (not छे): क्षेत्र"
-section = "Section 3(छ) — क्षे/छे distinction"
+rule = "तत्सम शब्दमा क्षे (छे होइन): क्षेत्र"
+section = "खण्ड ३(छ) — क्षे/छे भेद"
 page = 12
 
 # =============================================================================
-# Paragraph-level corrections (cross-referencing multiple rules)
+# अनुच्छेद-स्तर सुधार (धेरै नियमसँग सम्बन्धित)
 # =============================================================================
 
 [[paragraph_correction]]
 incorrect = "भनीन"
 correct = "भनिन्"
-rule = "verb form takes ह्रस्व + हलन्त: भनिन् (not भनीन)"
-section = "Section 3(क) + Section 3(ङ) — ह्रस्व + हलन्त"
+rule = "क्रियापदको रूप भनिन् मा ह्रस्व + हलन्त हुन्छ (भनीन होइन)"
+section = "खण्ड ३(क) + खण्ड ३(ङ) — ह्रस्व + हलन्त"
 page = 7
 
 [[paragraph_correction]]
 incorrect = "सन्सारमा"
 correct = "संसारमा"
-rule = "शिरबिन्दु form: संसार (not हलन्त-न सन्सार)"
-section = "Section 3(ख) — शिरबिन्दु vs हलन्त-न"
+rule = "संसार मा शिरबिन्दु रूप हुन्छ (हलन्त-न सन्सार होइन)"
+section = "खण्ड ३(ख) — शिरबिन्दु र हलन्त-न"
 page = 9

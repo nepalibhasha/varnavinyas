@@ -2,40 +2,40 @@ use crate::engine;
 use crate::rule::Rule;
 use varnavinyas_shabda::{Origin, OriginSource, classify_with_provenance, source_language};
 
-/// Analysis of a word's orthography with origin-based explanations.
+/// शब्दको वर्णविन्यास विश्लेषण (उत्पत्ति-आधारित व्याख्यासहित)।
 #[derive(Debug, Clone)]
 pub struct WordAnalysis {
-    /// The input word.
+    /// इनपुट शब्द।
     pub word: String,
-    /// The word's origin classification.
+    /// शब्दको उत्पत्ति वर्गीकरण।
     pub origin: Origin,
-    /// Provenance for origin classification (`override`, `kosha`, `heuristic`).
+    /// उत्पत्ति वर्गीकरणको स्रोत (`override`, `kosha`, `heuristic`)।
     pub origin_source: OriginSource,
-    /// Confidence score for origin classification (0.0–1.0).
+    /// उत्पत्ति वर्गीकरणको confidence स्कोर (0.0–1.0)।
     pub origin_confidence: f32,
-    /// Source language name (e.g., "फारसी", "अरबी", "संस्कृत"), if known.
+    /// स्रोत भाषा (जस्तै: "फारसी", "अरबी", "संस्कृत"), उपलब्ध भएमा।
     pub source_language: Option<String>,
-    /// Whether the word's orthography is correct.
+    /// वर्णविन्यास सही छ/छैन।
     pub is_correct: bool,
-    /// Suggested correction, if any.
+    /// सुझाव गरिएको सुधार (भएमा)।
     pub correction: Option<String>,
-    /// Explanatory notes citing Academy rules.
+    /// Academy नियम सन्दर्भसहित व्याख्यात्मक टिप्पणी।
     pub rule_notes: Vec<RuleNote>,
 }
 
-/// An explanatory note about why a word's orthography is correct or incorrect.
+/// शब्द सही/गलत हुनुको कारण बताउने टिप्पणी।
 #[derive(Debug, Clone)]
 pub struct RuleNote {
-    /// The Academy rule being cited.
+    /// उद्धृत गरिएको Academy नियम।
     pub rule: Rule,
-    /// Human-readable explanation in Nepali.
+    /// नेपालीमा पढ्न सजिलो व्याख्या।
     pub explanation: String,
 }
 
-/// Analyze a word: derive its correction (if any) and generate explanatory rule notes.
+/// शब्द विश्लेषण: सुधार (भएमा) निकाल्ने र नियम-आधारित व्याख्या बनाउने।
 ///
-/// Unlike `derive()`, this function also explains *why* a correct word is correct,
-/// based on its origin classification and applicable Academy rules.
+/// `derive()` भन्दा फरक, यो function ले सही शब्द किन सही हो भन्ने कारण
+/// उत्पत्ति वर्गीकरण र लागू Academy नियमका आधारमा पनि देखाउँछ।
 pub fn analyze(input: &str) -> WordAnalysis {
     if input.is_empty() {
         return WordAnalysis {
@@ -57,10 +57,10 @@ pub fn analyze(input: &str) -> WordAnalysis {
     let mut rule_notes = Vec::new();
 
     if prakriya.is_correct {
-        // Generate explanatory notes for why the word is correct
+        // शब्द सही हुँदा किन सही हो भन्ने व्याख्या बनाउने।
         generate_correct_notes(input, origin, &mut rule_notes);
     } else {
-        // Generate notes explaining why the word is incorrect
+        // शब्द गलत हुँदा किन गलत हो भन्ने व्याख्या बनाउने।
         for step in &prakriya.steps {
             rule_notes.push(RuleNote {
                 rule: step.rule,
@@ -85,7 +85,7 @@ pub fn analyze(input: &str) -> WordAnalysis {
     }
 }
 
-/// Generate explanatory notes for a word that is already correct.
+/// पहिले नै सही शब्दका लागि व्याख्यात्मक टिप्पणी बनाउने।
 fn generate_correct_notes(word: &str, origin: Origin, notes: &mut Vec<RuleNote>) {
     for template in NOTE_TEMPLATES {
         if template.origin == origin && marker_matches(word, template.marker) {
@@ -116,12 +116,12 @@ struct NoteTemplate {
 }
 
 const NOTE_TEMPLATES: &[NoteTemplate] = &[
-    // Tatsam
+    // तत्सम
     NoteTemplate {
         origin: Origin::Tatsam,
         marker: NoteMarker::Always,
         rule: Rule::VarnaVinyasNiyam("3(क)"),
-        explanation: "तत्सम शब्द: संस्कृतको मूल वर्णविन्यास कायम राख्नुपर्छ",
+        explanation: "तत्सम (tatsam) शब्द: संस्कृतको मूल वर्णविन्यास कायम राख्नुपर्छ",
     },
     NoteTemplate {
         origin: Origin::Tatsam,
@@ -177,12 +177,12 @@ const NOTE_TEMPLATES: &[NoteTemplate] = &[
         rule: Rule::VarnaVinyasNiyam("3(ङ)"),
         explanation: "तत्सम शब्दमा हलन्त चिह्न आवश्यक",
     },
-    // Tadbhav
+    // तद्भव
     NoteTemplate {
         origin: Origin::Tadbhav,
         marker: NoteMarker::Always,
         rule: Rule::VarnaVinyasNiyam("3(क)"),
-        explanation: "तद्भव शब्द: संस्कृतबाट परिवर्तित, नेपाली ध्वनि नियम लागू",
+        explanation: "तद्भव (tadbhav) शब्द: संस्कृतबाट परिवर्तित, नेपाली ध्वनि नियम लागू",
     },
     NoteTemplate {
         origin: Origin::Tadbhav,
@@ -196,19 +196,19 @@ const NOTE_TEMPLATES: &[NoteTemplate] = &[
         rule: Rule::VarnaVinyasNiyam("3(ख)"),
         explanation: "तद्भव शब्दमा चन्द्रबिन्दु (ँ) प्रयोग हुन्छ",
     },
-    // Deshaj
+    // देशज
     NoteTemplate {
         origin: Origin::Deshaj,
         marker: NoteMarker::Always,
         rule: Rule::VarnaVinyasNiyam("3(क)"),
-        explanation: "देशज शब्द: मूल नेपाली शब्द, ह्रस्व नियम लागू",
+        explanation: "देशज (deshaj) शब्द: मूल नेपाली शब्द, ह्रस्व नियम लागू",
     },
-    // Aagantuk
+    // आगन्तुक
     NoteTemplate {
         origin: Origin::Aagantuk,
         marker: NoteMarker::Always,
         rule: Rule::VarnaVinyasNiyam("3(ग)(अ)-9"),
-        explanation: "आगन्तुक शब्द: विदेशी शब्दमा 'स' मात्र प्रयोग हुन्छ",
+        explanation: "आगन्तुक (aagantuk) शब्द: विदेशी शब्दमा 'स' मात्र प्रयोग हुन्छ",
     },
     NoteTemplate {
         origin: Origin::Aagantuk,
