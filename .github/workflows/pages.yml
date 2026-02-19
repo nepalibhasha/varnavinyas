@@ -25,16 +25,19 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: "1.85.0"
           targets: wasm32-unknown-unknown
 
       - uses: Swatinem/rust-cache@v2
 
       - name: Install wasm-pack
         run: cargo install wasm-pack
+        env:
+          RUSTUP_TOOLCHAIN: stable
 
       - name: Install wasm-bindgen-cli
         run: cargo install wasm-bindgen-cli --version 0.2.108
+        env:
+          RUSTUP_TOOLCHAIN: stable
 
       - name: Build WASM
         run: |
@@ -43,6 +46,8 @@ jobs:
             --out-dir ../../web/pkg \
             --release \
             --mode no-install
+        env:
+          RUSTUP_TOOLCHAIN: stable
 
       - uses: actions/configure-pages@v5
 

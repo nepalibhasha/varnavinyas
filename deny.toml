@@ -1,6 +1,11 @@
 [advisories]
 version = 2
-ignore = []
+ignore = [
+    # Transitive deps via uniffi 0.28 — unmaintained, not vulnerable.
+    # Remove when uniffi upgrades past these.
+    { id = "RUSTSEC-2025-0141", reason = "bincode: transitive dep via uniffi" },
+    { id = "RUSTSEC-2024-0436", reason = "paste: transitive dep via uniffi" },
+]
 
 [licenses]
 allow = [

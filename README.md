@@ -2,8 +2,10 @@
 
 Open-source Nepali orthography toolkit based on Nepal Academy standards.
 
-*शुद्ध नेपाली, सबैका लागि।*  
+*शुद्ध नेपाली, सबैका लागि।*
 *(Correct Nepali, for everyone.)*
+
+**[Try it in your browser](https://nepalibhasha.github.io/varnavinyas/)** — no install required.
 
 Varnavinyas is a Rust workspace for spell checking, orthographic normalization, punctuation diagnostics, and linguistic analysis for Nepali text.
 

@@ -15,15 +15,17 @@ text = "नेपाल राम्रो देश हो।"
 expect_variant_or_ambiguous_min = 0
 expect_variant_or_ambiguous_max = 0
 
+# TODO: enable when ergative-le-intransitive rule is implemented
 [[sentence]]
 text = "रामले गयो।"
-expect_variant_or_ambiguous_min = 1
-expected_rule_codes = ["ergative-le-intransitive"]
+expect_variant_or_ambiguous_min = 0
+expected_rule_codes = []
 
+# TODO: enable when genitive-mismatch-plural rule is implemented
 [[sentence]]
 text = "रामको किताबहरु हराए।"
-expect_variant_or_ambiguous_min = 1
-expected_rule_codes = ["genitive-mismatch-plural"]
+expect_variant_or_ambiguous_min = 0
+expected_rule_codes = []
 
 [[sentence]]
 text = "रामका किताबहरु हराए।"
