@@ -1026,6 +1026,20 @@ body {
 }
 
 /* === Responsive === */
+
+/* Tablet: narrow the fixed panel */
+@media (max-width: 1024px) {
+  .checker-layout {
+    grid-template-columns: 1fr 280px;
+  }
+}
+
+/* === Mobile diagnostic overlay card === */
+.mobile-diag-overlay {
+  display: none;
+}
+
+/* Mobile: stack to single column */
 @media (max-width: 768px) {
   .header-inner {
     flex-direction: column;
@@ -1034,14 +1048,84 @@ body {
 
   .checker-layout {
     grid-template-columns: 1fr;
+    min-height: auto;
+    max-height: none;
   }
 
+  .editor-container {
+    min-height: 250px;
+  }
+
+  /* Stack the diagnostics panel below the editor on mobile */
   .checker-panel-col {
-    max-height: 300px;
+    max-height: 40vh;
+    overflow-y: auto;
+  }
+
+  /* Show inline overlay instead */
+  .mobile-diag-overlay {
+    display: none; /* shown via JS when tapping an error */
+    position: absolute;
+    bottom: 0.5rem;
+    left: 0.5rem;
+    right: 0.5rem;
+    z-index: 20;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    padding: 0.75rem;
+    animation: fadeIn 0.15s ease;
+  }
+
+  .mobile-diag-overlay.visible {
+    display: block;
+  }
+
+  .mobile-diag-overlay .diag-correction {
+    font-size: 1.05rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .mobile-diag-overlay .diag-explanation {
+    display: block;
+    margin-bottom: 0.3rem;
+  }
+
+  .mobile-diag-overlay .diag-rule {
+    display: block;
+    margin-bottom: 0.4rem;
+  }
+
+  .mobile-diag-overlay .mobile-diag-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .mobile-diag-dismiss {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: var(--color-text-secondary);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 0.2rem;
+    line-height: 1;
   }
 
   .editor-status {
     flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .editor-status-left {
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .mode-note {
+    max-width: 100%;
   }
 
   .inspector-word-header { flex-direction: column; align-items: flex-start; }
@@ -1051,6 +1135,62 @@ body {
   .ref-examples { font-size: 0.8rem; }
   .ref-subrules { flex-direction: column; }
 
+  /* Tables: horizontal scroll on narrow screens */
+  .steps-table,
+  .ref-examples {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
   .rule-ref:hover::after { white-space: normal; max-width: 250px; left: 0; transform: none; }
   .rule-ref:hover::before { left: 1rem; transform: none; }
+}
+
+/* Small phones */
+@media (max-width: 480px) {
+  .header-title {
+    font-size: 1.35rem;
+  }
+
+  .header-subtitle {
+    font-size: 0.75rem;
+  }
+
+  .main {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .editor-container {
+    min-height: 200px;
+  }
+
+  .editor-backdrop,
+  .editor-input {
+    padding: 0.75rem;
+    font-size: 0.95rem;
+  }
+
+  .grammar-toggle {
+    font-size: 0.72rem;
+  }
+
+  .category-pill {
+    font-size: 0.62rem;
+    padding: 0.15rem 0.45rem;
+  }
+
+  .diag-card {
+    padding: 0.5rem;
+  }
+
+  .ref-card {
+    padding: 0.75rem;
+  }
+
+  .sandhi-split-row {
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    padding: 0.5rem 0.75rem;
+  }
 }

@@ -13,6 +13,7 @@ let diagnostics = [];
 let hiddenCategories = new Set();
 let activeCardIndex = -1;
 let runtimeErrorMessage = null;
+const mobileDiagOverlay = document.getElementById('mobile-diag-overlay');
 
 const editorInput = document.getElementById('editor-input');
 const editorBackdrop = document.getElementById('editor-backdrop');
@@ -119,6 +120,7 @@ function heuristicLabel(diag) {
 }
 
 function runCheck() {
+  hideMobileDiagOverlay();
   const text = editorInput.value;
   runtimeErrorMessage = null;
 
@@ -291,7 +293,7 @@ function renderDiagnostics() {
       const tagLabel = heuristicLabel(d);
       const isHeuristic = Boolean(tagLabel);
       const label = isHeuristic
-        ? "सुझाव"
+        ? "विवरण"
         : (CATEGORY_LABELS[d.category_code] || d.category);
       const heuristicClass = isHeuristic ? " heuristic" : "";
       const heuristicTag = isHeuristic
@@ -405,6 +407,66 @@ function setActiveCard(index) {
 }
 
 /**
+ * Whether we're on a narrow (mobile) viewport where the panel is hidden.
+ */
+function isMobileView() {
+  return window.innerWidth <= 768;
+}
+
+/**
+ * Show a single diagnostic as an overlay card inside the editor (mobile).
+ */
+function showMobileDiagOverlay(d, idx) {
+  if (!mobileDiagOverlay) return;
+  const hasChange = d.incorrect !== d.correction;
+  const label = CATEGORY_LABELS[d.category_code] || d.category;
+  const code = escapeHtml(d.category_code);
+  mobileDiagOverlay.innerHTML = `
+    <div class="diag-meta">
+      <span class="diag-badge" data-category="${code}">${escapeHtml(label)}</span>
+      <button class="mobile-diag-dismiss" aria-label="Close">&times;</button>
+    </div>
+    ${hasChange
+      ? `<div class="diag-correction">
+          <span class="diag-incorrect">${escapeHtml(d.incorrect)}</span>
+          <span class="diag-arrow">\u2192</span>
+          <span class="diag-correct">${escapeHtml(d.correction)}</span>
+        </div>`
+      : `<div class="diag-correction"><span class="diag-incorrect">${escapeHtml(d.incorrect)}</span></div>`
+    }
+    <div class="diag-explanation">${escapeHtml(d.explanation)}</div>
+    <div class="diag-rule">${wrapRuleTooltip(d.rule, d.category_code)}</div>
+    <div class="mobile-diag-actions">
+      ${hasChange ? `<button class="btn btn-sm btn-primary" id="mobile-fix-btn">सच्याउनुहोस्</button>` : ''}
+    </div>`;
+  mobileDiagOverlay.classList.add('visible');
+
+  // Fix button
+  const fixBtn = mobileDiagOverlay.querySelector('#mobile-fix-btn');
+  if (fixBtn) {
+    fixBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      fixOne(idx);
+      hideMobileDiagOverlay();
+    });
+  }
+
+  // Dismiss button
+  mobileDiagOverlay.querySelector('.mobile-diag-dismiss')
+    ?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      hideMobileDiagOverlay();
+    });
+}
+
+function hideMobileDiagOverlay() {
+  if (mobileDiagOverlay) {
+    mobileDiagOverlay.classList.remove('visible');
+    mobileDiagOverlay.innerHTML = '';
+  }
+}
+
+/**
  * Handle click in editor — show inspector for clicked word, or highlight diagnostic.
  */
 function onEditorClick() {
@@ -415,14 +477,24 @@ function onEditorClick() {
   const idx = diagnostics.findIndex(
     (d) => pos >= d.charStart && pos < d.charEnd && !hiddenCategories.has(d.category_code)
   );
+
   if (idx >= 0) {
+    if (isMobileView()) {
+      // Mobile: show overlay card inside editor
+      showMobileDiagOverlay(diagnostics[idx], idx);
+      return;
+    }
     activeCardIndex = idx;
     renderDiagnostics();
     const card = diagnosticsList.querySelector(`[data-index="${idx}"]`);
     if (card) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  } else if (isMobileView()) {
+    hideMobileDiagOverlay();
   }
 
-  // Show inspector for clicked word
+  // Show inspector for clicked word (desktop only — on mobile the panel is hidden)
+  if (isMobileView()) return;
+
   const wordInfo = getWordAtCursor(text, pos);
   if (wordInfo) {
     // Hide diagnostics panel content, show inspector
