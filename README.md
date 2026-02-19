@@ -75,9 +75,14 @@ Current feature matrix: `docs/STATUS.md`
 
 ## Documentation
 
-- `docs/VISION.md` — project motivation
-- `docs/PRD.md` — architecture and product requirements
-- `docs/ROADMAP.md` — phase planning
+- `docs/README.md` — central index for all documentation
+- `docs/VISION.md` — project philosophy and principles
+- `docs/ARCHITECTURE.md` — system design and dependencies
+- `docs/DEVELOPMENT.md` — build instructions and dev workflows
+- `docs/DATASETS.md` — testing sources and provenance
+- `docs/RULES.md` — linguistic rule implementations
+- `docs/STATUS.md` — feature matrix and current progress
+- `docs/BACKLOG.md` — near-term priorities
 - `docs/RUST_GUIDE.md` — onboarding for Rust contributors
 - `docs/Notices-pages-77-99.md` — Academy reference used for rules alignment
 
