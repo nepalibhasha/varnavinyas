@@ -235,6 +235,10 @@ fn is_punctuation(c: char) -> bool {
             | '/'
             | '।'
             | '…'
+            | '“'
+            | '”'
+            | '‘'
+            | '’'
     )
 }
 
@@ -260,6 +264,13 @@ mod tests {
         let tokens = tokenize("देश हो।");
         assert_eq!(tokens.len(), 2);
         assert_eq!(tokens[1].text, "हो");
+    }
+
+    #[test]
+    fn strips_smart_quotes() {
+        let tokens = tokenize("“अत्याधिक”");
+        assert_eq!(tokens.len(), 1);
+        assert_eq!(tokens[0].text, "अत्याधिक");
     }
 
     #[test]

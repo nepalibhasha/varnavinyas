@@ -305,7 +305,7 @@ impl LanguageServer for Backend {
 
 fn to_lsp_severity(kind: parikshak::DiagnosticKind) -> DiagnosticSeverity {
     match kind {
-        parikshak::DiagnosticKind::Error => DiagnosticSeverity::WARNING,
+        parikshak::DiagnosticKind::Error => DiagnosticSeverity::ERROR,
         parikshak::DiagnosticKind::Variant | parikshak::DiagnosticKind::Ambiguous => {
             DiagnosticSeverity::INFORMATION
         }
@@ -343,5 +343,13 @@ mod tests {
         let diags2 = [diag];
         let hits2 = diagnostics_at_byte(&diags2, 5, &config2);
         assert!(hits2.is_empty());
+    }
+
+    #[test]
+    fn lsp_severity_maps_core_error_to_error() {
+        assert_eq!(
+            to_lsp_severity(parikshak::DiagnosticKind::Error),
+            DiagnosticSeverity::ERROR
+        );
     }
 }

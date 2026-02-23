@@ -125,6 +125,18 @@ fn punctuation_in_check_text() {
 }
 
 #[test]
+fn spelling_inside_smart_quotes_is_detected() {
+    let text = "“अत्याधिक”";
+    let diags = check_text(text);
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "अत्याधिक" && d.correction == "अत्यधिक"),
+        "Expected spelling diagnostic inside smart quotes, got: {diags:?}"
+    );
+}
+
+#[test]
 fn punctuation_normalized_editorial_emits_variant() {
     let text = "नेपाल राम्रो देश हो.";
     let diags = check_text_with_options(

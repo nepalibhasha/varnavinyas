@@ -20,3 +20,6 @@ varnavinyas-prakriya = { workspace = true }
 varnavinyas-kosha = { workspace = true }
 varnavinyas-lekhya = { workspace = true }
 varnavinyas-parikshak = { workspace = true, features = ["grammar-pass"] }
+
+[build-dependencies]
+pyo3-build-config = "0.24.1"

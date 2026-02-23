@@ -126,8 +126,28 @@ fn check_spacing(text: &str, diagnostics: &mut Vec<LekhyaDiagnostic>) {
                     rule: "Section 5: punctuation should attach to the previous word",
                 });
             }
+
+            // Check if missing space after punctuation in running text.
+            if idx + 1 < chars.len() {
+                let next = chars[idx + 1].1;
+                if !next.is_whitespace() && !is_spacing_exempt_follower(next) {
+                    diagnostics.push(LekhyaDiagnostic {
+                        span: (pos, pos + c.len_utf8()),
+                        found: c.to_string(),
+                        expected: format!("{c} "),
+                        rule: "Section 5: punctuation should be followed by a space",
+                    });
+                }
+            }
         }
     }
+}
+
+fn is_spacing_exempt_follower(c: char) -> bool {
+    matches!(
+        c,
+        ')' | ']' | '}' | '"' | '\'' | '”' | '’' | '।' | ',' | ';' | ':' | '!' | '?'
+    )
 }
 
 /// Y1: Detect `.` used as sentence-end in Devanagari text instead of `।`.
@@ -545,6 +565,19 @@ mod tests {
         assert_eq!(diags.len(), 1);
         assert_eq!(diags[0].found, " ?");
         assert_eq!(diags[0].expected, "?");
+    }
+
+    #[test]
+    fn missing_space_after_question_mark_detected() {
+        let diags = check_punctuation("के छ?तिमी");
+        assert!(
+            diags.iter().any(|d| {
+                d.found == "?"
+                    && d.expected == "? "
+                    && d.rule == "Section 5: punctuation should be followed by a space"
+            }),
+            "Expected missing-space-after diagnostic, got: {diags:?}"
+        );
     }
 
     #[test]
