@@ -84,7 +84,7 @@ Current feature matrix: `docs/STATUS.md`
 - `docs/STATUS.md` — feature matrix and current progress
 - `docs/BACKLOG.md` — near-term priorities
 - `docs/RUST_GUIDE.md` — onboarding for Rust contributors
-- `docs/Notices-pages-77-99.md` — Academy reference used for rules alignment
+- `docs/Notices-pages-77-99.md` — Academy reference used for rules alignment (source: [MoFAGA notice](https://mofaga.gov.np/notice-file/Notices-20211029142422901.pdf))
 
 ## Contributing
 

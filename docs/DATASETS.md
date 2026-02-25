@@ -33,7 +33,7 @@ Test data is located in `docs/tests/`:
 
 Every entry in our datasets must have a traceback to an authoritative source.
 
-1.  **Primary Source**: *Nepal Academy Orthography Standard* (PDF).
+1.  **Key Source**: *Nepal Academy Orthography Standard* — published by MoFAGA ([PDF](https://mofaga.gov.np/notice-file/Notices-20211029142422901.pdf)). Local copy: `docs/Notices-pages-77-99.pdf`.
 2.  **Secondary Sources**: *LDTA Training Materials* (Government training docs).
 
 ### Promotion Flow

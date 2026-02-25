@@ -2,6 +2,14 @@
 
 Varnavinyas encodes the rules of the **Nepali Orthography Standard (नेपाली वर्णविन्यास)** directly into Rust code. This document outlines the rule categories and how they map to the codebase.
 
+## Sources
+
+One of the key sources we leverage is the Nepal Academy orthography standard published by the Ministry of Federal Affairs and General Administration (MoFAGA):
+
+**[https://mofaga.gov.np/notice-file/Notices-20211029142422901.pdf](https://mofaga.gov.np/notice-file/Notices-20211029142422901.pdf)**
+
+A local copy is kept at `docs/Notices-pages-77-99.pdf` (pages 77–99 of the notice).
+
 ## Rule Categories
 
 The standard is divided into specific sections. We map these sections to our `Rule` enum in `crates/prakriya`.
