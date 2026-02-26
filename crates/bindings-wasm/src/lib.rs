@@ -456,6 +456,7 @@ fn parse_scheme(s: &str) -> Result<varnavinyas_lipi::Scheme, JsError> {
 mod tests {
     use super::*;
 
+<<<<<<< HEAD
     #[test]
     fn samasa_type_labels_are_stable() {
         assert_eq!(
@@ -537,6 +538,8 @@ mod tests {
         );
     }
 
+=======
+>>>>>>> cee6074 (feat(bindings-wasm): expose samasa analysis APIs)
     #[test]
     fn sandhi_type_labels_are_devanagari() {
         assert_eq!(
@@ -556,6 +559,87 @@ mod tests {
                 .display_label()
                 .to_string(),
                 "व्यञ्जन सन्धि"
+        );
+    }
+
+    #[test]
+    fn samasa_type_labels_are_stable() {
+        assert_eq!(
+            samasa_type_to_string(varnavinyas_samasa::SamasaType::Tatpurusha),
+            "तत्पुरुष"
+        );
+        assert_eq!(
+            samasa_type_to_string(varnavinyas_samasa::SamasaType::Karmadharaya),
+            "कर्मधारय"
+        );
+        assert_eq!(
+            samasa_type_to_string(varnavinyas_samasa::SamasaType::Dvigu),
+            "द्विगु"
+        );
+        assert_eq!(
+            samasa_type_to_string(varnavinyas_samasa::SamasaType::Bahuvrihi),
+            "बहुव्रीहि"
+        );
+        assert_eq!(
+            samasa_type_to_string(varnavinyas_samasa::SamasaType::Dvandva),
+            "द्वन्द्व"
+        );
+        assert_eq!(
+            samasa_type_to_string(varnavinyas_samasa::SamasaType::Avyayibhava),
+            "अव्ययीभाव"
+        );
+        assert_eq!(
+            samasa_type_to_string(varnavinyas_samasa::SamasaType::Unknown),
+            "अज्ञात"
+        );
+    }
+
+    #[test]
+    fn analyze_compound_returns_expected_json_fields() {
+        let json = analyze_compound("सूर्योदय");
+        let parsed: serde_json::Value =
+            serde_json::from_str(&json).expect("compound analysis must return valid JSON");
+        let arr = parsed
+            .as_array()
+            .expect("compound analysis payload must be an array");
+
+        assert!(!arr.is_empty(), "expected at least one compound candidate");
+
+        let first = &arr[0];
+        assert!(
+            first
+                .get("left")
+                .and_then(serde_json::Value::as_str)
+                .is_some(),
+            "candidate must include string field 'left'"
+        );
+        assert!(
+            first
+                .get("right")
+                .and_then(serde_json::Value::as_str)
+                .is_some(),
+            "candidate must include string field 'right'"
+        );
+        assert!(
+            first
+                .get("samasa_type")
+                .and_then(serde_json::Value::as_str)
+                .is_some(),
+            "candidate must include string field 'samasa_type'"
+        );
+        assert!(
+            first
+                .get("score")
+                .and_then(serde_json::Value::as_f64)
+                .is_some(),
+            "candidate must include numeric field 'score'"
+        );
+        assert!(
+            first
+                .get("vigraha")
+                .and_then(serde_json::Value::as_str)
+                .is_some(),
+            "candidate must include string field 'vigraha'"
         );
     }
 }
