@@ -38,6 +38,8 @@ pub struct WordEntry {
 pub struct Kosha {
     /// FST set for O(1) word existence checks.
     fst: Set<Vec<u8>>,
+    /// Sorted full-word forms for nearby suggestion heuristics.
+    words: Vec<&'static str>,
     /// Sorted headword entries for binary-search metadata lookup.
     headwords: Vec<WordEntry>,
 }
@@ -65,12 +67,56 @@ impl Kosha {
             .collect();
         headwords.sort_by(|a, b| a.word.as_bytes().cmp(b.word.as_bytes()));
 
-        Kosha { fst, headwords }
+        Kosha {
+            fst,
+            words,
+            headwords,
+        }
     }
 
     /// Check if a word exists in the lexicon.
     pub fn contains(&self, word: &str) -> bool {
         self.fst.contains(word)
+    }
+
+    /// Find one near-match candidate by character-level edit distance.
+    ///
+    /// This searches a bounded lexicographic window around the insertion point,
+    /// avoiding a full-lexicon scan while keeping Unicode-aware matching.
+    pub fn suggest_nearby(&self, word: &str, max_distance: usize) -> Option<String> {
+        if word.is_empty() {
+            return None;
+        }
+
+        let idx = self
+            .words
+            .binary_search_by(|w| w.as_bytes().cmp(word.as_bytes()))
+            .unwrap_or_else(|i| i);
+        const WINDOW: usize = 256;
+        let start = idx.saturating_sub(WINDOW);
+        let end = (idx + WINDOW).min(self.words.len());
+
+        let mut best: Option<(&str, usize)> = None;
+        for candidate in &self.words[start..end] {
+            let clen = candidate.chars().count();
+            let wlen = word.chars().count();
+            if clen.abs_diff(wlen) > max_distance {
+                continue;
+            }
+
+            if let Some(dist) = bounded_levenshtein_chars(word, candidate, max_distance) {
+                match best {
+                    None => best = Some((candidate, dist)),
+                    Some((best_word, best_dist)) => {
+                        if dist < best_dist || (dist == best_dist && candidate < &best_word) {
+                            best = Some((candidate, dist));
+                        }
+                    }
+                }
+            }
+        }
+
+        best.map(|(w, _)| w.to_string())
     }
 
     /// Look up headword metadata (POS tags).
@@ -208,4 +254,47 @@ mod tests {
             },
         );
     }
+
+    #[test]
+    fn test_suggest_nearby_returns_close_match() {
+        with_test_kosha(
+            "अध्ययन\nआकाश\n",
+            "अध्ययन\tना.\nआकाश\tना.\n",
+            || {
+                let hit = kosha().suggest_nearby("अध्यन", 1);
+                assert_eq!(hit.as_deref(), Some("अध्ययन"));
+            },
+        );
+    }
+}
+
+fn bounded_levenshtein_chars(a: &str, b: &str, max_distance: usize) -> Option<usize> {
+    if a == b {
+        return Some(0);
+    }
+    let a_chars: Vec<char> = a.chars().collect();
+    let b_chars: Vec<char> = b.chars().collect();
+    if a_chars.len().abs_diff(b_chars.len()) > max_distance {
+        return None;
+    }
+
+    let mut prev: Vec<usize> = (0..=b_chars.len()).collect();
+    let mut curr: Vec<usize> = vec![0; b_chars.len() + 1];
+
+    for (i, &ac) in a_chars.iter().enumerate() {
+        curr[0] = i + 1;
+        let mut row_min = curr[0];
+        for (j, &bc) in b_chars.iter().enumerate() {
+            let cost = if ac == bc { 0 } else { 1 };
+            curr[j + 1] = (prev[j + 1] + 1).min(curr[j] + 1).min(prev[j] + cost);
+            row_min = row_min.min(curr[j + 1]);
+        }
+        if row_min > max_distance {
+            return None;
+        }
+        std::mem::swap(&mut prev, &mut curr);
+    }
+
+    let dist = prev[b_chars.len()];
+    (dist <= max_distance).then_some(dist)
 }

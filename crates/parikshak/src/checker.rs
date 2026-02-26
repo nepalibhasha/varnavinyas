@@ -186,7 +186,8 @@ pub struct CheckOptions {
 /// 1. Run prakriya::derive — authoritative Academy rules always win
 /// 2. If derive has no opinion, consult kosha lexicon:
 ///    - Known word → confirmed correct (None)
-///    - Unknown word → not flagged (None) — we have no correction to offer
+///    - Unknown with close lexicon near-match → flagged as Ambiguous
+///    - Other unknown word → not flagged (None)
 ///
 /// Derive runs first because the sabdasakha lexicon contains observed word
 /// forms (including common misspellings like राजनैतिक). Academy correction
@@ -227,10 +228,29 @@ pub fn check_word(word: &str) -> Option<Diagnostic> {
     }
 
     // Step 2: Derive found no correction. Consult lexicon for validation.
-    // A word in the lexicon is confirmed correct. A word absent from both
-    // the correction rules and the lexicon is unknown — we don't flag it
-    // because we have no correction to offer.
-    let _in_lexicon = kosha().contains(word);
+    // - Known word: confirmed correct.
+    // - Unknown + near-match candidate: likely misspelling.
+    // - Unknown without near-match: keep unflagged to avoid noisy false positives.
+    let in_lexicon = kosha().contains(word);
+    if in_lexicon {
+        return None;
+    }
+
+    if let Some(suggestion) = kosha().suggest_nearby(word, 1) {
+        if suggestion == word {
+            return None;
+        }
+        return Some(Diagnostic {
+            span: (0, word.len()),
+            incorrect: word.to_string(),
+            correction: suggestion,
+            rule: Rule::ShuddhaAshuddha("unknown"),
+            explanation: "शब्द शब्दकोशमा भेटिएन; सम्भावित वर्तनी त्रुटि".to_string(),
+            category: DiagnosticCategory::ShuddhaTable,
+            kind: DiagnosticKind::Ambiguous,
+            confidence: 0.72,
+        });
+    }
 
     None
 }
@@ -265,7 +285,9 @@ pub fn check_text_with_options(text: &str, options: CheckOptions) -> Vec<Diagnos
                 diag.correction.push_str(sfx);
             }
 
-            blocked_spans.insert(diag.span);
+            if !matches!(diag.kind, DiagnosticKind::Ambiguous) {
+                blocked_spans.insert(diag.span);
+            }
             diagnostics.push(diag);
         }
     }
@@ -389,7 +411,12 @@ fn add_style_variant_diagnostics(
 fn overlaps_existing_span(diagnostics: &[Diagnostic], candidate: (usize, usize)) -> bool {
     diagnostics
         .iter()
+        .filter(|d| !is_non_blocking_diagnostic(d))
         .any(|d| d.span.0 < candidate.1 && candidate.0 < d.span.1)
+}
+
+fn is_non_blocking_diagnostic(d: &Diagnostic) -> bool {
+    matches!(d.kind, DiagnosticKind::Ambiguous)
 }
 
 fn is_word_boundary(text: &str, start: usize, end: usize) -> bool {
