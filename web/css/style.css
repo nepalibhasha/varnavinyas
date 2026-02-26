@@ -1025,6 +1025,13 @@ body {
   margin-top: 0.15rem;
 }
 
+.footer-build {
+  font-family: var(--font-latin);
+  font-size: 0.68rem;
+  margin-top: 0.15rem;
+  opacity: 0.9;
+}
+
 /* === Responsive === */
 
 /* Tablet: narrow the fixed panel */

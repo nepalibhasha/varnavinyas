@@ -12,6 +12,8 @@ const SAMPLE_TEXT =
 let returnScrollY = null;
 
 async function main() {
+  await renderBuildInfo();
+
   // Initialize WASM
   const overlay = document.getElementById('loading-overlay');
   try {
@@ -39,6 +41,22 @@ async function main() {
 
   // Load sample text
   setText(SAMPLE_TEXT);
+}
+
+async function renderBuildInfo() {
+  const el = document.getElementById('footer-build');
+  if (!el) return;
+
+  try {
+    const res = await fetch('build-info.json', { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const info = await res.json();
+    const sha = info?.git_sha || 'unknown';
+    const builtAt = info?.built_at_utc || 'unknown';
+    el.textContent = `Build: ${sha} · ${builtAt}`;
+  } catch (_err) {
+    el.textContent = 'Build: unavailable';
+  }
 }
 
 /**
