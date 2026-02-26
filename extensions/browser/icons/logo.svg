@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0.8" y2="1">
+      <stop offset="0%" stop-color="#9F1239"/>
+      <stop offset="100%" stop-color="#7F1D1D"/>
+    </linearGradient>
+  </defs>
+  <!-- Rounded square background -->
+  <rect width="128" height="128" rx="26" fill="url(#bg)"/>
+  <!-- व character — uses system Devanagari font for correct glyph -->
+  <text x="64" y="84" text-anchor="middle" font-family="'Noto Sans Devanagari', 'Devanagari MT', system-ui" font-size="80" font-weight="600" fill="#fff" opacity="0.95">व</text>
+</svg>

@@ -1,6 +1,6 @@
 # Varnavinyas Feature Status
 
-> **Last Updated**: 2026-02-19
+> **Last Updated**: 2026-02-25
 
 ## Core Features
 
@@ -21,6 +21,7 @@
 |-----------|--------|-------|
 | **CLI** | ✅ Beta | Basic checking works |
 | **WASM** | ✅ Alpha | Browser bindings active |
+| **Browser Extension** | ✅ MVP | Chrome side panel + Firefox popup, Sabdasakha dictionary |
 | **Python** | 🚧 WIP | `varnavinyas` package stub |
 | **LSP** | 🚧 WIP | Editor integration scaffolded |
 | **Vyakaran** | 🚧 MVP | Basic morphology analysis |
