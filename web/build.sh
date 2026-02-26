@@ -63,4 +63,13 @@ wasm-pack build crates/bindings-wasm \
   --release \
   --mode no-install
 
+BUILD_TIME_UTC="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+GIT_SHA="$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")"
+cat > web/build-info.json <<EOF
+{
+  "built_at_utc": "${BUILD_TIME_UTC}",
+  "git_sha": "${GIT_SHA}"
+}
+EOF
+
 echo "Done. Serve with: python3 -m http.server 8080 --directory web/"
