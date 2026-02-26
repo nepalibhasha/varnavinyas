@@ -102,6 +102,28 @@ fn c6_no_false_positives_on_correct() {
     }
 }
 
+#[test]
+fn unknown_word_with_close_match_is_flagged_as_ambiguous() {
+    let diag = check_word("अध्यन");
+    assert!(
+        diag.is_some(),
+        "Unknown form with close lexicon match should be flagged"
+    );
+    let diag = diag.unwrap();
+    assert!(matches!(diag.kind, DiagnosticKind::Ambiguous));
+    assert_eq!(diag.incorrect, "अध्यन");
+    assert_eq!(diag.correction, "अध्ययन");
+}
+
+#[test]
+fn unknown_simple_word_remains_unflagged() {
+    let diag = check_word("गलुमी");
+    assert!(
+        diag.is_none(),
+        "Simple unknown forms should remain unflagged to avoid noisy false positives"
+    );
+}
+
 /// Punctuation diagnostics integrated into check_text.
 #[test]
 fn punctuation_in_check_text() {
