@@ -263,7 +263,7 @@ pub fn sandhi_split_value(word: &str) -> Result<JsValue, JsError> {
 fn sandhi_result_to_js(res: varnavinyas_sandhi::SandhiResult) -> JsSandhiResult {
     JsSandhiResult {
         output: res.output,
-        sandhi_type: sandhi_type_to_string(res.sandhi_type),
+        sandhi_type: res.sandhi_type.display_label().to_string(),
         rule_citation: res.rule_citation.to_string(),
     }
 }
@@ -277,16 +277,8 @@ fn sandhi_split_to_js(
         left,
         right,
         output: res.output,
-        sandhi_type: sandhi_type_to_string(res.sandhi_type),
+        sandhi_type: res.sandhi_type.display_label().to_string(),
         rule_citation: res.rule_citation.to_string(),
-    }
-}
-
-fn sandhi_type_to_string(st: varnavinyas_sandhi::SandhiType) -> String {
-    match st {
-        varnavinyas_sandhi::SandhiType::VowelSandhi => "VowelSandhi".into(),
-        varnavinyas_sandhi::SandhiType::VisargaSandhi => "VisargaSandhi".into(),
-        varnavinyas_sandhi::SandhiType::ConsonantSandhi => "ConsonantSandhi".into(),
     }
 }
 
@@ -378,5 +370,30 @@ fn parse_scheme(s: &str) -> Result<varnavinyas_lipi::Scheme, JsError> {
         _ => Err(JsError::new(&format!(
             "Unknown scheme '{s}'. Use 'Devanagari' or 'Iast'."
         ))),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn sandhi_type_labels_are_devanagari() {
+        assert_eq!(
+            varnavinyas_sandhi::SandhiType::VowelSandhi
+                .display_label()
+                .to_string(),
+            "स्वर सन्धि"
+        );
+        assert_eq!(
+            varnavinyas_sandhi::SandhiType::VisargaSandhi
+                .display_label()
+                .to_string(),
+            "विसर्ग सन्धि"
+        );
+        assert_eq!(
+            varnavinyas_sandhi::SandhiType::ConsonantSandhi
+                .display_label()
+                .to_string(),
+            "व्यञ्जन सन्धि"
+        );
     }
 }
