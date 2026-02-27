@@ -117,7 +117,7 @@ fn unknown_word_with_close_match_is_flagged_as_ambiguous() {
 
 #[test]
 fn unknown_simple_word_remains_unflagged() {
-    let diag = check_word("गलुमी");
+    let diag = check_word("झ्क्ष्ट्र्व्ङ");
     assert!(
         diag.is_none(),
         "Simple unknown forms should remain unflagged to avoid noisy false positives"
