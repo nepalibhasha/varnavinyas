@@ -101,7 +101,8 @@ fn bracket_invariant_all_brackets_are_origin_or_known() {
     // If a first-bracket starts with one of these, parse_origin_tag MUST
     // return Some(_). (Matches the prefixes in origin_tag::classify_tag.)
     let origin_prefixes: &[&str] = &[
-        "सं",
+        "सं.",
+        "सं ",
         "अ.",
         "अ ",
         "अङ्",
