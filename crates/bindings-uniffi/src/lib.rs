@@ -18,6 +18,13 @@ pub enum Origin {
     Aagantuk,
 }
 
+/// Runtime punctuation classification mode for diagnostics.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
+pub enum PunctuationMode {
+    Strict,
+    NormalizedEditorial,
+}
+
 /// A single spell-check diagnostic.
 #[derive(Debug, Serialize)]
 struct FfiDiagnostic {
@@ -26,6 +33,7 @@ struct FfiDiagnostic {
     incorrect: String,
     correction: String,
     rule: String,
+    rule_code: String,
     explanation: String,
     category: String,
     category_code: String,
@@ -38,7 +46,33 @@ struct FfiDiagnostic {
 /// Returns a JSON array of diagnostics.
 #[uniffi::export]
 pub fn check_text(text: String) -> String {
-    let diags = varnavinyas_parikshak::check_text(&text);
+    check_text_with_options(text, false, PunctuationMode::Strict, false)
+}
+
+/// Check text with runtime options.
+///
+/// Returns a JSON array of diagnostics.
+#[uniffi::export]
+pub fn check_text_with_options(
+    text: String,
+    grammar: bool,
+    punctuation_mode: PunctuationMode,
+    include_noop_heuristics: bool,
+) -> String {
+    let punctuation_mode = match punctuation_mode {
+        PunctuationMode::Strict => varnavinyas_parikshak::PunctuationMode::Strict,
+        PunctuationMode::NormalizedEditorial => {
+            varnavinyas_parikshak::PunctuationMode::NormalizedEditorial
+        }
+    };
+    let diags = varnavinyas_parikshak::check_text_with_options(
+        &text,
+        varnavinyas_parikshak::CheckOptions {
+            grammar,
+            punctuation_mode,
+            include_noop_heuristics,
+        },
+    );
     let ffi_diags: Vec<FfiDiagnostic> = diags
         .into_iter()
         .map(|d| FfiDiagnostic {
@@ -47,6 +81,7 @@ pub fn check_text(text: String) -> String {
             incorrect: d.incorrect,
             correction: d.correction,
             rule: d.rule.to_string(),
+            rule_code: d.rule.code().to_string(),
             explanation: d.explanation,
             category: d.category.to_string(),
             category_code: d.category.as_code().to_string(),
@@ -55,6 +90,30 @@ pub fn check_text(text: String) -> String {
         })
         .collect();
     serde_json::to_string(&ffi_diags).unwrap_or_else(|_| "[]".to_string())
+}
+
+/// Check a single word.
+///
+/// Returns a JSON diagnostic object or `null`.
+#[uniffi::export]
+pub fn check_word(word: String) -> String {
+    match varnavinyas_parikshak::check_word(&word) {
+        Some(d) => serde_json::to_string(&FfiDiagnostic {
+            span_start: d.span.0 as u64,
+            span_end: d.span.1 as u64,
+            incorrect: d.incorrect,
+            correction: d.correction,
+            rule: d.rule.to_string(),
+            rule_code: d.rule.code().to_string(),
+            explanation: d.explanation,
+            category: d.category.to_string(),
+            category_code: d.category.as_code().to_string(),
+            kind: d.kind.as_code().to_string(),
+            confidence: d.confidence,
+        })
+        .unwrap_or_else(|_| "null".to_string()),
+        None => "null".to_string(),
+    }
 }
 
 /// Transliterate text between Devanagari and IAST.
@@ -103,6 +162,21 @@ mod tests {
             assert!(d["correction"].is_string());
             assert!(d["rule"].is_string());
         }
+    }
+
+    #[test]
+    fn check_word_returns_json_object_or_null() {
+        let result = check_word("अध्यन".to_string());
+        let parsed: serde_json::Value = serde_json::from_str(&result).unwrap();
+        assert!(parsed.is_object() || parsed.is_null());
+    }
+
+    #[test]
+    fn check_text_with_options_works() {
+        let result =
+            check_text_with_options("नेपाल".to_string(), true, PunctuationMode::Strict, false);
+        let parsed: serde_json::Value = serde_json::from_str(&result).unwrap();
+        assert!(parsed.is_array());
     }
 
     #[test]

@@ -29,6 +29,16 @@ impl PySandhiType {
             PySandhiType::ConsonantSandhi => "SandhiType.ConsonantSandhi".to_string(),
         }
     }
+
+    /// Canonical Devanagari label for UI/display use.
+    #[getter]
+    fn display_label(&self) -> &'static str {
+        match self {
+            PySandhiType::VowelSandhi => SandhiType::VowelSandhi.display_label(),
+            PySandhiType::VisargaSandhi => SandhiType::VisargaSandhi.display_label(),
+            PySandhiType::ConsonantSandhi => SandhiType::ConsonantSandhi.display_label(),
+        }
+    }
 }
 
 #[pyclass(name = "SandhiResult", get_all, frozen)]

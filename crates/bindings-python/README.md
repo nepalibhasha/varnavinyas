@@ -2,7 +2,7 @@
 
 **Python Bindings for Varnavinyas.**
 
-Exposes core functionality (spell checking, transliteration, analysis) to Python via PyO3.
+Exposes core functionality to Python via PyO3.
 
 ## Installation
 
@@ -14,8 +14,32 @@ pip install varnavinyas
 
 ```python
 import varnavinyas
-checker = varnavinyas.Parikshak()
+
+diagnostics = varnavinyas.parikshak.check_text_with_options(
+    "नेपाल एक सुन्दर देश हो।",
+    grammar=True,
+    punctuation_mode="strict",  # or "normalized_editorial"
+    include_noop_heuristics=False,
+)
+
+result = varnavinyas.sandhi.apply("अति", "अधिक")
+print(result.sandhi_type.display_label)  # "स्वर सन्धि"
 ```
 
 ## Status
-🚧 Work in Progress
+
+Implemented modules:
+
+- `akshar`
+- `lipi`
+- `shabda`
+- `sandhi`
+- `prakriya`
+- `kosha`
+- `lekhya`
+- `parikshak`
+
+Current gaps:
+
+- Publish/release automation for Python wheels in CI
+- Python-level runtime integration tests (import + API smoke tests)
