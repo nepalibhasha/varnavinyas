@@ -19,6 +19,10 @@ pub enum Origin {
 pub const SCHEME_DEVANAGARI: c_int = 0;
 pub const SCHEME_IAST: c_int = 1;
 
+/// Punctuation mode constants for use with `varnavinyas_check_text_with_options`.
+pub const PUNCTUATION_STRICT: c_int = 0;
+pub const PUNCTUATION_NORMALIZED_EDITORIAL: c_int = 1;
+
 #[derive(Serialize)]
 struct CDiagnostic {
     span_start: u64,
@@ -26,6 +30,7 @@ struct CDiagnostic {
     incorrect: String,
     correction: String,
     rule: String,
+    rule_code: String,
     explanation: String,
     category: String,
     category_code: String,
@@ -60,6 +65,17 @@ fn parse_scheme(value: c_int) -> Option<varnavinyas_lipi::Scheme> {
     }
 }
 
+/// Convert a `c_int` punctuation mode to internal `PunctuationMode`.
+fn parse_punctuation_mode(value: c_int) -> Option<varnavinyas_parikshak::PunctuationMode> {
+    match value {
+        PUNCTUATION_STRICT => Some(varnavinyas_parikshak::PunctuationMode::Strict),
+        PUNCTUATION_NORMALIZED_EDITORIAL => {
+            Some(varnavinyas_parikshak::PunctuationMode::NormalizedEditorial)
+        }
+        _ => None,
+    }
+}
+
 /// Check text for spelling and punctuation issues.
 ///
 /// Returns a JSON array of diagnostics as a C string.
@@ -83,6 +99,7 @@ pub unsafe extern "C" fn varnavinyas_check_text(text: *const c_char) -> *mut c_c
             incorrect: d.incorrect,
             correction: d.correction,
             rule: d.rule.to_string(),
+            rule_code: d.rule.code().to_string(),
             explanation: d.explanation,
             category: d.category.to_string(),
             category_code: d.category.as_code().to_string(),
@@ -91,6 +108,93 @@ pub unsafe extern "C" fn varnavinyas_check_text(text: *const c_char) -> *mut c_c
         })
         .collect();
     let json = serde_json::to_string(&c_diags).unwrap_or_else(|_| "[]".to_string());
+    string_to_c(json)
+}
+
+/// Check text with runtime options.
+///
+/// `punctuation_mode` must be one of `PUNCTUATION_STRICT` or
+/// `PUNCTUATION_NORMALIZED_EDITORIAL`.
+///
+/// Returns a JSON array of diagnostics as a C string.
+/// The caller must free the returned pointer with `varnavinyas_free_string`.
+/// Returns NULL on null/invalid UTF-8 text or invalid punctuation mode.
+///
+/// # Safety
+///
+/// `text` must be a valid null-terminated C string or null.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn varnavinyas_check_text_with_options(
+    text: *const c_char,
+    grammar: bool,
+    punctuation_mode: c_int,
+    include_noop_heuristics: bool,
+) -> *mut c_char {
+    let Some(text) = (unsafe { cstr_to_str(text) }) else {
+        return std::ptr::null_mut();
+    };
+    let Some(punctuation_mode) = parse_punctuation_mode(punctuation_mode) else {
+        return std::ptr::null_mut();
+    };
+    let diags = varnavinyas_parikshak::check_text_with_options(
+        text,
+        varnavinyas_parikshak::CheckOptions {
+            grammar,
+            punctuation_mode,
+            include_noop_heuristics,
+        },
+    );
+    let c_diags: Vec<CDiagnostic> = diags
+        .into_iter()
+        .map(|d| CDiagnostic {
+            span_start: d.span.0 as u64,
+            span_end: d.span.1 as u64,
+            incorrect: d.incorrect,
+            correction: d.correction,
+            rule: d.rule.to_string(),
+            rule_code: d.rule.code().to_string(),
+            explanation: d.explanation,
+            category: d.category.to_string(),
+            category_code: d.category.as_code().to_string(),
+            kind: d.kind.as_code().to_string(),
+            confidence: d.confidence,
+        })
+        .collect();
+    let json = serde_json::to_string(&c_diags).unwrap_or_else(|_| "[]".to_string());
+    string_to_c(json)
+}
+
+/// Check a single word.
+///
+/// Returns a JSON diagnostic object or `null` as a C string.
+/// The caller must free the returned pointer with `varnavinyas_free_string`.
+/// Returns NULL on null input or invalid UTF-8.
+///
+/// # Safety
+///
+/// `word` must be a valid null-terminated C string or null.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn varnavinyas_check_word(word: *const c_char) -> *mut c_char {
+    let Some(word) = (unsafe { cstr_to_str(word) }) else {
+        return std::ptr::null_mut();
+    };
+    let json = match varnavinyas_parikshak::check_word(word) {
+        Some(d) => serde_json::to_string(&CDiagnostic {
+            span_start: d.span.0 as u64,
+            span_end: d.span.1 as u64,
+            incorrect: d.incorrect,
+            correction: d.correction,
+            rule: d.rule.to_string(),
+            rule_code: d.rule.code().to_string(),
+            explanation: d.explanation,
+            category: d.category.to_string(),
+            category_code: d.category.as_code().to_string(),
+            kind: d.kind.as_code().to_string(),
+            confidence: d.confidence,
+        })
+        .unwrap_or_else(|_| "null".to_string()),
+        None => "null".to_string(),
+    };
     string_to_c(json)
 }
 
@@ -187,6 +291,28 @@ mod tests {
     fn check_text_null_returns_null() {
         unsafe {
             let result = varnavinyas_check_text(std::ptr::null());
+            assert!(result.is_null());
+        }
+    }
+
+    #[test]
+    fn check_word_returns_json_or_null() {
+        let input = CString::new("अध्यन").unwrap();
+        unsafe {
+            let result = varnavinyas_check_word(input.as_ptr());
+            assert!(!result.is_null());
+            let s = CStr::from_ptr(result).to_str().unwrap();
+            let parsed: serde_json::Value = serde_json::from_str(s).unwrap();
+            assert!(parsed.is_object() || parsed.is_null());
+            varnavinyas_free_string(result);
+        }
+    }
+
+    #[test]
+    fn check_text_with_options_invalid_mode_returns_null() {
+        let input = CString::new("नेपाल").unwrap();
+        unsafe {
+            let result = varnavinyas_check_text_with_options(input.as_ptr(), false, 99, false);
             assert!(result.is_null());
         }
     }

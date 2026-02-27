@@ -26,8 +26,24 @@ Test data is located in `docs/tests/`:
     *   Sentence-level pairs testing contextual grammar diagnostic bounds.
 
 *   **`data/headwords.tsv`**
-    *   The primary lexicon containing ~51k+ correctly verified headwords.
-    *   **Usage**: Compiled into the FST (Finite State Transducer) by `varnavinyas-kosha` for sub-microsecond validation.
+    *   Canonical headword list with POS metadata (`word<TAB>pos`) used by `varnavinyas-kosha`.
+    *   Current scale: ~132k headwords.
+
+*   **`data/words.txt`**
+    *   Surface-form lexicon used to build the fast containment index for spell-checking.
+    *   Current scale: ~207k entries.
+
+## Lexicon Provenance
+
+`data/words.txt` and `data/headwords.tsv` are derived from the Sabdasakha dictionary database, whose Nepali lexicon is anchored in:
+
+1.  **नेपाली बृहत् शब्दकोश** (Nepali Brihat Shabdakosh), Nepal Academy.
+2.  **प्रज्ञा नेपाली बृहत् शब्दकोश** (Pragya Nepali Brihat Shabdakosh), Nepal Academy.
+
+Usage in Varnavinyas:
+
+1.  `words.txt` powers the compiled FST for fast existence checks.
+2.  `headwords.tsv` provides headword-level metadata (POS/origin-tag parsing).
 
 ## Provenance Policy
 
