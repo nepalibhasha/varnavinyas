@@ -55,11 +55,11 @@ pub fn split(word: &str) -> Vec<SandhiCandidate> {
 }
 
 /// Return the safest single split candidate for public-facing consumers.
+///
+/// Requires Authoritative confidence (≥ 0.85) to suppress mechanically valid
+/// but linguistically spurious splits on everyday lexicalized forms.
 pub fn split_best(word: &str) -> Option<SandhiCandidate> {
-    split(word).into_iter().find(|candidate| {
-        matches!(
-            candidate.authority,
-            AuthorityTier::Authoritative | AuthorityTier::Likely
-        )
-    })
+    split(word)
+        .into_iter()
+        .find(|c| c.authority == AuthorityTier::Authoritative)
 }

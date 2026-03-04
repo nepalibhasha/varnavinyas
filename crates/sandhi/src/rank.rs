@@ -9,7 +9,10 @@ pub fn rank_candidates(
     lex: &Kosha,
 ) -> Vec<SandhiCandidate> {
     let surface_origin = lex.origin_of(surface);
-    let surface_is_lexicalized = lex.lookup(surface).is_some();
+    let surface_entry = lex.lookup(surface);
+    let surface_is_lexicalized = surface_entry.is_some();
+    let surface_is_proper_name =
+        surface_entry.is_some_and(|entry| entry.pos.trim_start().starts_with("नाम"));
 
     for candidate in &mut candidates {
         let mut score: f32 = 0.0;
@@ -43,14 +46,14 @@ pub fn rank_candidates(
             RuleFamily::Ayadi => 0.08,
         };
 
-        // Favor origin-consistent tatsam compounds, where most classical sandhi is expected.
-        if surface_origin == Some(OriginTag::Tatsam) {
-            let left_tatsam = lex.origin_of(&candidate.left) == Some(OriginTag::Tatsam)
-                || candidate.lexical_left == LexicalStatus::KnownBoundForm;
-            let right_tatsam = lex.origin_of(&candidate.right) == Some(OriginTag::Tatsam);
-            if left_tatsam && right_tatsam {
-                score += 0.10;
-            }
+        // Favor tatsam compounds: both parts being classical Sanskrit words is strong
+        // evidence of a genuine sandhi junction, regardless of whether the surface
+        // word itself appears in the lexicon as a tagged entry.
+        let left_tatsam = lex.origin_of(&candidate.left) == Some(OriginTag::Tatsam)
+            || candidate.lexical_left == LexicalStatus::KnownBoundForm;
+        let right_tatsam = lex.origin_of(&candidate.right) == Some(OriginTag::Tatsam);
+        if left_tatsam && right_tatsam {
+            score += 0.10;
         }
 
         // If the surface is already a lexicalized word and not explicitly tatsam,
@@ -68,6 +71,12 @@ pub fn rank_candidates(
             && matches!(candidate.family, RuleFamily::Yan | RuleFamily::Ayadi)
         {
             score -= 0.08;
+        }
+
+        // Proper names are usually atomic lexical items for orthography UX.
+        // Penalize mechanical sandhi parses unless they are explicit direct joins.
+        if surface_is_proper_name && !matches!(candidate.family, RuleFamily::DirectJoin) {
+            score -= 0.40;
         }
 
         // Penalize minimal-boundary one-akshara left segments outside direct-join style cases.
