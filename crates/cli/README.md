@@ -1,21 +1,47 @@
 # varnavinyas-cli
 
-**Command Line Interface for Varnavinyas.**
+Terminal interface for running Varnavinyas checks and utility commands.
 
-Provides terminal access to spell checking, analysis, and transliteration tools.
+## What This Crate Owns
 
-## Usage
+This crate is the command-line surface for the workspace. It exists to make the core engines usable from shell workflows, CI, and quick manual inspection.
+
+## Commands
+
+The CLI currently exposes commands for:
+
+- `check` -> run text diagnostics
+- `akshar` -> inspect script/akshara behavior
+- `lipi` -> transliterate text
+
+## Example
 
 ```bash
-# Check a file or text
 varnavinyas check document.txt
-
-# Analyze characters/syllables
 varnavinyas akshar "शब्द"
-
-# Transliterate text
-varnavinyas lipi "शब्द" --to IAST
+varnavinyas lipi "नेपाल" --to IAST
 ```
 
+```bash
+echo "राजनैतिक" | varnavinyas check -
+```
+
+## Design Notes
+
+- This crate should stay a thin wrapper over core crates.
+- It should expose core semantics clearly, especially the difference between definite errors and softer suggestions.
+
+## Depends On
+
+- `varnavinyas-parikshak`
+- `varnavinyas-akshar`
+- `varnavinyas-lipi`
+
+## Current Limits
+
+- Advanced internal analyses are not yet surfaced in a rich review mode.
+- JSON output is useful, but still flatter than the underlying future data model should be.
+
 ## Status
-✅ Beta
+
+Usable command surface for local workflows and CI.

@@ -1,8 +1,51 @@
 # varnavinyas-bindings-uniffi
 
-**UniFFI Bindings (Kotlin/Swift).**
+UniFFI bridge for Swift/Kotlin-style consumers.
 
-Generates bindings for mobile platforms (Android/iOS).
+## What This Crate Owns
+
+This crate provides a higher-level foreign-function interface for platforms that integrate well with UniFFI, especially:
+
+- iOS / Swift
+- Android / Kotlin
+- other native clients that benefit from generated bindings
+
+## What It Exposes
+
+The exported API currently focuses on a compact core:
+
+- `check_text`
+- `transliterate`
+- `classify`
+
+## Example
+
+Conceptually, native consumers use generated bindings for the exported functions:
+
+```text
+check_text("यो बाक्यमा गल्ति छ")
+transliterate("नेपाल", Devanagari, Iast)
+classify("नेपाल")
+```
+
+The exact call shape depends on the generated Swift/Kotlin package, but the exported Rust API is those three functions.
+
+## Design Notes
+
+- This crate is meant to be a stable language boundary, not the main place to add features first.
+- It should mirror trusted core semantics from Rust.
+- As the core gains richer structured outputs, this crate should move away from string-heavy contracts where possible.
+
+## Used By
+
+- mobile applications
+- native clients that want generated bindings instead of manual C FFI
+
+## Current Limits
+
+- The surface area is intentionally narrower than the Rust API.
+- Some outputs are still simplified for portability.
 
 ## Status
-✅ MVP / Implemented
+
+Implemented MVP integration layer.
