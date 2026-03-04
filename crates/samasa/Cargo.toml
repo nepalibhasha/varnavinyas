@@ -7,5 +7,6 @@ license.workspace = true
 description = "Heuristic samasa (compound) analysis for Nepali/Sanskrit words"
 
 [dependencies]
+varnavinyas-akshar = { workspace = true }
 varnavinyas-kosha = { workspace = true }
 varnavinyas-sandhi = { workspace = true }
