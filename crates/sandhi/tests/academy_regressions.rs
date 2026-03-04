@@ -59,4 +59,9 @@ fn lexicalized_word_has_no_safe_split() {
         "Expected no safe split for lexicalized word नेपाली, got {:?}",
         split("नेपाली")
     );
+    assert!(
+        split("नेपाल").is_empty(),
+        "Expected no promoted split candidates for lexicalized proper name नेपाल, got {:?}",
+        split("नेपाल")
+    );
 }
