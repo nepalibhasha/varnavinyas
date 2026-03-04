@@ -1,13 +1,71 @@
 # varnavinyas-kosha
 
-**FST-Based Lexicon.**
+Lexicon engine and lexical metadata lookup for the Varnavinyas workspace.
 
-A high-performance, memory-efficient dictionary store.
+## What This Crate Owns
 
-## Features
-- **FST Storage**: Uses finite state transducers for extreme compression.
-- **Lookup**: Sub-microsecond word validation.
-- **Lexicon Data**: Stores ~51k+ headwords based on the Academy standard and other primary sources.
+This crate is the dictionary-backed lexical layer. It provides:
+
+- fast word existence checks
+- headword metadata lookup
+- origin tag lookup
+- source-language lookup
+
+Higher-level crates use `kosha` as the main gate for deciding whether a form is known and lexically plausible.
+
+## Data Model
+
+The crate currently builds a singleton lexicon from embedded compile-time assets:
+
+- `data/words.txt` -> word-form inventory
+- `data/headwords.tsv` -> headword metadata
+
+It uses:
+
+- an `fst::Set` for fast membership checks
+- a sorted headword table for metadata lookup
+
+## Main APIs
+
+- `kosha()` -> global singleton lexicon
+- `contains(&str)` -> check whether a form is known
+- `lookup(&str)` -> retrieve headword metadata
+- `origin_of(&str)` -> infer origin from dictionary tags
+- `source_language_of(&str)` -> source language from dictionary tags
+
+## Examples
+
+### Check lexical presence
+
+```rust
+use varnavinyas_kosha::kosha;
+
+let lex = kosha();
+assert!(lex.contains("नेपाल"));
+```
+
+### Look up lexical origin tags
+
+```rust
+use varnavinyas_kosha::kosha;
+
+let lex = kosha();
+let _origin = lex.origin_of("नेपाल");
+```
+
+## Used By
+
+- `varnavinyas-shabda`
+- `varnavinyas-sandhi`
+- `varnavinyas-samasa`
+- `varnavinyas-parikshak`
+
+## Current Limits
+
+- Metadata is still relatively shallow and string-based.
+- `contains()` only tells you that a form exists, not whether it is canonical, variant, deprecated, or merely attested.
+- This is a lexical index, not yet a full lexical knowledge graph.
 
 ## Status
-✅ Stable
+
+Core foundational data crate.

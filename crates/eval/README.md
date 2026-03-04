@@ -1,48 +1,65 @@
 # varnavinyas-eval
 
-Evaluation test suites for regression tracking across sandhi, samasa, morphology, and grammar-pass behavior.
+Evaluation harness for measuring quality, not just building features.
 
-## Test suites
+## What This Crate Owns
+
+This crate runs curated evaluation suites against fixture datasets so the workspace can track regressions and quality drift across:
+
+- orthographic correction
+- sandhi
+- samasa
+- morphology
+- grammar-pass behavior
+
+Unlike regular unit tests, this crate is about behavior quality and dataset-backed expectations.
+
+## Test Suites
 
 - `sandhi_eval.rs`
-  - split recall sanity for known examples
-  - headword census with false-positive guard (`split rate < 15%`)
-
+  - known split recall
+  - false-positive guard on headword census
 - `samasa_eval.rs`
-  - validates expected compound pair + type from `docs/tests/samasa_gold.toml`
-
+  - expected compound pair and type checks
 - `morph_eval.rs`
-  - validates `vyakaran` MVP analyses against `docs/tests/morph_gold.toml`
-
+  - morphology expectations against curated fixtures
 - `grammar_eval.rs`
-  - validates grammar-pass diagnostic expectations from `docs/tests/grammar_sentences.toml`
+  - grammar-pass expectation checks
 
-## Run commands
-
-```bash
-cargo test -p varnavinyas-eval --test sandhi_eval -- --nocapture
-cargo test -p varnavinyas-eval --test samasa_eval -- --nocapture
-cargo test -p varnavinyas-eval --test morph_eval -- --nocapture
-cargo test -p varnavinyas-eval --test grammar_eval -- --nocapture
-```
-
-Run all eval tests:
-
-```bash
-cargo test -p varnavinyas-eval --tests -- --nocapture
-```
-
-## Dataset locations
+## Fixture Sources
 
 - `docs/tests/gold.toml`
 - `docs/tests/samasa_gold.toml`
 - `docs/tests/morph_gold.toml`
 - `docs/tests/grammar_sentences.toml`
 
-Keep fixtures high-confidence and deterministic. Add small curated sets first, then expand with measured threshold updates.
+## Run
 
-## Triage
+```bash
+cargo test -p varnavinyas-eval --tests -- --nocapture
+```
 
-When eval failures occur, classify and track them using:
+## Example
 
-- `docs/tests/ERROR_TRIAGE.md`
+To inspect sandhi quality specifically:
+
+```bash
+cargo test -p varnavinyas-eval --test sandhi_eval -- --nocapture
+```
+
+That run is meant to answer a focused question such as: “Are recent sandhi changes still recovering known splits without causing too many false positives?”
+
+## Design Notes
+
+- Keep fixtures curated and high-confidence.
+- Prefer small, precise test sets over broad noisy datasets.
+- This crate should eventually measure ranking quality and confidence calibration, not only binary pass/fail behavior.
+
+## Used By
+
+- maintainers validating regressions
+- CI quality gates
+
+## Status
+
+Active evaluation harness for curated regression measurement.
