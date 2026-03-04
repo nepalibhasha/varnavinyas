@@ -37,9 +37,7 @@ fn d4_consonant_assimilation() {
 fn d5_split_vowel_sandhi() {
     let results = split("अत्यधिक");
     assert!(
-        results
-            .iter()
-            .any(|(first, second, _)| first == "अति" && second == "अधिक"),
+        results.iter().any(|c| c.left == "अति" && c.right == "अधिक"),
         "Expected to find split (अति, अधिक) in results: {results:?}"
     );
 }
@@ -51,7 +49,7 @@ fn d6_split_visarga_sandhi() {
     assert!(
         results
             .iter()
-            .any(|(first, second, _)| first == "पुनः" && second == "अवलोकन"),
+            .any(|c| c.left == "पुनः" && c.right == "अवलोकन"),
         "Expected to find split (पुनः, अवलोकन) in results: {results:?}"
     );
 }

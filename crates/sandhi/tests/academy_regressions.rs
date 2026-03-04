@@ -3,7 +3,7 @@
 //! These test both forward sandhi (apply) and reverse sandhi (split) against
 //! the explicit examples given in the Nepal Academy orthography standard.
 
-use varnavinyas_sandhi::{apply, split};
+use varnavinyas_sandhi::{apply, split, split_best};
 
 /// Academy examples for inherent vowel sandhi (Gap #1).
 /// Morphemes ending in a bare consonant carry an implicit अ that must
@@ -40,12 +40,23 @@ fn guna_vriddhi_split() {
         assert!(
             results
                 .iter()
-                .any(|(l, r, _)| l == exp_left && r == exp_right),
+                .any(|c| c.left == *exp_left && c.right == *exp_right),
             "{word}: expected {exp_left} + {exp_right}, got {:?}",
             results
                 .iter()
-                .map(|(l, r, _)| format!("{l} + {r}"))
+                .map(|c| format!("{} + {}", c.left, c.right))
                 .collect::<Vec<_>>()
         );
     }
+}
+
+/// Lexicalized everyday words should not be promoted as "safe" sandhi analyses
+/// unless the evidence is substantially stronger than a mechanically plausible split.
+#[test]
+fn lexicalized_word_has_no_safe_split() {
+    assert!(
+        split_best("नेपाली").is_none(),
+        "Expected no safe split for lexicalized word नेपाली, got {:?}",
+        split("नेपाली")
+    );
 }
