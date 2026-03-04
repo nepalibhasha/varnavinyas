@@ -34,6 +34,7 @@ function showState(name) {
 let wasmReady = false;
 let currentWord = '';
 let currentDefinitions = [];
+let currentDictionaryHeadword = '';
 let activeLookupToken = 0;
 let lastPopupSelection = '';
 
@@ -154,6 +155,7 @@ async function processWord(text) {
 
     // Request dictionary lookup from background (async, updates UI when ready)
     const normalized = wasmReady ? normalizeQuery(word) : word;
+    currentDictionaryHeadword = normalized;
     chrome.runtime.sendMessage(
       { type: 'LOOKUP_REQUEST', payload: { query: normalized } },
       (response) => {
@@ -180,6 +182,7 @@ function renderResult(word, analysis, check, decomposition, splits, compounds) {
 
   currentWord = analysis.word || word;
   currentDefinitions = [];
+  currentDictionaryHeadword = '';
   document.getElementById('result-word').textContent = currentWord;
 
   // Set open link
@@ -267,20 +270,41 @@ function renderResult(word, analysis, check, decomposition, splits, compounds) {
   const splitContent = document.getElementById('split-content');
   splitContent.innerHTML = '';
   const allCompounds = Array.isArray(compounds) ? compounds : [];
+  const allSplits = Array.isArray(splits) ? splits : [];
   const isUnknownSamasa = (samasaType) => {
     const t = String(samasaType || '').trim().toLowerCase();
     return t === 'अज्ञात' || t === 'unknown';
   };
-  const knownCompounds = allCompounds.filter((c) => !isUnknownSamasa(c.samasa_type));
-  const unknownCompounds = allCompounds.filter((c) => isUnknownSamasa(c.samasa_type));
-  const hasCompounds = knownCompounds.length > 0;
-  const hasSandhi = splits && splits.length > 0;
-  const showUnknownFallback = !hasCompounds && !hasSandhi && unknownCompounds.length > 0;
-  if (hasCompounds || hasSandhi || showUnknownFallback) {
+  const isStrongCompound = (candidate) =>
+    !isUnknownSamasa(candidate.samasa_type) && Number(candidate.score || 0) >= 0.75;
+  const isStrongSandhi = (candidate) => {
+    const authority = String(candidate.authority || '').trim();
+    return authority === 'Likely' || authority === 'Authoritative';
+  };
+  const formatSamasaConfidence = (score) => {
+    const value = Number(score || 0);
+    if (value >= 0.9) return 'उच्च विश्वसनीयता';
+    if (value >= 0.75) return 'विश्वसनीय';
+    return '';
+  };
+  const formatSandhiConfidence = (authority) => {
+    const value = String(authority || '').trim();
+    if (value === 'Authoritative') return 'उच्च विश्वसनीयता';
+    if (value === 'Likely') return 'विश्वसनीय';
+    return '';
+  };
+
+  const strongCompounds = allCompounds.filter(isStrongCompound);
+  const strongSplits = allSplits.filter(isStrongSandhi);
+  const hasCompounds = strongCompounds.length > 0;
+  const hasSandhi = strongSplits.length > 0;
+  const hasAnySignals = allCompounds.length > 0 || allSplits.length > 0;
+
+  if (hasCompounds || hasSandhi || hasAnySignals) {
     splitSection.style.display = 'block';
     // Compound candidates (top 2)
     if (hasCompounds) {
-      const top = knownCompounds.slice(0, 2);
+      const top = strongCompounds.slice(0, 2);
       for (const c of top) {
         const li = document.createElement('li');
         const parts = document.createElement('span');
@@ -291,6 +315,13 @@ function renderResult(word, analysis, check, decomposition, splits, compounds) {
         type.className = 'sandhi-type';
         type.textContent = c.samasa_type;
         li.appendChild(type);
+        const confidence = formatSamasaConfidence(c.score);
+        if (confidence) {
+          const meta = document.createElement('span');
+          meta.className = 'split-confidence';
+          meta.textContent = confidence;
+          li.appendChild(meta);
+        }
         if (c.vigraha) {
           const vig = document.createElement('span');
           vig.className = 'split-vigraha';
@@ -300,38 +331,12 @@ function renderResult(word, analysis, check, decomposition, splits, compounds) {
         splitContent.appendChild(li);
       }
     }
-    if (showUnknownFallback) {
-      const c = unknownCompounds[0];
-      const li = document.createElement('li');
-      li.className = 'split-tentative';
-      const marker = document.createElement('span');
-      marker.className = 'tentative-marker';
-      marker.textContent = '?';
-      marker.title = 'अनुमानित परिणाम';
-      marker.setAttribute('aria-label', 'अनुमानित परिणाम');
-      li.appendChild(marker);
-      const parts = document.createElement('span');
-      parts.className = 'sandhi-parts';
-      parts.textContent = `${c.left} + ${c.right}`;
-      li.appendChild(parts);
-      const type = document.createElement('span');
-      type.className = 'sandhi-type';
-      type.textContent = 'अनुमानित';
-      li.appendChild(type);
-      if (c.vigraha) {
-        const vig = document.createElement('span');
-        vig.className = 'split-vigraha';
-        vig.textContent = c.vigraha;
-        li.appendChild(vig);
-      }
-      splitContent.appendChild(li);
-    }
     // Sandhi splits (that aren't duplicates of compound candidates)
     if (hasSandhi) {
       const compoundKeys = new Set(
-        knownCompounds.map((c) => `${c.left}|${c.right}`)
+        strongCompounds.map((c) => `${c.left}|${c.right}`)
       );
-      for (const s of splits) {
+      for (const s of strongSplits) {
         if (compoundKeys.has(`${s.left}|${s.right}`)) continue;
         const li = document.createElement('li');
         const parts = document.createElement('span');
@@ -344,8 +349,22 @@ function renderResult(word, analysis, check, decomposition, splits, compounds) {
           type.textContent = s.sandhi_type;
           li.appendChild(type);
         }
+        const confidence = formatSandhiConfidence(s.authority);
+        if (confidence) {
+          const meta = document.createElement('span');
+          meta.className = 'split-confidence';
+          meta.textContent = confidence;
+          li.appendChild(meta);
+        }
         splitContent.appendChild(li);
       }
+    }
+
+    if (!hasCompounds && !hasSandhi) {
+      const li = document.createElement('li');
+      li.className = 'split-empty';
+      li.textContent = 'विश्वसनीय समास वा सन्धि विच्छेद भेटिएन';
+      splitContent.appendChild(li);
     }
   } else {
     splitSection.style.display = 'none';
@@ -372,6 +391,13 @@ function renderDictionary(data) {
   }
 
   currentDefinitions = data.definitions;
+
+  if (currentDictionaryHeadword && currentDictionaryHeadword !== currentWord) {
+    const note = document.createElement('div');
+    note.className = 'dict-lookup-note';
+    note.textContent = `${currentDictionaryHeadword}:`;
+    el.appendChild(note);
+  }
 
   // Part of speech
   if (data.partOfSpeech) {
@@ -404,12 +430,14 @@ function renderNotFound(word) {
   showState('notFound');
   currentWord = word;
   currentDefinitions = [];
+  currentDictionaryHeadword = '';
   document.getElementById('notfound-word').textContent = word;
 }
 
 function renderError(message) {
   showState('error');
   currentDefinitions = [];
+  currentDictionaryHeadword = '';
   document.getElementById('error-message').textContent = message;
 }
 

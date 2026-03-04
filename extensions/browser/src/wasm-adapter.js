@@ -8,13 +8,7 @@
  * - Idempotent: safe to call ensureInit() on every popup open
  */
 
-import init, {
-  analyze_word_value,
-  check_word_value,
-  decompose_word_value,
-  sandhi_split_value,
-  analyze_compound_value,
-} from '../pkg/varnavinyas_bindings_wasm.js';
+import init, * as wasmBindings from '../pkg/varnavinyas_bindings_wasm.js';
 
 let initialized = false;
 let initPromise = null;
@@ -54,7 +48,10 @@ export async function ensureInit() {
  */
 export function analyzeWord(word) {
   try {
-    return analyze_word_value(word);
+    if (typeof wasmBindings.analyze_word_value !== 'function') {
+      return { word, error: 'analyze_word_value unavailable' };
+    }
+    return wasmBindings.analyze_word_value(word);
   } catch (err) {
     return { word, error: err.message };
   }
@@ -66,7 +63,10 @@ export function analyzeWord(word) {
  */
 export function checkWord(word) {
   try {
-    return check_word_value(word);
+    if (typeof wasmBindings.check_word_value !== 'function') {
+      return null;
+    }
+    return wasmBindings.check_word_value(word);
   } catch (err) {
     return null;
   }
@@ -78,7 +78,10 @@ export function checkWord(word) {
  */
 export function decomposeWord(word) {
   try {
-    return decompose_word_value(word);
+    if (typeof wasmBindings.decompose_word_value !== 'function') {
+      return { word, error: 'decompose_word_value unavailable' };
+    }
+    return wasmBindings.decompose_word_value(word);
   } catch (err) {
     return { word, error: err.message };
   }
@@ -90,7 +93,10 @@ export function decomposeWord(word) {
  */
 export function sandhiSplit(word) {
   try {
-    return sandhi_split_value(word);
+    if (typeof wasmBindings.sandhi_split_value !== 'function') {
+      return [];
+    }
+    return wasmBindings.sandhi_split_value(word);
   } catch (err) {
     return [];
   }
@@ -102,7 +108,10 @@ export function sandhiSplit(word) {
  */
 export function analyzeCompound(word) {
   try {
-    return analyze_compound_value(word);
+    if (typeof wasmBindings.analyze_compound_value !== 'function') {
+      return [];
+    }
+    return wasmBindings.analyze_compound_value(word);
   } catch (err) {
     return [];
   }

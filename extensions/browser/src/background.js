@@ -60,12 +60,16 @@ function handleSelectionUpdated(payload) {
   sessionStore.set({ latestSelection: payload.text });
 
   // Forward to side panel so it auto-updates
-  chrome.runtime.sendMessage({
-    type: 'SELECTION_CHANGED',
-    payload: { text: payload.text },
-  }).catch(() => {
-    // Side panel / popup not open — ignore
-  });
+  chrome.runtime.sendMessage(
+    {
+      type: 'SELECTION_CHANGED',
+      payload: { text: payload.text },
+    },
+    () => {
+      // Side panel / popup not open — ignore the expected no-receiver error.
+      void chrome.runtime.lastError;
+    }
+  );
 }
 
 function handleGetSelection(sendResponse) {

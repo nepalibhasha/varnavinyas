@@ -515,6 +515,15 @@ body {
   padding: 2px 8px;
 }
 
+.split-confidence {
+  font-size: 10px;
+  font-weight: 700;
+  color: #0f766e;
+  background: #daf7f2;
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
 .split-vigraha {
   display: block;
   width: 100%;
@@ -523,10 +532,27 @@ body {
   margin-left: 2px;
 }
 
+.split-empty {
+  font-size: 12px;
+  color: #6f8392;
+  font-style: italic;
+  padding: 2px 0;
+}
+
 .dict-stub {
   font-size: 12px;
   color: #6f8392;
   font-style: italic;
+}
+
+.dict-lookup-note {
+  margin-bottom: 8px;
+  font-size: 11px;
+  color: #5e7383;
+  background: #f3f8fa;
+  border: 1px solid #d9e5ec;
+  border-radius: 8px;
+  padding: 6px 8px;
 }
 
 .dict-pos {
