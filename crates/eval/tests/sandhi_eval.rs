@@ -10,7 +10,7 @@
 
 use varnavinyas_akshar::split_aksharas;
 use varnavinyas_kosha::kosha;
-use varnavinyas_sandhi::split as sandhi_split;
+use varnavinyas_sandhi::{split as sandhi_split, split_best as sandhi_split_best};
 use varnavinyas_shabda::decompose;
 
 /// Known correct sandhi splits (word → expected left + right).
@@ -39,13 +39,17 @@ const NO_SPLIT_EXPECTED: &[&str] = &[
     "रामसँग", // after stripping सँग, root=राम (2 aksharas)
 ];
 
+/// Lexicalized forms that may admit mechanical reconstructions but should not
+/// produce a promoted "safe" split.
+const NO_SAFE_SPLIT_EXPECTED: &[&str] = &["नेपाली", "नेपाल"];
+
 /// Run sandhi split using the morphology-first pipeline.
 fn pipeline_split(word: &str) -> Vec<(String, String)> {
     let morph = decompose(word);
     let root = &morph.root;
     sandhi_split(root)
         .into_iter()
-        .map(|(l, r, _)| (l, r))
+        .map(|c| (c.left, c.right))
         .collect()
 }
 
@@ -105,6 +109,27 @@ fn no_split_words_are_clean() {
 }
 
 #[test]
+fn lexicalized_words_have_no_safe_split() {
+    let mut failures = Vec::new();
+
+    for &word in NO_SAFE_SPLIT_EXPECTED {
+        let best = sandhi_split_best(word);
+        if best.is_none() {
+            println!("  ✓ {} → no safe split (correct)", word);
+        } else {
+            println!("  ✗ {} → unexpected safe split: {:?}", word, best);
+            failures.push((word, best));
+        }
+    }
+
+    assert!(
+        failures.is_empty(),
+        "Lexicalized words that should not have safe splits produced one: {:?}",
+        failures
+    );
+}
+
+#[test]
 fn headword_sandhi_census() {
     let lex = kosha();
 
@@ -134,7 +159,7 @@ fn headword_sandhi_census() {
         let root = &morph.root;
         let results: Vec<(String, String)> = sandhi_split(root)
             .into_iter()
-            .map(|(l, r, _)| (l, r))
+            .map(|c| (c.left, c.right))
             .collect();
 
         if !results.is_empty() {
