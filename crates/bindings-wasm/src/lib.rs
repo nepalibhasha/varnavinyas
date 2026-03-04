@@ -254,6 +254,8 @@ fn samasa_type_to_string(t: varnavinyas_samasa::SamasaType) -> String {
 struct JsSandhiResult {
     output: String,
     sandhi_type: String,
+    family: String,
+    rule_id: String,
     rule_citation: String,
 }
 
@@ -265,7 +267,11 @@ struct JsSandhiSplit {
     right: String,
     output: String,
     sandhi_type: String,
+    family: String,
+    rule_id: String,
     rule_citation: String,
+    authority: String,
+    confidence: f32,
 }
 
 /// Apply sandhi: join two morphemes.
@@ -296,10 +302,7 @@ pub fn sandhi_apply_value(first: &str, second: &str) -> Result<JsValue, JsError>
 #[wasm_bindgen]
 pub fn sandhi_split(word: &str) -> String {
     let results = varnavinyas_sandhi::split(word);
-    let js_results: Vec<JsSandhiSplit> = results
-        .into_iter()
-        .map(|(left, right, res)| sandhi_split_to_js(left, right, res))
-        .collect();
+    let js_results: Vec<JsSandhiSplit> = results.into_iter().map(sandhi_split_to_js).collect();
     serde_json::to_string(&js_results).unwrap_or_else(|_| "[]".to_string())
 }
 
@@ -307,10 +310,7 @@ pub fn sandhi_split(word: &str) -> String {
 #[wasm_bindgen]
 pub fn sandhi_split_value(word: &str) -> Result<JsValue, JsError> {
     let results = varnavinyas_sandhi::split(word);
-    let js_results: Vec<JsSandhiSplit> = results
-        .into_iter()
-        .map(|(left, right, res)| sandhi_split_to_js(left, right, res))
-        .collect();
+    let js_results: Vec<JsSandhiSplit> = results.into_iter().map(sandhi_split_to_js).collect();
     serde_wasm_bindgen::to_value(&js_results)
         .map_err(|e| JsError::new(&format!("failed to serialize sandhi split result: {e}")))
 }
@@ -319,21 +319,45 @@ fn sandhi_result_to_js(res: varnavinyas_sandhi::SandhiResult) -> JsSandhiResult 
     JsSandhiResult {
         output: res.output,
         sandhi_type: res.sandhi_type.display_label().to_string(),
+        family: rule_family_to_string(res.family).to_string(),
+        rule_id: res.rule_id.to_string(),
         rule_citation: res.rule_citation.to_string(),
     }
 }
 
-fn sandhi_split_to_js(
-    left: String,
-    right: String,
-    res: varnavinyas_sandhi::SandhiResult,
-) -> JsSandhiSplit {
+fn sandhi_split_to_js(candidate: varnavinyas_sandhi::SandhiCandidate) -> JsSandhiSplit {
     JsSandhiSplit {
-        left,
-        right,
-        output: res.output,
-        sandhi_type: res.sandhi_type.display_label().to_string(),
-        rule_citation: res.rule_citation.to_string(),
+        left: candidate.left,
+        right: candidate.right,
+        output: candidate.surface,
+        sandhi_type: candidate.sandhi_type.display_label().to_string(),
+        family: rule_family_to_string(candidate.family).to_string(),
+        rule_id: candidate.rule_id.to_string(),
+        rule_citation: candidate.rule_citation.to_string(),
+        authority: authority_tier_to_string(candidate.authority).to_string(),
+        confidence: candidate.confidence,
+    }
+}
+
+fn authority_tier_to_string(tier: varnavinyas_sandhi::AuthorityTier) -> &'static str {
+    match tier {
+        varnavinyas_sandhi::AuthorityTier::Authoritative => "Authoritative",
+        varnavinyas_sandhi::AuthorityTier::Likely => "Likely",
+        varnavinyas_sandhi::AuthorityTier::Plausible => "Plausible",
+        varnavinyas_sandhi::AuthorityTier::Exploratory => "Exploratory",
+    }
+}
+
+fn rule_family_to_string(family: varnavinyas_sandhi::RuleFamily) -> &'static str {
+    match family {
+        varnavinyas_sandhi::RuleFamily::DirectJoin => "DirectJoin",
+        varnavinyas_sandhi::RuleFamily::VowelGuna => "VowelGuna",
+        varnavinyas_sandhi::RuleFamily::VowelVriddhi => "VowelVriddhi",
+        varnavinyas_sandhi::RuleFamily::Yan => "Yan",
+        varnavinyas_sandhi::RuleFamily::Ayadi => "Ayadi",
+        varnavinyas_sandhi::RuleFamily::VisargaR => "VisargaR",
+        varnavinyas_sandhi::RuleFamily::VisargaSibilant => "VisargaSibilant",
+        varnavinyas_sandhi::RuleFamily::ConsonantAssimilation => "ConsonantAssimilation",
     }
 }
 

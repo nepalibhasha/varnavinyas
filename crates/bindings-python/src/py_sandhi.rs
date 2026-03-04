@@ -46,6 +46,8 @@ impl PySandhiType {
 pub struct PySandhiResult {
     pub output: String,
     pub sandhi_type: PySandhiType,
+    pub family: String,
+    pub rule_id: String,
     pub rule_citation: String,
 }
 
@@ -53,9 +55,11 @@ pub struct PySandhiResult {
 impl PySandhiResult {
     fn __repr__(&self) -> String {
         format!(
-            "SandhiResult(output='{}', type={}, rule='{}')",
+            "SandhiResult(output='{}', type={}, family='{}', rule_id='{}', rule='{}')",
             self.output,
             self.sandhi_type.__repr__(),
+            self.family,
+            self.rule_id,
             self.rule_citation,
         )
     }
@@ -68,6 +72,8 @@ pub fn apply(first: &str, second: &str) -> PyResult<PySandhiResult> {
         .map(|r| PySandhiResult {
             output: r.output,
             sandhi_type: r.sandhi_type.into(),
+            family: format!("{:?}", r.family),
+            rule_id: r.rule_id.to_string(),
             rule_citation: r.rule_citation.to_string(),
         })
         .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))
@@ -78,14 +84,16 @@ pub fn apply(first: &str, second: &str) -> PyResult<PySandhiResult> {
 pub fn split(word: &str) -> Vec<(String, String, PySandhiResult)> {
     sandhi_core::split(word)
         .into_iter()
-        .map(|(first, second, result)| {
+        .map(|candidate| {
             (
-                first,
-                second,
+                candidate.left,
+                candidate.right,
                 PySandhiResult {
-                    output: result.output,
-                    sandhi_type: result.sandhi_type.into(),
-                    rule_citation: result.rule_citation.to_string(),
+                    output: candidate.surface,
+                    sandhi_type: candidate.sandhi_type.into(),
+                    family: format!("{:?}", candidate.family),
+                    rule_id: candidate.rule_id.to_string(),
+                    rule_citation: candidate.rule_citation.to_string(),
                 },
             )
         })

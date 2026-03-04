@@ -2309,6 +2309,7 @@ dependencies = [
 name = "varnavinyas-samasa"
 version = "0.1.0"
 dependencies = [
+ "varnavinyas-akshar",
  "varnavinyas-kosha",
  "varnavinyas-sandhi",
 ]
