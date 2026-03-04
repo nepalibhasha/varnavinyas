@@ -1,3 +1,4 @@
+use varnavinyas_akshar::split_aksharas;
 use varnavinyas_kosha::WordEntry;
 use varnavinyas_kosha::kosha;
 
@@ -38,9 +39,9 @@ pub fn analyze_compound(word: &str) -> Vec<SamasaCandidate> {
     let lex = kosha();
     let mut out = Vec::new();
 
-    // Strategy 1: sandhi-backed candidates.
-    for (left, right, _res) in varnavinyas_sandhi::split(word) {
-        push_candidate(&mut out, &left, &right, 0.0);
+    // Strategy 1: only the safest sandhi-backed candidate.
+    if let Some(candidate) = varnavinyas_sandhi::split_best(word) {
+        push_candidate(&mut out, &candidate.left, &candidate.right, 0.0);
     }
 
     // Strategy 2: direct lexical boundary scan.
@@ -51,10 +52,10 @@ pub fn analyze_compound(word: &str) -> Vec<SamasaCandidate> {
             continue;
         }
         // Avoid noisy tiny fragments except numerals used in dvigu.
-        if left.chars().count() < 2 && !is_numeral(left) {
+        if split_aksharas(left).len() < 2 && !is_numeral(left) {
             continue;
         }
-        if right.chars().count() < 2 {
+        if split_aksharas(right).len() < 2 {
             continue;
         }
         push_candidate(&mut out, left, right, -0.05);
@@ -260,6 +261,15 @@ mod tests {
             candidates
                 .iter()
                 .any(|c| c.left == "एक" && c.right == "चक्र")
+        );
+    }
+
+    #[test]
+    fn analyze_compound_skips_lexicalized_non_compound_word() {
+        let candidates = analyze_compound("नेपाली");
+        assert!(
+            candidates.is_empty(),
+            "Expected no compound analysis for lexicalized word नेपाली, got {candidates:?}"
         );
     }
 }
