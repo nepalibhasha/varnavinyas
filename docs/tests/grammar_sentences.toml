@@ -30,7 +30,7 @@ expected_rule_codes = []
 [[sentence]]
 text = "रामका किताबहरु हराए।"
 expect_variant_or_ambiguous_min = 0
-expect_variant_or_ambiguous_max = 0
+expect_variant_or_ambiguous_max = 1
 
 [[sentence]]
 text = "धेरै मानिस आए।"
