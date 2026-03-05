@@ -3,7 +3,7 @@
 //! These test both forward sandhi (apply) and reverse sandhi (split) against
 //! the explicit examples given in the Nepal Academy orthography standard.
 
-use varnavinyas_sandhi::{apply, split, split_best};
+use varnavinyas_sandhi::{apply, split, split_best, split_best_for_compound};
 
 /// Academy examples for inherent vowel sandhi (Gap #1).
 /// Morphemes ending in a bare consonant carry an implicit अ that must
@@ -63,5 +63,20 @@ fn lexicalized_word_has_no_safe_split() {
         split("नेपाल").is_empty(),
         "Expected no promoted split candidates for lexicalized proper name नेपाल, got {:?}",
         split("नेपाल")
+    );
+}
+
+#[test]
+fn known_compound_is_available_for_compound_analysis() {
+    let best = split_best_for_compound("सूर्योदय");
+    assert!(
+        best.is_some(),
+        "Expected compound-analysis split for सूर्योदय, got {:?}",
+        split("सूर्योदय")
+    );
+    assert!(
+        split_best_for_compound("नेपाली").is_none(),
+        "Expected no compound-analysis split for lexicalized word नेपाली, got {:?}",
+        split("नेपाली")
     );
 }

@@ -792,6 +792,7 @@ fn is_voiced_consonant(c: char) -> bool {
     )
 }
 
+#[allow(clippy::ptr_arg)]
 fn noop_reverse(
     _rule: &SandhiRule,
     _surface: &str,

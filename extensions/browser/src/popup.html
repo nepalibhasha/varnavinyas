@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ne">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header class="header">
+    <div class="header-brand">
+      <img src="../icons/logo.svg" alt="व" class="header-logo" width="24" height="24">
+      <div>
+        <h1 class="header-title">वर्णविन्यास</h1>
+        <span class="header-subtitle">शब्द जाँच र अर्थ</span>
+      </div>
+    </div>
+    <span class="wasm-badge" id="wasm-status"></span>
+  </header>
+
+  <!-- Search input -->
+  <div class="search-row">
+    <div class="search-field">
+      <svg class="search-icon" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+        <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.45 4.39l4.26 4.27a.75.75 0 11-1.06 1.06l-4.27-4.26A7 7 0 012 9z" clip-rule="evenodd"/>
+      </svg>
+      <input type="text" id="search-input" placeholder="शब्द खोज्नुहोस्…">
+    </div>
+    <button id="search-btn">खोज</button>
+  </div>
+  <section class="history-row" id="history-row" style="display:none">
+    <div class="history-head">
+      <span class="history-title">हालै</span>
+      <button class="history-clear" id="history-clear" type="button">सफा गर्नुहोस्</button>
+    </div>
+    <div class="history-list" id="history-list"></div>
+  </section>
+
+  <!-- Idle: no selection yet -->
+  <div id="state-idle" class="state state-idle active">
+    <div class="idle-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="40" height="40">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.076-4.076a1.526 1.526 0 011.037-.443 48.282 48.282 0 005.68-.494c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"/>
+      </svg>
+    </div>
+    <p class="idle-text">वेबपेजमा नेपाली शब्द सेलेक्ट गर्नुहोस्</p>
+    <p class="idle-hint">वा माथि टाइप गरेर खोज्नुहोस्</p>
+  </div>
+
+  <!-- Loading -->
+  <div id="state-loading" class="state state-loading">
+    <div class="spinner"></div>
+    <div class="loading-text">विश्लेषण गर्दै…</div>
+  </div>
+
+  <!-- Result -->
+  <div id="state-result" class="state">
+    <div class="result-header">
+      <div class="selected-word" id="result-word"></div>
+      <span class="origin-badge" id="result-origin"></span>
+    </div>
+
+    <div class="correction-card" id="result-correction" style="display:none">
+      <svg class="correction-icon" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clip-rule="evenodd"/>
+      </svg>
+      <div>
+        <span class="correction-wrong" id="correction-wrong"></span>
+        <span class="correction-arrow">&rarr;</span>
+        <span class="correction-right" id="correction-right"></span>
+      </div>
+    </div>
+
+    <ul class="rules-list" id="result-rules"></ul>
+
+    <section class="panel-section" id="morph-section" style="display:none">
+      <h3 class="section-title">शब्द संरचना</h3>
+      <div id="morph-content"></div>
+    </section>
+
+    <section class="panel-section" id="split-section" style="display:none">
+      <h3 class="section-title">समास / सन्धि विच्छेद</h3>
+      <ul class="sandhi-list" id="split-content"></ul>
+    </section>
+
+    <section class="panel-section dict-section">
+      <h3 class="section-title">शब्दकोश</h3>
+      <div id="dict-content">
+        <span class="dict-stub">शब्दकोश खोज्दै…</span>
+      </div>
+    </section>
+
+    <div class="actions" id="actions" style="display:none">
+      <button class="action-btn btn-copy" id="btn-copy" title="अर्थ कपी गर्नुहोस्">
+        <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14">
+          <path d="M7 3.5A1.5 1.5 0 018.5 2h3.879a1.5 1.5 0 011.06.44l3.122 3.12A1.5 1.5 0 0117 6.622V12.5a1.5 1.5 0 01-1.5 1.5h-1v-3.379a3 3 0 00-.879-2.121L10.5 5.379A3 3 0 008.379 4.5H7v-1z"/>
+          <path d="M4.5 6A1.5 1.5 0 003 7.5v9A1.5 1.5 0 004.5 18h7a1.5 1.5 0 001.5-1.5v-5.879a1.5 1.5 0 00-.44-1.06L9.44 6.439A1.5 1.5 0 008.378 6H4.5z"/>
+        </svg>
+        कपी
+      </button>
+      <a class="action-btn btn-open" id="btn-open" href="#" target="_blank" rel="noopener" title="शब्दसखामा हेर्नुहोस्">
+        <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14">
+          <path fill-rule="evenodd" d="M4.25 5.5a.75.75 0 00-.75.75v8.5c0 .414.336.75.75.75h8.5a.75.75 0 00.75-.75v-4a.75.75 0 011.5 0v4A2.25 2.25 0 0112.75 17h-8.5A2.25 2.25 0 012 14.75v-8.5A2.25 2.25 0 014.25 4h5a.75.75 0 010 1.5h-5zm7.25-.182a.75.75 0 01.75-.75h3.5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0V6.56l-5.22 5.22a.75.75 0 11-1.06-1.06l5.22-5.22h-2.19a.75.75 0 01-.75-.75z" clip-rule="evenodd"/>
+        </svg>
+        शब्दसखा
+      </a>
+    </div>
+  </div>
+
+  <!-- Not found -->
+  <div id="state-not-found" class="state state-not-found">
+    <div class="notfound-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="36" height="36">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
+      </svg>
+    </div>
+    <div class="selected-word" id="notfound-word"></div>
+    <p class="notfound-text">यो शब्दको बारेमा जानकारी भेटिएन।</p>
+  </div>
+
+  <!-- Error -->
+  <div id="state-error" class="state state-error">
+    <div class="error-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="36" height="36">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+      </svg>
+    </div>
+    <p class="error-message" id="error-message"></p>
+  </div>
+
+  <footer class="footer">
+    <span class="footer-timing" id="footer"></span>
+    <span class="footer-version">v0.1</span>
+  </footer>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

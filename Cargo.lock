@@ -2192,6 +2192,7 @@ dependencies = [
  "varnavinyas-lipi",
  "varnavinyas-parikshak",
  "varnavinyas-prakriya",
+ "varnavinyas-samasa",
  "varnavinyas-sandhi",
  "varnavinyas-shabda",
  "wasm-bindgen",
