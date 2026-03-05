@@ -455,6 +455,7 @@ fn parse_scheme(s: &str) -> Result<varnavinyas_lipi::Scheme, JsError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
     #[test]
     fn sandhi_type_labels_are_devanagari() {
         assert_eq!(
