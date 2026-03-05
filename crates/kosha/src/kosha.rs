@@ -208,6 +208,37 @@ pub fn kosha() -> &'static Kosha {
     &KOSHA
 }
 
+fn bounded_levenshtein_chars(a: &str, b: &str, max_distance: usize) -> Option<usize> {
+    if a == b {
+        return Some(0);
+    }
+    let a_chars: Vec<char> = a.chars().collect();
+    let b_chars: Vec<char> = b.chars().collect();
+    if a_chars.len().abs_diff(b_chars.len()) > max_distance {
+        return None;
+    }
+
+    let mut prev: Vec<usize> = (0..=b_chars.len()).collect();
+    let mut curr: Vec<usize> = vec![0; b_chars.len() + 1];
+
+    for (i, &ac) in a_chars.iter().enumerate() {
+        curr[0] = i + 1;
+        let mut row_min = curr[0];
+        for (j, &bc) in b_chars.iter().enumerate() {
+            let cost = if ac == bc { 0 } else { 1 };
+            curr[j + 1] = (prev[j + 1] + 1).min(curr[j] + 1).min(prev[j] + cost);
+            row_min = row_min.min(curr[j + 1]);
+        }
+        if row_min > max_distance {
+            return None;
+        }
+        std::mem::swap(&mut prev, &mut curr);
+    }
+
+    let dist = prev[b_chars.len()];
+    (dist <= max_distance).then_some(dist)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -266,35 +297,4 @@ mod tests {
             },
         );
     }
-}
-
-fn bounded_levenshtein_chars(a: &str, b: &str, max_distance: usize) -> Option<usize> {
-    if a == b {
-        return Some(0);
-    }
-    let a_chars: Vec<char> = a.chars().collect();
-    let b_chars: Vec<char> = b.chars().collect();
-    if a_chars.len().abs_diff(b_chars.len()) > max_distance {
-        return None;
-    }
-
-    let mut prev: Vec<usize> = (0..=b_chars.len()).collect();
-    let mut curr: Vec<usize> = vec![0; b_chars.len() + 1];
-
-    for (i, &ac) in a_chars.iter().enumerate() {
-        curr[0] = i + 1;
-        let mut row_min = curr[0];
-        for (j, &bc) in b_chars.iter().enumerate() {
-            let cost = if ac == bc { 0 } else { 1 };
-            curr[j + 1] = (prev[j + 1] + 1).min(curr[j] + 1).min(prev[j] + cost);
-            row_min = row_min.min(curr[j + 1]);
-        }
-        if row_min > max_distance {
-            return None;
-        }
-        std::mem::swap(&mut prev, &mut curr);
-    }
-
-    let dist = prev[b_chars.len()];
-    (dist <= max_distance).then_some(dist)
 }

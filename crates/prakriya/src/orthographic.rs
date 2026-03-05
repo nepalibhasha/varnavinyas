@@ -667,13 +667,20 @@ fn is_stop_consonant(c: char) -> bool {
 /// यसले उच्च-विश्वसनीयता origin वर्गीकरण भए पनि गैर-प्रमाणित
 /// candidate (जस्तै: भैंसी -> भैँसी) उत्पादन नगर्न मद्दत गर्छ।
 fn should_replace_shirbindu(
-    _input: &str,
+    input: &str,
     chars: &[char],
     idx: usize,
     _origin_source: OriginSource,
 ) -> bool {
     if idx + 1 == chars.len() && idx > 0 && matches!(chars[idx - 1], 'े' | 'ौ') {
         return true;
+    }
+
+    // Conservatively keep already-lexicalized shirobindu forms unchanged
+    // for non-final positions (e.g. भैंसी), even if a chandrabindu variant
+    // also exists in the wordlist.
+    if kosha().contains(input) {
+        return false;
     }
 
     let mut candidate_chars = chars.to_vec();
