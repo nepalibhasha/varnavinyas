@@ -40,7 +40,7 @@ pub fn analyze_compound(word: &str) -> Vec<SamasaCandidate> {
     let mut out = Vec::new();
 
     // Strategy 1: only the safest sandhi-backed candidate.
-    if let Some(candidate) = varnavinyas_sandhi::split_best(word) {
+    if let Some(candidate) = varnavinyas_sandhi::split_best_for_compound(word) {
         push_candidate(&mut out, &candidate.left, &candidate.right, 0.0);
     }
 

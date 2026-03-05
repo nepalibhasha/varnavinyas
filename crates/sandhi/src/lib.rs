@@ -9,7 +9,7 @@ mod vowel_sandhi;
 
 pub use apply::{apply, apply_all};
 pub use consonant_sandhi::apply_consonant_sandhi;
-pub use decode::{split, split_best};
+pub use decode::{split, split_best, split_best_for_compound};
 pub use types::{
     AuthorityTier, LexicalStatus, RuleFamily, SandhiCandidate, SandhiError, SandhiResult,
     SandhiType,

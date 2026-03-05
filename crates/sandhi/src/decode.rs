@@ -4,7 +4,7 @@ use varnavinyas_kosha::origin_tag::OriginTag;
 
 use crate::rank::rank_candidates;
 use crate::rules::{all_rules, apply_reverse_rule};
-use crate::{AuthorityTier, SandhiCandidate};
+use crate::{AuthorityTier, LexicalStatus, RuleFamily, SandhiCandidate};
 
 /// Known one-akshara upasarga forms that are valid left segments in compounds.
 const ONE_AKSHARA_UPASARGAS: &[&str] = &["प्र", "वि", "सु", "नि", "आ"];
@@ -62,4 +62,32 @@ pub fn split_best(word: &str) -> Option<SandhiCandidate> {
     split(word)
         .into_iter()
         .find(|c| c.authority == AuthorityTier::Authoritative)
+}
+
+/// Return the best split candidate for downstream compound analysis.
+///
+/// This path is slightly less strict than [`split_best`] and accepts Likely
+/// candidates so genuine compounds (e.g., classical Yan/Guna joins) are not
+/// dropped before samasa classification.
+pub fn split_best_for_compound(word: &str) -> Option<SandhiCandidate> {
+    let lex = kosha();
+    split(word).into_iter().find(|c| {
+        if !matches!(
+            c.authority,
+            AuthorityTier::Authoritative | AuthorityTier::Likely
+        ) {
+            return false;
+        }
+
+        // For compound analysis, require classical lexical evidence on at least
+        // the non-direct sandhi path to avoid reviving lexicalized false splits.
+        if matches!(c.family, RuleFamily::DirectJoin) {
+            return true;
+        }
+
+        let left_tatsam = lex.origin_of(&c.left) == Some(OriginTag::Tatsam)
+            || c.lexical_left == LexicalStatus::KnownBoundForm;
+        let right_tatsam = lex.origin_of(&c.right) == Some(OriginTag::Tatsam);
+        left_tatsam && right_tatsam
+    })
 }
