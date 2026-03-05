@@ -51,6 +51,7 @@ The goal is to produce ranked compound interpretations that higher-level tools c
 
 - This crate is currently a heuristic analyzer, not a formal grammatical proof engine.
 - Ranking is useful for hinting, but scores should be interpreted as plausibility, not certainty.
+- It uses sandhi's compound-analysis selector (`split_best_for_compound`) rather than the strict public-safe selector, so valid compounds are retained without reopening common lexicalized false positives.
 
 ## Current Limits
 

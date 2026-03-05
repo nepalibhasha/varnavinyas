@@ -17,7 +17,8 @@ This crate is the foundation for authentic compound reconstruction and for any f
 
 - `apply(&str, &str)` -> apply sandhi forward
 - `split(&str)` -> generate ranked reverse split candidates
-- `split_best(&str)` -> return the safest single candidate
+- `split_best(&str)` -> return the strict safest single candidate (Authoritative only)
+- `split_best_for_compound(&str)` -> return a best candidate for compound analysis (Likely+ with classical lexical evidence)
 - lower-level rule helpers:
   - `apply_vowel_sandhi`
   - `apply_visarga_sandhi`
@@ -64,7 +65,11 @@ For example, the crate should be able to recover candidates such as:
 - `अत्यधिक` -> `अति + अधिक`
 - `पुनरवलोकन` -> `पुनः + अवलोकन`
 
-The current API returns `SandhiCandidate` values with confidence and authority metadata, not just raw string pairs. Higher-level crates such as `varnavinyas-samasa` can use these candidates for ranking and interpretation.
+The current API returns `SandhiCandidate` values with confidence and authority metadata, not just raw string pairs.
+
+Use `split_best` for public-facing safe suggestions where false positives must be minimized.
+
+Use `split_best_for_compound` for samasa-style analysis where genuine compounds may only reach `Likely`, but non-classical lexicalized noise should still be filtered.
 
 ## Design Notes
 
