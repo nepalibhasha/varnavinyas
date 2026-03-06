@@ -91,6 +91,14 @@ fn classify_with_provenance_heuristic_source() {
 }
 
 #[test]
+fn classify_with_provenance_headword_without_origin_defaults_to_deshaj() {
+    // "नेपाले" is a known headword with non-origin bracket metadata.
+    let d = classify_with_provenance("नेपाले");
+    assert_eq!(d.source, OriginSource::Kosha);
+    assert_eq!(d.origin, Origin::Deshaj);
+}
+
+#[test]
 fn decompose_empty() {
     let m = decompose("");
     assert_eq!(m.root, "");
@@ -173,4 +181,11 @@ fn decompose_explicit_derivational_unjel() {
 fn decompose_explicit_derivational_at() {
     let m = decompose("सुरुआत");
     assert!(m.suffixes.contains(&"आत".to_string()) || m.suffixes.contains(&"अट".to_string()));
+}
+
+#[test]
+fn decompose_nepali_to_nepal_plus_long_i() {
+    let m = decompose("नेपाली");
+    assert_eq!(m.root, "नेपाल");
+    assert!(m.suffixes.contains(&"ी".to_string()) || m.suffixes.contains(&"ई".to_string()));
 }

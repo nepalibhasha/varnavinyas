@@ -5,7 +5,7 @@ use crate::origin::Origin;
 /// This small verified table serves as the first-priority lookup in the
 /// three-tier classification: override table → kosha dictionary → heuristic.
 ///
-/// With the kosha integration (~26K dictionary-tagged words), most words no
+/// With the kosha integration (~130K headwords with metadata), most words no
 /// longer need to be here. This table is only for:
 /// - Inflected/suffixed forms not in the dictionary headwords
 /// - Words where the dictionary tag or heuristic gives wrong results
@@ -204,4 +204,5 @@ pub static SUFFIXES: &[&str] = &[
     "इक",
     // 3 bytes
     "ई",
+    "ी",
 ];

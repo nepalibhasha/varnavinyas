@@ -24,7 +24,7 @@ pub struct OriginDecision {
 ///
 /// त्रिस्तरीय lookup:
 /// 1. Override तालिका (dictionary/heuristic ले छुटाउन सक्ने किनाराका केस)
-/// 2. Kosha lookup (~26K शब्द, Brihat Shabdakosha origin tag सहित)
+/// 2. Kosha lookup (~130K headwords, Brihat + Pragya Shabdakosha metadata सहित)
 /// 3. Heuristic वर्गीकरण (ध्वन्यात्मक ढाँचा)
 pub fn classify(word: &str) -> Origin {
     classify_with_provenance(word).origin
@@ -49,12 +49,22 @@ pub fn classify_with_provenance(word: &str) -> OriginDecision {
         };
     }
 
-    // 2. Kosha lookup (~26K शब्दमा origin tag)
-    if let Some(tag) = varnavinyas_kosha::kosha().origin_of(word) {
+    // 2. Kosha lookup (~130K headwords; origin tag available when present)
+    let kosha = varnavinyas_kosha::kosha();
+    if let Some(tag) = kosha.origin_of(word) {
         return OriginDecision {
             origin: tag,
             source: OriginSource::Kosha,
             confidence: 0.95,
+        };
+    }
+    // If the word is a known headword but has no explicit origin tag,
+    // treat it as Deshaj by default (dictionary-backed fallback).
+    if kosha.lookup(word).is_some() {
+        return OriginDecision {
+            origin: Origin::Deshaj,
+            source: OriginSource::Kosha,
+            confidence: 0.85,
         };
     }
 
