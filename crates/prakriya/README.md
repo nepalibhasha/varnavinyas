@@ -48,11 +48,32 @@ The rule engine is layered:
 - pattern rules second
 - “already correct” fallback last
 
-Pattern rules are grouped into domains such as:
+Pattern rules are registered via a niyama-oriented registry:
 
-- structural rules
-- hrasva/dirgha rules
-- orthographic rules
+- `niyama_registry::section3_rules()` for Section 3 (`३. नेपाली वर्णविन्यास`)
+- `niyama_registry::non_section3_rules()` for non-Section-3 rules (e.g., Section 4 structural)
+
+Within Section 3, implementation is organized in descriptive modules:
+
+- `hrasva_dirgha` -> `(क) ह्रस्वदीर्घ वर्ण र मात्रा ...`
+- `chandrabindu_shirbindu` (+ `structural::rule_panchham_varna`) -> `(ख) चन्द्रविन्दु/शिरविन्दु/पञ्चम`
+- `ustai_ucharan_varnaharu` -> `(ग) श/ष/स, ऋ/रि, ब/व, य/ए, क्ष/छ्य, ज्ञ/ग्या`
+- `halanta_ra_ajanta` -> `(ङ) हलन्त र अजन्त`
+- `aadhi_vriddhi` -> `(क)` sub-rule path for आदिवृद्धि cases
+
+`orthographic` is currently kept as a compatibility facade that re-exports rule specs/functions from the newer descriptive modules.
+
+## Crate Boundary (Important)
+
+`prakriya` is intentionally word-centric: `derive(&str)` takes one token and returns one token-level correction path.
+
+Rules that require multi-word context (especially most of Section 3 `(घ) पदयोग र पदवियोगसम्बन्धी नियम`) are implemented in `varnavinyas-parikshak` text-level passes, not inside `prakriya`.
+
+Practical implication:
+
+- keep token-level deterministic transforms in `prakriya`
+- keep phrase/sentence boundary decisions in `parikshak`
+- do not force context-sensitive spacing logic into `derive(&str)` unless we redesign the API
 
 ## Used By
 

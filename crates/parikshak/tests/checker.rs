@@ -268,6 +268,134 @@ fn padayog_ota_varga_sambandhi_detected() {
 }
 
 #[test]
+fn padabiyog_split_cases_detected() {
+    let text = "देशकालागि काम गरियो। मेरानिम्ति खबर छ। रामकामा लेखिएको छ।";
+    let diags = check_text(text);
+
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "देशकालागि" && d.correction == "देशका लागि"),
+        "Expected 'देशकालागि' -> 'देशका लागि', got: {diags:?}"
+    );
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "मेरानिम्ति" && d.correction == "मेरा निम्ति"),
+        "Expected 'मेरानिम्ति' -> 'मेरा निम्ति', got: {diags:?}"
+    );
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "रामकामा" && d.correction == "रामका मा"),
+        "Expected 'रामकामा' -> 'रामका मा', got: {diags:?}"
+    );
+}
+
+#[test]
+fn padayog_padabiyog_notice_subrules_sampled() {
+    let text = "राम ले देश को कुरा गर्‍यो, किन भने देशकालागि चारजना थिए र पढ्नुनैपर्छ भन्यो।";
+    let diags = check_text(text);
+
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "राम ले" && d.correction == "रामले"),
+        "Expected 3(घ)-पदयोग-३ sample correction, got: {diags:?}"
+    );
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "देश को" && d.correction == "देशको"),
+        "Expected 3(घ)-पदयोग-३ sample correction, got: {diags:?}"
+    );
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "किन भने" && d.correction == "किनभने"),
+        "Expected 3(घ)-पदयोग-९ sample correction, got: {diags:?}"
+    );
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "देशकालागि" && d.correction == "देशका लागि"),
+        "Expected 3(घ)-पदवियोग-३ sample correction, got: {diags:?}"
+    );
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "चारजना" && d.correction == "चार जना"),
+        "Expected 3(घ)-पदवियोग-११ sample correction, got: {diags:?}"
+    );
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "पढ्नुनैपर्छ" && d.correction == "पढ्नु नै पर्छ"),
+        "Expected 3(घ)-पदवियोग-८ sample correction, got: {diags:?}"
+    );
+}
+
+#[test]
+fn generalized_padayog_vibhakti_join_applies_beyond_fixed_pairs() {
+    let text = "विद्यालय मा कार्यक्रम छ।";
+    let diags = check_text(text);
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "विद्यालय मा" && d.correction == "विद्यालयमा"),
+        "Expected generalized 3(घ)-पदयोग-३ join, got: {diags:?}"
+    );
+}
+
+#[test]
+fn generalized_padabiyog_vibhakti_split_applies_beyond_fixed_pairs() {
+    let text = "हाम्रालागि यो समाजकानिम्ति राम्रो हो।";
+    let diags = check_text(text);
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "हाम्रालागि" && d.correction == "हाम्रा लागि"),
+        "Expected generalized 3(घ)-पदवियोग-३ split for लागि, got: {diags:?}"
+    );
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "समाजकानिम्ति" && d.correction == "समाजका निम्ति"),
+        "Expected generalized 3(घ)-पदवियोग-३ split for निम्ति, got: {diags:?}"
+    );
+}
+
+#[test]
+fn generalized_padayog_conjunction_join_handles_variable_spacing() {
+    let text = "म जान्नँ, किन   भने समय थिएन।";
+    let diags = check_text(text);
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "किन   भने" && d.correction == "किनभने"),
+        "Expected generalized 3(घ)-पदयोग-९ join with variable spacing, got: {diags:?}"
+    );
+}
+
+#[test]
+fn generalized_padabiyog_verb_complex_split_applies_beyond_fixed_pairs() {
+    let text = "उनी खेल्दैछन् र भोलि हिँड्नेछन् ।";
+    let diags = check_text(text);
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "खेल्दैछन्" && d.correction == "खेल्दै छन्"),
+        "Expected generalized 3(घ)-पदवियोग-६ split, got: {diags:?}"
+    );
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "हिँड्नेछन्" && d.correction == "हिँड्ने छन्"),
+        "Expected generalized 3(घ)-पदवियोग-७ split, got: {diags:?}"
+    );
+}
+
+#[test]
 fn section4_style_variants_are_opt_in() {
     let text = "कार्यक्रमको सम्बन्धमा छलफल भयो।";
 
