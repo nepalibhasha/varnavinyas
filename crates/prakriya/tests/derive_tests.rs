@@ -1,3 +1,6 @@
+use varnavinyas_prakriya::orthographic::{
+    rule_ba_va, rule_gya_gyan, rule_ksha_chhya, rule_ri_kri, rule_sibilant, rule_ya_e,
+};
 use varnavinyas_prakriya::{Rule, derive};
 
 // P1: Corrects अत्याधिक → अत्यधिक
@@ -110,6 +113,14 @@ fn ri_to_ri() {
 fn kri_to_kri() {
     let p = derive("क्रिति");
     assert_eq!(p.output, "कृति");
+}
+
+// Regression: क्रि→कृ should not over-correct valid tatsam words like "क्रिया".
+#[test]
+fn kri_not_applied_to_valid_tatsam_kriya() {
+    let p = derive("क्रिया");
+    assert_eq!(p.output, "क्रिया");
+    assert!(p.is_correct);
 }
 
 #[test]
@@ -311,4 +322,245 @@ fn notice_section4_uparokta_gets_corrected() {
     let p = derive("उपरोक्त");
     assert_eq!(p.output, "उपर्युक्त");
     assert!(!p.is_correct);
+}
+
+// =================================================================
+// O8: Section 3(ग) numbered-subrule citation checks
+// =================================================================
+
+fn has_varna_niyam_code(p: &varnavinyas_prakriya::Prakriya, code: &str) -> bool {
+    p.steps
+        .iter()
+        .any(|s| matches!(s.rule, Rule::VarnaVinyasNiyam(c) if c == code))
+}
+
+#[test]
+fn o8_ga_a_9_aagantuk_s_normalization_citation() {
+    let p = rule_sibilant("शहिद").expect("expected sibilant correction");
+    assert_eq!(p.output, "सहिद");
+    assert!(
+        has_varna_niyam_code(&p, "3(ग)(अ)-9") || has_varna_niyam_code(&p, "3(ग)(अ)-8"),
+        "Expected 3(ग)(अ)-8 or 3(ग)(अ)-9 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o8_ga_aa_v_1_bi_prefix_citation() {
+    let p = rule_ba_va("बिदेश").expect("expected ba/va correction");
+    assert_eq!(p.output, "विदेश");
+    assert!(
+        has_varna_niyam_code(&p, "3(ग)(आ)-व-1"),
+        "Expected 3(ग)(आ)-व-1 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o8_ga_aa_v_3_suffix_group_citation() {
+    let p = rule_ba_va("मान्यबर").expect("expected ba/va correction");
+    assert_eq!(p.output, "मान्यवर");
+    assert!(
+        has_varna_niyam_code(&p, "3(ग)(आ)-व-3"),
+        "Expected 3(ग)(आ)-व-3 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o8_ga_aa_v_10_trailing_group_citation() {
+    let p = rule_ba_va("जिम्मेबारी").expect("expected ba/va correction");
+    assert_eq!(p.output, "जिम्मेवारी");
+    assert!(
+        has_varna_niyam_code(&p, "3(ग)(आ)-व-10"),
+        "Expected 3(ग)(आ)-व-10 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o8_ga_aa_b_1_contextual_citation() {
+    let p = rule_ba_va("वुद्धि").expect("expected ba/va correction");
+    assert_eq!(p.output, "बुद्धि");
+    assert!(
+        has_varna_niyam_code(&p, "3(ग)(आ)-ब-1"),
+        "Expected 3(ग)(आ)-ब-1 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o8_ga_aa_b_4_adjective_bucket_citation() {
+    let p = rule_ba_va("वुढो").expect("expected ba/va correction");
+    assert_eq!(p.output, "बुढो");
+    assert!(
+        has_varna_niyam_code(&p, "3(ग)(आ)-ब-4"),
+        "Expected 3(ग)(आ)-ब-4 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o8_ga_aa_b_5_avyaya_bucket_citation() {
+    let p = rule_ba_va("वरु").expect("expected ba/va correction");
+    assert_eq!(p.output, "बरु");
+    assert!(
+        has_varna_niyam_code(&p, "3(ग)(आ)-ब-5"),
+        "Expected 3(ग)(आ)-ब-5 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o8_ga_aa_b_6_verb_bucket_citation() {
+    let p = rule_ba_va("वग्नु").expect("expected ba/va correction");
+    assert_eq!(p.output, "बग्नु");
+    assert!(
+        has_varna_niyam_code(&p, "3(ग)(आ)-ब-6"),
+        "Expected 3(ग)(आ)-ब-6 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o8_ga_i_y_4_tatsam_ya_class_citation() {
+    let p = rule_ya_e("एथार्थ").expect("expected ya/e correction");
+    assert_eq!(p.output, "यथार्थ");
+    assert!(
+        has_varna_niyam_code(&p, "3(ग)(इ)-य-4"),
+        "Expected 3(ग)(इ)-य-4 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o8_ga_ii_ri_1_tatsam_ri_kri_citation() {
+    let p = rule_ri_kri("रिषि").expect("expected ri/kri correction");
+    assert_eq!(p.output, "ऋषि");
+    assert!(
+        has_varna_niyam_code(&p, "3(ग)(ई)-ऋ-1"),
+        "Expected 3(ग)(ई)-ऋ-1 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o8_ga_u_ksha_1_citation() {
+    let p = rule_ksha_chhya("लछ्य").expect("expected ksha/chhya correction");
+    assert_eq!(p.output, "लक्ष्य");
+    assert!(
+        has_varna_niyam_code(&p, "3(ग)(उ)-क्ष-1"),
+        "Expected 3(ग)(उ)-क्ष-1 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o8_ga_uu_3_gya_to_gyaana_citation() {
+    let p = rule_gya_gyan("अग्यान").expect("expected gya/gyan correction");
+    assert_eq!(p.output, "अज्ञान");
+    assert!(
+        has_varna_niyam_code(&p, "3(ग)(ऊ)-3"),
+        "Expected 3(ग)(ऊ)-3 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o8_ga_aa_v_2_vai_ref_ri_class_citation() {
+    let p = rule_ba_va("बर्ष").expect("expected ba/va correction");
+    assert_eq!(p.output, "वर्ष");
+    assert!(
+        has_varna_niyam_code(&p, "3(ग)(आ)-व-2"),
+        "Expected 3(ग)(आ)-व-2 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o8_ga_aa_v_4_sam_prefix_citation() {
+    let p = rule_ba_va("संबाद").expect("expected ba/va correction");
+    assert_eq!(p.output, "संवाद");
+    assert!(
+        has_varna_niyam_code(&p, "3(ग)(आ)-व-4"),
+        "Expected 3(ग)(आ)-व-4 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o8_ga_aa_v_5_final_v_citation() {
+    let p = rule_ba_va("मानब").expect("expected ba/va correction");
+    assert_eq!(p.output, "मानव");
+    assert!(
+        has_varna_niyam_code(&p, "3(ग)(आ)-व-5"),
+        "Expected 3(ग)(आ)-व-5 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o8_ga_aa_v_7_adjective_class_citation() {
+    let p = rule_ba_va("जुबाडे").expect("expected ba/va correction");
+    assert_eq!(p.output, "जुवाडे");
+    assert!(
+        has_varna_niyam_code(&p, "3(ग)(आ)-व-7"),
+        "Expected 3(ग)(आ)-व-7 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o8_ga_aa_v_8_verb_class_citation() {
+    let p = rule_ba_va("खुबाउनु").expect("expected ba/va correction");
+    assert_eq!(p.output, "खुवाउनु");
+    assert!(
+        has_varna_niyam_code(&p, "3(ग)(आ)-व-8"),
+        "Expected 3(ग)(आ)-व-8 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o8_ga_aa_v_9_avyaya_class_citation() {
+    let p = rule_ba_va("बरिपरि").expect("expected ba/va correction");
+    assert_eq!(p.output, "वरिपरि");
+    assert!(
+        has_varna_niyam_code(&p, "3(ग)(आ)-व-9"),
+        "Expected 3(ग)(आ)-व-9 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o8_ga_aa_o_1_class_citation() {
+    let p = rule_ba_va("उडार").expect("expected o-class correction");
+    assert_eq!(p.output, "ओडार");
+    assert!(
+        has_varna_niyam_code(&p, "3(ग)(आ)-ओ-1"),
+        "Expected 3(ग)(आ)-ओ-1 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o8_ga_aa_o_2_verb_citation() {
+    let p = rule_ba_va("देऊस्").expect("expected o-verb correction");
+    assert_eq!(p.output, "देओस्");
+    assert!(
+        has_varna_niyam_code(&p, "3(ग)(आ)-ओ-2"),
+        "Expected 3(ग)(आ)-ओ-2 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o8_ga_aa_o_3_tatsam_citation() {
+    let p = rule_ba_va("उजस्वी").expect("expected tatsam o-correction");
+    assert_eq!(p.output, "ओजस्वी");
+    assert!(
+        has_varna_niyam_code(&p, "3(ग)(आ)-ओ-3"),
+        "Expected 3(ग)(आ)-ओ-3 citation, got: {:?}",
+        p.steps
+    );
 }
