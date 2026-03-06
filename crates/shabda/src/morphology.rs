@@ -2,6 +2,16 @@ use crate::origin::{Origin, classify};
 use crate::tables;
 use varnavinyas_kosha::kosha;
 
+fn normalize_suffix_label(sfx: &str) -> String {
+    match sfx {
+        "ि" => "इ".to_string(),
+        "ी" => "ई".to_string(),
+        "ु" => "उ".to_string(),
+        "ू" => "ऊ".to_string(),
+        _ => sfx.to_string(),
+    }
+}
+
 /// Morphological decomposition of a word.
 #[derive(Debug, Clone)]
 pub struct Morpheme {
@@ -67,7 +77,7 @@ pub fn decompose(word: &str) -> Morpheme {
             for &sfx in tables::CASE_MARKERS.iter() {
                 if let Some(rest) = remaining.strip_suffix(sfx) {
                     if rest.chars().count() >= min_root_chars {
-                        suffixes.push(sfx.to_string());
+                        suffixes.push(normalize_suffix_label(sfx));
                         remaining = rest.to_string();
                         found = true;
                         break;
@@ -82,7 +92,7 @@ pub fn decompose(word: &str) -> Morpheme {
         for &sfx in tables::PLURAL_MARKERS.iter() {
             if let Some(rest) = remaining.strip_suffix(sfx) {
                 if rest.chars().count() >= min_root_chars {
-                    suffixes.push(sfx.to_string());
+                    suffixes.push(normalize_suffix_label(sfx));
                     remaining = rest.to_string();
                     break;
                 }
@@ -97,7 +107,7 @@ pub fn decompose(word: &str) -> Morpheme {
             for &sfx in tables::SUFFIXES.iter() {
                 if let Some(rest) = remaining.strip_suffix(sfx) {
                     if rest.chars().count() >= min_root_chars && lex.contains(rest) {
-                        suffixes.push(sfx.to_string());
+                        suffixes.push(normalize_suffix_label(sfx));
                         remaining = rest.to_string();
                         break;
                     }
@@ -113,7 +123,7 @@ pub fn decompose(word: &str) -> Morpheme {
         for &suffix in tables::SUFFIXES.iter() {
             if let Some(rest) = remaining.strip_suffix(suffix) {
                 if rest.chars().count() >= min_root_chars && lex.contains(rest) {
-                    suffixes.push(suffix.to_string());
+                    suffixes.push(normalize_suffix_label(suffix));
                     remaining = rest.to_string();
                     break; // Only strip one suffix for now
                 }

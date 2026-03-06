@@ -187,5 +187,5 @@ fn decompose_explicit_derivational_at() {
 fn decompose_nepali_to_nepal_plus_long_i() {
     let m = decompose("नेपाली");
     assert_eq!(m.root, "नेपाल");
-    assert!(m.suffixes.contains(&"ी".to_string()) || m.suffixes.contains(&"ई".to_string()));
+    assert!(m.suffixes.contains(&"ई".to_string()));
 }
