@@ -6,6 +6,7 @@ use varnavinyas_prakriya::DiagnosticKind;
 use varnavinyas_prakriya::{Rule, derive};
 
 use crate::diagnostic::{Diagnostic, DiagnosticCategory};
+use crate::padayog_padabiyog::PADAYOG_PHRASE_CORRECTIONS;
 #[cfg(feature = "grammar-pass")]
 use crate::tokenizer::AnalyzedToken;
 use crate::tokenizer::tokenize_analyzed;
@@ -29,20 +30,6 @@ const INTRANSITIVE_VERB_FORMS: &[&str] = &[
 
 #[cfg(feature = "grammar-pass")]
 const MIN_SUFFIX_HEURISTIC_CONFIDENCE: f32 = 0.80;
-
-/// Baseline padayog/padabiyog phrase corrections from Section 3(घ).
-/// This set is intentionally conservative and deterministic.
-const PADAYOG_PHRASE_CORRECTIONS: &[(&str, &str, &str)] = &[
-    ("घर तिर", "घरतिर", "नामयोगी जोडेर लेख्नुपर्छ"),
-    ("तिमी भन्दा", "तिमीभन्दा", "नामयोगी जोडेर लेख्नुपर्छ"),
-    ("कोठा भित्र", "कोठाभित्र", "नामयोगी जोडेर लेख्नुपर्छ"),
-    ("बिना काम", "बिनाकाम", "नामयोगी जोडेर लेख्नुपर्छ"),
-    ("म सँग", "मसँग", "नामयोगी जोडेर लेख्नुपर्छ"),
-    ("आज्ञा अनुसार", "आज्ञाअनुसार", "नामयोगी जोडेर लेख्नुपर्छ"),
-    ("हामी बाहेक", "हामीबाहेक", "नामयोगी जोडेर लेख्नुपर्छ"),
-    ("त्यस अन्तर्गत", "त्यसअन्तर्गत", "नामयोगी जोडेर लेख्नुपर्छ"),
-    ("भने बमोजिम", "भनेबमोजिम", "नामयोगी जोडेर लेख्नुपर्छ"),
-];
 
 /// Section 4 phrase/sentence-level style variants.
 /// These are guidance suggestions, not hard errors.

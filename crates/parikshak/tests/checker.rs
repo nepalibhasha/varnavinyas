@@ -243,6 +243,31 @@ fn padayog_phrase_multiple_detected() {
 }
 
 #[test]
+fn padayog_ota_varga_sambandhi_detected() {
+    let text = "तीन ओटा शिक्षक वर्ग र ज्ञान सम्बन्धी छलफल भयो।";
+    let diags = check_text(text);
+
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "तीन ओटा" && d.correction == "तीनओटा"),
+        "Expected 'तीन ओटा' -> 'तीनओटा', got: {diags:?}"
+    );
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "शिक्षक वर्ग" && d.correction == "शिक्षकवर्ग"),
+        "Expected 'शिक्षक वर्ग' -> 'शिक्षकवर्ग', got: {diags:?}"
+    );
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "ज्ञान सम्बन्धी" && d.correction == "ज्ञानसम्बन्धी"),
+        "Expected 'ज्ञान सम्बन्धी' -> 'ज्ञानसम्बन्धी', got: {diags:?}"
+    );
+}
+
+#[test]
 fn section4_style_variants_are_opt_in() {
     let text = "कार्यक्रमको सम्बन्धमा छलफल भयो।";
 

@@ -1,5 +1,6 @@
 mod checker;
 mod diagnostic;
+mod padayog_padabiyog;
 mod tokenizer;
 
 pub use checker::{CheckOptions, PunctuationMode, check_text, check_text_with_options, check_word};
