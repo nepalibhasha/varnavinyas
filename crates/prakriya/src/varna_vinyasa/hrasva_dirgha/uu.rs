@@ -3,20 +3,23 @@ use crate::model::prakriya::Prakriya;
 use crate::model::rule::Rule;
 use crate::model::rule_spec::{DiagnosticKind, RuleCategory, RuleSpec};
 use crate::model::step::Step;
-use varnavinyas_shabda::{Origin, classify};
+use varnavinyas_shabda::{Origin, classify, decompose};
 
 // -----------------------------------------------------------------------------
 // 3(क)(ऊ) शब्दका अन्त्यमा दीर्घ ईकार/ऊकारको प्रयोग
 // Rule-book map:
-// - 1  TODO: 'ई' प्रत्ययान्त शब्द
+// - 1  implemented in `rule_final_ii_suffix_dirgha`
 // - 2  TODO: वती/वी प्रत्यय
 // - 3  implemented in `rule_dirgha_endings` and `rule_kinship_tadbhav`
 // - 4  TODO: स्त्रीलिङ्गी विशेषण
 // - 5  implemented/shared in `rule_dirgha_endings`, `final_dirgha_class_for`
 // - 6  TODO: ईकारान्त निर्जीव नाम
+//      Blocker: current morphology/lexicon layers do not expose a reliable
+//      animate-vs-inanimate distinction, so a systematic implementation would
+//      overreach without extra semantic metadata.
 // - 7  implemented/shared in `rule_pronoun_vowel_length`
 // - 8  TODO: ईकारान्त विशेषण
-// - 9  TODO: सङ्ख्यावाचक शब्द
+// - 9  implemented/shared in `rule_dirgha_endings`, `final_dirgha_class_for`
 // - 10 TODO: विध्यर्थक र स्त्रीलिङ्गी क्रियापद
 // - 11 implemented/shared in `rule_dirgha_endings`, `final_dirgha_class_for`
 // - 12 implemented/shared in `rule_dirgha_endings`, `final_dirgha_class_for`
@@ -25,6 +28,15 @@ use varnavinyas_shabda::{Origin, classify};
 // - 15 implemented/shared in `final_dirgha_class_for`
 // - 16 implemented/shared in `final_dirgha_class_for`
 // -----------------------------------------------------------------------------
+pub const SPEC_FINAL_II_SUFFIX_DIRGHA: RuleSpec = RuleSpec {
+    id: "hd-final-ii-suffix-dirgha",
+    category: RuleCategory::HrasvaDirgha,
+    kind: DiagnosticKind::Error,
+    priority: 239,
+    citation: Rule::VarnaVinyasNiyam("3(क)(ऊ)-1"),
+    examples: &[("योगि", "योगी"), ("त्यागि", "त्यागी")],
+};
+
 pub const SPEC_DIRGHA_ENDINGS: RuleSpec = RuleSpec {
     id: "hd-dirgha-endings",
     category: RuleCategory::HrasvaDirgha,
@@ -42,6 +54,42 @@ pub const SPEC_KOSHA_BACKED: RuleSpec = RuleSpec {
     citation: Rule::VarnaVinyasNiyam("3(क)(ऊ)"),
     examples: &[("नेपालि", "नेपाली")],
 };
+
+pub fn rule_final_ii_suffix_dirgha(input: &str) -> Option<Prakriya> {
+    let origin = classify(input);
+    if matches!(origin, Origin::Tatsam) || !input.ends_with('ि') {
+        return None;
+    }
+
+    let chars: Vec<char> = input.chars().collect();
+    let mut output_chars = chars.clone();
+    *output_chars.last_mut().unwrap() = 'ी';
+    let output: String = output_chars.into_iter().collect();
+
+    let kosha = varnavinyas_kosha::kosha();
+    if !kosha.contains(&output) {
+        return None;
+    }
+
+    let morphology = decompose(&output);
+    if !morphology.suffixes.iter().any(|suffix| suffix == "ई") {
+        return None;
+    }
+    if final_classes::final_dirgha_class_for(&output, "ई").0 != "3(क)(ऊ)" {
+        return None;
+    }
+
+    Some(Prakriya::corrected(
+        input,
+        &output,
+        vec![Step::new(
+            Rule::VarnaVinyasNiyam("3(क)(ऊ)-1"),
+            "'ई' प्रत्यय अन्त्यमा आउने शब्दहरू दीर्घ हुन्छन्",
+            input,
+            &output,
+        )],
+    ))
+}
 
 pub fn rule_dirgha_endings(input: &str) -> Option<Prakriya> {
     let origin = classify(input);
@@ -93,6 +141,19 @@ pub fn rule_dirgha_endings(input: &str) -> Option<Prakriya> {
                 vec![Step::new(
                     Rule::VarnaVinyasNiyam("3(क)(ऊ)-11"),
                     "स्थान, नदी र भाषा बुझाउने शब्दमा दीर्घ हुन्छ",
+                    input,
+                    &explicit_dirgha,
+                )],
+            ));
+        }
+
+        if final_classes::is_number_final_dirgha(&explicit_dirgha) {
+            return Some(Prakriya::corrected(
+                input,
+                &explicit_dirgha,
+                vec![Step::new(
+                    Rule::VarnaVinyasNiyam("3(क)(ऊ)-9"),
+                    "सङ्ख्यावाचक शब्दहरू अन्त्यमा दीर्घ हुन्छन्",
                     input,
                     &explicit_dirgha,
                 )],
@@ -189,6 +250,25 @@ pub fn rule_dirgha_endings(input: &str) -> Option<Prakriya> {
                     )],
                 ));
             }
+        }
+    }
+
+    if last == 'इ' {
+        let mut explicit_dirgha_chars = chars.clone();
+        *explicit_dirgha_chars.last_mut().unwrap() = 'ई';
+        let explicit_dirgha: String = explicit_dirgha_chars.into_iter().collect();
+
+        if final_classes::is_number_final_dirgha(&explicit_dirgha) {
+            return Some(Prakriya::corrected(
+                input,
+                &explicit_dirgha,
+                vec![Step::new(
+                    Rule::VarnaVinyasNiyam("3(क)(ऊ)-9"),
+                    "सङ्ख्यावाचक शब्दहरू अन्त्यमा दीर्घ हुन्छन्",
+                    input,
+                    &explicit_dirgha,
+                )],
+            ));
         }
     }
 

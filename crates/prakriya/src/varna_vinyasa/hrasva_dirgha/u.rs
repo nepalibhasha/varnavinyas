@@ -7,13 +7,22 @@ use crate::model::step::Step;
 // 3(क)(ई) शब्दका सुरुमा दीर्घ ईकार/ऊकारको प्रयोग
 // Rule-book map:
 // - 1  TODO: संस्कृतबाट जस्ताको तस्तै आएका दीर्घ-आदि शब्द
-// - 2  TODO: 'सु' उपसर्ग लागेका उकारादि शब्द
+// - 2  implemented in `rule_su_prefix_preserves_dirgha`
 // -----------------------------------------------------------------------------
 // 3(क)(उ) शब्दका बिचमा दीर्घ ईकार/ऊकारको प्रयोग
 // Rule-book map:
 // - 1  implemented in `rule_suffix_preserves_dirgha`
 // - 2  implemented in `rule_suffix_family_preserves_dirgha`
 // -----------------------------------------------------------------------------
+pub const SPEC_SU_PREFIX_PRESERVES_DIRGHA: RuleSpec = RuleSpec {
+    id: "hd-su-prefix-preserves-dirgha",
+    category: RuleCategory::HrasvaDirgha,
+    kind: DiagnosticKind::Error,
+    priority: 219,
+    citation: Rule::VarnaVinyasNiyam("3(क)(ई)-2"),
+    examples: &[("सुक्ति", "सूक्ति"), ("सुक्त", "सूक्त")],
+};
+
 pub const SPEC_SUFFIX_PRESERVES: RuleSpec = RuleSpec {
     id: "hd-suffix-preserves",
     category: RuleCategory::HrasvaDirgha,
@@ -31,6 +40,34 @@ pub const SPEC_SUFFIX_FAMILY_PRESERVES_DIRGHA: RuleSpec = RuleSpec {
     citation: Rule::VarnaVinyasNiyam("3(क)(उ)-2"),
     examples: &[("एकिकरण", "एकीकरण"), ("एकिकृत", "एकीकृत")],
 };
+
+pub fn rule_su_prefix_preserves_dirgha(input: &str) -> Option<Prakriya> {
+    let lex = varnavinyas_kosha::kosha();
+    if !input.starts_with("सु") {
+        return None;
+    }
+
+    let output = input.replacen("सु", "सू", 1);
+    let Some(base_tail) = output.strip_prefix("सू") else {
+        return None;
+    };
+    let base = format!("उ{base_tail}");
+
+    if !lex.contains(&output) || !lex.contains(&base) {
+        return None;
+    }
+
+    Some(Prakriya::corrected(
+        input,
+        &output,
+        vec![Step::new(
+            Rule::VarnaVinyasNiyam("3(क)(ई)-2"),
+            "उकारादि शब्दमा 'सु' उपसर्ग लागेर बनेका शब्दमा सुरुमा दीर्घ हुन्छ",
+            input,
+            &output,
+        )],
+    ))
+}
 
 pub fn rule_suffix_preserves_dirgha(input: &str) -> Option<Prakriya> {
     static KNOWN_CORRECTIONS: &[(&str, &str, &str)] = &[

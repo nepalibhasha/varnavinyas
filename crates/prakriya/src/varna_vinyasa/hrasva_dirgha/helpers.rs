@@ -14,6 +14,10 @@ pub(super) mod final_classes {
             );
         }
 
+        if is_number_final_dirgha(output) {
+            return ("3(क)(ऊ)-9", "सङ्ख्यावाचक शब्दहरू अन्त्यमा दीर्घ हुन्छन्".to_string());
+        }
+
         if is_profession_jati_thar_dirgha(output) {
             return (
                 "3(क)(ऊ)-5",
@@ -235,6 +239,10 @@ pub(super) mod final_classes {
                 | "प्रसाईं"
                 | "गिरी"
         )
+    }
+
+    pub(crate) fn is_number_final_dirgha(output: &str) -> bool {
+        matches!(output, "दुई" | "साठी" | "सत्तरी" | "असी")
     }
 
     pub(crate) fn is_hi_final_dirgha(output: &str) -> bool {

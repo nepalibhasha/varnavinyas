@@ -1172,6 +1172,80 @@ fn o15_ka_u_2_suffix_family_preserves_dirgha_krita() {
 }
 
 #[test]
+fn o15_ka_ii_2_su_prefix_preserves_dirgha_sukti() {
+    let p = derive("सुक्ति");
+    assert_eq!(p.output, "सूक्ति");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(ई)-2"),
+        "Expected 3(क)(ई)-2 citation, got: {:?}",
+        p.steps
+    );
+    assert_eq!(
+        p.steps[0].description,
+        "उकारादि शब्दमा 'सु' उपसर्ग लागेर बनेका शब्दमा सुरुमा दीर्घ हुन्छ"
+    );
+}
+
+#[test]
+fn o15_ka_ii_2_su_prefix_preserves_dirgha_sukta() {
+    let p = derive("सुक्त");
+    assert_eq!(p.output, "सूक्त");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(ई)-2"),
+        "Expected 3(क)(ई)-2 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o16_ka_uu_1_final_ii_suffix_dirgha_yogi() {
+    let p = derive("योगि");
+    assert_eq!(p.output, "योगी");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(ऊ)-1"),
+        "Expected 3(क)(ऊ)-1 citation, got: {:?}",
+        p.steps
+    );
+    assert_eq!(
+        p.steps[0].description,
+        "'ई' प्रत्यय अन्त्यमा आउने शब्दहरू दीर्घ हुन्छन्"
+    );
+}
+
+#[test]
+fn o16_ka_uu_1_final_ii_suffix_dirgha_tyagi() {
+    let p = derive("त्यागि");
+    assert_eq!(p.output, "त्यागी");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(ऊ)-1"),
+        "Expected 3(क)(ऊ)-1 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o16_ka_uu_9_final_number_dirgha_dui() {
+    let p = derive("दुइ");
+    assert_eq!(p.output, "दुई");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(ऊ)-9"),
+        "Expected 3(क)(ऊ)-9 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o16_ka_uu_9_final_number_dirgha_sathi() {
+    let p = derive("साठि");
+    assert_eq!(p.output, "साठी");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(ऊ)-9"),
+        "Expected 3(क)(ऊ)-9 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
 fn o14_ka_i_2_location_inanimate_final_hrasva() {
     let p = derive("आलू");
     assert_eq!(p.output, "आलु");

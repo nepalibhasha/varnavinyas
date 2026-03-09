@@ -108,12 +108,20 @@ fn ka_rules() -> Vec<PatternRule> {
             apply: hrasva_dirgha::rule_final_hrasva_endings,
         },
         PatternRule {
+            spec: hrasva_dirgha::SPEC_SU_PREFIX_PRESERVES_DIRGHA,
+            apply: hrasva_dirgha::rule_su_prefix_preserves_dirgha,
+        },
+        PatternRule {
             spec: hrasva_dirgha::SPEC_SUFFIX_PRESERVES,
             apply: hrasva_dirgha::rule_suffix_preserves_dirgha,
         },
         PatternRule {
             spec: hrasva_dirgha::SPEC_SUFFIX_FAMILY_PRESERVES_DIRGHA,
             apply: hrasva_dirgha::rule_suffix_family_preserves_dirgha,
+        },
+        PatternRule {
+            spec: hrasva_dirgha::SPEC_FINAL_II_SUFFIX_DIRGHA,
+            apply: hrasva_dirgha::rule_final_ii_suffix_dirgha,
         },
         PatternRule {
             spec: hrasva_dirgha::SPEC_DIRGHA_ENDINGS,
