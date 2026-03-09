@@ -3,6 +3,7 @@ use crate::model::rule::Rule;
 use crate::model::rule_spec::{DiagnosticKind, RuleCategory, RuleSpec};
 use crate::model::step::Step;
 use varnavinyas_kosha::kosha;
+use varnavinyas_shabda::{Origin, classify};
 
 pub const SPEC_HALANTA: RuleSpec = RuleSpec {
     id: "ortho-halanta",
@@ -49,6 +50,7 @@ fn corrected(
 // - 3(ङ)-2
 // - 3(ङ)-3
 // - 3(ङ)-4
+// - conservative lexicon-backed tatsam padanta halanta restoration
 // -----------------------------------------------------------------------------
 pub(super) fn rule_halanta_required(input: &str) -> Option<Prakriya> {
     let lex = kosha();
@@ -113,6 +115,29 @@ pub(super) fn rule_halanta_required(input: &str) -> Option<Prakriya> {
                         "तत्सम प्रत्ययमा हलन्त हुन्छ: {} -> {}",
                         wrong_suffix, correct_suffix
                     ),
+                    input,
+                    &output,
+                )],
+            ));
+        }
+    }
+
+    // Conservative lexicon-backed fallback for tatsam words whose only issue is
+    // a missing padanta halanta, e.g. जगत -> जगत्. This avoids weak edit-distance
+    // suggestions like जगत -> जग while keeping the rule systematic: we only fire
+    // when the exact halanta-restored form is attested and tatsam.
+    if !input.ends_with('्') {
+        let output = format!("{input}्");
+        if !lex.contains(input)
+            && lex.contains(&output)
+            && matches!(classify(&output), Origin::Tatsam)
+        {
+            return Some(Prakriya::corrected(
+                input,
+                &output,
+                vec![Step::new(
+                    Rule::VarnaVinyasNiyam("3(ङ)-पदान्त"),
+                    "तत्सम शब्दको पदान्त हलन्त कायम राखिन्छ",
                     input,
                     &output,
                 )],

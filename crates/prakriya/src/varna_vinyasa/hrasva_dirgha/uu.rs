@@ -61,6 +61,14 @@ pub fn rule_final_ii_suffix_dirgha(input: &str) -> Option<Prakriya> {
         return None;
     }
 
+    // 3(क)(ऊ)-1 should not override words that already belong to explicit
+    // final-hrasva classes like मूल अव्यय (e.g. पनि, अनि). The Academy text
+    // gives those classes separately under 3(क)(इ), so this derived-ई rule
+    // must back off when the input itself is already explained there.
+    if final_classes::final_hrasva_class_for(input).is_some() {
+        return None;
+    }
+
     let chars: Vec<char> = input.chars().collect();
     let mut output_chars = chars.clone();
     *output_chars.last_mut().unwrap() = 'ी';

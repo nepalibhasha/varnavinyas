@@ -598,6 +598,17 @@ fn o9_nga_halanta_4_suffix_forms() {
 }
 
 #[test]
+fn o9_nga_halanta_tatsam_padanta_restoration() {
+    let p = derive("जगत");
+    assert_eq!(p.output, "जगत्");
+    assert!(
+        has_varna_niyam_code(&p, "3(ङ)-पदान्त"),
+        "Expected 3(ङ)-पदान्त citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
 fn o9_nga_ajanta_8_terminal_halanta_removed() {
     assert_eq!(derive("कस्").output, "कस");
     assert_eq!(derive("जवान्").output, "जवान");
@@ -1221,6 +1232,20 @@ fn o16_ka_uu_1_final_ii_suffix_dirgha_tyagi() {
         "Expected 3(क)(ऊ)-1 citation, got: {:?}",
         p.steps
     );
+}
+
+#[test]
+fn o16_ka_uu_1_does_not_override_mula_avyaya_pani() {
+    let p = derive("पनि");
+    assert!(p.is_correct, "Expected मूल अव्यय 'पनि' to remain correct");
+    assert_eq!(p.output, "पनि");
+}
+
+#[test]
+fn o16_ka_uu_1_does_not_override_mula_avyaya_ani() {
+    let p = derive("अनि");
+    assert!(p.is_correct, "Expected मूल अव्यय 'अनि' to remain correct");
+    assert_eq!(p.output, "अनि");
 }
 
 #[test]

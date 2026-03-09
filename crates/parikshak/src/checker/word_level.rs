@@ -2,7 +2,9 @@ use varnavinyas_kosha::kosha;
 use varnavinyas_prakriya::DiagnosticKind;
 use varnavinyas_prakriya::{Rule, RuleHit, collect_rule_hits};
 
-use crate::diagnostic::{Diagnostic, DiagnosticCategory, DiagnosticReason};
+use crate::diagnostic::{
+    Diagnostic, DiagnosticCategory, DiagnosticReason, choose_diagnostic_category,
+};
 use crate::tokenizer::AnalyzedToken;
 
 const AMBIGUOUS_HALANTA_DHATU_FORMS: &[&str] = &["भन", "गर", "पढ", "हेर", "लेख", "बुझ", "लुक"];
@@ -37,10 +39,7 @@ pub(crate) fn check_word_impl(word: &str) -> Option<Diagnostic> {
             .first()
             .map(|s| s.description.clone())
             .unwrap_or_default();
-        let category = prakriya
-            .category
-            .map(DiagnosticCategory::from_rule_category)
-            .unwrap_or_else(|| DiagnosticCategory::from_rule(&rule));
+        let category = choose_diagnostic_category(prakriya.category, &rule);
 
         return Some(Diagnostic {
             span: (0, word.len()),

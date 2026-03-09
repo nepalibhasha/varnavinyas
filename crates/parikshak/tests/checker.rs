@@ -124,6 +124,81 @@ fn unknown_simple_word_remains_unflagged() {
     );
 }
 
+#[test]
+fn common_mula_avyaya_are_not_overcorrected() {
+    for word in ["पनि", "अनि"] {
+        let diag = check_word(word);
+        assert!(
+            diag.is_none(),
+            "Common मूल अव्यय '{word}' should not be overcorrected, got: {diag:?}"
+        );
+    }
+}
+
+#[test]
+fn chandrabindu_word_gets_chandrabindu_category() {
+    let diag = check_word("आउछ").expect("Expected diagnostic for आउछ");
+    assert_eq!(diag.correction, "आउँछ");
+    assert_eq!(
+        diag.category,
+        varnavinyas_parikshak::DiagnosticCategory::Chandrabindu
+    );
+}
+
+#[test]
+fn halanta_word_gets_halanta_category() {
+    let diag = check_word("महान").expect("Expected diagnostic for महान");
+    assert_eq!(diag.correction, "महान्");
+    assert_eq!(
+        diag.category,
+        varnavinyas_parikshak::DiagnosticCategory::Halanta
+    );
+}
+
+#[test]
+fn tatsam_padanta_halanta_beats_edit_distance() {
+    let diag = check_word("जगत").expect("Expected diagnostic for जगत");
+    assert_eq!(diag.correction, "जगत्");
+    assert_eq!(
+        diag.category,
+        varnavinyas_parikshak::DiagnosticCategory::Halanta
+    );
+    assert!(
+        !matches!(diag.kind, DiagnosticKind::Ambiguous),
+        "जगत should be explained by halanta restoration, not edit-distance fallback: {diag:?}"
+    );
+}
+
+#[test]
+fn ya_e_correction_gets_ya_e_category() {
+    let diag = check_word("यकता").expect("Expected diagnostic for यकता");
+    assert_eq!(diag.correction, "एकता");
+    assert_eq!(
+        diag.category,
+        varnavinyas_parikshak::DiagnosticCategory::YaE
+    );
+}
+
+#[test]
+fn ri_kri_correction_gets_ri_kri_category() {
+    let diag = check_word("रिषि").expect("Expected diagnostic for रिषि");
+    assert_eq!(diag.correction, "ऋषि");
+    assert_eq!(
+        diag.category,
+        varnavinyas_parikshak::DiagnosticCategory::RiKri
+    );
+}
+
+#[test]
+fn aadhi_vriddhi_correction_gets_aadhi_vriddhi_category() {
+    let diag = check_word("व्यवहारिक").expect("Expected diagnostic for व्यवहारिक");
+    assert_eq!(diag.correction, "व्यावहारिक");
+    assert_eq!(
+        diag.category,
+        varnavinyas_parikshak::DiagnosticCategory::AadhiVriddhi
+    );
+}
+
 /// Punctuation diagnostics integrated into check_text.
 #[test]
 fn punctuation_in_check_text() {

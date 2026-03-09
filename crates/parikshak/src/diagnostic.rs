@@ -43,7 +43,22 @@ impl DiagnosticCategory {
             Rule::ShuddhaAshuddha(_) => DiagnosticCategory::ShuddhaTable,
             Rule::ChihnaNiyam(_) => DiagnosticCategory::Punctuation,
             Rule::VarnaVinyasNiyam(code) => {
-                if code.contains("ह्रस्व") || code.contains("दीर्घ") || code.contains("3(क)")
+                if code.contains("3(क)-इक-प्रत्यय") {
+                    DiagnosticCategory::AadhiVriddhi
+                } else if code.contains("ऋ")
+                    || code.contains("कृ")
+                    || code.contains("3(ग)-ऋ")
+                    || code.contains("3(ग)-कृ")
+                {
+                    DiagnosticCategory::RiKri
+                } else if code.contains("क्ष") || code.contains("छ्य") || code.contains("3(छ)-क्ष")
+                {
+                    DiagnosticCategory::KshaChhya
+                } else if code.contains("ज्ञ") || code.contains("ग्य") {
+                    DiagnosticCategory::GyaGyan
+                } else if code.contains("य/ए") || *code == "3(छ)" {
+                    DiagnosticCategory::YaE
+                } else if code.contains("ह्रस्व") || code.contains("दीर्घ") || code.contains("3(क)")
                 {
                     DiagnosticCategory::HrasvaDirgha
                 } else if code.contains("चन्द्रबिन्दु") || code.contains("3(ख)")
@@ -51,14 +66,8 @@ impl DiagnosticCategory {
                     DiagnosticCategory::Chandrabindu
                 } else if code.contains("श/ष/स") || code.contains("3(ग)") {
                     DiagnosticCategory::ShaShaS
-                } else if code.contains("ऋ") || code.contains("कृ") {
-                    DiagnosticCategory::RiKri
-                } else if code.contains("हलन्त") {
+                } else if code.contains("हलन्त") || code.contains("3(ङ)") {
                     DiagnosticCategory::Halanta
-                } else if code.contains("य/ए") {
-                    DiagnosticCategory::YaE
-                } else if code.contains("क्ष") || code.contains("छ्य") {
-                    DiagnosticCategory::KshaChhya
                 } else if code.contains("सन्धि") || code.contains("sandhi") {
                     DiagnosticCategory::Sandhi
                 } else {
@@ -91,6 +100,26 @@ impl DiagnosticCategory {
             RuleCategory::GyaGyan => DiagnosticCategory::GyaGyan,
             RuleCategory::Structural => DiagnosticCategory::ShuddhaTable,
         }
+    }
+}
+
+/// Prefer typed prakriya metadata, but upgrade generic ShuddhaTable to a more
+/// specific family when the winning rule itself clearly identifies one.
+pub fn choose_diagnostic_category(
+    category: Option<RuleCategory>,
+    rule: &Rule,
+) -> DiagnosticCategory {
+    match category.map(DiagnosticCategory::from_rule_category) {
+        Some(DiagnosticCategory::ShuddhaTable) => {
+            let from_rule = DiagnosticCategory::from_rule(rule);
+            if from_rule == DiagnosticCategory::ShuddhaTable {
+                DiagnosticCategory::ShuddhaTable
+            } else {
+                from_rule
+            }
+        }
+        Some(specific) => specific,
+        None => DiagnosticCategory::from_rule(rule),
     }
 }
 
@@ -140,10 +169,7 @@ pub struct Diagnostic {
 pub type DiagnosticReason = varnavinyas_prakriya::Explanation;
 
 pub fn diagnostic_reason_category(reason: &DiagnosticReason) -> DiagnosticCategory {
-    reason
-        .category
-        .map(DiagnosticCategory::from_rule_category)
-        .unwrap_or_else(|| DiagnosticCategory::from_rule(&reason.rule))
+    choose_diagnostic_category(reason.category, &reason.rule)
 }
 
 impl std::fmt::Display for Diagnostic {
