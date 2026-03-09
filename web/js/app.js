@@ -3,10 +3,18 @@
  */
 import { initialize } from './wasm-bridge.js';
 import { initChecker, setText } from './checker.js';
-import { initReference, highlightCard } from './reference.js';
+import { initReference, highlightCard, setReferenceContext } from './reference.js';
 
-const SAMPLE_TEXT =
-  'नेपाल एक सुन्दर देश हो। यहाँको प्रसाशन राम्रो हुनुपर्छ। अत्याधिक खर्च गर्नु हुँदैन। राजनैतिक स्थिरता आवश्यक छ।';
+// Sample text is intentionally built from Academy notice examples so the default
+// UI exercises rule families users can cross-check in the Rules Reference.
+const SAMPLE_TEXT = [
+  'सरकारी प्रसाशनमा अत्याधिक ढिलाइ र राजनैतिक अस्थिरता हुँदा औपचारिक नेपाली लेखन बिग्रन्छ।',
+  'अभीमान, सूमार्ग र भौतीक जस्ता रूपभन्दा अभिमान, सुमार्ग र भौतिक मानक मानिन्छन्।',
+  'अहीले धेरैले आउछ, निम्ती, त्यती, नीती, दुइ र साठि जस्ता रूप लेख्छन्।',
+  'महान लेख्दा हलन्त छुट्न सक्छ, नेपालि, गरिबि, कोहि र थारु जस्ता रूप भेटिन्छन्।',
+  'एशिया, छेत्र, अग्यान, यकता, रिषि र व्यवहारिक जस्ता रूपले उस्तै उच्चारण र आदिवृद्धिमा पनि अन्योल ल्याउँछन्।',
+  'अंक जस्तो तत्सम शब्दमा पञ्चम वर्णको प्रयोग चाहिन्छ, र “उनले भने", नेपाल सुन्दर छ. जस्ता वाक्यमा विरामचिह्न मिलाउनुपर्छ।',
+].join(' ');
 
 /** Stores the scroll position to return to when the user clicks "back" from reference. */
 let returnScrollY = null;
@@ -67,6 +75,7 @@ function initViewSwitching() {
   if (rulesBtn) {
     rulesBtn.addEventListener('click', () => {
       returnScrollY = window.scrollY;
+      setReferenceContext(null);
       switchToView('reference');
     });
   }
@@ -114,12 +123,21 @@ function initRuleNavigation() {
     if (!ruleRef) return;
 
     const categoryCode = ruleRef.dataset.category;
+    const targetId = ruleRef.dataset.target || null;
     if (!categoryCode) return;
+    const context = {
+      word: ruleRef.dataset.word || '',
+      incorrect: ruleRef.dataset.incorrect || '',
+      correction: ruleRef.dataset.correction || '',
+      explanation: ruleRef.dataset.explanation || '',
+      rule: ruleRef.dataset.rule || ruleRef.textContent || '',
+    };
 
     // Don't navigate if already on reference view
     const currentView = getActiveView();
     if (currentView === 'reference') {
-      highlightCard(categoryCode);
+      setReferenceContext(context);
+      highlightCard(categoryCode, targetId);
       return;
     }
 
@@ -131,12 +149,14 @@ function initRuleNavigation() {
 
     // Small delay to let the panel render before scrolling
     requestAnimationFrame(() => {
-      highlightCard(categoryCode);
+      setReferenceContext(context);
+      highlightCard(categoryCode, targetId);
     });
   });
 }
 
 function goBack() {
+  setReferenceContext(null);
   switchToView('editor');
   if (returnScrollY != null) {
     requestAnimationFrame(() => {

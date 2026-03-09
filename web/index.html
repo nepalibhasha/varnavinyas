@@ -68,6 +68,19 @@
         </div>
         <div class="checker-panel-col" id="panel-col">
           <h3 class="diag-header">जाँच विवरण <span class="diag-label">Diagnostics</span></h3>
+          <div class="review-toolbar" id="review-toolbar">
+            <div class="review-toolbar-group">
+              <button class="btn btn-sm" id="review-prev-btn" disabled>&larr; अघिल्लो</button>
+              <button class="btn btn-sm" id="review-next-btn" disabled>अर्को &rarr;</button>
+              <span class="review-progress" id="review-progress">0 / 0</span>
+            </div>
+            <div class="review-toolbar-group">
+              <button class="btn btn-sm" id="apply-hard-btn" disabled>त्रुटि मात्र सच्याउनुहोस्</button>
+              <button class="btn btn-sm" id="copy-corrected-btn" disabled>सच्याइएको पाठ कपी</button>
+              <button class="btn btn-sm" id="toggle-preview-btn" disabled>पूर्वावलोकन</button>
+            </div>
+          </div>
+          <div class="preview-panel" id="preview-panel" hidden></div>
           <div class="diagnostics-list" id="diagnostics-list">
             <p class="diag-empty">पाठ लेख्नुहोस् वा नमूना पाठ प्रयोग गर्नुहोस्।</p>
           </div>

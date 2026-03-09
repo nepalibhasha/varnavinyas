@@ -25,6 +25,50 @@ export const RULES_SECTIONS = [
       'देशज शब्दमा ह्रस्व प्रयोग',
       'आगन्तुक शब्दमा ह्रस्व प्रयोग',
     ],
+    referenceTargets: [
+      {
+        id: 'ka-a',
+        label: '(अ) शब्दका सुरुमा ह्रस्व/दीर्घ',
+        status: 'implemented',
+        summary: 'उपसर्ग, अव्युत्पन्न/आगन्तुक नाम, विशेषण, सङ्ख्या, अव्यय, र अनुकरणात्मक शब्दका केही मुख्य नियमहरू कार्यान्वयनमा छन्।',
+        examples: ['सूमार्ग -> सुमार्ग', 'ऊन्नाइस -> उन्नाइस', 'भीत्र -> भित्र'],
+      },
+      {
+        id: 'ka-aa',
+        label: '(आ) शब्दका बीचमा ह्रस्व/दीर्घ',
+        status: 'partial',
+        summary: 'बीचको स्वर-दीर्घ सम्बन्धी केही नाम, विशेषण, अव्यय, र आगन्तुक वर्ग प्रणालीगत रूपमा समेटिएका छन्; क्रियासम्बन्धी केही नियम अझै बाँकी छन्।',
+        examples: ['अभीमान -> अभिमान', 'कुकूर -> कुकुर', 'अहीले -> अहिले'],
+      },
+      {
+        id: 'ka-i',
+        label: '(इ) शब्दका अन्त्यमा ह्रस्व',
+        status: 'partial',
+        summary: 'स्थानवाचक, अव्यय, केही प्रत्यय, र निश्चित अन्त्यरूपका नियमहरू लागू छन्; सबै क्रियारूपहरू सुरक्षित रूपमा समेटिएका छैनन्।',
+        examples: ['आलू -> आलु', 'निम्ती -> निम्ति', 'त्यती -> त्यति'],
+      },
+      {
+        id: 'ka-ii',
+        label: '(ई) शब्दका सुरुमा दीर्घ',
+        status: 'partial',
+        summary: 'सु-उपसर्ग लागेका उकारादि शब्दका केही सुरक्षित ढाँचाहरू लागू छन्; संस्कृतजन्य सबै दीर्घ-आदि शब्दहरू अझै समेटिएका छैनन्।',
+        examples: ['सुक्ति -> सूक्ति', 'सुक्त -> सूक्त'],
+      },
+      {
+        id: 'ka-u',
+        label: '(उ) शब्दका बीचमा दीर्घ',
+        status: 'implemented',
+        summary: 'प्रत्यय-आधारित बीचको दीर्घ स्वर ढाँचाहरूका मुख्य वर्गहरू लागू छन्।',
+        examples: ['एकिकरण -> एकीकरण', 'एकिकृत -> एकीकृत'],
+      },
+      {
+        id: 'ka-uu',
+        label: '(ऊ) शब्दका अन्त्यमा दीर्घ',
+        status: 'partial',
+        summary: 'अन्त्यमा दीर्घ हुने सर्वनाम, जाति/थर, स्थान/भाषा, केही प्रत्यय, र सङ्ख्यावाचक शब्दका वर्गहरू लागू छन्; निर्जीव/सजीव जस्ता अर्थसूचक वर्गहरू अझै खुला छन्।',
+        examples: ['योगि -> योगी', 'दुइ -> दुई', 'भाउजु -> भाउजू'],
+      },
+    ],
   },
   {
     title: 'चन्द्रबिन्दु/शिरबिन्दु नियम',
@@ -42,6 +86,22 @@ export const RULES_SECTIONS = [
       'तत्सममा पञ्चम वर्ण + अनुस्वार',
       'तद्भवमा चन्द्रबिन्दु',
       'वर्गीय नासिक्यमा पञ्चम वर्ण',
+    ],
+    referenceTargets: [
+      {
+        id: 'kha-a',
+        label: '(अ) पञ्चम वर्ण प्रयोग',
+        status: 'implemented',
+        summary: 'पञ्चम वर्ण र अति-संस्कृत रूपको केही प्रणालीगत सुधार लागू छन्, तर केही किनारी अवस्थाहरूमा अझै संरक्षित guard प्रयोग गरिएको छ।',
+        examples: ['झण्डा -> झन्डा', 'इञ्जिन -> इन्जिन'],
+      },
+      {
+        id: 'kha-aa',
+        label: '(आ) चन्द्रबिन्दु/शिरबिन्दु',
+        status: 'implemented',
+        summary: 'चन्द्रबिन्दु र शिरबिन्दुसम्बन्धी मुख्य तद्भव/तत्सम प्रयोगका ढाँचाहरू लागू छन्।',
+        examples: ['आउछ -> आउँछ', 'बांस -> बाँस'],
+      },
     ],
   },
   {
@@ -90,6 +150,22 @@ export const RULES_SECTIONS = [
     subRules: [
       'शब्दान्तमा हलन्त',
       'संयुक्ताक्षर बन्ने ठाउँमा हलन्त नलगाउने',
+    ],
+    referenceTargets: [
+      {
+        id: 'nga-halanta',
+        label: 'हलन्त प्रयोग',
+        status: 'implemented',
+        summary: 'हलन्त चाहिने मुख्य शब्दरूप र प्रत्यय-आधारित ढाँचाहरू कार्यान्वयनमा छन्। केही प्रयोगहरू सन्दर्भअनुसार अस्पष्ट हुन सक्छन्।',
+        examples: ['महान -> महान्', 'जगत -> जगत्'],
+      },
+      {
+        id: 'nga-ajanta',
+        label: 'अजन्त प्रयोग',
+        status: 'implemented',
+        summary: 'अजन्त रूपका मुख्य ढाँचाहरू छुट्टै नियमबाट सम्हालिएका छन्, ताकि हलन्त र अजन्त नियम मिश्रित नहोस्।',
+        examples: ['अजन्त चाहिने रूपहरू हलन्त नियमबाट अलग राखिन्छन्'],
+      },
     ],
   },
   {
@@ -191,6 +267,36 @@ export const RULES_SECTIONS = [
       'निपात, केही क्रियारूप र पूर्ण द्वित्वमा पदवियोग',
       'कहिलेकाहीँ अर्थभेदका कारण शैलीगत सुझाव मात्र हुन सक्छ',
     ],
+    referenceTargets: [
+      {
+        id: 'table-core',
+        label: 'शब्द तालिका र मानक रूप',
+        status: 'implemented',
+        summary: 'शुद्ध/अशुद्ध तालिकाका कोर मानक रूपहरू सीधै सन्दर्भको रूपमा प्रयोग हुन्छन्।',
+        examples: ['प्रसाशन -> प्रशासन', 'उपरोक्त -> उपर्युक्त'],
+      },
+      {
+        id: 'padayog',
+        label: 'पदयोग',
+        status: 'partial',
+        summary: 'जोडेर लेखिने केही मुख्य phrase नियमहरू पाठ-स्तर जाँचमा लागू छन्।',
+        examples: ['आज्ञा अनुसार -> आज्ञाअनुसार'],
+      },
+      {
+        id: 'padabiyog',
+        label: 'पदवियोग',
+        status: 'partial',
+        summary: 'छुट्याएर लेखिने केही मुख्य phrase नियमहरू पाठ-स्तर जाँचमा लागू छन्।',
+        examples: ['सबै पदवियोग नियमहरू अझै पूर्ण कार्यान्वयनमा पुगेका छैनन्'],
+      },
+      {
+        id: 'style',
+        label: 'शैलीगत/प्रयोगगत सुधार',
+        status: 'partial',
+        summary: 'केही diagnostics अनिवार्य त्रुटि होइनन्; शैली वा प्रयोगगत सुधारको रूपमा देखाइन्छन्।',
+        examples: ['शैलीगत सुझावहरू सन्दर्भअनुसार अपनाउन वा छोड्न सकिन्छ'],
+      },
+    ],
   },
   {
     title: 'विराम चिह्न नियम',
@@ -243,6 +349,31 @@ const RULE_KEYWORDS = {
   Punctuation: ['विराम', 'चिह्न', 'punctuation', 'निर्देशक', 'सापेक्षविराम', 'सङ्क्षेप', 'ऐजन', ':-'],
 };
 
+const TARGET_MATCHERS = {
+  HrasvaDirgha: [
+    { test: /3\(क\)\(अ\)-/, targetId: 'ka-a' },
+    { test: /3\(क\)\(आ\)-/, targetId: 'ka-aa' },
+    { test: /3\(क\)\(इ\)-/, targetId: 'ka-i' },
+    { test: /3\(क\)\(ई\)-/, targetId: 'ka-ii' },
+    { test: /3\(क\)\(उ\)-/, targetId: 'ka-u' },
+    { test: /3\(क\)\(ऊ\)-/, targetId: 'ka-uu' },
+  ],
+  Chandrabindu: [
+    { test: /3\(ख\)\(अ\)-/, targetId: 'kha-a' },
+    { test: /3\(ख\)\(आ\)-/, targetId: 'kha-aa' },
+  ],
+  Halanta: [
+    { test: /हलन्त/, targetId: 'nga-halanta' },
+    { test: /अजन्त/, targetId: 'nga-ajanta' },
+    { test: /3\(ङ\)/, targetId: 'nga-halanta' },
+  ],
+  ShuddhaTable: [
+    { test: /पदयोग/, targetId: 'padayog' },
+    { test: /पदवियोग/, targetId: 'padabiyog' },
+    { test: /section4-phrase-style/, targetId: 'style' },
+  ],
+};
+
 /**
  * Resolve a rule citation string to its categoryCode.
  */
@@ -272,18 +403,46 @@ export function getTooltipForRule(ruleText) {
   return cat ? (RULE_TOOLTIPS[cat] || null) : null;
 }
 
+export function getReferenceTargetForRule(ruleText, categoryCode) {
+  const cat = categoryCode || getCategoryForRule(ruleText);
+  if (!cat || !ruleText) return null;
+
+  const matchers = TARGET_MATCHERS[cat] || [];
+  for (const { test, targetId } of matchers) {
+    if (test.test(ruleText)) {
+      return { categoryCode: cat, targetId };
+    }
+  }
+
+  return { categoryCode: cat, targetId: null };
+}
+
 /**
  * Wrap a rule citation in a tooltip-enabled span.
  * Shared by checker.js and inspector.js.
  */
-export function wrapRuleTooltip(ruleText, categoryCode) {
+export function wrapRuleTooltip(ruleText, categoryCode, context = {}) {
   const cat = categoryCode || getCategoryForRule(ruleText);
   const tooltip = (cat && RULE_TOOLTIPS[cat]) || getTooltipForRule(ruleText);
+  const target = getReferenceTargetForRule(ruleText, cat);
+  const targetAttr = target?.targetId
+    ? ` data-target="${escapeHtml(target.targetId)}"`
+    : "";
+  const contextAttr = Object.entries({
+    word: context.word,
+    incorrect: context.incorrect,
+    correction: context.correction,
+    explanation: context.explanation,
+    rule: ruleText,
+  })
+    .filter(([, value]) => value)
+    .map(([key, value]) => ` data-${key}="${escapeHtml(String(value))}"`)
+    .join("");
   if (tooltip && cat) {
-    return `<span class="rule-ref" tabindex="0" role="button" aria-label="${escapeHtml(tooltip)}" data-tooltip="${escapeHtml(tooltip)}" data-category="${escapeHtml(cat)}">${escapeHtml(ruleText)}</span>`;
+    return `<span class="rule-ref" tabindex="0" role="button" aria-label="${escapeHtml(tooltip)}" data-tooltip="${escapeHtml(tooltip)}" data-category="${escapeHtml(cat)}"${targetAttr}${contextAttr}>${escapeHtml(ruleText)}</span>`;
   }
   if (tooltip) {
-    return `<span class="rule-ref" tabindex="0" role="button" aria-label="${escapeHtml(tooltip)}" data-tooltip="${escapeHtml(tooltip)}">${escapeHtml(ruleText)}</span>`;
+    return `<span class="rule-ref" tabindex="0" role="button" aria-label="${escapeHtml(tooltip)}" data-tooltip="${escapeHtml(tooltip)}"${contextAttr}>${escapeHtml(ruleText)}</span>`;
   }
   return escapeHtml(ruleText);
 }

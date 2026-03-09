@@ -11,6 +11,7 @@ import { initInspector, showInspector, hideInspector, isInspectorActive } from '
 
 let diagnostics = [];
 let hiddenCategories = new Set();
+let dismissedDiagnosticKeys = new Set();
 let activeCardIndex = -1;
 let runtimeErrorMessage = null;
 const mobileDiagOverlay = document.getElementById('mobile-diag-overlay');
@@ -26,6 +27,14 @@ const grammarToggle = document.getElementById('grammar-toggle');
 const punctuationStrictToggle = document.getElementById('punctuation-strict-toggle');
 const punctuationModeNote = document.getElementById('punctuation-mode-note');
 const grammarCoverage = document.getElementById('grammar-coverage');
+const reviewPrevBtn = document.getElementById('review-prev-btn');
+const reviewNextBtn = document.getElementById('review-next-btn');
+const reviewProgress = document.getElementById('review-progress');
+const applyHardBtn = document.getElementById('apply-hard-btn');
+const copyCorrectedBtn = document.getElementById('copy-corrected-btn');
+const togglePreviewBtn = document.getElementById('toggle-preview-btn');
+const previewPanel = document.getElementById('preview-panel');
+let previewOpen = false;
 
 /**
  * Initialize the spell checker module.
@@ -35,6 +44,11 @@ export function initChecker() {
   editorInput.addEventListener('scroll', syncScroll);
   editorInput.addEventListener('click', onEditorClick);
   fixAllBtn.addEventListener('click', fixAll);
+  reviewPrevBtn?.addEventListener('click', goToPreviousDiagnostic);
+  reviewNextBtn?.addEventListener('click', goToNextDiagnostic);
+  applyHardBtn?.addEventListener('click', applyHardErrors);
+  copyCorrectedBtn?.addEventListener('click', copyCorrectedText);
+  togglePreviewBtn?.addEventListener('click', togglePreviewPanel);
   grammarToggle?.addEventListener('change', () => runCheck());
   punctuationStrictToggle?.addEventListener('change', () => {
     renderPunctuationModeNote();
@@ -62,6 +76,21 @@ const HEURISTIC_RULE_LABELS = {
   "genitive-mismatch-plural": "सम्बन्ध",
   "section4-phrase-style": "शैली",
 };
+
+const FILTER_CATEGORY_ORDER = [
+  "HrasvaDirgha",
+  "Chandrabindu",
+  "Halanta",
+  "Punctuation",
+  "ShaShaS",
+  "RiKri",
+  "YaE",
+  "KshaChhya",
+  "GyaGyan",
+  "AadhiVriddhi",
+  "Sandhi",
+  "ShuddhaTable",
+];
 
 function syncScroll() {
   editorBackdrop.scrollTop = editorInput.scrollTop;
@@ -119,6 +148,83 @@ function heuristicLabel(diag) {
   return getHeuristicRuleLabel(diag.rule_code);
 }
 
+function primaryCategoryLabel(diag) {
+  switch (diag.category_code) {
+    case "HrasvaDirgha":
+      return "ह्रस्व/दीर्घ";
+    case "Punctuation":
+    case "Chandrabindu":
+      return "चिह्न";
+    case "ShuddhaTable":
+    case "AadhiVriddhi":
+      return "शुद्ध/अशुद्ध";
+    case "Halanta":
+      return "हलन्त/अजन्त";
+    case "ShaShaS":
+    case "RiKri":
+    case "YaE":
+    case "KshaChhya":
+    case "GyaGyan":
+      return "उस्तै उच्चारण";
+    default:
+      return CATEGORY_LABELS[diag.category_code] || diag.category;
+  }
+}
+
+function diagnosticStateLabel(diag) {
+  if (isHeuristicDiagnostic(diag)) return "सुझाव";
+  if (diag.kind === "Variant") return "वैकल्पिक";
+  return null;
+}
+
+function diagnosticKindClass(diag) {
+  if (isHeuristicDiagnostic(diag)) return "suggestion";
+  if (diag.kind === "Variant") return "variant";
+  return "error";
+}
+
+function diagnosticGuidance(diag) {
+  if (isHeuristicDiagnostic(diag)) {
+    return "यो सन्दर्भअनुसार छान्ने सुझाव हो।";
+  }
+  if (diag.kind === "Variant") {
+    return "यो अनिवार्य त्रुटि होइन; मानक वैकल्पिक रूपसम्बन्धी सूचना हो।";
+  }
+  return "यो मुख्य मानक त्रुटि हो। चाहनुहुन्छ भने सिधै सच्याउन सकिन्छ।";
+}
+
+function diagnosticKey(d) {
+  return [
+    d.charStart,
+    d.charEnd,
+    d.rule_code || '',
+    d.rule || '',
+    d.incorrect || '',
+    d.correction || '',
+  ].join('::');
+}
+
+function isDismissedDiagnostic(d) {
+  return dismissedDiagnosticKeys.has(diagnosticKey(d));
+}
+
+function getVisibleDiagnosticsWithIndex() {
+  return diagnostics
+    .map((d, index) => ({ d, index }))
+    .filter(({ d }) =>
+      !hiddenCategories.has(d.category_code) && !isDismissedDiagnostic(d)
+    );
+}
+
+function getActiveVisiblePosition() {
+  if (activeCardIndex < 0) return -1;
+  return getVisibleDiagnosticsWithIndex().findIndex(({ index }) => index === activeCardIndex);
+}
+
+function isHardDiagnostic(d) {
+  return !isHeuristicDiagnostic(d);
+}
+
 function runCheck() {
   hideMobileDiagOverlay();
   const text = editorInput.value;
@@ -126,10 +232,13 @@ function runCheck() {
 
   if (!text.trim()) {
     diagnostics = [];
+    dismissedDiagnosticKeys.clear();
     renderBackdrop(text);
     renderDiagnostics();
     renderFilters();
     renderGrammarCoverage();
+    renderReviewToolbar();
+    renderPreviewPanel();
     return;
   }
 
@@ -141,11 +250,146 @@ function runCheck() {
     diagnostics = [];
   }
 
+  dismissedDiagnosticKeys.clear();
   activeCardIndex = -1;
   renderBackdrop(text);
   renderDiagnostics();
   renderFilters();
   renderGrammarCoverage();
+  renderReviewToolbar();
+  renderPreviewPanel();
+}
+
+function renderReviewToolbar() {
+  const visible = getVisibleDiagnosticsWithIndex();
+  const hardVisible = visible.filter(({ d }) => isHardDiagnostic(d));
+  const activePos = getActiveVisiblePosition();
+
+  if (reviewProgress) {
+    reviewProgress.textContent = visible.length > 0
+      ? `${activePos >= 0 ? activePos + 1 : 0} / ${visible.length}`
+      : '0 / 0';
+  }
+  if (reviewPrevBtn) reviewPrevBtn.disabled = visible.length <= 1;
+  if (reviewNextBtn) reviewNextBtn.disabled = visible.length <= 1;
+  if (applyHardBtn) applyHardBtn.disabled = hardVisible.length === 0;
+  if (copyCorrectedBtn) copyCorrectedBtn.disabled = visible.length === 0;
+  if (togglePreviewBtn) togglePreviewBtn.disabled = visible.length === 0;
+}
+
+function togglePreviewPanel() {
+  previewOpen = !previewOpen;
+  renderPreviewPanel();
+}
+
+function renderPreviewPanel() {
+  if (!previewPanel) return;
+  const visible = getVisibleDiagnosticsWithIndex().map(({ d }) => d);
+  const corrected = buildCorrectedText({ hardOnly: false });
+  const original = editorInput.value;
+
+  if (visible.length === 0 || !previewOpen) {
+    previewPanel.hidden = true;
+    previewPanel.innerHTML = '';
+    if (togglePreviewBtn) {
+      togglePreviewBtn.textContent = 'पूर्वावलोकन';
+    }
+    return;
+  }
+
+  const changedCount = visible.filter((d) => d.incorrect !== d.correction).length;
+  previewPanel.hidden = false;
+  previewPanel.innerHTML = `
+    <div class="preview-head">
+      <div>
+        <div class="preview-title">सच्याइएको पाठको पूर्वावलोकन</div>
+        <div class="preview-note">${changedCount} वटा लागू सुधार, अहिले देखिएका नियमहरूका आधारमा</div>
+      </div>
+      <button class="btn btn-sm" id="preview-close-btn">बन्द गर्नुहोस्</button>
+    </div>
+    <div class="preview-grid">
+      <div class="preview-block">
+        <div class="preview-label">अहिलेको पाठ</div>
+        <pre class="preview-text">${escapeHtml(original)}</pre>
+      </div>
+      <div class="preview-block">
+        <div class="preview-label">सच्याइएको पाठ</div>
+        <pre class="preview-text preview-text-corrected">${escapeHtml(corrected)}</pre>
+      </div>
+    </div>
+  `;
+  previewPanel.querySelector('#preview-close-btn')
+    ?.addEventListener('click', () => {
+      previewOpen = false;
+      renderPreviewPanel();
+    });
+
+  if (togglePreviewBtn) {
+    togglePreviewBtn.textContent = 'पूर्वावलोकन लुकाउनुहोस्';
+  }
+}
+
+function goToDiagnosticByVisiblePosition(position) {
+  const visible = getVisibleDiagnosticsWithIndex();
+  if (visible.length === 0) return;
+  const normalized = ((position % visible.length) + visible.length) % visible.length;
+  const targetIndex = visible[normalized].index;
+  setActiveCard(targetIndex);
+  const card = diagnosticsList.querySelector(`[data-index="${targetIndex}"]`);
+  if (card) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function goToPreviousDiagnostic() {
+  const visible = getVisibleDiagnosticsWithIndex();
+  if (visible.length === 0) return;
+  const activePos = getActiveVisiblePosition();
+  goToDiagnosticByVisiblePosition(activePos <= 0 ? visible.length - 1 : activePos - 1);
+}
+
+function goToNextDiagnostic() {
+  const visible = getVisibleDiagnosticsWithIndex();
+  if (visible.length === 0) return;
+  const activePos = getActiveVisiblePosition();
+  goToDiagnosticByVisiblePosition(activePos < 0 ? 0 : activePos + 1);
+}
+
+function buildCorrectedText({ hardOnly = false } = {}) {
+  const applicable = getVisibleDiagnosticsWithIndex()
+    .map(({ d }) => d)
+    .filter((d) => !hardOnly || isHardDiagnostic(d))
+    .sort((a, b) => b.charStart - a.charStart);
+
+  let text = editorInput.value;
+  for (const d of applicable) {
+    text = text.slice(0, d.charStart) + d.correction + text.slice(d.charEnd);
+  }
+  return text;
+}
+
+function applyHardErrors() {
+  editorInput.value = buildCorrectedText({ hardOnly: true });
+  runCheck();
+}
+
+async function copyCorrectedText() {
+  const corrected = buildCorrectedText({ hardOnly: false });
+  try {
+    await navigator.clipboard.writeText(corrected);
+    if (copyCorrectedBtn) {
+      const oldText = copyCorrectedBtn.textContent;
+      copyCorrectedBtn.textContent = 'कपी भयो';
+      setTimeout(() => {
+        copyCorrectedBtn.textContent = oldText;
+      }, 1200);
+    }
+  } catch (_err) {
+    const probe = document.createElement('textarea');
+    probe.value = corrected;
+    document.body.appendChild(probe);
+    probe.select();
+    document.execCommand('copy');
+    probe.remove();
+  }
 }
 
 function renderGrammarCoverage() {
@@ -267,7 +511,7 @@ function renderDiagnostics() {
   }
 
   const visibleDiagnostics = diagnostics.filter(
-    (d) => !hiddenCategories.has(d.category_code)
+    (d) => !hiddenCategories.has(d.category_code) && !isDismissedDiagnostic(d)
   );
   const visibleErrorCount = visibleDiagnostics.filter(
     (d) => !isHeuristicDiagnostic(d)
@@ -290,19 +534,12 @@ function renderDiagnostics() {
       const hidden = hiddenCategories.has(d.category_code) ? ' hidden' : '';
       const active = i === activeCardIndex ? ' active' : '';
       const code = escapeHtml(d.category_code);
-      const tagLabel = heuristicLabel(d);
-      const isHeuristic = Boolean(tagLabel);
-      const label = isHeuristic
-        ? "विवरण"
-        : (CATEGORY_LABELS[d.category_code] || d.category);
+      const isHeuristic = isHeuristicDiagnostic(d);
+      const label = primaryCategoryLabel(d);
       const heuristicClass = isHeuristic ? " heuristic" : "";
-      const heuristicTag = isHeuristic
-        ? `<span class="diag-heuristic-tag">${escapeHtml(tagLabel)}</span>`
-        : "";
-      const badgeClass = isHeuristic
-        ? "diag-badge diag-badge-suggestion"
-        : "diag-badge";
-      const badgeAttr = isHeuristic ? "" : ` data-category="${code}"`;
+      const kindLabel = diagnosticStateLabel(d);
+      const kindClass = diagnosticKindClass(d);
+      const guidance = diagnosticGuidance(d);
       const hasChange = d.incorrect !== d.correction;
       const correctionRow = hasChange
         ? `<div class="diag-correction">
@@ -316,19 +553,28 @@ function renderDiagnostics() {
       const fixButton = hasChange
         ? `<button class="btn btn-sm btn-primary diag-fix" data-index="${i}">\u0938\u091A\u094D\u092F\u093E\u0909\u0928\u0941\u0939\u094B\u0938\u094D</button>`
         : "";
+      const dismissButton = `<button class="btn btn-sm diag-dismiss" data-index="${i}">\u0905\u0939\u093F\u0932\u0947 \u091B\u094B\u0921\u094D\u0928\u0941\u0939\u094B\u0938\u094D</button>`;
       const confidence = Number.isFinite(d.confidence) ? Math.round(d.confidence * 100) : 0;
       return `
       <div class="diag-card${hidden}${active}${heuristicClass}" data-index="${i}" data-category="${code}">
         <div class="diag-meta">
-          <span class="${badgeClass}"${badgeAttr}>${escapeHtml(label)}</span>
-          ${heuristicTag}
+          <span class="diag-badge" data-category="${code}">${escapeHtml(label)}</span>
+          ${kindLabel ? `<span class="diag-kind-chip diag-kind-${kindClass}">${escapeHtml(kindLabel)}</span>` : ""}
           <span class="diag-confidence">${confidence}%</span>
         </div>
         ${correctionRow}
+        <div class="diag-guidance">${escapeHtml(guidance)}</div>
         <div class="diag-explanation">${escapeHtml(d.explanation)}</div>
-        <div class="diag-rule">${wrapRuleTooltip(d.rule, d.category_code)}</div>
+        <div class="diag-rule">${wrapRuleTooltip(d.rule, d.category_code, {
+          incorrect: d.incorrect,
+          correction: d.correction,
+          explanation: d.explanation,
+        })}</div>
         ${renderAlternateReasons(d)}
-        ${fixButton}
+        <div class="diag-actions">
+          ${dismissButton}
+          ${fixButton}
+        </div>
       </div>`;
     })
     .join('');
@@ -349,6 +595,16 @@ function renderDiagnostics() {
       fixOne(parseInt(btn.dataset.index));
     });
   });
+
+  diagnosticsList.querySelectorAll('.diag-dismiss').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dismissOne(parseInt(btn.dataset.index));
+    });
+  });
+
+  renderReviewToolbar();
+  renderPreviewPanel();
 }
 
 /**
@@ -357,10 +613,20 @@ function renderDiagnostics() {
 function renderFilters() {
   const counts = {};
   for (const d of diagnostics) {
+    if (isDismissedDiagnostic(d)) continue;
     counts[d.category_code] = (counts[d.category_code] || 0) + 1;
   }
 
-  const categories = Object.keys(counts).sort();
+  const presentExtras = Object.keys(counts).filter(
+    (code) => !FILTER_CATEGORY_ORDER.includes(code)
+  );
+  const categories = [...FILTER_CATEGORY_ORDER, ...presentExtras].sort((a, b) => {
+    const aIndex = FILTER_CATEGORY_ORDER.indexOf(a);
+    const bIndex = FILTER_CATEGORY_ORDER.indexOf(b);
+    const aRank = aIndex === -1 ? Number.MAX_SAFE_INTEGER : aIndex;
+    const bRank = bIndex === -1 ? Number.MAX_SAFE_INTEGER : bIndex;
+    return aRank - bRank || a.localeCompare(b);
+  });
   if (categories.length === 0) {
     categoryFilters.innerHTML = '';
     return;
@@ -368,12 +634,14 @@ function renderFilters() {
 
   categoryFilters.innerHTML = categories
     .map((code) => {
+      const count = counts[code] || 0;
+      const empty = count === 0 ? ' empty' : '';
       const inactive = hiddenCategories.has(code) ? ' inactive' : '';
       const color = CATEGORY_COLORS[code] || 'var(--cat-default)';
       const label = CATEGORY_LABELS[code] || code;
-      return `<button class="category-pill${inactive}" data-category="${escapeHtml(code)}" style="border-color: ${color}; color: ${color};">
+      return `<button class="category-pill${inactive}${empty}" data-category="${escapeHtml(code)}" style="border-color: ${color}; color: ${color};" ${count === 0 ? 'disabled' : ''}>
         ${escapeHtml(label)}
-        <span class="pill-count">${counts[code]}</span>
+        <span class="pill-count">${count}</span>
       </button>`;
     })
     .join('');
@@ -389,6 +657,8 @@ function renderFilters() {
       renderBackdrop(editorInput.value);
       renderDiagnostics();
       renderFilters();
+      renderReviewToolbar();
+      renderPreviewPanel();
     });
   });
 }
@@ -419,12 +689,19 @@ function isMobileView() {
  */
 function showMobileDiagOverlay(d, idx) {
   if (!mobileDiagOverlay) return;
+  const visible = getVisibleDiagnosticsWithIndex();
+  const visiblePos = visible.findIndex(({ index }) => index === idx);
   const hasChange = d.incorrect !== d.correction;
-  const label = CATEGORY_LABELS[d.category_code] || d.category;
+  const label = primaryCategoryLabel(d);
   const code = escapeHtml(d.category_code);
+  const kindLabel = diagnosticStateLabel(d);
+  const kindClass = diagnosticKindClass(d);
+  const guidance = diagnosticGuidance(d);
   mobileDiagOverlay.innerHTML = `
     <div class="diag-meta">
       <span class="diag-badge" data-category="${code}">${escapeHtml(label)}</span>
+      ${kindLabel ? `<span class="diag-kind-chip diag-kind-${kindClass}">${escapeHtml(kindLabel)}</span>` : ""}
+      <span class="mobile-diag-progress">${visiblePos >= 0 ? `${visiblePos + 1} / ${visible.length}` : ''}</span>
       <button class="mobile-diag-dismiss" aria-label="Close">&times;</button>
     </div>
     ${hasChange
@@ -435,10 +712,18 @@ function showMobileDiagOverlay(d, idx) {
         </div>`
       : `<div class="diag-correction"><span class="diag-incorrect">${escapeHtml(d.incorrect)}</span></div>`
     }
+    <div class="diag-guidance">${escapeHtml(guidance)}</div>
     <div class="diag-explanation">${escapeHtml(d.explanation)}</div>
-    <div class="diag-rule">${wrapRuleTooltip(d.rule, d.category_code)}</div>
+    <div class="diag-rule">${wrapRuleTooltip(d.rule, d.category_code, {
+      incorrect: d.incorrect,
+      correction: d.correction,
+      explanation: d.explanation,
+    })}</div>
     ${renderAlternateReasons(d)}
     <div class="mobile-diag-actions">
+      <button class="btn btn-sm" id="mobile-prev-btn" ${visible.length <= 1 ? 'disabled' : ''}>&larr; अघिल्लो</button>
+      <button class="btn btn-sm" id="mobile-next-btn" ${visible.length <= 1 ? 'disabled' : ''}>अर्को &rarr;</button>
+      <button class="btn btn-sm" id="mobile-skip-btn">अहिले छोड्नुहोस्</button>
       ${hasChange ? `<button class="btn btn-sm btn-primary" id="mobile-fix-btn">सच्याउनुहोस्</button>` : ''}
     </div>`;
   mobileDiagOverlay.classList.add('visible');
@@ -452,6 +737,37 @@ function showMobileDiagOverlay(d, idx) {
       hideMobileDiagOverlay();
     });
   }
+
+  mobileDiagOverlay.querySelector('#mobile-prev-btn')
+    ?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (visible.length === 0) return;
+      const nextPos = visiblePos <= 0 ? visible.length - 1 : visiblePos - 1;
+      const target = visible[nextPos];
+      if (target) showMobileDiagOverlay(target.d, target.index);
+    });
+
+  mobileDiagOverlay.querySelector('#mobile-next-btn')
+    ?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (visible.length === 0) return;
+      const nextPos = visiblePos < 0 || visiblePos >= visible.length - 1 ? 0 : visiblePos + 1;
+      const target = visible[nextPos];
+      if (target) showMobileDiagOverlay(target.d, target.index);
+    });
+
+  mobileDiagOverlay.querySelector('#mobile-skip-btn')
+    ?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dismissOne(idx);
+      const refreshed = getVisibleDiagnosticsWithIndex();
+      if (refreshed.length === 0) {
+        hideMobileDiagOverlay();
+        return;
+      }
+      const target = refreshed[Math.min(visiblePos, refreshed.length - 1)];
+      if (target) showMobileDiagOverlay(target.d, target.index);
+    });
 
   // Dismiss button
   mobileDiagOverlay.querySelector('.mobile-diag-dismiss')
@@ -482,7 +798,11 @@ function renderAlternateReasons(d) {
       <div class="diag-alt-item">
         <div class="diag-alt-meta">
           <span class="diag-alt-category">${escapeHtml(altLabel)}</span>
-          <span class="diag-alt-rule">${wrapRuleTooltip(alt.rule, alt.category_code)}</span>
+          <span class="diag-alt-rule">${wrapRuleTooltip(alt.rule, alt.category_code, {
+            incorrect: d.incorrect,
+            correction: alt.correction || d.correction,
+            explanation: alt.explanation,
+          })}</span>
           ${altCorrection}
         </div>
         <div class="diag-alt-text">${escapeHtml(alt.explanation)}</div>
@@ -505,7 +825,11 @@ function onEditorClick() {
 
   // Check if click is on a diagnostic
   const idx = diagnostics.findIndex(
-    (d) => pos >= d.charStart && pos < d.charEnd && !hiddenCategories.has(d.category_code)
+    (d) =>
+      pos >= d.charStart &&
+      pos < d.charEnd &&
+      !hiddenCategories.has(d.category_code) &&
+      !isDismissedDiagnostic(d)
   );
 
   if (idx >= 0) {
@@ -601,18 +925,24 @@ function fixOne(index) {
   runCheck();
 }
 
+function dismissOne(index) {
+  const d = diagnostics[index];
+  dismissedDiagnosticKeys.add(diagnosticKey(d));
+  if (activeCardIndex === index) {
+    activeCardIndex = -1;
+  }
+  hideMobileDiagOverlay();
+  renderBackdrop(editorInput.value);
+  renderDiagnostics();
+  renderFilters();
+  renderReviewToolbar();
+  renderPreviewPanel();
+}
+
 /**
  * Fix all visible diagnostics, applying in reverse offset order.
  */
 function fixAll() {
-  const visible = diagnostics
-    .filter((d) => !hiddenCategories.has(d.category_code))
-    .sort((a, b) => b.charStart - a.charStart);
-
-  let text = editorInput.value;
-  for (const d of visible) {
-    text = text.slice(0, d.charStart) + d.correction + text.slice(d.charEnd);
-  }
-  editorInput.value = text;
+  editorInput.value = buildCorrectedText({ hardOnly: false });
   runCheck();
 }

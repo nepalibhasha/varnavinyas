@@ -136,7 +136,11 @@ export function showInspector(word, start, end) {
     for (const note of analysis.rule_notes) {
       html += `
       <div class="analysis-note">
-        <span class="analysis-note-rule">${wrapRuleTooltip(note.rule)}</span>
+        <span class="analysis-note-rule">${wrapRuleTooltip(note.rule, null, {
+          word,
+          correction: analysis?.correction || word,
+          explanation: note.explanation,
+        })}</span>
         <span class="analysis-note-text">${escapeHtml(note.explanation)}</span>
       </div>`;
     }
@@ -150,7 +154,11 @@ export function showInspector(word, start, end) {
     for (const note of analysis.alternate_rule_notes) {
       html += `
       <div class="analysis-note">
-        <span class="analysis-note-rule">${wrapRuleTooltip(note.rule)}</span>
+        <span class="analysis-note-rule">${wrapRuleTooltip(note.rule, null, {
+          word,
+          correction: analysis?.correction || word,
+          explanation: note.explanation,
+        })}</span>
         <span class="analysis-note-text">${escapeHtml(note.explanation)}</span>
       </div>`;
     }
@@ -282,7 +290,12 @@ function renderDerivationSection(word) {
     const rows = result.steps.map((s, i) => `
       <tr>
         <td>${i + 1}</td>
-        <td class="rule-cell">${wrapRuleTooltip(s.rule)}</td>
+        <td class="rule-cell">${wrapRuleTooltip(s.rule, null, {
+          word,
+          incorrect: s.before,
+          correction: s.after,
+          explanation: s.description,
+        })}</td>
         <td>${escapeHtml(s.description)}</td>
         <td>${escapeHtml(s.before)}</td>
         <td>${escapeHtml(s.after)}</td>
