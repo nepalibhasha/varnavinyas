@@ -21,8 +21,10 @@
   --cat-sha-sha-s: #c2410c;
   --cat-ri-kri: #4f46e5;
   --cat-halanta: #0d9488;
+  --cat-aadhi-vriddhi: #dc2626;
   --cat-ya-e: #b45309;
   --cat-ksha-chhya: #be185d;
+  --cat-gya-gyan: #7c2d12;
   --cat-sandhi: #059669;
   --cat-punctuation: #6366f1;
   --cat-default: #6b7280;
@@ -263,8 +265,10 @@ body {
 .editor-backdrop mark[data-category="ShaShaS"] { border-bottom-color: var(--cat-sha-sha-s); }
 .editor-backdrop mark[data-category="RiKri"] { border-bottom-color: var(--cat-ri-kri); }
 .editor-backdrop mark[data-category="Halanta"] { border-bottom-color: var(--cat-halanta); }
+.editor-backdrop mark[data-category="AadhiVriddhi"] { border-bottom-color: var(--cat-aadhi-vriddhi); }
 .editor-backdrop mark[data-category="YaE"] { border-bottom-color: var(--cat-ya-e); }
 .editor-backdrop mark[data-category="KshaChhya"] { border-bottom-color: var(--cat-ksha-chhya); }
+.editor-backdrop mark[data-category="GyaGyan"] { border-bottom-color: var(--cat-gya-gyan); }
 .editor-backdrop mark[data-category="Sandhi"] { border-bottom-color: var(--cat-sandhi); }
 .editor-backdrop mark[data-category="Punctuation"] { border-bottom-color: var(--cat-punctuation); }
 
@@ -421,8 +425,10 @@ body {
 .diag-card[data-category="ShaShaS"] { border-left-color: var(--cat-sha-sha-s); }
 .diag-card[data-category="RiKri"] { border-left-color: var(--cat-ri-kri); }
 .diag-card[data-category="Halanta"] { border-left-color: var(--cat-halanta); }
+.diag-card[data-category="AadhiVriddhi"] { border-left-color: var(--cat-aadhi-vriddhi); }
 .diag-card[data-category="YaE"] { border-left-color: var(--cat-ya-e); }
 .diag-card[data-category="KshaChhya"] { border-left-color: var(--cat-ksha-chhya); }
+.diag-card[data-category="GyaGyan"] { border-left-color: var(--cat-gya-gyan); }
 .diag-card[data-category="Sandhi"] { border-left-color: var(--cat-sandhi); }
 .diag-card[data-category="Punctuation"] { border-left-color: var(--cat-punctuation); }
 
@@ -445,8 +451,10 @@ body {
 .diag-badge[data-category="ShaShaS"] { background: var(--cat-sha-sha-s); }
 .diag-badge[data-category="RiKri"] { background: var(--cat-ri-kri); }
 .diag-badge[data-category="Halanta"] { background: var(--cat-halanta); }
+.diag-badge[data-category="AadhiVriddhi"] { background: var(--cat-aadhi-vriddhi); }
 .diag-badge[data-category="YaE"] { background: var(--cat-ya-e); }
 .diag-badge[data-category="KshaChhya"] { background: var(--cat-ksha-chhya); }
+.diag-badge[data-category="GyaGyan"] { background: var(--cat-gya-gyan); }
 .diag-badge[data-category="Sandhi"] { background: var(--cat-sandhi); }
 .diag-badge[data-category="Punctuation"] { background: var(--cat-punctuation); }
 .diag-badge:not([data-category]) { background: var(--cat-default); }

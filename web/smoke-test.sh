@@ -103,7 +103,7 @@ done
 # --- 3. Category code consistency across Rust → JS → CSS ---
 echo "[3] Category code consistency"
 # Expected codes from Rust DiagnosticCategory enum (via Debug format)
-EXPECTED_CODES="ShuddhaTable HrasvaDirgha Chandrabindu ShaShaS RiKri Halanta YaE KshaChhya Sandhi Punctuation"
+EXPECTED_CODES="ShuddhaTable HrasvaDirgha Chandrabindu ShaShaS RiKri Halanta AadhiVriddhi YaE KshaChhya GyaGyan Sandhi Punctuation"
 
 for code in $EXPECTED_CODES; do
   # Check JS CATEGORY_COLORS has this key
@@ -145,12 +145,13 @@ else
   fail "checker.js uses bare d.category for filtering in $BARE_CATEGORY_KEYING places"
 fi
 
-# --- 6. Rust WASM bindings have category_code field ---
-echo "[6] Rust category_code field"
-if grep -q "category_code" ../crates/bindings-wasm/src/lib.rs 2>/dev/null; then
-  pass "category_code field in JsDiagnostic struct"
+# --- 6. Rust WASM bindings use ApiDiagnostic serialization contract ---
+echo "[6] Rust diagnostic serialization contract"
+if grep -q "ApiDiagnostic" ../crates/bindings-wasm/src/lib.rs 2>/dev/null && \
+   grep -q "category_code" ../crates/parikshak/src/presentation.rs 2>/dev/null; then
+  pass "WASM bindings use ApiDiagnostic, which includes category_code"
 else
-  fail "category_code field missing from Rust WASM bindings"
+  fail "WASM diagnostic serialization contract is missing category_code support"
 fi
 
 # --- 7. HTTP server test (quick start/stop) ---

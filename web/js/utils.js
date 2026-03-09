@@ -28,8 +28,10 @@ export const CATEGORY_COLORS = {
   ShaShaS: 'var(--cat-sha-sha-s)',
   RiKri: 'var(--cat-ri-kri)',
   Halanta: 'var(--cat-halanta)',
+  AadhiVriddhi: 'var(--cat-aadhi-vriddhi)',
   YaE: 'var(--cat-ya-e)',
   KshaChhya: 'var(--cat-ksha-chhya)',
+  GyaGyan: 'var(--cat-gya-gyan)',
   Sandhi: 'var(--cat-sandhi)',
   Punctuation: 'var(--cat-punctuation)',
 };
@@ -54,8 +56,10 @@ export const CATEGORY_LABELS = {
   ShaShaS: 'श/ष/स',
   RiKri: 'ऋ/कृ',
   Halanta: 'हलन्त',
+  AadhiVriddhi: 'आदिवृद्धि',
   YaE: 'य/ए',
   KshaChhya: 'क्ष/छ',
+  GyaGyan: 'ज्ञ/ग्य',
   Sandhi: 'सन्धि',
   Punctuation: 'चिह्न',
 };
