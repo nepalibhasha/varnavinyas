@@ -21,6 +21,8 @@ pub struct WordAnalysis {
     pub correction: Option<String>,
     /// Academy नियम सन्दर्भसहित व्याख्यात्मक टिप्पणी।
     pub rule_notes: Vec<RuleNote>,
+    /// मुख्य diagnostic बाहेक लागू हुन सक्ने अन्य नियम-आधारित टिप्पणी।
+    pub alternate_rule_notes: Vec<RuleNote>,
 }
 
 /// शब्द सही/गलत हुनुको कारण बताउने टिप्पणी।
@@ -47,14 +49,20 @@ pub fn analyze(input: &str) -> WordAnalysis {
             is_correct: true,
             correction: None,
             rule_notes: Vec::new(),
+            alternate_rule_notes: Vec::new(),
         };
     }
 
     let origin_decision = classify_with_provenance(input);
     let origin = origin_decision.origin;
     let source_lang = source_language(input).map(String::from);
-    let prakriya = engine::derive(input);
+    let all_hits = engine::collect_rule_hits(input);
+    let prakriya = all_hits
+        .first()
+        .map(|hit| hit.prakriya.clone())
+        .unwrap_or_else(|| engine::derive(input));
     let mut rule_notes = Vec::new();
+    let mut alternate_rule_notes = Vec::new();
 
     if prakriya.is_correct {
         // शब्द सही हुँदा किन सही हो भन्ने व्याख्या बनाउने।
@@ -67,6 +75,7 @@ pub fn analyze(input: &str) -> WordAnalysis {
                 explanation: step.description.clone(),
             });
         }
+        collect_alternate_rule_notes(&all_hits, &mut alternate_rule_notes);
     }
 
     WordAnalysis {
@@ -82,6 +91,7 @@ pub fn analyze(input: &str) -> WordAnalysis {
             Some(prakriya.output)
         },
         rule_notes,
+        alternate_rule_notes,
     }
 }
 
@@ -93,6 +103,25 @@ fn generate_correct_notes(word: &str, origin: Origin, notes: &mut Vec<RuleNote>)
                 rule: template.rule,
                 explanation: template.explanation.to_string(),
             });
+        }
+    }
+}
+
+fn collect_alternate_rule_notes(hits: &[crate::prakriya::RuleHit], notes: &mut Vec<RuleNote>) {
+    for hit in hits.iter().skip(1) {
+        for step in &hit.prakriya.steps {
+            let note = RuleNote {
+                rule: step.rule,
+                explanation: format!(
+                    "{} (अन्य सम्भावित सुधार: {})",
+                    step.description, hit.prakriya.output
+                ),
+            };
+            if !notes.iter().any(|existing| {
+                existing.rule == note.rule && existing.explanation == note.explanation
+            }) {
+                notes.push(note);
+            }
         }
     }
 }
@@ -234,6 +263,9 @@ fn marker_matches(word: &str, marker: NoteMarker) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::prakriya::{Prakriya, RuleHit};
+    use crate::rule_spec::{DiagnosticKind, RuleCategory};
+    use crate::step::Step;
 
     #[test]
     fn tatsam_templates_emit_expected_notes() {
@@ -272,5 +304,52 @@ mod tests {
         let mut notes_with_sha = Vec::new();
         generate_correct_notes("शहर", Origin::Aagantuk, &mut notes_with_sha);
         assert_eq!(notes_with_sha.len(), 1);
+    }
+
+    #[test]
+    fn collects_alternate_rule_notes_from_secondary_hits() {
+        let hits = vec![
+            RuleHit {
+                spec_id: Some("primary"),
+                priority: 10,
+                category: RuleCategory::HrasvaDirgha,
+                kind: DiagnosticKind::Error,
+                prakriya: Prakriya::corrected(
+                    "सूमार्ग",
+                    "सुमार्ग",
+                    vec![Step::new(
+                        Rule::VarnaVinyasNiyam("3(क)(अ)-1"),
+                        "उपसर्गबाट बनेका शब्दहरू ह्रस्व हुन्छन्",
+                        "सूमार्ग",
+                        "सुमार्ग",
+                    )],
+                )
+                .with_metadata(RuleCategory::HrasvaDirgha, DiagnosticKind::Error),
+            },
+            RuleHit {
+                spec_id: Some("secondary"),
+                priority: 20,
+                category: RuleCategory::ShaShaS,
+                kind: DiagnosticKind::Error,
+                prakriya: Prakriya::corrected(
+                    "सूमार्ग",
+                    "शुमार्ग",
+                    vec![Step::new(
+                        Rule::VarnaVinyasNiyam("3(ग)(अ)-1"),
+                        "तालव्य श को प्रयोग",
+                        "सूमार्ग",
+                        "शुमार्ग",
+                    )],
+                )
+                .with_metadata(RuleCategory::ShaShaS, DiagnosticKind::Error),
+            },
+        ];
+        let mut notes = Vec::new();
+
+        collect_alternate_rule_notes(&hits, &mut notes);
+
+        assert_eq!(notes.len(), 1);
+        assert_eq!(notes[0].rule, Rule::VarnaVinyasNiyam("3(ग)(अ)-1"));
+        assert!(notes[0].explanation.contains("अन्य सम्भावित सुधार: शुमार्ग"));
     }
 }

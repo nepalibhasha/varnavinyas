@@ -17,6 +17,18 @@ pub struct PyDiagnostic {
     pub category_code: String,
     pub kind: String,
     pub confidence: f32,
+    pub alternate_reasons: Vec<PyDiagnosticReason>,
+}
+
+#[pyclass(name = "DiagnosticReason", get_all, frozen)]
+#[derive(Clone)]
+pub struct PyDiagnosticReason {
+    pub rule: PyRule,
+    pub rule_code: String,
+    pub explanation: String,
+    pub category: String,
+    pub category_code: String,
+    pub correction: String,
 }
 
 #[pymethods]
@@ -40,19 +52,7 @@ impl PyDiagnostic {
 /// Returns a Diagnostic or None.
 #[pyfunction]
 pub fn check_word(word: &str) -> Option<PyDiagnostic> {
-    parikshak_core::check_word(word).map(|d| PyDiagnostic {
-        span_start: d.span.0,
-        span_end: d.span.1,
-        incorrect: d.incorrect,
-        correction: d.correction,
-        rule_code: d.rule.code().to_string(),
-        rule: d.rule.into(),
-        explanation: d.explanation,
-        category: d.category.to_string(),
-        category_code: d.category.as_code().to_string(),
-        kind: d.kind.as_code().to_string(),
-        confidence: d.confidence,
-    })
+    parikshak_core::check_word(word).map(py_diagnostic_from_core)
 }
 
 /// Check a full text for spelling and punctuation issues.
@@ -92,25 +92,42 @@ pub fn check_text_with_options(
     );
     Ok(diagnostics
         .into_iter()
-        .map(|d| PyDiagnostic {
-            span_start: d.span.0,
-            span_end: d.span.1,
-            incorrect: d.incorrect,
-            correction: d.correction,
-            rule_code: d.rule.code().to_string(),
-            rule: d.rule.into(),
-            explanation: d.explanation,
-            category: d.category.to_string(),
-            category_code: d.category.as_code().to_string(),
-            kind: d.kind.as_code().to_string(),
-            confidence: d.confidence,
-        })
+        .map(py_diagnostic_from_core)
         .collect())
+}
+
+fn py_diagnostic_from_core(d: parikshak_core::Diagnostic) -> PyDiagnostic {
+    PyDiagnostic {
+        span_start: d.span.0,
+        span_end: d.span.1,
+        incorrect: d.incorrect,
+        correction: d.correction,
+        rule_code: d.rule.code().to_string(),
+        rule: d.rule.into(),
+        explanation: d.explanation,
+        category: d.category.to_string(),
+        category_code: d.category.as_code().to_string(),
+        kind: d.kind.as_code().to_string(),
+        confidence: d.confidence,
+        alternate_reasons: d
+            .alternate_reasons
+            .into_iter()
+            .map(|r| PyDiagnosticReason {
+                rule_code: r.rule.code().to_string(),
+                rule: r.rule.into(),
+                explanation: r.explanation,
+                category: r.category.to_string(),
+                category_code: r.category.as_code().to_string(),
+                correction: r.correction,
+            })
+            .collect(),
+    }
 }
 
 #[pymodule]
 pub fn parikshak(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyDiagnostic>()?;
+    m.add_class::<PyDiagnosticReason>()?;
     m.add_function(wrap_pyfunction!(check_word, m)?)?;
     m.add_function(wrap_pyfunction!(check_text, m)?)?;
     m.add_function(wrap_pyfunction!(check_text_with_options, m)?)?;

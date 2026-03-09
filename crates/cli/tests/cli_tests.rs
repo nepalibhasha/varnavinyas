@@ -115,6 +115,28 @@ fn check_json_clean_returns_empty_array() {
     assert_eq!(json, serde_json::json!([]));
 }
 
+#[test]
+fn check_json_includes_alternate_reasons_for_multi_hit_word() {
+    let output = cmd()
+        .args(["check", "--format", "json"])
+        .write_stdin("भौतीक\n")
+        .assert()
+        .code(1)
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: serde_json::Value =
+        serde_json::from_slice(&output).expect("stdout should be valid JSON");
+    let arr = json.as_array().unwrap();
+    assert!(!arr.is_empty());
+    let alternate_reasons = arr[0]
+        .get("alternate_reasons")
+        .and_then(serde_json::Value::as_array)
+        .expect("multi-hit word should expose alternate_reasons");
+    assert!(!alternate_reasons.is_empty());
+}
+
 // ── akshar subcommand ───────────────────────────────────────────
 
 #[test]

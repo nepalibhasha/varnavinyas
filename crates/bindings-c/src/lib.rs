@@ -1,4 +1,3 @@
-use serde::Serialize;
 use std::ffi::{CStr, CString, c_char};
 use std::os::raw::c_int;
 
@@ -22,21 +21,6 @@ pub const SCHEME_IAST: c_int = 1;
 /// Punctuation mode constants for use with `varnavinyas_check_text_with_options`.
 pub const PUNCTUATION_STRICT: c_int = 0;
 pub const PUNCTUATION_NORMALIZED_EDITORIAL: c_int = 1;
-
-#[derive(Serialize)]
-struct CDiagnostic {
-    span_start: u64,
-    span_end: u64,
-    incorrect: String,
-    correction: String,
-    rule: String,
-    rule_code: String,
-    explanation: String,
-    category: String,
-    category_code: String,
-    kind: String,
-    confidence: f32,
-}
 
 /// Helper: convert a C string pointer to a Rust &str.
 /// Returns None on null pointer or invalid UTF-8.
@@ -91,23 +75,9 @@ pub unsafe extern "C" fn varnavinyas_check_text(text: *const c_char) -> *mut c_c
         return std::ptr::null_mut();
     };
     let diags = varnavinyas_parikshak::check_text(text);
-    let c_diags: Vec<CDiagnostic> = diags
-        .into_iter()
-        .map(|d| CDiagnostic {
-            span_start: d.span.0 as u64,
-            span_end: d.span.1 as u64,
-            incorrect: d.incorrect,
-            correction: d.correction,
-            rule: d.rule.to_string(),
-            rule_code: d.rule.code().to_string(),
-            explanation: d.explanation,
-            category: d.category.to_string(),
-            category_code: d.category.as_code().to_string(),
-            kind: d.kind.as_code().to_string(),
-            confidence: d.confidence,
-        })
-        .collect();
-    let json = serde_json::to_string(&c_diags).unwrap_or_else(|_| "[]".to_string());
+    let api_diags: Vec<varnavinyas_parikshak::ApiDiagnostic> =
+        diags.into_iter().map(Into::into).collect();
+    let json = serde_json::to_string(&api_diags).unwrap_or_else(|_| "[]".to_string());
     string_to_c(json)
 }
 
@@ -144,23 +114,9 @@ pub unsafe extern "C" fn varnavinyas_check_text_with_options(
             include_noop_heuristics,
         },
     );
-    let c_diags: Vec<CDiagnostic> = diags
-        .into_iter()
-        .map(|d| CDiagnostic {
-            span_start: d.span.0 as u64,
-            span_end: d.span.1 as u64,
-            incorrect: d.incorrect,
-            correction: d.correction,
-            rule: d.rule.to_string(),
-            rule_code: d.rule.code().to_string(),
-            explanation: d.explanation,
-            category: d.category.to_string(),
-            category_code: d.category.as_code().to_string(),
-            kind: d.kind.as_code().to_string(),
-            confidence: d.confidence,
-        })
-        .collect();
-    let json = serde_json::to_string(&c_diags).unwrap_or_else(|_| "[]".to_string());
+    let api_diags: Vec<varnavinyas_parikshak::ApiDiagnostic> =
+        diags.into_iter().map(Into::into).collect();
+    let json = serde_json::to_string(&api_diags).unwrap_or_else(|_| "[]".to_string());
     string_to_c(json)
 }
 
@@ -179,20 +135,8 @@ pub unsafe extern "C" fn varnavinyas_check_word(word: *const c_char) -> *mut c_c
         return std::ptr::null_mut();
     };
     let json = match varnavinyas_parikshak::check_word(word) {
-        Some(d) => serde_json::to_string(&CDiagnostic {
-            span_start: d.span.0 as u64,
-            span_end: d.span.1 as u64,
-            incorrect: d.incorrect,
-            correction: d.correction,
-            rule: d.rule.to_string(),
-            rule_code: d.rule.code().to_string(),
-            explanation: d.explanation,
-            category: d.category.to_string(),
-            category_code: d.category.as_code().to_string(),
-            kind: d.kind.as_code().to_string(),
-            confidence: d.confidence,
-        })
-        .unwrap_or_else(|_| "null".to_string()),
+        Some(d) => serde_json::to_string(&varnavinyas_parikshak::ApiDiagnostic::from(d))
+            .unwrap_or_else(|_| "null".to_string()),
         None => "null".to_string(),
     };
     string_to_c(json)

@@ -2,7 +2,7 @@ use std::sync::LazyLock;
 
 use crate::correction_table;
 use crate::niyama_registry;
-use crate::prakriya::Prakriya;
+use crate::prakriya::{Prakriya, RuleHit};
 use crate::rule_spec::{DiagnosticKind, PatternRule, RuleCategory};
 use crate::step::Step;
 
@@ -26,46 +26,91 @@ pub fn derive(input: &str) -> Prakriya {
         return Prakriya::correct("");
     }
 
-    // Phase A: Correction table lookup (Authoritative)
-    if let Some(p) = try_correction_table(input) {
-        return p;
-    }
-
-    // Phase B: Try pattern rules (Heuristics)
-    if let Some(p) = try_pattern_rules(input) {
-        return p;
+    if let Some(hit) = collect_rule_hits(input).into_iter().next() {
+        return hit.into_prakriya();
     }
 
     // No correction needed — word is considered correct
     Prakriya::correct(input)
 }
 
-/// Try all pattern-based rules in priority order.
-fn try_pattern_rules(input: &str) -> Option<Prakriya> {
-    for rule in PATTERN_RULES.iter() {
-        if let Some(p) = (rule.apply)(input) {
-            return Some(p.with_metadata(rule.spec.category, rule.spec.kind));
-        }
+/// Collect all applicable rule hits for a word, sorted by production priority.
+///
+/// This is a non-breaking companion to `derive()`: callers that need the
+/// current single best correction should keep using `derive()`, while tools
+/// that want to surface alternate applicable rules can use this API.
+pub fn collect_rule_hits(input: &str) -> Vec<RuleHit> {
+    if input.is_empty() {
+        return Vec::new();
     }
-    None
+
+    let mut hits = Vec::new();
+    if let Some(hit) = try_correction_table_hit(input) {
+        hits.push(hit);
+    }
+    hits.extend(collect_pattern_rule_hits(input));
+    hits.sort_by_key(|hit| hit.priority);
+    hits.dedup_by(rule_hits_equivalent);
+    hits
+}
+
+fn rule_hits_equivalent(a: &mut RuleHit, b: &mut RuleHit) -> bool {
+    a.category == b.category
+        && a.kind == b.kind
+        && a.prakriya.output == b.prakriya.output
+        && step_signatures(&a.prakriya.steps) == step_signatures(&b.prakriya.steps)
+}
+
+fn step_signatures(steps: &[Step]) -> Vec<(crate::rule::Rule, &str, &str, &str)> {
+    steps
+        .iter()
+        .map(|s| {
+            (
+                s.rule,
+                s.description.as_str(),
+                s.before.as_str(),
+                s.after.as_str(),
+            )
+        })
+        .collect()
+}
+
+/// Try all pattern-based rules in priority order.
+fn collect_pattern_rule_hits(input: &str) -> Vec<RuleHit> {
+    PATTERN_RULES
+        .iter()
+        .filter_map(|rule| {
+            (rule.apply)(input).map(|p| RuleHit {
+                spec_id: Some(rule.spec.id),
+                priority: rule.spec.priority,
+                category: rule.spec.category,
+                kind: rule.spec.kind,
+                prakriya: p.with_metadata(rule.spec.category, rule.spec.kind),
+            })
+        })
+        .collect()
 }
 
 /// Try the static correction table.
-fn try_correction_table(input: &str) -> Option<Prakriya> {
+fn try_correction_table_hit(input: &str) -> Option<RuleHit> {
     let entry = correction_table::lookup(input)?;
 
     // Handle multi-answer entries (e.g., "धीरता/धैर्य")
     // Return the first alternative
     let output = entry.correct.split('/').next().unwrap_or(entry.correct);
 
-    Some(
-        Prakriya::corrected(
+    Some(RuleHit {
+        spec_id: None,
+        priority: 0,
+        category: RuleCategory::ShuddhaTable,
+        kind: DiagnosticKind::Error,
+        prakriya: Prakriya::corrected(
             input,
             output,
             vec![Step::new(entry.rule, entry.description, input, output)],
         )
         .with_metadata(RuleCategory::ShuddhaTable, DiagnosticKind::Error),
-    )
+    })
 }
 
 #[cfg(test)]
@@ -106,13 +151,84 @@ mod tests {
     fn production_priority_structural_beats_orthographic() {
         // श्रृङ्गार matches struct-shri (priority 100).
         // Verify the production path returns the structural correction.
-        let p = try_pattern_rules("श्रृङ्गार").expect("should fire a pattern rule");
+        let p = collect_pattern_rule_hits("श्रृङ्गार")
+            .into_iter()
+            .next()
+            .expect("should fire a pattern rule")
+            .into_prakriya();
         assert_eq!(p.output, "शृङ्गार");
         // The first step should cite ShuddhaAshuddha (structural rule), not VarnaVinyasNiyam.
         assert!(
             matches!(p.steps[0].rule, Rule::ShuddhaAshuddha(_)),
             "Expected structural rule citation, got {:?}",
             p.steps[0].rule,
+        );
+    }
+
+    #[test]
+    fn collect_rule_hits_keeps_derive_winner_stable() {
+        let hits = collect_rule_hits("बिद्वान");
+        assert!(
+            !hits.is_empty(),
+            "Expected at least one hit for बिद्वान, got: {hits:?}"
+        );
+        assert_eq!(
+            derive("बिद्वान").output,
+            hits[0].prakriya.output,
+            "derive() should still pick the top-priority hit"
+        );
+        assert_eq!(
+            hits[0].prakriya.output, "विद्वान्",
+            "Authoritative correction-table winner should remain stable"
+        );
+    }
+
+    #[test]
+    fn collect_rule_hits_deduplicates_equivalent_hits() {
+        let hits = collect_rule_hits("नेपालि");
+        assert_eq!(
+            hits.len(),
+            1,
+            "Equivalent duplicate hits should be collapsed for नेपालि, got: {hits:?}"
+        );
+        assert_eq!(hits[0].prakriya.output, "नेपाली");
+    }
+
+    #[test]
+    fn collect_rule_hits_prefers_specific_rules_over_hd_tadbhav_fallback() {
+        let cases = [
+            ("सूमार्ग", "3(क)(अ)-1"),
+            ("अभीमान", "3(क)(आ)-1"),
+            ("ऊन्नाइस", "3(क)(अ)-7"),
+            ("कीसान", "3(क)(अ)-3"),
+        ];
+
+        for (input, expected_rule) in cases {
+            let hits = collect_rule_hits(input);
+            assert_eq!(
+                hits.len(),
+                1,
+                "Specific numbered rule should suppress generic hd-tadbhav alternate for {input}: {hits:?}"
+            );
+            assert_eq!(
+                hits[0].prakriya.steps[0].rule,
+                Rule::VarnaVinyasNiyam(expected_rule)
+            );
+        }
+    }
+
+    #[test]
+    fn collect_rule_hits_prefers_specific_final_dirgha_rules_over_kosha_fallback() {
+        let hits = collect_rule_hits("भाउजु");
+        assert_eq!(
+            hits.len(),
+            1,
+            "Specific final-dirgha rule should suppress kosha-backed generic alternate: {hits:?}"
+        );
+        assert_eq!(hits[0].prakriya.output, "भाउजू");
+        assert_eq!(
+            hits[0].prakriya.steps[0].rule,
+            Rule::VarnaVinyasNiyam("3(क)(ऊ)-3")
         );
     }
 
@@ -127,12 +243,31 @@ mod tests {
             "struct-redundant-suffix",
             "struct-panchham",
             // hrasva-dirgha
+            "hd-prefix-hrasva",
+            "hd-dvi-tri-hrasva",
+            "hd-initial-name-hrasva",
+            "hd-initial-aagantuk-hrasva",
             "hd-suffix-nu",
             "hd-suffix-eli",
             "hd-suffix-preserves",
+            "hd-suffix-family-preserves-dirgha",
             "hd-tadbhav",
+            "hd-pronoun",
+            "hd-initial-adjective-hrasva",
+            "hd-initial-number-hrasva",
+            "hd-initial-avyaya-hrasva",
+            "hd-initial-onomatopoeic-hrasva",
+            "hd-medial-prefix-hrasva",
+            "hd-medial-suffix-hrasva",
+            "hd-medial-derived-name-hrasva",
+            "hd-medial-underived-name-hrasva",
+            "hd-medial-aagantuk-name-hrasva",
+            "hd-medial-adjective-hrasva",
+            "hd-medial-avyaya-hrasva",
+            "hd-medial-onomatopoeic-hrasva",
             "hd-dirgha-endings",
             "hd-kinship",
+            "hd-final-hrasva-endings",
             "hd-kosha-backed",
             // orthographic
             "ortho-chandrabindu",

@@ -119,8 +119,8 @@ export function deriveWord(word) {
 }
 
 /**
- * Analyze a word: get origin, correction, and explanatory rule notes.
- * Returns { word, origin, is_correct, correction, rule_notes: [{rule, explanation}] }
+ * Analyze a word: get origin, correction, explanatory rule notes, and optional alternates.
+ * Returns { word, origin, is_correct, correction, rule_notes, alternate_rule_notes? }
  */
 export function analyzeWord(word) {
   try {

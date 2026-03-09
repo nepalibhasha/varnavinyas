@@ -1,150 +1,26 @@
 use std::collections::HashSet;
 
 use varnavinyas_kosha::kosha;
-use varnavinyas_lekhya::check_punctuation;
 use varnavinyas_prakriya::DiagnosticKind;
-use varnavinyas_prakriya::{Rule, derive};
+use varnavinyas_prakriya::Rule;
 
-use crate::diagnostic::{Diagnostic, DiagnosticCategory};
-use crate::padayog_padabiyog::PADAYOG_PADABIYOG_RULES;
-#[cfg(feature = "grammar-pass")]
-use crate::tokenizer::AnalyzedToken;
+use crate::diagnostic::Diagnostic;
 use crate::tokenizer::tokenize_analyzed;
 
+mod common;
 #[cfg(feature = "grammar-pass")]
-const QUANTIFIER_WORDS: &[&str] = &["धेरै", "सबै", "केही", "अनेक", "धेरैजसो"];
+mod grammar;
+mod padayog;
+mod punctuation;
+mod style_variants;
+mod word_level;
 
 #[cfg(feature = "grammar-pass")]
-const INTRANSITIVE_VERB_FORMS: &[&str] = &[
-    "छ",
-    "थियो",
-    "गयो",
-    "जान्छ",
-    "आयो",
-    "आउँछ",
-    "बस्यो",
-    "हिँड्यो",
-    "सुत्यो",
-    "पुग्यो",
-];
-
-#[cfg(feature = "grammar-pass")]
-const MIN_SUFFIX_HEURISTIC_CONFIDENCE: f32 = 0.80;
-
-/// Section 4 phrase/sentence-level style variants.
-/// These are guidance suggestions, not hard errors.
-const STYLE_VARIANT_CORRECTIONS: &[(&str, &str, &str)] = &[
-    (
-        "मर्माहित भएको",
-        "मर्माहत भएको",
-        "शब्द-रूपगत प्रयोगमा मर्माहत रूप उपयुक्त हुन्छ",
-    ),
-    (
-        "निर्देशित गरेको",
-        "निर्देशन गरेको",
-        "पदावली प्रयोगमा निर्देशन रूप उपयुक्त हुन्छ",
-    ),
-    (
-        "इमानदारिता देखाउनु",
-        "इमानदारी देखाउनु",
-        "पदावली प्रयोगमा इमानदारी रूप प्रचलित छ",
-    ),
-    (
-        "भन्नुभएको कुरा",
-        "भनेको कुरा",
-        "पदावली प्रयोगमा भनेको रूप सिफारिस गरिन्छ",
-    ),
-    (
-        "पढ्नुभएको किताब",
-        "पढेको किताब",
-        "पदावली प्रयोगमा पढेको रूप सिफारिस गरिन्छ",
-    ),
-    (
-        "कार्यक्रमको सम्बन्धमा",
-        "कार्यक्रमका सम्बन्धमा",
-        "सम्बन्धमा अघि बहुवचन कारकमा का उपयुक्त हुन्छ",
-    ),
-    (
-        "सूचनाको आधारमा",
-        "सूचनाका आधारमा",
-        "आधारमा अघि बहुवचन कारकमा का उपयुक्त हुन्छ",
-    ),
-    (
-        "उपस्थितिको बारेमा",
-        "उपस्थितिका बारेमा",
-        "बारेमा अघि बहुवचन कारकमा का उपयुक्त हुन्छ",
-    ),
-    (
-        "अपहरित भएको",
-        "अपहरण भएको",
-        "प्रयोगगत रूपमा अपहरण भएको सिफारिस गरिन्छ",
-    ),
-    (
-        "संरक्षित गरिएको",
-        "संरक्षण गरिएको",
-        "प्रयोगगत रूपमा संरक्षण गरिएको सिफारिस गरिन्छ",
-    ),
-    (
-        "प्रसारित गरिएको",
-        "प्रसारण गरिएको",
-        "प्रयोगगत रूपमा प्रसारण गरिएको सिफारिस गरिन्छ",
-    ),
-    (
-        "कामको लागि",
-        "कामका लागि",
-        "प्रयोगगत रूपमा कामका लागि सिफारिस गरिन्छ",
-    ),
-    (
-        "देशको निम्ति",
-        "देशका निम्ति",
-        "प्रयोगगत रूपमा देशका निम्ति सिफारिस गरिन्छ",
-    ),
-    (
-        "म सबैलाई हार्दिक स्वागत गर्न चाहन्छु",
-        "म सबैलाई हार्दिक स्वागत गर्छु",
-        "वक्तव्य शैलीमा प्रत्यक्ष स्वागत गर्छु रूप स्पष्ट हुन्छ",
-    ),
-    (
-        "म अब कार्यक्रम सञ्चालन गर्न गइरहेको छु वा जाँदै छु",
-        "म अब कार्यक्रम सञ्चालन गर्दै छु",
-        "वाक्यगत सटीकता: सञ्चालन गर्दै छु रूप स्पष्ट र संक्षिप्त हुन्छ",
-    ),
-    (
-        "अब यो प्रसारणका प्रमुख समाचारहरू सुन्नुहोस्",
-        "अब यस प्रसारणका प्रमुख समाचारहरू सुन्नुहोस्",
-        "तिर्यक् कारक प्रसङ्गमा यो -> यस रूप उपयुक्त हुन्छ",
-    ),
-    (
-        "म यस कार्यक्रम यहाँ अन्त्य गर्दछु",
-        "म यो कार्यक्रम यहीँ अन्त्य गर्दछु",
-        "सरल कारक प्रयोगमा यो/यहीँ रूप उपयुक्त हुन्छ",
-    ),
-    (
-        "लाखौँ नेपालका जनता गरिबीको रेखामुनि छन्",
-        "नेपालका लाखौँ जनता गरिबीको रेखामुनि छन्",
-        "पदक्रम मिलाउन नेपालका लाखौँ जनता रूप उपयुक्त हुन्छ",
-    ),
-    (
-        "नेपाल मानव अधिकार आयोगद्वारा आयोजित टीकापुर हत्याकाण्डसम्बन्धी छलफल कार्यक्रममा मन्त्रीज्यूले पनि बोल्नुभयो",
-        "टीकापुर हत्याकाण्डसम्बन्धी नेपाल मानव अधिकार आयोगद्वारा आयोजित छलफल कार्यक्रममा मन्त्रीज्यूले पनि बोल्नुभयो",
-        "वाक्यगत अर्थ-स्पष्टताका लागि घटकहरूको पदक्रम मिलाउनु उपयुक्त हुन्छ",
-    ),
-    (
-        "स्थानीय जनशक्तिको श्रमदानबाट दश किलोमिटर लामो गाडी गुड्न सक्ने सडक निर्माण गरियो",
-        "स्थानीय जनशक्तिको श्रमदानबाट गाडी गुड्न सक्ने दश किलोमिटर लामो सडक निर्माण गरियो",
-        "वाक्यमा विशेषण/विशेष्यको सम्बन्ध स्पष्ट राख्न पदक्रम मिलाउनु उपयुक्त हुन्छ",
-    ),
-    (
-        "यहाँको सहयोगप्रति म कृतघ्न छु",
-        "यहाँको सहयोगप्रति म कृतज्ञ छु",
-        "कृतघ्न र कृतज्ञ अर्थ भिन्न छन्",
-    ),
-    (
-        "ऊ राजनीतिमा निर्लिप्त छ",
-        "ऊ राजनीतिमा लिप्त छ",
-        "निर्लिप्त र लिप्त अर्थ भिन्न छन्",
-    ),
-];
+use grammar::add_grammar_diagnostics;
+use padayog::{add_generalized_padayog_padabiyog_diagnostics, add_padayog_padabiyog_diagnostics};
+use punctuation::punctuation_diagnostics;
+use style_variants::add_style_variant_diagnostics;
+use word_level::{adjust_context_sensitive_nga_halanta_rule, check_word_impl};
 
 /// Runtime options for `check_text_with_options`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -180,66 +56,7 @@ pub struct CheckOptions {
 /// forms (including common misspellings like राजनैतिक). Academy correction
 /// rules are authoritative and must override lexicon presence.
 pub fn check_word(word: &str) -> Option<Diagnostic> {
-    if word.is_empty() {
-        return None;
-    }
-
-    // Step 1: Authoritative Academy correction rules always take priority.
-    let prakriya = derive(word);
-    if !prakriya.is_correct {
-        let rule = prakriya
-            .steps
-            .first()
-            .map(|s| s.rule)
-            .unwrap_or(Rule::ShuddhaAshuddha("unknown"));
-        let explanation = prakriya
-            .steps
-            .first()
-            .map(|s| s.description.clone())
-            .unwrap_or_default();
-        let category = prakriya
-            .category
-            .map(DiagnosticCategory::from_rule_category)
-            .unwrap_or_else(|| DiagnosticCategory::from_rule(&rule));
-
-        return Some(Diagnostic {
-            span: (0, word.len()),
-            incorrect: word.to_string(),
-            correction: prakriya.output,
-            rule,
-            explanation,
-            category,
-            kind: prakriya.kind,
-            confidence: 1.0,
-        });
-    }
-
-    // Step 2: Derive found no correction. Consult lexicon for validation.
-    // - Known word: confirmed correct.
-    // - Unknown + near-match candidate: likely misspelling.
-    // - Unknown without near-match: keep unflagged to avoid noisy false positives.
-    let in_lexicon = kosha().contains(word);
-    if in_lexicon {
-        return None;
-    }
-
-    if let Some(suggestion) = kosha().suggest_nearby(word, 1) {
-        if suggestion == word {
-            return None;
-        }
-        return Some(Diagnostic {
-            span: (0, word.len()),
-            incorrect: word.to_string(),
-            correction: suggestion,
-            rule: Rule::ShuddhaAshuddha("unknown"),
-            explanation: "शब्द शब्दकोशमा भेटिएन; सम्भावित वर्तनी त्रुटि".to_string(),
-            category: DiagnosticCategory::ShuddhaTable,
-            kind: DiagnosticKind::Ambiguous,
-            confidence: 0.72,
-        });
-    }
-
-    None
+    check_word_impl(word)
 }
 
 /// Check full text with runtime options.
@@ -250,7 +67,7 @@ pub fn check_text_with_options(text: &str, options: CheckOptions) -> Vec<Diagnos
     // Word-level checks (suffix-aware: checks stem, spans full token)
     let tokens = tokenize_analyzed(text);
     let lex = kosha();
-    for token in &tokens {
+    for (idx, token) in tokens.iter().enumerate() {
         // If the full token (stem+suffix) is a known word, skip correction.
         // e.g. "संसदमा" = संसद + मा — the stem "संसद" triggers a halanta rule,
         // but the agglutinative form "संसदमा" is a valid word in the lexicon.
@@ -262,6 +79,7 @@ pub fn check_text_with_options(text: &str, options: CheckOptions) -> Vec<Diagnos
         }
 
         if let Some(mut diag) = check_word(&token.stem) {
+            adjust_context_sensitive_nga_halanta_rule(idx, &tokens, token, &mut diag);
             diag.span = (token.start, token.end);
 
             // If a suffix was detached, reattach it to the diagnostic strings.
@@ -301,18 +119,11 @@ pub fn check_text_with_options(text: &str, options: CheckOptions) -> Vec<Diagnos
         PunctuationMode::NormalizedEditorial => 0.72,
     };
 
-    for lekhya_diag in check_punctuation(text) {
-        diagnostics.push(Diagnostic {
-            span: lekhya_diag.span,
-            incorrect: lekhya_diag.found,
-            correction: lekhya_diag.expected,
-            rule: Rule::ChihnaNiyam("Section 5"),
-            explanation: lekhya_diag.rule.to_string(),
-            category: DiagnosticCategory::Punctuation,
-            kind: punctuation_kind,
-            confidence: punctuation_confidence,
-        });
-    }
+    diagnostics.extend(punctuation_diagnostics(
+        text,
+        punctuation_kind,
+        punctuation_confidence,
+    ));
 
     if !options.include_noop_heuristics {
         diagnostics.retain(|d| !is_noop_heuristic_diagnostic(d));
@@ -332,414 +143,6 @@ fn is_noop_heuristic_diagnostic(d: &Diagnostic) -> bool {
     matches!(d.rule, Rule::Vyakaran(_))
 }
 
-fn add_padayog_padabiyog_diagnostics(
-    text: &str,
-    blocked_spans: &mut HashSet<(usize, usize)>,
-    diagnostics: &mut Vec<Diagnostic>,
-) {
-    for rule in PADAYOG_PADABIYOG_RULES {
-        for rw in rule.rewrites {
-            for (start, _) in text.match_indices(rw.incorrect) {
-                let end = start + rw.incorrect.len();
-                let span = (start, end);
-
-                if blocked_spans.contains(&span) || overlaps_existing_span(diagnostics, span) {
-                    continue;
-                }
-                if !is_word_boundary(text, start, end) {
-                    continue;
-                }
-
-                diagnostics.push(Diagnostic {
-                    span,
-                    incorrect: rw.incorrect.to_string(),
-                    correction: rw.correct.to_string(),
-                    rule: Rule::VarnaVinyasNiyam("3(घ)"),
-                    explanation: format!(
-                        "पदयोग/पदवियोग [{} | {} | {:?}]: {}",
-                        rule.code, rule.label, rule.action, rw.explanation
-                    ),
-                    category: DiagnosticCategory::ShuddhaTable,
-                    kind: DiagnosticKind::Error,
-                    confidence: 0.95,
-                });
-                blocked_spans.insert(span);
-            }
-        }
-    }
-}
-
-fn add_style_variant_diagnostics(
-    text: &str,
-    blocked_spans: &mut HashSet<(usize, usize)>,
-    diagnostics: &mut Vec<Diagnostic>,
-) {
-    for &(incorrect, correct, explanation) in STYLE_VARIANT_CORRECTIONS {
-        for (start, _) in text.match_indices(incorrect) {
-            let end = start + incorrect.len();
-            let span = (start, end);
-
-            if blocked_spans.contains(&span) || overlaps_existing_span(diagnostics, span) {
-                continue;
-            }
-            if !is_word_boundary(text, start, end) {
-                continue;
-            }
-
-            diagnostics.push(Diagnostic {
-                span,
-                incorrect: incorrect.to_string(),
-                correction: correct.to_string(),
-                rule: Rule::Vyakaran("section4-phrase-style"),
-                explanation: format!("Section 4 शैली सुझाव: {explanation}"),
-                category: DiagnosticCategory::ShuddhaTable,
-                kind: DiagnosticKind::Variant,
-                confidence: 0.78,
-            });
-            blocked_spans.insert(span);
-        }
-    }
-}
-
-fn add_generalized_padayog_padabiyog_diagnostics(
-    text: &str,
-    blocked_spans: &mut HashSet<(usize, usize)>,
-    diagnostics: &mut Vec<Diagnostic>,
-) {
-    add_generalized_padayog_vibhakti_join(text, blocked_spans, diagnostics);
-    add_generalized_padayog_conjunction_join(text, blocked_spans, diagnostics);
-    add_generalized_padabiyog_vibhakti_split(text, blocked_spans, diagnostics);
-    add_generalized_padabiyog_verb_complex_split(text, blocked_spans, diagnostics);
-}
-
-fn add_generalized_padayog_vibhakti_join(
-    text: &str,
-    blocked_spans: &mut HashSet<(usize, usize)>,
-    diagnostics: &mut Vec<Diagnostic>,
-) {
-    // 3(घ)-पदयोग-३: सबै विभक्तिहरू जोडेर लेख्नुपर्छ
-    const VIBHAKTI_TOKENS: &[&str] = &["ले", "लाई", "को", "बाट", "देखि", "मा", "का", "की"];
-    let lex = kosha();
-    let segments = whitespace_segments(text);
-
-    for pair in segments.windows(2) {
-        let (left, lstart, _) = pair[0];
-        let (right, _, rend) = pair[1];
-        if !is_devanagari_word(left) || !is_devanagari_word(right) {
-            continue;
-        }
-        if !VIBHAKTI_TOKENS.contains(&right) {
-            continue;
-        }
-
-        let candidate = format!("{left}{right}");
-        if !lex.contains(&candidate) {
-            continue;
-        }
-
-        let span = (lstart, rend);
-        if blocked_spans.contains(&span) || overlaps_existing_span(diagnostics, span) {
-            continue;
-        }
-        if !is_word_boundary(text, span.0, span.1) {
-            continue;
-        }
-
-        diagnostics.push(Diagnostic {
-            span,
-            incorrect: text[span.0..span.1].to_string(),
-            correction: candidate,
-            rule: Rule::VarnaVinyasNiyam("3(घ)"),
-            explanation: "पदयोग/पदवियोग [3(घ)-पदयोग-३ | विभक्ति जोडेर लेख्नुपर्छ | Join]: सामान्य विभक्ति पद जोडेर लेख्नुपर्छ".to_string(),
-            category: DiagnosticCategory::ShuddhaTable,
-            kind: DiagnosticKind::Error,
-            confidence: 0.92,
-        });
-        blocked_spans.insert(span);
-    }
-}
-
-fn add_generalized_padabiyog_vibhakti_split(
-    text: &str,
-    blocked_spans: &mut HashSet<(usize, usize)>,
-    diagnostics: &mut Vec<Diagnostic>,
-) {
-    // 3(घ)-पदवियोग-३: लागि, निम्ति र दुईओटा विभक्ति एकै ठाउँमा आएमा छुट्याएर
-    for (seg, start, end) in whitespace_segments(text) {
-        if !is_devanagari_word(seg) {
-            continue;
-        }
-
-        let suggestion = if let Some(prefix) = seg.strip_suffix("लागि") {
-            if prefix.chars().count() >= 2 {
-                Some(format!("{prefix} लागि"))
-            } else {
-                None
-            }
-        } else if let Some(prefix) = seg.strip_suffix("निम्ति") {
-            if prefix.chars().count() >= 2 {
-                Some(format!("{prefix} निम्ति"))
-            } else {
-                None
-            }
-        } else if let Some(prefix) = seg.strip_suffix("कामा") {
-            if prefix.chars().count() >= 1 {
-                Some(format!("{prefix}का मा"))
-            } else {
-                None
-            }
-        } else {
-            None
-        };
-
-        let Some(correction) = suggestion else {
-            continue;
-        };
-        let span = (start, end);
-        if blocked_spans.contains(&span) || overlaps_existing_span(diagnostics, span) {
-            continue;
-        }
-        if !is_word_boundary(text, span.0, span.1) {
-            continue;
-        }
-        if correction == seg {
-            continue;
-        }
-
-        diagnostics.push(Diagnostic {
-            span,
-            incorrect: seg.to_string(),
-            correction,
-            rule: Rule::VarnaVinyasNiyam("3(घ)"),
-            explanation: "पदयोग/पदवियोग [3(घ)-पदवियोग-३ | लागि/निम्ति/दोहोरो विभक्ति छुट्याएर | Split]: जोडिएर आएको पद छुट्याएर लेख्नुपर्छ".to_string(),
-            category: DiagnosticCategory::ShuddhaTable,
-            kind: DiagnosticKind::Error,
-            confidence: 0.90,
-        });
-        blocked_spans.insert(span);
-    }
-}
-
-fn add_generalized_padayog_conjunction_join(
-    text: &str,
-    blocked_spans: &mut HashSet<(usize, usize)>,
-    diagnostics: &mut Vec<Diagnostic>,
-) {
-    // 3(घ)-पदयोग-९: केही संयोजकहरू जोडेर लेख्नुपर्छ
-    const JOINS: &[(&str, &str, &str)] = &[
-        ("किन", "भने", "किनभने"),
-        ("ताप", "नि", "तापनि"),
-        ("यद्य", "पि", "यद्यपि"),
-        ("तथा", "पि", "तथापि"),
-    ];
-    let segments = whitespace_segments(text);
-    for pair in segments.windows(2) {
-        let (left, lstart, _) = pair[0];
-        let (right, _, rend) = pair[1];
-        for &(a, b, joined) in JOINS {
-            if left != a || right != b {
-                continue;
-            }
-            let span = (lstart, rend);
-            if blocked_spans.contains(&span) || overlaps_existing_span(diagnostics, span) {
-                continue;
-            }
-            if !is_word_boundary(text, span.0, span.1) {
-                continue;
-            }
-            diagnostics.push(Diagnostic {
-                span,
-                incorrect: text[span.0..span.1].to_string(),
-                correction: joined.to_string(),
-                rule: Rule::VarnaVinyasNiyam("3(घ)"),
-                explanation:
-                    "पदयोग/पदवियोग [3(घ)-पदयोग-९ | संयोजक जोडेर लेख्नुपर्छ | Join]: संयोजक पद जोडेर लेख्नुपर्छ"
-                        .to_string(),
-                category: DiagnosticCategory::ShuddhaTable,
-                kind: DiagnosticKind::Error,
-                confidence: 0.94,
-            });
-            blocked_spans.insert(span);
-        }
-    }
-}
-
-fn add_generalized_padabiyog_verb_complex_split(
-    text: &str,
-    blocked_spans: &mut HashSet<(usize, usize)>,
-    diagnostics: &mut Vec<Diagnostic>,
-) {
-    // 3(घ)-पदवियोग-६/७/९:
-    // - अपूर्ण/पूर्ण पक्ष जनाउने क्रियापद छुट्याएर
-    // - 'ने छ' भविष्यत् कालबोधक क्रियापद छुट्याएर
-    // - 'नु'/'न' पछि आउने क्रियापद छुट्याएर
-    const AUX_SUFFIXES: &[&str] = &[
-        "छन्",
-        "छौ",
-        "छु",
-        "छ",
-        "थिए",
-        "थियो",
-        "थिई",
-        "थिइन्",
-        "थिइ",
-        "थें",
-    ];
-    const MODAL_SUFFIXES: &[&str] = &["सक्छन्", "सक्छु", "सक्छौ", "सक्छ", "सक्दैन"];
-
-    for (seg, start, end) in whitespace_segments(text) {
-        if !is_devanagari_word(seg) {
-            continue;
-        }
-
-        let mut candidate: Option<(String, &'static str)> = None;
-
-        // 3(घ)-पदवियोग-६ and 3(घ)-पदवियोग-७
-        for &aux in AUX_SUFFIXES {
-            if let Some(prefix) = seg.strip_suffix(aux) {
-                if prefix.chars().count() < 2 {
-                    continue;
-                }
-                let is_aspect = prefix.ends_with("दै")
-                    || prefix.ends_with("दो")
-                    || prefix.ends_with("को")
-                    || prefix.ends_with("का")
-                    || prefix.ends_with("की");
-                let is_ne_future = prefix.ends_with("ने");
-                if is_aspect {
-                    candidate = Some((
-                        format!("{prefix} {aux}"),
-                        "3(घ)-पदवियोग-६ | पक्षसूचक क्रियापद छुट्याएर",
-                    ));
-                    break;
-                }
-                if is_ne_future {
-                    candidate = Some((format!("{prefix} {aux}"), "3(घ)-पदवियोग-७ | 'ने छ' छुट्याएर"));
-                    break;
-                }
-            }
-        }
-
-        // 3(घ)-पदवियोग-९
-        if candidate.is_none() {
-            for &modal in MODAL_SUFFIXES {
-                if let Some(prefix) = seg.strip_suffix(modal) {
-                    if prefix.ends_with("नु") || prefix.ends_with('न') {
-                        candidate = Some((
-                            format!("{prefix} {modal}"),
-                            "3(घ)-पदवियोग-९ | 'नु'/'न' पछि क्रियापद छुट्याएर",
-                        ));
-                        break;
-                    }
-                }
-            }
-        }
-
-        let Some((correction, subrule)) = candidate else {
-            continue;
-        };
-        if correction == seg {
-            continue;
-        }
-        let span = (start, end);
-        if blocked_spans.contains(&span) || overlaps_existing_span(diagnostics, span) {
-            continue;
-        }
-        if !is_word_boundary(text, span.0, span.1) {
-            continue;
-        }
-
-        diagnostics.push(Diagnostic {
-            span,
-            incorrect: seg.to_string(),
-            correction,
-            rule: Rule::VarnaVinyasNiyam("3(घ)"),
-            explanation: format!("पदयोग/पदवियोग [{subrule} | Split]: क्रियापद पद छुट्याएर लेख्नुपर्छ"),
-            category: DiagnosticCategory::ShuddhaTable,
-            kind: DiagnosticKind::Error,
-            confidence: 0.90,
-        });
-        blocked_spans.insert(span);
-    }
-}
-
-fn whitespace_segments(text: &str) -> Vec<(&str, usize, usize)> {
-    let mut out = Vec::new();
-    let mut pos = 0;
-    for seg in text.split_whitespace() {
-        let start = text[pos..].find(seg).map(|i| pos + i).unwrap_or(pos);
-        let end = start + seg.len();
-        out.push((seg, start, end));
-        pos = end;
-    }
-    out
-}
-
-fn is_devanagari_word(s: &str) -> bool {
-    !s.is_empty()
-        && s.chars().all(|c| {
-            ('\u{0900}'..='\u{097F}').contains(&c)
-                && !matches!(
-                    c,
-                    '।' | ',' | '.' | '!' | '?' | ';' | ':' | '“' | '”' | '‘' | '’'
-                )
-        })
-}
-
-fn overlaps_existing_span(diagnostics: &[Diagnostic], candidate: (usize, usize)) -> bool {
-    diagnostics
-        .iter()
-        .filter(|d| !is_non_blocking_diagnostic(d))
-        .any(|d| d.span.0 < candidate.1 && candidate.0 < d.span.1)
-}
-
-fn is_non_blocking_diagnostic(d: &Diagnostic) -> bool {
-    matches!(d.kind, DiagnosticKind::Ambiguous)
-}
-
-fn is_word_boundary(text: &str, start: usize, end: usize) -> bool {
-    let prev_ok = if start == 0 {
-        true
-    } else {
-        text[..start]
-            .chars()
-            .next_back()
-            .is_none_or(is_boundary_char)
-    };
-
-    let next_ok = if end >= text.len() {
-        true
-    } else {
-        text[end..].chars().next().is_none_or(is_boundary_char)
-    };
-
-    prev_ok && next_ok
-}
-
-fn is_boundary_char(c: char) -> bool {
-    c.is_whitespace()
-        || matches!(
-            c,
-            '.' | ','
-                | '!'
-                | '?'
-                | ';'
-                | ':'
-                | '-'
-                | '('
-                | ')'
-                | '['
-                | ']'
-                | '{'
-                | '}'
-                | '"'
-                | '\''
-                | '/'
-                | '।'
-                | '…'
-        )
-}
-
 /// Check a full text and return all diagnostics.
 ///
 /// Pipeline:
@@ -752,255 +155,10 @@ pub fn check_text(text: &str) -> Vec<Diagnostic> {
 }
 
 #[cfg(feature = "grammar-pass")]
-fn add_grammar_diagnostics(
-    tokens: &[AnalyzedToken],
-    blocked_spans: &HashSet<(usize, usize)>,
-    diagnostics: &mut Vec<Diagnostic>,
-) {
-    use varnavinyas_vyakaran::MorphAnalyzer;
-
-    let analyzer = varnavinyas_vyakaran::RuleBasedAnalyzer;
-
-    for (idx, token) in tokens.iter().enumerate() {
-        let span = (token.start, token.end);
-        if blocked_spans.contains(&span) {
-            continue;
-        }
-
-        let full = token_full_form(token);
-
-        if let Ok(analyses) = analyzer.analyze(&full) {
-            if analyses.len() > 1 {
-                diagnostics.push(Diagnostic {
-                    span,
-                    incorrect: full.clone(),
-                    correction: full.clone(),
-                    rule: Rule::Vyakaran("morph-ambiguity"),
-                    explanation: "व्याकरण विश्लेषण अस्पष्ट: एकभन्दा बढी सम्भावित संरचना".to_string(),
-                    category: DiagnosticCategory::ShuddhaTable,
-                    kind: DiagnosticKind::Ambiguous,
-                    confidence: 0.55,
-                });
-            }
-        }
-
-        if has_plural_suffix(&full) && idx > 0 && is_quantifier(&token_full_form(&tokens[idx - 1]))
-        {
-            let confidence = 0.62;
-            if confidence >= MIN_SUFFIX_HEURISTIC_CONFIDENCE {
-                let singular = strip_plural_suffix(&full).unwrap_or(&full).to_string();
-                push_best_grammar_variant(
-                    diagnostics,
-                    Diagnostic {
-                        span,
-                        incorrect: full.clone(),
-                        correction: singular,
-                        rule: Rule::Vyakaran("quantifier-plural-redundancy"),
-                        explanation: "परिमाणबोधक शब्दपछि बहुवचन -हरु/-हरू प्रायः अनावश्यक हुन्छ।"
-                            .to_string(),
-                        category: DiagnosticCategory::ShuddhaTable,
-                        kind: DiagnosticKind::Variant,
-                        confidence,
-                    },
-                );
-            }
-        }
-
-        if has_ergative_suffix(token) && sentence_has_intransitive_predicate(tokens, idx) {
-            let confidence = 0.68;
-            if confidence >= MIN_SUFFIX_HEURISTIC_CONFIDENCE {
-                push_best_grammar_variant(
-                    diagnostics,
-                    Diagnostic {
-                        span,
-                        incorrect: full.clone(),
-                        correction: token.stem.clone(),
-                        rule: Rule::Vyakaran("ergative-le-intransitive"),
-                        explanation: "सामान्य अकर्मक क्रियासँग कर्तामा ले प्रायः प्रयोग हुँदैन।".to_string(),
-                        category: DiagnosticCategory::ShuddhaTable,
-                        kind: DiagnosticKind::Variant,
-                        confidence,
-                    },
-                );
-            }
-        }
-
-        if let Some(suggested_suffix) = suggested_genitive_suffix(token, tokens.get(idx + 1)) {
-            let confidence = 0.64;
-            if confidence >= MIN_SUFFIX_HEURISTIC_CONFIDENCE {
-                push_best_grammar_variant(
-                    diagnostics,
-                    Diagnostic {
-                        span,
-                        incorrect: full.clone(),
-                        correction: format!("{}{}", token.stem, suggested_suffix),
-                        rule: Rule::Vyakaran("genitive-mismatch-plural"),
-                        explanation: "बहुवचन संज्ञा अघि सामान्यतया सम्बन्ध सूचक का प्रयोग उपयुक्त हुन्छ।"
-                            .to_string(),
-                        category: DiagnosticCategory::ShuddhaTable,
-                        kind: DiagnosticKind::Variant,
-                        confidence,
-                    },
-                );
-            }
-        }
-
-        // Optional samasa hint: expose high-confidence split as variant guidance.
-        let candidates = varnavinyas_samasa::analyze_compound(&full);
-        if let Some(top) = candidates.first() {
-            if top.score >= 0.75 {
-                push_best_grammar_variant(
-                    diagnostics,
-                    Diagnostic {
-                        span,
-                        incorrect: full.clone(),
-                        correction: format!("{} + {}", top.left, top.right),
-                        rule: Rule::Vyakaran("samasa-heuristic"),
-                        explanation: format!(
-                            "समास सम्भावना ({:?}): {}",
-                            top.samasa_type, top.vigraha
-                        ),
-                        category: DiagnosticCategory::Sandhi,
-                        kind: DiagnosticKind::Variant,
-                        confidence: top.score.min(0.9),
-                    },
-                );
-            }
-        }
-    }
-}
-
-#[cfg(feature = "grammar-pass")]
-fn push_best_grammar_variant(diagnostics: &mut Vec<Diagnostic>, candidate: Diagnostic) {
-    let existing = diagnostics.iter_mut().find(|d| {
-        d.span == candidate.span
-            && matches!(d.kind, DiagnosticKind::Variant)
-            && matches!(d.rule, Rule::Vyakaran(_))
-    });
-
-    if let Some(diag) = existing {
-        if candidate.confidence > diag.confidence {
-            *diag = candidate;
-        }
-    } else {
-        diagnostics.push(candidate);
-    }
-}
-
-#[cfg(feature = "grammar-pass")]
-fn has_plural_suffix(word: &str) -> bool {
-    word.ends_with("हरू") || word.ends_with("हरु")
-}
-
-#[cfg(feature = "grammar-pass")]
-fn strip_plural_suffix(word: &str) -> Option<&str> {
-    word.strip_suffix("हरू").or_else(|| word.strip_suffix("हरु"))
-}
-
-#[cfg(feature = "grammar-pass")]
-fn is_quantifier(word: &str) -> bool {
-    QUANTIFIER_WORDS.contains(&word)
-}
-
-#[cfg(feature = "grammar-pass")]
-fn has_ergative_suffix(token: &AnalyzedToken) -> bool {
-    token.suffix.as_deref() == Some("ले")
-}
-
-#[cfg(feature = "grammar-pass")]
-fn sentence_has_intransitive_predicate(tokens: &[AnalyzedToken], subject_idx: usize) -> bool {
-    tokens
-        .iter()
-        .skip(subject_idx + 1)
-        .any(|tok| is_intransitive_verb_form(&token_full_form(tok)))
-}
-
-#[cfg(feature = "grammar-pass")]
-fn is_intransitive_verb_form(word: &str) -> bool {
-    INTRANSITIVE_VERB_FORMS.contains(&word)
-}
-
-#[cfg(feature = "grammar-pass")]
-fn suggested_genitive_suffix(
-    token: &AnalyzedToken,
-    next_token: Option<&AnalyzedToken>,
-) -> Option<String> {
-    let suffix = token.suffix.as_deref()?;
-    if suffix == "का" || !matches!(suffix, "को" | "की") {
-        return None;
-    }
-
-    let next = next_token?;
-    if has_plural_suffix(&token_full_form(next)) {
-        Some("का".to_string())
-    } else {
-        None
-    }
-}
-
-#[cfg(feature = "grammar-pass")]
-fn token_full_form(token: &AnalyzedToken) -> String {
-    match &token.suffix {
-        Some(sfx) => format!("{}{}", token.stem, sfx),
-        None => token.stem.clone(),
-    }
-}
-
-#[cfg(all(test, feature = "grammar-pass"))]
-mod grammar_variant_refine_tests {
-    use super::*;
-
-    fn mk_variant(span: (usize, usize), rule_code: &'static str, confidence: f32) -> Diagnostic {
-        Diagnostic {
-            span,
-            incorrect: "x".to_string(),
-            correction: "y".to_string(),
-            rule: Rule::Vyakaran(rule_code),
-            explanation: "heuristic".to_string(),
-            category: DiagnosticCategory::ShuddhaTable,
-            kind: DiagnosticKind::Variant,
-            confidence,
-        }
-    }
-
-    #[test]
-    fn keeps_highest_confidence_variant_per_span() {
-        let mut diagnostics = Vec::new();
-
-        push_best_grammar_variant(
-            &mut diagnostics,
-            mk_variant((3, 12), "quantifier-plural-redundancy", 0.62),
-        );
-        push_best_grammar_variant(
-            &mut diagnostics,
-            mk_variant((3, 12), "samasa-heuristic", 0.86),
-        );
-
-        assert_eq!(diagnostics.len(), 1);
-        assert_eq!(diagnostics[0].rule, Rule::Vyakaran("samasa-heuristic"));
-        assert_eq!(diagnostics[0].confidence, 0.86);
-    }
-
-    #[test]
-    fn keeps_variants_for_different_spans() {
-        let mut diagnostics = Vec::new();
-
-        push_best_grammar_variant(
-            &mut diagnostics,
-            mk_variant((0, 6), "quantifier-plural-redundancy", 0.62),
-        );
-        push_best_grammar_variant(
-            &mut diagnostics,
-            mk_variant((7, 14), "ergative-le-intransitive", 0.68),
-        );
-
-        assert_eq!(diagnostics.len(), 2);
-    }
-}
-
 #[cfg(test)]
 mod noop_heuristic_tests {
     use super::*;
+    use crate::DiagnosticCategory;
 
     #[test]
     fn filters_noop_grammar_variant() {
@@ -1013,6 +171,7 @@ mod noop_heuristic_tests {
             category: DiagnosticCategory::ShuddhaTable,
             kind: DiagnosticKind::Variant,
             confidence: 0.55,
+            alternate_reasons: Vec::new(),
         };
         assert!(is_noop_heuristic_diagnostic(&d));
     }
@@ -1028,6 +187,7 @@ mod noop_heuristic_tests {
             category: DiagnosticCategory::HrasvaDirgha,
             kind: DiagnosticKind::Error,
             confidence: 1.0,
+            alternate_reasons: Vec::new(),
         };
         assert!(!is_noop_heuristic_diagnostic(&d));
     }

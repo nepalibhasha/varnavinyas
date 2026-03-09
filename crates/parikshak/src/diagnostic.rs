@@ -126,6 +126,21 @@ pub struct Diagnostic {
     pub kind: DiagnosticKind,
     /// Confidence score (0.0–1.0).
     pub confidence: f32,
+    /// Other applicable Academy reasons for the same token, if any.
+    pub alternate_reasons: Vec<DiagnosticReason>,
+}
+
+/// An alternate applicable reason for the same token.
+#[derive(Debug, Clone)]
+pub struct DiagnosticReason {
+    /// The alternative rule that was applied.
+    pub rule: Rule,
+    /// Human-readable explanation.
+    pub explanation: String,
+    /// Category of the issue.
+    pub category: DiagnosticCategory,
+    /// The correction suggested by this alternate rule.
+    pub correction: String,
 }
 
 impl std::fmt::Display for Diagnostic {

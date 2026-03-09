@@ -519,6 +519,53 @@ body {
 
 .diag-card.active .diag-rule { display: block; }
 
+.diag-alternates {
+  display: none;
+  margin: 0.4rem 0 0.55rem;
+  padding-top: 0.45rem;
+  border-top: 1px dashed var(--color-border);
+}
+
+.diag-card.active .diag-alternates { display: block; }
+
+.diag-alternates-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.35rem;
+}
+
+.diag-alt-item + .diag-alt-item {
+  margin-top: 0.35rem;
+}
+
+.diag-alt-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+  margin-bottom: 0.15rem;
+}
+
+.diag-alt-category,
+.diag-alt-correction {
+  font-family: var(--font-latin);
+  font-size: 0.68rem;
+  color: var(--color-text-secondary);
+  background: var(--color-surface-alt);
+  border-radius: 999px;
+  padding: 0.08rem 0.45rem;
+}
+
+.diag-alt-rule {
+  font-size: 0.68rem;
+}
+
+.diag-alt-text {
+  font-size: 0.77rem;
+  color: var(--color-text-secondary);
+}
+
 .diag-fix {
   display: none;
 }
@@ -1102,6 +1149,12 @@ body {
   .mobile-diag-overlay .diag-rule {
     display: block;
     margin-bottom: 0.4rem;
+  }
+
+  .mobile-diag-overlay .diag-alternates {
+    display: block;
+    margin-top: 0.45rem;
+    margin-bottom: 0.45rem;
   }
 
   .mobile-diag-overlay .mobile-diag-actions {

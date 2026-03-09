@@ -327,6 +327,7 @@ function renderDiagnostics() {
         ${correctionRow}
         <div class="diag-explanation">${escapeHtml(d.explanation)}</div>
         <div class="diag-rule">${wrapRuleTooltip(d.rule, d.category_code)}</div>
+        ${renderAlternateReasons(d)}
         ${fixButton}
       </div>`;
     })
@@ -436,6 +437,7 @@ function showMobileDiagOverlay(d, idx) {
     }
     <div class="diag-explanation">${escapeHtml(d.explanation)}</div>
     <div class="diag-rule">${wrapRuleTooltip(d.rule, d.category_code)}</div>
+    ${renderAlternateReasons(d)}
     <div class="mobile-diag-actions">
       ${hasChange ? `<button class="btn btn-sm btn-primary" id="mobile-fix-btn">सच्याउनुहोस्</button>` : ''}
     </div>`;
@@ -464,6 +466,34 @@ function hideMobileDiagOverlay() {
     mobileDiagOverlay.classList.remove('visible');
     mobileDiagOverlay.innerHTML = '';
   }
+}
+
+function renderAlternateReasons(d) {
+  if (!d.alternate_reasons || d.alternate_reasons.length === 0) {
+    return "";
+  }
+
+  const items = d.alternate_reasons.map((alt) => {
+    const altLabel = CATEGORY_LABELS[alt.category_code] || alt.category;
+    const altCorrection = alt.correction && alt.correction !== d.correction
+      ? `<span class="diag-alt-correction">${escapeHtml(alt.correction)}</span>`
+      : "";
+    return `
+      <div class="diag-alt-item">
+        <div class="diag-alt-meta">
+          <span class="diag-alt-category">${escapeHtml(altLabel)}</span>
+          <span class="diag-alt-rule">${wrapRuleTooltip(alt.rule, alt.category_code)}</span>
+          ${altCorrection}
+        </div>
+        <div class="diag-alt-text">${escapeHtml(alt.explanation)}</div>
+      </div>`;
+  }).join('');
+
+  return `
+    <div class="diag-alternates">
+      <div class="diag-alternates-title">अन्य लागू नियमहरू</div>
+      ${items}
+    </div>`;
 }
 
 /**

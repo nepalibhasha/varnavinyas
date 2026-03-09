@@ -329,6 +329,7 @@ mod tests {
             category: DiagnosticCategory::ShuddhaTable,
             kind: varnavinyas_prakriya::DiagnosticKind::Error,
             confidence: 1.0,
+            alternate_reasons: Vec::new(),
         };
 
         // Enabled — should find it

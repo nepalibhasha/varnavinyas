@@ -3,7 +3,8 @@ use std::process::ExitCode;
 
 use serde::Serialize;
 use varnavinyas_parikshak::{
-    CheckOptions, Diagnostic, DiagnosticKind, PunctuationMode, check_text_with_options,
+    ApiDiagnostic, CheckOptions, Diagnostic, DiagnosticKind, PunctuationMode,
+    check_text_with_options,
 };
 
 use crate::{OutputFormat, PunctuationModeArg};
@@ -20,6 +21,16 @@ struct JsonDiagnostic {
     explanation: String,
     kind: String,
     confidence: f32,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    alternate_reasons: Vec<JsonAlternateReason>,
+}
+
+#[derive(Serialize)]
+struct JsonAlternateReason {
+    rule: String,
+    category: String,
+    explanation: String,
+    correction: String,
 }
 
 pub fn run(
@@ -145,6 +156,12 @@ fn print_text(
         );
         if explain {
             println!("  [{}] {}", diag.category, diag.explanation);
+            for alt in &diag.alternate_reasons {
+                println!(
+                    "  [other: {} | {}] {} -> {}",
+                    alt.category, alt.rule, alt.explanation, alt.correction
+                );
+            }
         }
     }
 }
@@ -154,16 +171,27 @@ fn print_json(diagnostics: &[Diagnostic], text: &str, line_offsets: &[usize]) {
         .iter()
         .map(|diag| {
             let (line, column) = byte_to_line_col(diag.span.0, text, line_offsets);
+            let api = ApiDiagnostic::from(diag);
             JsonDiagnostic {
                 line,
                 column,
-                incorrect: diag.incorrect.clone(),
-                correction: diag.correction.clone(),
-                rule: diag.rule.to_string(),
-                category: diag.category.to_string(),
-                explanation: diag.explanation.clone(),
-                kind: diag.kind.as_code().to_string(),
-                confidence: diag.confidence,
+                incorrect: api.incorrect,
+                correction: api.correction,
+                rule: api.rule,
+                category: api.category,
+                explanation: api.explanation,
+                kind: api.kind,
+                confidence: api.confidence,
+                alternate_reasons: api
+                    .alternate_reasons
+                    .into_iter()
+                    .map(|alt| JsonAlternateReason {
+                        rule: alt.rule,
+                        category: alt.category,
+                        explanation: alt.explanation,
+                        correction: alt.correction,
+                    })
+                    .collect(),
             }
         })
         .collect();

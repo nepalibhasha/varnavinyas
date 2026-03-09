@@ -1,5 +1,3 @@
-use serde::Serialize;
-
 uniffi::setup_scaffolding!();
 
 /// Transliteration scheme.
@@ -23,22 +21,6 @@ pub enum Origin {
 pub enum PunctuationMode {
     Strict,
     NormalizedEditorial,
-}
-
-/// A single spell-check diagnostic.
-#[derive(Debug, Serialize)]
-struct FfiDiagnostic {
-    span_start: u64,
-    span_end: u64,
-    incorrect: String,
-    correction: String,
-    rule: String,
-    rule_code: String,
-    explanation: String,
-    category: String,
-    category_code: String,
-    kind: String,
-    confidence: f32,
 }
 
 /// Check text for spelling and punctuation issues.
@@ -73,23 +55,9 @@ pub fn check_text_with_options(
             include_noop_heuristics,
         },
     );
-    let ffi_diags: Vec<FfiDiagnostic> = diags
-        .into_iter()
-        .map(|d| FfiDiagnostic {
-            span_start: d.span.0 as u64,
-            span_end: d.span.1 as u64,
-            incorrect: d.incorrect,
-            correction: d.correction,
-            rule: d.rule.to_string(),
-            rule_code: d.rule.code().to_string(),
-            explanation: d.explanation,
-            category: d.category.to_string(),
-            category_code: d.category.as_code().to_string(),
-            kind: d.kind.as_code().to_string(),
-            confidence: d.confidence,
-        })
-        .collect();
-    serde_json::to_string(&ffi_diags).unwrap_or_else(|_| "[]".to_string())
+    let api_diags: Vec<varnavinyas_parikshak::ApiDiagnostic> =
+        diags.into_iter().map(Into::into).collect();
+    serde_json::to_string(&api_diags).unwrap_or_else(|_| "[]".to_string())
 }
 
 /// Check a single word.
@@ -98,20 +66,8 @@ pub fn check_text_with_options(
 #[uniffi::export]
 pub fn check_word(word: String) -> String {
     match varnavinyas_parikshak::check_word(&word) {
-        Some(d) => serde_json::to_string(&FfiDiagnostic {
-            span_start: d.span.0 as u64,
-            span_end: d.span.1 as u64,
-            incorrect: d.incorrect,
-            correction: d.correction,
-            rule: d.rule.to_string(),
-            rule_code: d.rule.code().to_string(),
-            explanation: d.explanation,
-            category: d.category.to_string(),
-            category_code: d.category.as_code().to_string(),
-            kind: d.kind.as_code().to_string(),
-            confidence: d.confidence,
-        })
-        .unwrap_or_else(|_| "null".to_string()),
+        Some(d) => serde_json::to_string(&varnavinyas_parikshak::ApiDiagnostic::from(d))
+            .unwrap_or_else(|_| "null".to_string()),
         None => "null".to_string(),
     }
 }

@@ -11,10 +11,10 @@ varnavinyas-akshar = { workspace = true }
 varnavinyas-shabda = { workspace = true }
 varnavinyas-sandhi = { workspace = true }
 varnavinyas-kosha = { workspace = true }
+serde = { workspace = true }
 thiserror = { workspace = true }
 
 [dev-dependencies]
-serde = { workspace = true }
 toml = { workspace = true }
 criterion = { workspace = true }
 

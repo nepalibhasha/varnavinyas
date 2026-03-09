@@ -143,6 +143,20 @@ export function showInspector(word, start, end) {
     html += '</div></div>';
   }
 
+  if (analysis && analysis.alternate_rule_notes && analysis.alternate_rule_notes.length > 0) {
+    html += '<div class="inspector-section">';
+    html += `<div class="inspector-section-title">अन्य लागू नियमहरू <span class="inspector-section-label">Other Applicable Rules</span></div>`;
+    html += '<div class="analysis-notes">';
+    for (const note of analysis.alternate_rule_notes) {
+      html += `
+      <div class="analysis-note">
+        <span class="analysis-note-rule">${wrapRuleTooltip(note.rule)}</span>
+        <span class="analysis-note-text">${escapeHtml(note.explanation)}</span>
+      </div>`;
+    }
+    html += '</div></div>';
+  }
+
   panelEl.innerHTML = `<div class="inspector-container">${html}</div>`;
 
   // Attach event handlers

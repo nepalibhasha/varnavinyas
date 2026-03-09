@@ -2,27 +2,6 @@ use serde::Serialize;
 use tsify::Tsify;
 use wasm_bindgen::prelude::*;
 
-/// A diagnostic serialized for JavaScript consumers.
-#[derive(Serialize, Tsify)]
-#[tsify(into_wasm_abi)]
-struct JsDiagnostic {
-    span_start: usize,
-    span_end: usize,
-    incorrect: String,
-    correction: String,
-    rule: String,
-    rule_code: String,
-    explanation: String,
-    /// Human-readable category label (Nepali display text).
-    category: String,
-    /// Stable machine-readable category code (Rust enum variant name).
-    category_code: String,
-    /// Severity kind: "Error", "Variant", or "Ambiguous".
-    kind: String,
-    /// Confidence score (0.0–1.0).
-    confidence: f32,
-}
-
 /// A prakriya step serialized for JavaScript consumers.
 #[derive(Serialize, Tsify)]
 #[tsify(into_wasm_abi)]
@@ -60,8 +39,9 @@ pub fn check_text_with_options(text: &str, grammar: bool) -> String {
             ..Default::default()
         },
     );
-    let js_diags: Vec<JsDiagnostic> = diags.into_iter().map(diagnostic_to_js).collect();
-    serde_json::to_string(&js_diags).unwrap_or_else(|_| "[]".to_string())
+    let api_diags: Vec<varnavinyas_parikshak::ApiDiagnostic> =
+        diags.into_iter().map(Into::into).collect();
+    serde_json::to_string(&api_diags).unwrap_or_else(|_| "[]".to_string())
 }
 
 /// Check full text with optional grammar-pass diagnostics and return typed JsValue.
@@ -74,8 +54,9 @@ pub fn check_text_value(text: &str, grammar: bool) -> Result<JsValue, JsError> {
             ..Default::default()
         },
     );
-    let js_diags: Vec<JsDiagnostic> = diags.into_iter().map(diagnostic_to_js).collect();
-    serde_wasm_bindgen::to_value(&js_diags)
+    let api_diags: Vec<varnavinyas_parikshak::ApiDiagnostic> =
+        diags.into_iter().map(Into::into).collect();
+    serde_wasm_bindgen::to_value(&api_diags)
         .map_err(|e| JsError::new(&format!("failed to serialize diagnostics: {e}")))
 }
 
@@ -84,8 +65,8 @@ pub fn check_text_value(text: &str, grammar: bool) -> Result<JsValue, JsError> {
 pub fn check_word(word: &str) -> String {
     match varnavinyas_parikshak::check_word(word) {
         Some(d) => {
-            let js = diagnostic_to_js(d);
-            serde_json::to_string(&js).unwrap_or_else(|_| "null".to_string())
+            let api = varnavinyas_parikshak::ApiDiagnostic::from(d);
+            serde_json::to_string(&api).unwrap_or_else(|_| "null".to_string())
         }
         None => "null".to_string(),
     }
@@ -95,7 +76,7 @@ pub fn check_word(word: &str) -> String {
 #[wasm_bindgen]
 pub fn check_word_value(word: &str) -> Result<JsValue, JsError> {
     match varnavinyas_parikshak::check_word(word) {
-        Some(d) => serde_wasm_bindgen::to_value(&diagnostic_to_js(d))
+        Some(d) => serde_wasm_bindgen::to_value(&varnavinyas_parikshak::ApiDiagnostic::from(d))
             .map_err(|e| JsError::new(&format!("failed to serialize diagnostic: {e}"))),
         None => Ok(JsValue::NULL),
     }
@@ -127,43 +108,19 @@ pub fn derive_value(word: &str) -> Result<JsValue, JsError> {
         .map_err(|e| JsError::new(&format!("failed to serialize prakriya: {e}")))
 }
 
-/// A word analysis result serialized for JavaScript consumers.
-#[derive(Serialize, Tsify)]
-#[tsify(into_wasm_abi)]
-struct JsWordAnalysis {
-    word: String,
-    origin: String,
-    origin_source: String,
-    origin_confidence: f32,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    source_language: Option<String>,
-    is_correct: bool,
-    correction: Option<String>,
-    rule_notes: Vec<JsRuleNote>,
-}
-
-/// A rule note serialized for JavaScript consumers.
-#[derive(Serialize, Tsify)]
-#[tsify(into_wasm_abi)]
-struct JsRuleNote {
-    rule: String,
-    rule_code: String,
-    explanation: String,
-}
-
 /// Analyze a word: get origin classification, correction (if any), and explanatory rule notes.
 /// Returns a JSON object with word, origin, is_correct, correction, and rule_notes.
 #[wasm_bindgen]
 pub fn analyze_word(word: &str) -> String {
-    let js = word_analysis_to_js(varnavinyas_prakriya::analyze(word));
-    serde_json::to_string(&js).unwrap_or_else(|_| "{}".to_string())
+    let api = varnavinyas_prakriya::ApiWordAnalysis::from(varnavinyas_prakriya::analyze(word));
+    serde_json::to_string(&api).unwrap_or_else(|_| "{}".to_string())
 }
 
 /// Analyze a word and return typed JsValue.
 #[wasm_bindgen]
 pub fn analyze_word_value(word: &str) -> Result<JsValue, JsError> {
-    let js = word_analysis_to_js(varnavinyas_prakriya::analyze(word));
-    serde_wasm_bindgen::to_value(&js)
+    let api = varnavinyas_prakriya::ApiWordAnalysis::from(varnavinyas_prakriya::analyze(word));
+    serde_wasm_bindgen::to_value(&api)
         .map_err(|e| JsError::new(&format!("failed to serialize analysis: {e}")))
 }
 
@@ -361,39 +318,6 @@ fn rule_family_to_string(family: varnavinyas_sandhi::RuleFamily) -> &'static str
     }
 }
 
-fn origin_to_string(origin: varnavinyas_shabda::Origin) -> String {
-    match origin {
-        varnavinyas_shabda::Origin::Tatsam => "tatsam".into(),
-        varnavinyas_shabda::Origin::Tadbhav => "tadbhav".into(),
-        varnavinyas_shabda::Origin::Deshaj => "deshaj".into(),
-        varnavinyas_shabda::Origin::Aagantuk => "aagantuk".into(),
-    }
-}
-
-fn origin_source_to_string(source: varnavinyas_shabda::OriginSource) -> String {
-    match source {
-        varnavinyas_shabda::OriginSource::Override => "override".into(),
-        varnavinyas_shabda::OriginSource::Kosha => "kosha".into(),
-        varnavinyas_shabda::OriginSource::Heuristic => "heuristic".into(),
-    }
-}
-
-fn diagnostic_to_js(d: varnavinyas_parikshak::Diagnostic) -> JsDiagnostic {
-    JsDiagnostic {
-        span_start: d.span.0,
-        span_end: d.span.1,
-        incorrect: d.incorrect,
-        correction: d.correction,
-        rule: d.rule.to_string(),
-        rule_code: d.rule.code().to_string(),
-        explanation: d.explanation,
-        category: d.category.to_string(),
-        category_code: d.category.as_code().to_string(),
-        kind: d.kind.as_code().to_string(),
-        confidence: d.confidence,
-    }
-}
-
 fn prakriya_to_js(p: varnavinyas_prakriya::Prakriya) -> JsPrakriya {
     JsPrakriya {
         input: p.input,
@@ -412,24 +336,12 @@ fn prakriya_to_js(p: varnavinyas_prakriya::Prakriya) -> JsPrakriya {
     }
 }
 
-fn word_analysis_to_js(analysis: varnavinyas_prakriya::WordAnalysis) -> JsWordAnalysis {
-    JsWordAnalysis {
-        word: analysis.word,
-        origin: origin_to_string(analysis.origin),
-        origin_source: origin_source_to_string(analysis.origin_source),
-        origin_confidence: analysis.origin_confidence,
-        source_language: analysis.source_language,
-        is_correct: analysis.is_correct,
-        correction: analysis.correction,
-        rule_notes: analysis
-            .rule_notes
-            .into_iter()
-            .map(|n| JsRuleNote {
-                rule: n.rule.to_string(),
-                rule_code: n.rule.code().to_string(),
-                explanation: n.explanation,
-            })
-            .collect(),
+fn origin_to_string(origin: varnavinyas_shabda::Origin) -> String {
+    match origin {
+        varnavinyas_shabda::Origin::Tatsam => "tatsam".into(),
+        varnavinyas_shabda::Origin::Tadbhav => "tadbhav".into(),
+        varnavinyas_shabda::Origin::Deshaj => "deshaj".into(),
+        varnavinyas_shabda::Origin::Aagantuk => "aagantuk".into(),
     }
 }
 
@@ -557,5 +469,17 @@ mod tests {
                 .is_some(),
             "candidate must include string field 'vigraha'"
         );
+    }
+
+    #[test]
+    fn check_word_exposes_alternate_reasons_for_multi_hit_word() {
+        let json = check_word("भौतीक");
+        let parsed: serde_json::Value =
+            serde_json::from_str(&json).expect("check_word must return valid JSON");
+        let alternates = parsed
+            .get("alternate_reasons")
+            .and_then(serde_json::Value::as_array)
+            .expect("multi-hit word should include alternate_reasons");
+        assert!(!alternates.is_empty());
     }
 }

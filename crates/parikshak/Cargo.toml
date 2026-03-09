@@ -19,10 +19,10 @@ varnavinyas-prakriya = { workspace = true }
 varnavinyas-lekhya = { workspace = true }
 varnavinyas-vyakaran = { workspace = true, optional = true }
 varnavinyas-samasa = { workspace = true, optional = true }
+serde = { workspace = true }
 thiserror = { workspace = true }
 
 [dev-dependencies]
-serde = { workspace = true }
 toml = { workspace = true }
 criterion = { workspace = true }
 

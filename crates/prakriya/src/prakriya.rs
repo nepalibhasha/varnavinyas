@@ -64,3 +64,28 @@ impl std::fmt::Display for Prakriya {
         }
     }
 }
+
+/// A single applicable rule hit collected during analysis.
+///
+/// Unlike `Prakriya`, which represents the chosen correction path, `RuleHit`
+/// is used to expose every rule that can independently explain or correct the
+/// same input token.
+#[derive(Debug, Clone)]
+pub struct RuleHit {
+    /// Stable rule-spec id for pattern rules. `None` for correction-table hits.
+    pub spec_id: Option<&'static str>,
+    /// Lower value means higher precedence.
+    pub priority: u16,
+    /// Typed diagnostic category propagated from rule metadata.
+    pub category: RuleCategory,
+    /// Typed diagnostic severity propagated from rule metadata.
+    pub kind: DiagnosticKind,
+    /// The correction/explanation path for this hit.
+    pub prakriya: Prakriya,
+}
+
+impl RuleHit {
+    pub fn into_prakriya(self) -> Prakriya {
+        self.prakriya
+    }
+}
