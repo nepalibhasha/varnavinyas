@@ -1,4 +1,4 @@
-# varnavinyas-cli
+# varnavinyas
 
 Terminal interface for running Varnavinyas checks and utility commands.
 

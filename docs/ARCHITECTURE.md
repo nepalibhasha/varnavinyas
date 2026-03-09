@@ -1,102 +1,300 @@
 # Architecture
 
-## Workspace Structure
+This document describes the workspace-level architecture of Varnavinyas.
 
-Varnavinyas follows a flat crate workspace structure, ensuring modularity and clear separation of concerns.
+The project is organized around one core idea:
 
-```
-varnavinyas/
-├── Cargo.toml                    # Workspace root
-├── crates/
-│   ├── akshar/                   # Character & script utilities (Leaf crate)
-│   ├── lipi/                     # Transliteration (Devanagari ↔ Roman)
-│   ├── shabda/                   # Word analysis (Origin, Morphology)
-│   ├── sandhi/                   # Sound change rules (Conjuncts, Vowel combinations)
-│   ├── prakriya/                 # Derivation engine (Rule application, Tracing)
-│   ├── kosha/                    # FST-based Lexicon (Storage)
-│   ├── lekhya/                   # Punctuation & Writing conventions
-│   ├── parikshak/                # Spell Checker (Integration crate)
-│   ├── bindings-python/          # PyO3 bindings
-│   └── bindings-wasm/            # WASM bindings
-└── docs/                         # Documentation
-```
+- token-level orthography decisions should be deterministic and traceable
+- text-level diagnostics should compose those token decisions with context, punctuation, and higher-level passes
 
-## Crate Dependency Graph
+## Workspace Shape
 
-The dependencies form a strict Directed Acyclic Graph (DAG), with `akshar` as the foundation and `parikshak` as the top-level integrator.
+Varnavinyas is a Rust workspace with clear crate boundaries.
+
+At a high level:
+
+- `akshar`, `lipi` handle script and text utilities
+- `kosha` and `shabda` provide lexical and morphological knowledge
+- `prakriya` decides token-level standard form and rule trace
+- `parikshak` runs full-text checking and span-based diagnostics
+- `lekhya` handles punctuation diagnostics
+- CLI, LSP, web, and language bindings present those diagnostics to users
 
 ```mermaid
-graph TD
-    %% Tools & Interfaces
-    cli[varnavinyas-cli] --> parikshak
-    cli --> lipi
-    cli --> akshar
-    
-    lsp[varnavinyas-lsp] --> parikshak
-    
-    eval[varnavinyas-eval] --> parikshak
-    eval --> shabda
-    eval --> sandhi
-    
-    bindings[Bindings: Python/WASM/C/UniFFI] --> parikshak
-    bindings --> lipi
-    bindings --> akshar
-    bindings --> shabda
+flowchart LR
+    A[akshar / lipi / types]
+    B[kosha / shabda / sandhi]
+    C[prakriya / lekhya]
+    D[parikshak]
+    E[CLI / LSP / Web / Bindings / Eval]
 
-    %% Core Pipeline
-    parikshak[parikshak] --> prakriya
-    parikshak --> kosha
-    parikshak --> lekhya
-    
-    prakriya --> sandhi
-    prakriya --> shabda
-    prakriya --> akshar
-    
-    kosha --> akshar
-    lekhya --> akshar
-    lipi --> akshar
-    
-    sandhi --> akshar
-    sandhi --> kosha
-    
-    shabda --> akshar
-    shabda --> kosha
-    shabda --> types
+    A --> B --> C --> D --> E
 ```
 
-### Core Components
+## Crate Roles
 
-1.  **varnavinyas-akshar**: The foundational layer. Handles Unicode normalization, Devanagari character classification (Vowels, Consonants, Matras), and syllable segmentation.
-2.  **varnavinyas-kosha**: A memory-efficient FST (Finite State Transducer) lexicon. It stores ~51k+ headwords and provides sub-microsecond lookups.
-3.  **varnavinyas-prakriya**: The derivation engine. It applies orthography rules (hrasva/dirgha, etc.) to explain *why* a word is correct or incorrect, providing step-by-step traces.
-4.  **varnavinyas-parikshak**: The user-facing spell checker. It orchestrates tokenization, lexicon lookup, and rule application to produce diagnostics.
+### Core language/data crates
 
-## Data Flow: Spell-Check Pipeline
+- `crates/akshar`
+  - Unicode normalization helpers
+  - Devanagari classification
+  - akshara splitting and script utilities
 
-When a user submits text for checking:
+- `crates/lipi`
+  - transliteration
+  - legacy font conversion
 
-1.  **Tokenization** (`akshar`): Text is harmonized (Unicode Normalization) and split into words.
-2.  **Lexicon Lookup** (`kosha`):
-    *   Words are checked against the FST.
-    *   **known-correct**: Pass.
-    *   **known-incorrect**: Flagged immediately with a correction (e.g., *अत्याधिक* → *अत्यधिक*).
-    *   **unknown**: Passed to the rule engine.
-3.  **Rule Analysis** (`prakriya`):
-    *   The word is analyzed for structural violations (e.g., Hrasva/Dirgha rules based on patterns).
-    *   `shabda` determines word origin (Tatsam/Tadbhav) to select appropriate rules.
-4.  **Diagnostics** (`parikshak`): Errors are collected with rule citations and returned to the user.
+- `crates/types`
+  - shared data/model types used across crates
 
-## Design Decisions
+- `crates/shabda`
+  - origin classification
+  - lightweight morphological decomposition
 
-### 1. FST for Lexicon
-We use the `fst` crate to store the lexicon.
-*   **Why**: Extremely compact (entire dictionary in < 50MB) and fast.
-*   **Trade-off**: Immutable at runtime (requires rebuild to add words).
+- `crates/sandhi`
+  - sandhi analysis and helpers
 
-### 2. Code-Driven Rules
-Orthography rules are encoded as Rust functions, not external configuration files.
-*   **Why**: Compiler guarantees, ease of testing, and performance.
-*   **Auditability**: Every rule function includes a docstring citing the specific Nepal Academy Orthography Standard section it implements.
+### Normative checking stack
 
-### 3. Error Handling
-We use `thiserror` for library errors. Each crate defines its own `Error` enum (e.g., `AksharError`, `KoshaError`), which are unified into `ParikshakError` at the top level. This ensures precise error handling across boundaries (FFI, WASM).
+- `crates/kosha`
+  - lexicon lookup
+  - headword metadata
+  - compile-time lexical assets
+
+- `crates/prakriya`
+  - token-level orthography engine
+  - Academy-aligned rule families under `src/varna_vinyasa/`
+  - later cleanup rules under `src/usage_fixes/`
+  - runtime rule dispatch in `src/runtime.rs`
+  - shared outward-facing explanation model in `src/explanation.rs`
+
+- `crates/lekhya`
+  - Section 5 punctuation diagnostics
+
+- `crates/parikshak`
+  - end-to-end checker pipeline
+  - tokenization
+  - token-level integration with `prakriya`
+  - padayog/padabiyog passes
+  - punctuation integration
+  - optional grammar/style passes
+  - stable outward-facing `category_code` contract
+
+### Grammar/evaluation crates
+
+- `crates/vyakaran`
+  - grammar-oriented analysis used by optional higher-level passes
+
+- `crates/samasa`
+  - samasa analysis support
+
+- `crates/eval`
+  - evaluation harnesses over curated fixtures
+
+### User-facing surfaces
+
+- `crates/cli`
+  - terminal interface
+
+- `crates/lsp`
+  - editor integration through LSP
+
+- `crates/bindings-wasm`
+  - Rust-to-browser bridge for the web app
+
+- `crates/bindings-python`
+  - Python extension module
+
+- `crates/bindings-c`
+  - C-facing surface
+
+- `crates/bindings-uniffi`
+  - UniFFI-oriented bindings
+
+- `web/`
+  - static browser UI
+  - checker, inspector, and rules reference
+
+## Dependency Flow
+
+The practical flow is:
+
+```text
+akshar/lipi/types
+        ↓
+   kosha + shabda + sandhi
+        ↓
+     prakriya + lekhya
+        ↓
+       parikshak
+        ↓
+cli / lsp / web / bindings / eval
+```
+
+Important boundary:
+
+- `prakriya` is token-centric
+- `parikshak` is text-centric
+
+If a rule transforms one token into another token, it generally belongs in `prakriya`.
+If a rule needs neighboring tokens, spacing, punctuation context, or sentence-level heuristics, it generally belongs in `parikshak`.
+
+## Main Correction Pipeline
+
+For a typical text check:
+
+```mermaid
+flowchart TD
+    A[Input text]
+    B[Tokenize]
+    C[Word checks via kosha + prakriya]
+    D[Span-aware diagnostics]
+    E[Padayog / padabiyog passes]
+    F[Grammar / style heuristics]
+    G[Punctuation diagnostics]
+    H[Sorted output]
+
+    A --> B --> C --> D --> E --> F --> G --> H
+```
+
+1. text is tokenized
+2. each token is checked against `kosha` and `prakriya`
+3. token-level diagnostics are turned into span-aware `Diagnostic`s
+4. text-level passes add:
+   - padayog/padabiyog diagnostics
+   - punctuation diagnostics
+   - optional grammar/style suggestions
+5. diagnostics are sorted and exposed to the caller
+
+## `prakriya` Internal Design
+
+`prakriya` is internally organized by domain.
+
+```text
+prakriya/
+  model/            core derivation types
+  varna_vinyasa/    Academy rule families
+  usage_fixes/      later cleanup-style rules
+  runtime.rs        cached dispatch assembly
+  engine.rs         hit collection + winner selection
+  explanation.rs    shared outward-facing reason model
+  presentation.rs   serializable DTOs
+```
+
+- `src/model/`
+  - core derivation types such as `Prakriya`, `Rule`, `RuleSpec`, `Step`, `RuleHit`
+
+- `src/varna_vinyasa/`
+  - Academy orthography rule families such as:
+    - `hrasva_dirgha`
+    - `chandrabindu_shirbindu`
+    - `panchham`
+    - `ustai_ucharan_varnaharu`
+    - `halanta_ra_ajanta`
+    - `aadhi_vriddhi`
+
+- `src/usage_fixes/`
+  - later cleanup-style rules not modeled as the main Academy family layout
+
+- `src/runtime.rs`
+  - assembles and caches runtime rule dispatch
+
+- `src/engine.rs`
+  - collects rule hits
+  - deduplicates equivalent hits
+  - picks the production winner
+
+- `src/explanation.rs`
+  - shared outward-facing explanation model
+
+## `parikshak` Internal Design
+
+`parikshak` is split by pass ownership.
+
+```text
+parikshak/
+  checker.rs                pipeline orchestrator
+  checker/word_level.rs     token-level integration
+  checker/padayog.rs        text join/split passes
+  checker/padayog_rules.rs  backing rewrite tables
+  checker/punctuation.rs    punctuation diagnostics
+  checker/style_variants.rs style-only suggestions
+  checker/grammar.rs        optional grammar heuristics
+```
+
+- `checker/word_level.rs`
+  - token-level integration with `prakriya`
+
+- `checker/padayog.rs`
+  - join/split text passes
+
+- `checker/padayog_rules.rs`
+  - backing data for padayog/padabiyog rewrites
+
+- `checker/punctuation.rs`
+  - punctuation diagnostics
+
+- `checker/style_variants.rs`
+  - style-only phrase suggestions
+
+- `checker/grammar.rs`
+  - optional grammar-oriented heuristics
+
+## Outward-Facing Contracts
+
+Two contracts are intentionally stable across surfaces:
+
+### 1. Rule explanations
+
+`prakriya::Explanation` is the shared outward-facing reason model used by:
+
+- `prakriya::WordAnalysis`
+- `parikshak::DiagnosticReason`
+- CLI JSON
+- web/WASM
+- bindings
+
+### 2. Category codes
+
+`parikshak::DiagnosticCategory` provides stable `category_code` values used by:
+
+- web highlighting and filtering
+- CLI JSON consumers
+- LSP configuration
+- bindings
+
+Changing category codes is therefore a cross-cutting change, not a local UI tweak.
+
+## Key Design Decisions
+
+### Explicit rule registration
+
+Rules are registered explicitly rather than discovered dynamically.
+
+Why:
+- easier to audit
+- easier to keep aligned with Academy ordering
+- less hidden control flow
+
+### Plain functions over frameworks
+
+Rule logic is mostly plain Rust functions.
+
+Why:
+- easier for contributors to read
+- easier to test
+- easier to map back to Academy notices
+
+### Single production winner, optional alternate reasons
+
+`derive()` remains single-winner for deterministic correction.
+
+`collect_rule_hits()` exists so callers can inspect alternate applicable rules without changing the production result.
+
+## Related Docs
+
+- [README.md](../README.md)
+- [DEVELOPMENT.md](DEVELOPMENT.md)
+- [RULES.md](RULES.md)
+- [crates/prakriya/ARCHITECTURE.md](../crates/prakriya/ARCHITECTURE.md)
+- [crates/parikshak/ARCHITECTURE.md](../crates/parikshak/ARCHITECTURE.md)

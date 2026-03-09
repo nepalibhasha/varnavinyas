@@ -1,5 +1,16 @@
 # Documentation
 
+```text
+Start here:
+  README.md
+    ↓
+  docs/ARCHITECTURE.md
+    ↓
+  docs/DEVELOPMENT.md
+    ↓
+  crate-level ARCHITECTURE.md files
+```
+
 ## Overview
 
 - **[VISION.md](VISION.md)**: Why this project exists, principles, and high-level scope.
@@ -11,6 +22,11 @@
 - **[BACKLOG.md](BACKLOG.md)**: Near-term priorities and task list.
 - **[RUST_GUIDE.md](RUST_GUIDE.md)**: Onboarding guide for Rust contributors.
 - **[Notices-pages-77-99.md](Notices-pages-77-99.md)**: Reference material from the Nepal Academy standard (source: [MoFAGA notice](https://mofaga.gov.np/notice-file/Notices-20211029142422901.pdf)).
+
+## Crate Architecture Docs
+
+- **[../crates/prakriya/ARCHITECTURE.md](../crates/prakriya/ARCHITECTURE.md)**: Token-level orthography engine design, runtime dispatch, and rule-hit model.
+- **[../crates/parikshak/ARCHITECTURE.md](../crates/parikshak/ARCHITECTURE.md)**: Text-checking pipeline, diagnostic model, and pass ownership.
 
 ## Archive
 

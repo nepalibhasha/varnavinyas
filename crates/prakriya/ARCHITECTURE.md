@@ -30,6 +30,18 @@ presentation-facing shared model, not part of the core derivation state.
 
 `derive(input)` follows a simple procedural pipeline:
 
+```mermaid
+flowchart TD
+    A[Input token]
+    B[Correction table lookup]
+    C[Pattern-rule collection]
+    D[Priority sort + dedupe]
+    E[Choose winner]
+    F[Return Prakriya]
+
+    A --> B --> C --> D --> E --> F
+```
+
 1. authoritative correction-table lookup
 2. pattern-rule collection from the registry
 3. priority sort and equivalent-hit deduplication
@@ -42,9 +54,30 @@ single-winner behavior of `derive()`.
 This design keeps correction behavior deterministic while enabling callers to
 show alternate applicable reasons.
 
+### Example
+
+```text
+input:  सूमार्ग
+output: सुमार्ग
+rule:   3(क)(अ)-1
+
+input:  राजनैतिक
+output: राजनीतिक
+rule:   correction table
+```
+
+The first case goes through pattern-rule collection. The second resolves
+immediately through the authoritative correction table.
+
 ## Runtime Dispatch
 
 `runtime.rs` owns the assembled pattern-rule list used during correction.
+
+```text
+usage_fix_rules()      \
+                        -> runtime::pattern_rules() -> cached sorted list
+varna_vinyasa_rules() /
+```
 
 Its responsibilities are:
 
@@ -58,6 +91,18 @@ This keeps registry assembly separate from the correction algorithm in
 ## Module Ownership
 
 The code is organized by domain ownership, not by incidental file size.
+
+```text
+src/
+  model/            derivation state and rule types
+  varna_vinyasa/    Academy rule families
+  usage_fixes/      cleanup-style rules
+  runtime.rs        dispatch assembly
+  engine.rs         hit collection + winner selection
+  analysis.rs       word analysis
+  explanation.rs    outward-facing reason model
+  presentation.rs   serializable DTOs
+```
 
 - `varna_vinyasa/`
   Owns Academy orthography rule families under `३. नेपाली वर्णविन्यास`.
@@ -119,6 +164,17 @@ Production correction remains single-winner.
 
 If multiple rules match the same token:
 
+```mermaid
+flowchart LR
+    A[All applicable hits]
+    B[Deduplicate equivalents]
+    C[Highest-priority winner]
+    D[Optional alternates for callers]
+
+    A --> B --> C
+    B --> D
+```
+
 - all hits can be collected through `collect_rule_hits()`
 - semantically equivalent hits are deduplicated
 - the best-priority hit remains the production result returned by `derive()`
@@ -128,6 +184,16 @@ choose to display alternate applicable reasons.
 
 `Explanation` exists so those UI-facing surfaces can share one reason model
 without forcing `Prakriya` itself to become presentation-shaped.
+
+### Example
+
+`भौतीक` can match more than one explanatory path:
+
+- primary winner: `3(क)(आ)-2`
+- alternate applicable reason: `3(क)(आ)-6`
+
+`derive("भौतीक")` still returns one winner. `collect_rule_hits("भौतीक")`
+exposes both hits.
 
 ## Boundary With `parikshak`
 
@@ -141,6 +207,13 @@ Practical rule:
 
 - token-level normalization belongs in `prakriya`
 - text-level spacing, punctuation, and context heuristics belong in `parikshak`
+
+### Example
+
+```text
+prakriya:   सूमार्ग -> सुमार्ग
+parikshak:  तलमाथि -> तल माथि   (spacing/join-split style of issue)
+```
 
 ## Design Principles
 

@@ -8,6 +8,18 @@ Linguistic correctness is the primary goal of Varnavinyas. We manage our test da
 
 Test data is located in `docs/tests/`:
 
+```text
+authoritative source
+    ↓
+candidate example
+    ↓
+docs/tests/*.toml
+    ↓
+crate tests / eval harnesses
+    ↓
+CI regression gate
+```
+
 *   **`gold.toml`** (The Ground Truth)
     *   Contains verified Correct/Incorrect pairs.
     *   **Source**: Directly cited from the Nepal Academy Orthography Standard.
@@ -55,6 +67,20 @@ Every entry in our datasets must have a traceback to an authoritative source.
 ### Promotion Flow
 
 How a pair moves from `needs_review.toml` to `gold.toml`:
+
+```mermaid
+flowchart TD
+    A[Find discrepancy]
+    B[Add to needs_review]
+    C[Check authority]
+    D{Resolved?}
+    E[Promote to gold.toml]
+    F[Keep as review-only / multiple-valid]
+
+    A --> B --> C --> D
+    D -->|Yes| E
+    D -->|No or contested| F
+```
 
 1.  **Identify**: A discrepancy or ambiguity is found (e.g., *फाउण्डेशन* vs *फाउन्डेसन* where the exam key conflicts with the standard).
 2.  **Isolate**: Add it to `needs_review.toml` with a comment explaining the conflict.

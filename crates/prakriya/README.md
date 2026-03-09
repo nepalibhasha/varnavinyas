@@ -21,6 +21,7 @@ This is the closest thing the workspace has to a central normative orthography e
 
 - `derive(&str)` -> derive the standard form and a step trace
 - `analyze(&str)` -> word analysis with rule notes
+- `collect_rule_hits(&str)` -> collect all applicable rule hits before winner selection
 - `is_in_correction_table(&str)` -> quick check for known incorrect forms
 
 ## Examples
@@ -35,6 +36,16 @@ assert_eq!(result.output, "राजनीतिक");
 assert!(!result.steps.is_empty());
 ```
 
+Typical outcomes:
+
+```text
+राजनैतिक -> राजनीतिक   (correction-table path)
+सूमार्ग   -> सुमार्ग     (pattern-rule path, 3(क)(अ)-1)
+```
+
+This distinction matters because table-backed forms are authoritative overrides,
+while pattern-backed forms are derived from numbered Academy rules.
+
 ### Check whether a known incorrect form is table-backed
 
 ```rust
@@ -47,6 +58,18 @@ assert!(is_in_correction_table("राजनैतिक"));
 
 The rule engine is layered:
 
+```text
+input token
+  ↓
+correction table
+  ↓
+pattern rules
+  ↓
+winner selection
+  ↓
+Prakriya + Explanation
+```
+
 - correction table lookup first
 - pattern rules second
 - “already correct” fallback last
@@ -55,6 +78,9 @@ Pattern rules are registered via a domain-oriented registry:
 
 - `niyama_registry::varna_vinyasa_rules()` for Academy orthography families
 - `niyama_registry::usage_fix_rules()` for later cleanup-style rules
+
+Runtime dispatch is assembled in `runtime.rs`, which merges those registry
+groups, sorts them by priority, and caches the result for repeated correction.
 
 Within `src/`, implementation is organized by domain:
 
@@ -65,8 +91,9 @@ Within `src/`, implementation is organized by domain:
   - `halanta_ra_ajanta` -> `(ङ) हलन्त र अजन्त`
   - `aadhi_vriddhi` -> `(क)` sub-rule path for आदिवृद्धि cases
 - `usage_fixes/` -> later cleanup-style rules such as Section 4 shuddha/ashuddha fixes
-
-`orthographic` is kept as a compatibility facade that re-exports the main orthography rule specs/functions from `varna_vinyasa`.
+- `model/` -> core derivation types such as `Prakriya`, `Rule`, `RuleSpec`, and `Step`
+- `explanation.rs` -> shared outward-facing `Explanation` model used by analysis and diagnostics
+- `runtime.rs` -> pattern-rule dispatch assembly and caching
 
 ## Crate Boundary (Important)
 
@@ -80,6 +107,13 @@ Practical implication:
 - keep phrase/sentence boundary decisions in `parikshak`
 - do not force context-sensitive spacing logic into `derive(&str)` unless we redesign the API
 
+Example:
+
+```text
+prakriya handles:   सूमार्ग -> सुमार्ग
+parikshak handles:  text-level join/split and punctuation diagnostics
+```
+
 ## Used By
 
 - `varnavinyas-parikshak`
@@ -89,6 +123,7 @@ Practical implication:
 ## Current Limits
 
 - Pattern rule arbitration is first-match by priority, not a full multi-candidate resolution engine.
+- `derive()` stays single-winner even though `collect_rule_hits()` can expose alternate applicable reasons.
 - The correction table is authoritative but still finite; coverage grows as curated source material grows.
 
 ## Status

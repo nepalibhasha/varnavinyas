@@ -4,22 +4,50 @@
 
 - **Rust**: 1.85.0+ (Required for Edition 2024)
 - **Cargo**: Standard installation
-- **Optional**: `wasm-pack` (for web builds), `maturin` (for Python bindings)
+- **Optional**: `wasm-pack`, `wasm-bindgen-cli` (for web builds), `maturin` (for Python bindings)
 
-## Build Commands
+## Main Commands
 
 | Command | Description |
 |---------|-------------|
 | `cargo build --workspace` | Build all crates |
-| `cargo test --workspace` | Run all unit and integration tests |
-| `cargo fmt --all` | Format code |
-| `cargo clippy --workspace --all-targets` | Run linter |
+| `cargo test --workspace -q` | Run all unit and integration tests |
+| `cargo fmt --all --check` | Formatting check |
+| `cargo clippy --workspace --all-targets -- -D warnings` | Strict lint gate |
+| `cargo deny check advisories bans licenses sources` | Dependency/license/advisory checks |
+| `bash web/build.sh` | Build `web/pkg` from WASM bindings |
+| `bash extensions/browser/build.sh` | Build browser extension artifacts |
+| `bash web/smoke-test.sh` | Check web static/WASM asset consistency |
 
 ### Cargo Aliases
 Check `.cargo/config.toml` for shortcuts:
 - `cargo t` -> Run tests
 - `cargo c` -> Run clippy
 - `cargo f` -> Run format
+
+## Focused Test Commands
+
+Use these when working on a specific layer instead of the whole workspace:
+
+- `cargo test -p varnavinyas-prakriya --tests -q`
+- `cargo test -p varnavinyas-parikshak -q`
+- `cargo test -p varnavinyas-parikshak --features grammar-pass -q`
+- `cargo test -p varnavinyas-eval --tests -- --nocapture`
+- `cargo test -p varnavinyas-eval --test grammar_eval -q`
+
+## Typical Dev Loop
+
+```mermaid
+flowchart TD
+    A[Edit code or docs]
+    B[Run focused tests]
+    C[Run fmt + clippy]
+    D[Run broader crate/workspace tests]
+    E[Build web or extension if relevant]
+    F[Commit one scoped concern]
+
+    A --> B --> C --> D --> E --> F
+```
 
 ## Testing Strategy
 
@@ -33,19 +61,39 @@ Located in `tests/` of each crate. Verify cross-module interactions (e.g., `pari
 
 ### 3. Gold Dataset Tests
 **Critical for Linguistic Integrity.**
-We maintain a "Gold" dataset in `docs/tests/gold.toml`. These are 91+ verified correct/incorrect pairs directly from the Academy standard.
+We maintain a canonical "Gold" dataset in `docs/tests/gold.toml`.
 *   **Rule**: ALL entries in `gold.toml` must pass.
-*   **Run**: `cargo test -p varnavinyas-parikshak --test gold` (or specifically `gold_incorrect_forms_detected`).
+*   **Run**: `cargo test -p varnavinyas-parikshak gold_incorrect_forms_detected -- --nocapture`.
 
 ### 4. Property-Based Tests
 We use `proptest` to verify invariants, such as:
 - `transliterate(transliterate(x)) == x` (Round-trip)
 - `normalize(normalize(x)) == normalize(x)` (Idempotence)
 
-## CI/CD Pipeline
+## Web And Extension Workflow
 
-Our GitHub Actions pipeline (`.github/workflows/ci.yml`) enforces:
-1.  **Tests**: Runs on Ubuntu-latest (`cargo test`, `cargo bench`, `cargo test -p varnavinyas-eval`).
-2.  **MSRV**: Checks compatibility with Rust 1.85.0.
-3.  **Formatting & Clippy**: Zero tolerance for warnings (`cargo fmt`, `cargo clippy`).
-4.  **Dependencies**: Audits using `cargo-deny`.
+```text
+Rust/WASM code
+    ↓
+bash web/build.sh
+    ↓
+web/pkg
+    ↓
+web/smoke-test.sh
+    ↓
+bash extensions/browser/build.sh
+```
+
+- `web/js/rules-data.js` is the source of truth for rule-to-category mapping in the browser UI.
+- Keep diagnostics keyed by stable `category_code`, not display labels.
+- `extensions/browser/build.sh` refreshes `web/pkg` by default so the extension does not drift from the Rust/WASM code.
+- In sandbox-restricted environments, `web/smoke-test.sh` may skip HTTP-serving checks. Treat that as expected when the static asset checks still pass.
+
+## CI
+
+The GitHub Actions pipeline enforces:
+
+1. build and test coverage on the Rust workspace
+2. formatting and clippy
+3. dependency/license/advisory checks
+4. web and extension packaging checks where configured

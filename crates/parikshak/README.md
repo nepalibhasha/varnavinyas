@@ -9,13 +9,25 @@ For a high-level description of the checker pipeline and crate boundaries, see
 
 This is the main orchestrator crate. It combines the lower-level engines into a practical text checker.
 
+```text
+text
+  ↓
+tokenization
+  ↓
+word-level checks
+  ↓
+text-level passes
+  ↓
+Diagnostics[]
+```
+
 It is responsible for:
 
 - tokenizing text
 - running word-level orthography checks
 - attaching punctuation diagnostics
 - optionally adding grammar/samasa-style heuristics
-- returning unified diagnostics with spans, categories, rule citations, and confidence
+- returning unified diagnostics with spans, stable category codes, rule citations, confidence, and alternate reasons
 
 If you want “check this text and tell me what to flag”, this is the crate to call.
 
@@ -37,6 +49,13 @@ let diag = check_word("राजनैतिक").unwrap();
 assert_eq!(diag.correction, "राजनीतिक");
 ```
 
+Typical single-word outcomes:
+
+```text
+राजनैतिक -> राजनीतिक   (hard orthography correction)
+अध्यन    -> अध्ययन     (soft near-match fallback if no direct rule wins)
+```
+
 ### Check full text
 
 ```rust
@@ -44,6 +63,16 @@ use varnavinyas_parikshak::check_text;
 
 let diagnostics = check_text("यो बाक्यमा गल्ति छ.");
 assert!(!diagnostics.is_empty());
+```
+
+Typical full-text behavior:
+
+```text
+यो बाक्यमा गल्ति छ.
+   |        |       |
+   |        |       punctuation diagnostic
+   |        word-level diagnostic
+   token-level correction candidate
 ```
 
 ## Depends On
@@ -55,8 +84,16 @@ assert!(!diagnostics.is_empty());
 
 ## Design Notes
 
+```text
+Rule truth          -> prakriya
+Text orchestration  -> parikshak
+Presentation        -> CLI / web / LSP / bindings
+```
+
 - `parikshak` is the integration layer, not the source of core orthographic truth.
 - It should preserve distinctions between hard errors, variants, and heuristic suggestions.
+- `DiagnosticReason` shares the same outward-facing `Explanation` shape used by `prakriya::WordAnalysis`.
+- `category_code` is a stable contract used across CLI, web, LSP, and bindings.
 
 ## Current Limits
 

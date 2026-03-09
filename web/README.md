@@ -4,6 +4,16 @@ This directory contains the static web UI for Varnavinyas.
 
 ## What Is Here
 
+```text
+web/
+  index.html          page shell
+  css/style.css       styles
+  js/*.js             app modules
+  pkg/                generated WASM glue
+  build.sh            WASM build helper
+  smoke-test.sh       static consistency checks
+```
+
 - `index.html`: page shell
 - `css/style.css`: styles
 - `js/*.js`: app modules (checker, inspector, rules reference, wasm bridge)
@@ -21,6 +31,16 @@ python3 -m http.server 8080 --directory web/
 ```
 
 Open `http://localhost:8080`.
+
+```mermaid
+flowchart LR
+    A[Rust/WASM bindings]
+    B[web/pkg]
+    C[web/js modules]
+    D[Browser UI]
+
+    A -->|bash web/build.sh| B --> C --> D
+```
 
 ## Smoke Test
 

@@ -1,4 +1,4 @@
-# varnavinyas-bindings-python
+# varnavinyas-python
 
 PyO3-based Python bindings for the Varnavinyas workspace.
 

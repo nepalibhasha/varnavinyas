@@ -14,6 +14,16 @@ A local copy is kept at `docs/Notices-pages-77-99.pdf` (pages 77–99 of the not
 
 The standard is divided into specific sections. We map these sections to our `Rule` enum in `crates/prakriya`.
 
+```mermaid
+flowchart LR
+    A[Academy notice]
+    B[RuleSpec / PatternRule]
+    C[Prakriya / Diagnostic]
+    D[Web / CLI / LSP / Bindings]
+
+    A --> B --> C --> D
+```
+
 | Standard Section | Description | Implementation Crate |
 |------------------|-------------|----------------------|
 | **Section 3(क)** | Hrasva/Dirgha (Vowel Length) | `prakriya` |
@@ -22,6 +32,15 @@ The standard is divided into specific sections. We map these sections to our `Ru
 | **Section 3(ङ)** | Halanta (Virama) usage | `prakriya` / `sandhi` |
 | **Section 4** | Shuddha/Ashuddha Table | `kosha` (Lookup) |
 | **Section 5** | Punctuation & Formatting | `lekhya` |
+
+## High-Level Ownership
+
+```text
+Single-token normalization      -> prakriya
+Multi-token spacing/context     -> parikshak
+Punctuation                     -> lekhya
+Lexical plausibility / metadata -> kosha + shabda
+```
 
 ## Code-Driven Implementation
 

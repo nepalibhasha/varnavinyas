@@ -30,6 +30,21 @@ alternate applicable reasons share the same outward-facing explanation model as
 
 `check_text_with_options(text, options)` follows this order:
 
+```mermaid
+flowchart TD
+    A[Input text]
+    B[Tokenize]
+    C[check_word / word-level checks]
+    D[Context-sensitive token adjustments]
+    E[Padayog / padabiyog passes]
+    F[Optional style / grammar]
+    G[Punctuation]
+    H[Sort by span]
+    I[Diagnostics]
+
+    A --> B --> C --> D --> E --> F --> G --> H --> I
+```
+
 1. tokenize text into `AnalyzedToken`s
 2. run token-level orthography checks through `check_word`
 3. adjust context-sensitive token cases that need neighboring token context
@@ -41,6 +56,19 @@ alternate applicable reasons share the same outward-facing explanation model as
 
 This keeps the highest-confidence token corrections early and lets later passes
 respect already-blocked spans.
+
+### Example
+
+```text
+input text:  यो बाक्यमा गल्ति छ.
+
+possible passes:
+- word-level:  बाक्यमा -> वाक्यमा
+- punctuation: final '.' under Nepali punctuation policy
+```
+
+One input string can therefore produce multiple diagnostics owned by different
+passes in the same pipeline.
 
 ## Module Ownership
 
@@ -80,6 +108,11 @@ respect already-blocked spans.
 
 `parikshak` adds:
 
+```text
+prakriya   -> "this token should become that token"
+parikshak  -> "this span in this text should be flagged"
+```
+
 - tokenization
 - lexicon-aware ambiguity handling
 - phrase-level join/split passes
@@ -94,6 +127,16 @@ Practical rule:
 
 Section `3(घ)` is the clearest example of this boundary.
 
+### Example
+
+```text
+prakriya:   राजनैतिक -> राजनीतिक
+parikshak:  तलमाथि -> तल माथि
+```
+
+The first is a one-token normalization problem. The second is a text-level
+join/split problem.
+
 ## Category Contract
 
 `DiagnosticCategory` is a stable outward-facing contract.
@@ -107,6 +150,16 @@ values. Category evolution therefore requires synchronized updates across:
 - smoke tests and any UI assumptions
 
 This is why category additions are small but cross-cutting changes.
+
+### Example
+
+If a new category code is introduced in Rust, the same change usually has to be
+reflected in:
+
+- `web/js/rules-data.js`
+- `web/js/utils.js`
+- `web/css/style.css`
+- any smoke tests that assume the category set
 
 ## Design Principles
 
