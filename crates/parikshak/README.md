@@ -2,6 +2,9 @@
 
 Top-level checking pipeline for text diagnostics.
 
+For a high-level description of the checker pipeline and crate boundaries, see
+[`ARCHITECTURE.md`](./ARCHITECTURE.md).
+
 ## What This Crate Owns
 
 This is the main orchestrator crate. It combines the lower-level engines into a practical text checker.

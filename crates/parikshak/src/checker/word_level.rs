@@ -104,14 +104,10 @@ pub(crate) fn alternate_reasons_from_hits(hits: &[RuleHit]) -> Vec<DiagnosticRea
     let mut reasons = Vec::new();
     for hit in hits.iter().skip(1) {
         let correction = hit.prakriya.output.clone();
-        let category = DiagnosticCategory::from_rule_category(hit.category);
         for step in &hit.prakriya.steps {
-            let reason = DiagnosticReason {
-                rule: step.rule,
-                explanation: step.description.clone(),
-                category,
-                correction: correction.clone(),
-            };
+            let reason = DiagnosticReason::new(step.rule, step.description.clone())
+                .with_correction(correction.clone())
+                .with_category(hit.category);
             if !reasons.iter().any(|existing: &DiagnosticReason| {
                 existing.rule == reason.rule
                     && existing.explanation == reason.explanation
@@ -127,6 +123,7 @@ pub(crate) fn alternate_reasons_from_hits(hits: &[RuleHit]) -> Vec<DiagnosticRea
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::diagnostic::diagnostic_reason_category;
     use varnavinyas_prakriya::{Prakriya, RuleCategory, Step};
 
     #[test]
@@ -172,7 +169,10 @@ mod tests {
 
         assert_eq!(reasons.len(), 1);
         assert_eq!(reasons[0].rule, Rule::VarnaVinyasNiyam("3(ग)(अ)-1"));
-        assert_eq!(reasons[0].correction, "शुमार्ग");
-        assert_eq!(reasons[0].category, DiagnosticCategory::ShaShaS);
+        assert_eq!(reasons[0].correction.as_deref(), Some("शुमार्ग"));
+        assert_eq!(
+            diagnostic_reason_category(&reasons[0]),
+            DiagnosticCategory::ShaShaS
+        );
     }
 }

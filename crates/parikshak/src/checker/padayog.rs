@@ -4,11 +4,11 @@ use varnavinyas_kosha::kosha;
 use varnavinyas_prakriya::{DiagnosticKind, Rule};
 
 use crate::diagnostic::{Diagnostic, DiagnosticCategory};
-use crate::padayog_padabiyog::PADAYOG_PADABIYOG_RULES;
 
 use super::common::{
     is_devanagari_word, is_word_boundary, overlaps_existing_span, whitespace_segments,
 };
+use super::padayog_rules::PADAYOG_PADABIYOG_RULES;
 
 pub(crate) fn add_padayog_padabiyog_diagnostics(
     text: &str,

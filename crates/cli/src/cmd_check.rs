@@ -4,7 +4,7 @@ use std::process::ExitCode;
 use serde::Serialize;
 use varnavinyas_parikshak::{
     ApiDiagnostic, CheckOptions, Diagnostic, DiagnosticKind, PunctuationMode,
-    check_text_with_options,
+    check_text_with_options, diagnostic_reason_category,
 };
 
 use crate::{OutputFormat, PunctuationModeArg};
@@ -157,9 +157,13 @@ fn print_text(
         if explain {
             println!("  [{}] {}", diag.category, diag.explanation);
             for alt in &diag.alternate_reasons {
+                let category = diagnostic_reason_category(alt);
                 println!(
                     "  [other: {} | {}] {} -> {}",
-                    alt.category, alt.rule, alt.explanation, alt.correction
+                    category,
+                    alt.rule,
+                    alt.explanation,
+                    alt.correction.as_deref().unwrap_or("")
                 );
             }
         }

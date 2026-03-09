@@ -8,8 +8,10 @@ pub enum DiagnosticCategory {
     ShaShaS,
     RiKri,
     Halanta,
+    AadhiVriddhi,
     YaE,
     KshaChhya,
+    GyaGyan,
     Sandhi,
     Punctuation,
     ShuddhaTable,
@@ -25,8 +27,10 @@ impl DiagnosticCategory {
             Self::ShaShaS => "ShaShaS",
             Self::RiKri => "RiKri",
             Self::Halanta => "Halanta",
+            Self::AadhiVriddhi => "AadhiVriddhi",
             Self::YaE => "YaE",
             Self::KshaChhya => "KshaChhya",
+            Self::GyaGyan => "GyaGyan",
             Self::Sandhi => "Sandhi",
             Self::Punctuation => "Punctuation",
             Self::ShuddhaTable => "ShuddhaTable",
@@ -81,10 +85,10 @@ impl DiagnosticCategory {
             RuleCategory::RiKri => DiagnosticCategory::RiKri,
             RuleCategory::Halanta => DiagnosticCategory::Halanta,
             RuleCategory::Sandhi => DiagnosticCategory::Sandhi,
-            RuleCategory::AadhiVriddhi => DiagnosticCategory::ShuddhaTable,
+            RuleCategory::AadhiVriddhi => DiagnosticCategory::AadhiVriddhi,
             RuleCategory::YaE => DiagnosticCategory::YaE,
             RuleCategory::KshaChhya => DiagnosticCategory::KshaChhya,
-            RuleCategory::GyaGyan => DiagnosticCategory::ShuddhaTable,
+            RuleCategory::GyaGyan => DiagnosticCategory::GyaGyan,
             RuleCategory::Structural => DiagnosticCategory::ShuddhaTable,
         }
     }
@@ -98,8 +102,10 @@ impl std::fmt::Display for DiagnosticCategory {
             Self::ShaShaS => write!(f, "श/ष/स"),
             Self::RiKri => write!(f, "ऋ/कृ"),
             Self::Halanta => write!(f, "हलन्त"),
+            Self::AadhiVriddhi => write!(f, "आदिवृद्धि"),
             Self::YaE => write!(f, "य/ए"),
             Self::KshaChhya => write!(f, "क्ष/छ्य"),
+            Self::GyaGyan => write!(f, "ज्ञ/ग्य"),
             Self::Sandhi => write!(f, "सन्धि"),
             Self::Punctuation => write!(f, "चिह्न"),
             Self::ShuddhaTable => write!(f, "शुद्ध-अशुद्ध"),
@@ -131,16 +137,13 @@ pub struct Diagnostic {
 }
 
 /// An alternate applicable reason for the same token.
-#[derive(Debug, Clone)]
-pub struct DiagnosticReason {
-    /// The alternative rule that was applied.
-    pub rule: Rule,
-    /// Human-readable explanation.
-    pub explanation: String,
-    /// Category of the issue.
-    pub category: DiagnosticCategory,
-    /// The correction suggested by this alternate rule.
-    pub correction: String,
+pub type DiagnosticReason = varnavinyas_prakriya::Explanation;
+
+pub fn diagnostic_reason_category(reason: &DiagnosticReason) -> DiagnosticCategory {
+    reason
+        .category
+        .map(DiagnosticCategory::from_rule_category)
+        .unwrap_or_else(|| DiagnosticCategory::from_rule(&reason.rule))
 }
 
 impl std::fmt::Display for Diagnostic {

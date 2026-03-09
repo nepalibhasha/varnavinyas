@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::diagnostic::{Diagnostic, DiagnosticReason};
+use crate::diagnostic::{Diagnostic, DiagnosticReason, diagnostic_reason_category};
 
 /// Stable serializable diagnostic shape for JSON/binding adapters.
 #[derive(Debug, Clone, Serialize)]
@@ -33,13 +33,14 @@ pub struct ApiDiagnosticReason {
 
 impl From<&DiagnosticReason> for ApiDiagnosticReason {
     fn from(reason: &DiagnosticReason) -> Self {
+        let category = diagnostic_reason_category(reason);
         Self {
             rule: reason.rule.to_string(),
             rule_code: reason.rule.code().to_string(),
             explanation: reason.explanation.clone(),
-            category: reason.category.to_string(),
-            category_code: reason.category.as_code().to_string(),
-            correction: reason.correction.clone(),
+            category: category.to_string(),
+            category_code: category.as_code().to_string(),
+            correction: reason.correction.clone().unwrap_or_default(),
         }
     }
 }

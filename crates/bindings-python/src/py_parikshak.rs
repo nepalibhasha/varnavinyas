@@ -1,5 +1,6 @@
 use pyo3::prelude::*;
 use varnavinyas_parikshak as parikshak_core;
+use varnavinyas_parikshak::diagnostic_reason_category;
 
 use crate::py_prakriya::PyRule;
 
@@ -112,13 +113,16 @@ fn py_diagnostic_from_core(d: parikshak_core::Diagnostic) -> PyDiagnostic {
         alternate_reasons: d
             .alternate_reasons
             .into_iter()
-            .map(|r| PyDiagnosticReason {
-                rule_code: r.rule.code().to_string(),
-                rule: r.rule.into(),
-                explanation: r.explanation,
-                category: r.category.to_string(),
-                category_code: r.category.as_code().to_string(),
-                correction: r.correction,
+            .map(|r| {
+                let category = diagnostic_reason_category(&r);
+                PyDiagnosticReason {
+                    rule_code: r.rule.code().to_string(),
+                    rule: r.rule.into(),
+                    explanation: r.explanation,
+                    category: category.to_string(),
+                    category_code: category.as_code().to_string(),
+                    correction: r.correction.unwrap_or_default(),
+                }
             })
             .collect(),
     }

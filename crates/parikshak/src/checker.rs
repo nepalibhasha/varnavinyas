@@ -11,6 +11,7 @@ mod common;
 #[cfg(feature = "grammar-pass")]
 mod grammar;
 mod padayog;
+mod padayog_rules;
 mod punctuation;
 mod style_variants;
 mod word_level;
