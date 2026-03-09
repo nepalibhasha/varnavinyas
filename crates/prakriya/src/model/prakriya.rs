@@ -1,5 +1,5 @@
-use crate::rule_spec::{DiagnosticKind, RuleCategory};
-use crate::step::Step;
+use crate::model::rule_spec::{DiagnosticKind, RuleCategory};
+use crate::model::step::Step;
 
 /// The derivation state, tracking history.
 #[derive(Debug, Clone)]

@@ -2,10 +2,10 @@ use super::helpers::{
     chandrabindu_subrule_for, is_stop_consonant, nasalize_diphthong_suffix,
     should_replace_shirbindu,
 };
-use crate::prakriya::Prakriya;
-use crate::rule::Rule;
-use crate::rule_spec::{DiagnosticKind, RuleCategory, RuleSpec};
-use crate::step::Step;
+use crate::model::prakriya::Prakriya;
+use crate::model::rule::Rule;
+use crate::model::rule_spec::{DiagnosticKind, RuleCategory, RuleSpec};
+use crate::model::step::Step;
 use varnavinyas_kosha::kosha;
 use varnavinyas_shabda::{Origin, classify_with_provenance};
 

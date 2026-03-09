@@ -1,7 +1,8 @@
 use serde::Serialize;
 use varnavinyas_shabda::{Origin, OriginSource};
 
-use crate::analysis::{RuleNote, WordAnalysis};
+use crate::analysis::WordAnalysis;
+use crate::explanation::Explanation;
 
 /// Stable serializable analysis shape for JSON/binding adapters.
 #[derive(Debug, Clone, Serialize)]
@@ -28,8 +29,8 @@ pub struct ApiRuleNote {
     pub explanation: String,
 }
 
-impl From<&RuleNote> for ApiRuleNote {
-    fn from(note: &RuleNote) -> Self {
+impl From<&Explanation> for ApiRuleNote {
+    fn from(note: &Explanation) -> Self {
         Self {
             rule: note.rule.to_string(),
             rule_code: note.rule.code().to_string(),
@@ -38,8 +39,8 @@ impl From<&RuleNote> for ApiRuleNote {
     }
 }
 
-impl From<RuleNote> for ApiRuleNote {
-    fn from(note: RuleNote) -> Self {
+impl From<Explanation> for ApiRuleNote {
+    fn from(note: Explanation) -> Self {
         Self::from(&note)
     }
 }

@@ -1,5 +1,5 @@
-use crate::prakriya::Prakriya;
-use crate::rule::Rule;
+use crate::model::prakriya::Prakriya;
+use crate::model::rule::Rule;
 
 /// Diagnostic severity for a rule violation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

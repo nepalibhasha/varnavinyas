@@ -1,18 +1,8 @@
-use std::sync::LazyLock;
-
 use crate::correction_table;
-use crate::niyama_registry;
-use crate::prakriya::{Prakriya, RuleHit};
-use crate::rule_spec::{DiagnosticKind, PatternRule, RuleCategory};
-use crate::step::Step;
-
-/// All pattern rules, sorted by priority (lower = higher priority).
-static PATTERN_RULES: LazyLock<Vec<PatternRule>> = LazyLock::new(|| {
-    let mut rules = niyama_registry::non_section3_rules();
-    rules.extend(niyama_registry::section3_rules());
-    rules.sort_by_key(|r| r.spec.priority);
-    rules
-});
+use crate::model::prakriya::{Prakriya, RuleHit};
+use crate::model::rule_spec::{DiagnosticKind, RuleCategory};
+use crate::model::step::Step;
+use crate::runtime;
 
 /// Derive the correct form of a word, with step-by-step rule tracing.
 ///
@@ -61,7 +51,7 @@ fn rule_hits_equivalent(a: &mut RuleHit, b: &mut RuleHit) -> bool {
         && step_signatures(&a.prakriya.steps) == step_signatures(&b.prakriya.steps)
 }
 
-fn step_signatures(steps: &[Step]) -> Vec<(crate::rule::Rule, &str, &str, &str)> {
+fn step_signatures(steps: &[Step]) -> Vec<(crate::model::rule::Rule, &str, &str, &str)> {
     steps
         .iter()
         .map(|s| {
@@ -77,7 +67,7 @@ fn step_signatures(steps: &[Step]) -> Vec<(crate::rule::Rule, &str, &str, &str)>
 
 /// Try all pattern-based rules in priority order.
 fn collect_pattern_rule_hits(input: &str) -> Vec<RuleHit> {
-    PATTERN_RULES
+    runtime::pattern_rules()
         .iter()
         .filter_map(|rule| {
             (rule.apply)(input).map(|p| RuleHit {
@@ -116,32 +106,7 @@ fn try_correction_table_hit(input: &str) -> Option<RuleHit> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::rule::Rule;
-
-    #[test]
-    fn pattern_rules_sorted_by_priority() {
-        let rules = &*PATTERN_RULES;
-        for window in rules.windows(2) {
-            assert!(
-                window[0].spec.priority <= window[1].spec.priority,
-                "Rules out of order: {} (priority {}) before {} (priority {})",
-                window[0].spec.id,
-                window[0].spec.priority,
-                window[1].spec.id,
-                window[1].spec.priority,
-            );
-        }
-    }
-
-    #[test]
-    fn pattern_rules_have_unique_ids() {
-        let rules = &*PATTERN_RULES;
-        for (i, a) in rules.iter().enumerate() {
-            for b in rules.iter().skip(i + 1) {
-                assert_ne!(a.spec.id, b.spec.id, "Duplicate rule id: {}", a.spec.id,);
-            }
-        }
-    }
+    use crate::model::rule::Rule;
 
     /// Exercises the production `try_pattern_rules` path: structural rules (priority 100)
     /// must beat orthographic rules (priority 300+) for an input both would match.
@@ -281,7 +246,10 @@ mod tests {
             "ortho-gya-gyan",
         ];
 
-        let registered: Vec<&str> = PATTERN_RULES.iter().map(|r| r.spec.id).collect();
+        let registered: Vec<&str> = crate::runtime::pattern_rules()
+            .iter()
+            .map(|r| r.spec.id)
+            .collect();
         for &id in EXPECTED_IDS {
             assert!(
                 registered.contains(&id),

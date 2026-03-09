@@ -1,7 +1,7 @@
-use crate::prakriya::Prakriya;
-use crate::rule::Rule;
-use crate::rule_spec::{DiagnosticKind, RuleCategory, RuleSpec};
-use crate::step::Step;
+use crate::model::prakriya::Prakriya;
+use crate::model::rule::Rule;
+use crate::model::rule_spec::{DiagnosticKind, RuleCategory, RuleSpec};
+use crate::model::step::Step;
 
 pub const SPEC_SHRI: RuleSpec = RuleSpec {
     id: "struct-shri",

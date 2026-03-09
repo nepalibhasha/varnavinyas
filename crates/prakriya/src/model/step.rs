@@ -1,4 +1,4 @@
-use crate::rule::Rule;
+use crate::model::rule::Rule;
 
 /// A single step in a derivation.
 #[derive(Debug, Clone)]

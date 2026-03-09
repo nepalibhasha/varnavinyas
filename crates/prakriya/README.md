@@ -2,6 +2,9 @@
 
 Core orthographic correction engine with rule tracing.
 
+For a high-level description of the crate’s design and module ownership, see
+[`ARCHITECTURE.md`](./ARCHITECTURE.md).
+
 ## What This Crate Owns
 
 This crate answers the question: “Given a word form, what is the correct standard form, and why?”
@@ -48,10 +51,10 @@ The rule engine is layered:
 - pattern rules second
 - “already correct” fallback last
 
-Pattern rules are registered via a niyama-oriented registry:
+Pattern rules are registered via a domain-oriented registry:
 
-- `niyama_registry::section3_rules()` for Section 3 (`३. नेपाली वर्णविन्यास`)
-- `niyama_registry::non_section3_rules()` for non-Section-3 rules (e.g., Section 4 structural)
+- `niyama_registry::varna_vinyasa_rules()` for Academy orthography families
+- `niyama_registry::usage_fix_rules()` for later cleanup-style rules
 
 Within `src/`, implementation is organized by domain:
 

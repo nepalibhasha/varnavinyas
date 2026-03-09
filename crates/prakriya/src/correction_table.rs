@@ -1,4 +1,4 @@
-use crate::rule::Rule;
+use crate::model::rule::Rule;
 use std::sync::LazyLock;
 
 /// A correction entry from the Academy standard.

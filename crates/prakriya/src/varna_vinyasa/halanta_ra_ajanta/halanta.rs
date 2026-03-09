@@ -1,7 +1,7 @@
-use crate::prakriya::Prakriya;
-use crate::rule::Rule;
-use crate::rule_spec::{DiagnosticKind, RuleCategory, RuleSpec};
-use crate::step::Step;
+use crate::model::prakriya::Prakriya;
+use crate::model::rule::Rule;
+use crate::model::rule_spec::{DiagnosticKind, RuleCategory, RuleSpec};
+use crate::model::step::Step;
 use varnavinyas_kosha::kosha;
 
 pub const SPEC_HALANTA: RuleSpec = RuleSpec {
@@ -33,7 +33,7 @@ fn corrected(
     Prakriya::corrected(
         input,
         &output,
-        vec![crate::step::Step::new(
+        vec![crate::model::step::Step::new(
             Rule::VarnaVinyasNiyam(code),
             explanation,
             input,

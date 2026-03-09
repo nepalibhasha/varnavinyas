@@ -1,5 +1,6 @@
 use crate::engine;
-use crate::rule::Rule;
+use crate::explanation::Explanation;
+use crate::model::rule::Rule;
 use varnavinyas_shabda::{Origin, OriginSource, classify_with_provenance, source_language};
 
 /// शब्दको वर्णविन्यास विश्लेषण (उत्पत्ति-आधारित व्याख्यासहित)।
@@ -26,13 +27,7 @@ pub struct WordAnalysis {
 }
 
 /// शब्द सही/गलत हुनुको कारण बताउने टिप्पणी।
-#[derive(Debug, Clone)]
-pub struct RuleNote {
-    /// उद्धृत गरिएको Academy नियम।
-    pub rule: Rule,
-    /// नेपालीमा पढ्न सजिलो व्याख्या।
-    pub explanation: String,
-}
+pub type RuleNote = Explanation;
 
 /// शब्द विश्लेषण: सुधार (भएमा) निकाल्ने र नियम-आधारित व्याख्या बनाउने।
 ///
@@ -70,10 +65,7 @@ pub fn analyze(input: &str) -> WordAnalysis {
     } else {
         // शब्द गलत हुँदा किन गलत हो भन्ने व्याख्या बनाउने।
         for step in &prakriya.steps {
-            rule_notes.push(RuleNote {
-                rule: step.rule,
-                explanation: step.description.clone(),
-            });
+            rule_notes.push(Explanation::new(step.rule, step.description.clone()));
         }
         collect_alternate_rule_notes(&all_hits, &mut alternate_rule_notes);
     }
@@ -99,24 +91,26 @@ pub fn analyze(input: &str) -> WordAnalysis {
 fn generate_correct_notes(word: &str, origin: Origin, notes: &mut Vec<RuleNote>) {
     for template in NOTE_TEMPLATES {
         if template.origin == origin && marker_matches(word, template.marker) {
-            notes.push(RuleNote {
-                rule: template.rule,
-                explanation: template.explanation.to_string(),
-            });
+            notes.push(Explanation::new(template.rule, template.explanation));
         }
     }
 }
 
-fn collect_alternate_rule_notes(hits: &[crate::prakriya::RuleHit], notes: &mut Vec<RuleNote>) {
+fn collect_alternate_rule_notes(
+    hits: &[crate::model::prakriya::RuleHit],
+    notes: &mut Vec<RuleNote>,
+) {
     for hit in hits.iter().skip(1) {
         for step in &hit.prakriya.steps {
-            let note = RuleNote {
-                rule: step.rule,
-                explanation: format!(
+            let note = Explanation::new(
+                step.rule,
+                format!(
                     "{} (अन्य सम्भावित सुधार: {})",
                     step.description, hit.prakriya.output
                 ),
-            };
+            )
+            .with_correction(hit.prakriya.output.clone())
+            .with_category(hit.category);
             if !notes.iter().any(|existing| {
                 existing.rule == note.rule && existing.explanation == note.explanation
             }) {
@@ -263,9 +257,9 @@ fn marker_matches(word: &str, marker: NoteMarker) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::prakriya::{Prakriya, RuleHit};
-    use crate::rule_spec::{DiagnosticKind, RuleCategory};
-    use crate::step::Step;
+    use crate::model::prakriya::{Prakriya, RuleHit};
+    use crate::model::rule_spec::{DiagnosticKind, RuleCategory};
+    use crate::model::step::Step;
 
     #[test]
     fn tatsam_templates_emit_expected_notes() {
@@ -351,5 +345,6 @@ mod tests {
         assert_eq!(notes.len(), 1);
         assert_eq!(notes[0].rule, Rule::VarnaVinyasNiyam("3(ग)(अ)-1"));
         assert!(notes[0].explanation.contains("अन्य सम्भावित सुधार: शुमार्ग"));
+        assert_eq!(notes[0].correction.as_deref(), Some("शुमार्ग"));
     }
 }

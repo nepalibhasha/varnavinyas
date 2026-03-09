@@ -1,5 +1,5 @@
-use crate::rule::Rule;
-use crate::rule_spec::{DiagnosticKind, RuleCategory, RuleSpec};
+use crate::model::rule::Rule;
+use crate::model::rule_spec::{DiagnosticKind, RuleCategory, RuleSpec};
 
 mod ba_va;
 mod gya_gyan;

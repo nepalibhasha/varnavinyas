@@ -11,7 +11,7 @@ mod halanta;
 
 pub use halanta::SPEC_HALANTA;
 
-pub fn rule_halanta(input: &str) -> Option<crate::prakriya::Prakriya> {
+pub fn rule_halanta(input: &str) -> Option<crate::model::prakriya::Prakriya> {
     if input.is_empty() {
         return None;
     }

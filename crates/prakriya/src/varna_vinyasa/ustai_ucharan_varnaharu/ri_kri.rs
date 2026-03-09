@@ -1,6 +1,6 @@
-use crate::prakriya::Prakriya;
-use crate::rule::Rule;
-use crate::step::Step;
+use crate::model::prakriya::Prakriya;
+use crate::model::rule::Rule;
+use crate::model::step::Step;
 use varnavinyas_kosha::kosha;
 use varnavinyas_shabda::{Origin, classify};
 
