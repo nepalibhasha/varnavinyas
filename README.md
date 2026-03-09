@@ -32,6 +32,10 @@ Varnavinyas is a Rust workspace for spell checking, orthographic normalization, 
 - `web/`: browser UI + rules reference + WASM bridge
 - `docs/tests/*.toml`: gold/eval fixtures
 
+Inside `crates/prakriya`, orthography rule families now live under:
+- `src/varna_vinyasa/`: Academy orthography families such as `hrasva_dirgha`, `chandrabindu_shirbindu`, `ustai_ucharan_varnaharu`, `halanta_ra_ajanta`, `panchham`
+- `src/usage_fixes/`: later cleanup-style rules such as Section 4 shuddha/ashuddha fixes
+
 ## Quick Start
 
 ### Prerequisites

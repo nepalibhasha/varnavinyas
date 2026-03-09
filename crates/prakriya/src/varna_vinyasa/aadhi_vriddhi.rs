@@ -4,6 +4,13 @@ use crate::rule_spec::{DiagnosticKind, RuleCategory, RuleSpec};
 use crate::step::Step;
 use varnavinyas_akshar::{is_matra, is_svar, is_vyanjan};
 
+// Academy source context:
+// docs/Notices-pages-77-99.md, Section 3.
+//
+// This is a compact derivational rule used by the checker for forms like
+// "अर्थिक" -> "आर्थिक". It is not arranged as a numbered subsection family
+// like 3(क)/(ख)/(ग)/(ङ), so the file stays intentionally small.
+
 pub const SPEC_AADHI_VRIDDHI: RuleSpec = RuleSpec {
     id: "ortho-aadhi-vriddhi",
     category: RuleCategory::AadhiVriddhi,
@@ -54,6 +61,7 @@ fn apply_vriddhi(chars: &[char]) -> Option<Vec<char>> {
     None
 }
 
+// आदिवृद्धि-based normalization for `-िक` derivatives when the base lexeme is attested.
 pub fn rule_aadhi_vriddhi(input: &str) -> Option<Prakriya> {
     let chars: Vec<char> = input.chars().collect();
     let len = chars.len();

@@ -53,15 +53,17 @@ Pattern rules are registered via a niyama-oriented registry:
 - `niyama_registry::section3_rules()` for Section 3 (`३. नेपाली वर्णविन्यास`)
 - `niyama_registry::non_section3_rules()` for non-Section-3 rules (e.g., Section 4 structural)
 
-Within Section 3, implementation is organized in descriptive modules:
+Within `src/`, implementation is organized by domain:
 
-- `hrasva_dirgha` -> `(क) ह्रस्वदीर्घ वर्ण र मात्रा ...`
-- `chandrabindu_shirbindu` (+ `structural::rule_panchham_varna`) -> `(ख) चन्द्रविन्दु/शिरविन्दु/पञ्चम`
-- `ustai_ucharan_varnaharu` -> `(ग) श/ष/स, ऋ/रि, ब/व, य/ए, क्ष/छ्य, ज्ञ/ग्या`
-- `halanta_ra_ajanta` -> `(ङ) हलन्त र अजन्त`
-- `aadhi_vriddhi` -> `(क)` sub-rule path for आदिवृद्धि cases
+- `varna_vinyasa/` -> Academy orthography families
+  - `hrasva_dirgha` -> `(क) ह्रस्वदीर्घ वर्ण र मात्रा ...`
+  - `chandrabindu_shirbindu` + `panchham` -> `(ख) चन्द्रविन्दु/शिरविन्दु/पञ्चम`
+  - `ustai_ucharan_varnaharu` -> `(ग) श/ष/स, ऋ/रि, ब/व, य/ए, क्ष/छ्य, ज्ञ/ग्या`
+  - `halanta_ra_ajanta` -> `(ङ) हलन्त र अजन्त`
+  - `aadhi_vriddhi` -> `(क)` sub-rule path for आदिवृद्धि cases
+- `usage_fixes/` -> later cleanup-style rules such as Section 4 shuddha/ashuddha fixes
 
-`orthographic` is currently kept as a compatibility facade that re-exports rule specs/functions from the newer descriptive modules.
+`orthographic` is kept as a compatibility facade that re-exports the main orthography rule specs/functions from `varna_vinyasa`.
 
 ## Crate Boundary (Important)
 
