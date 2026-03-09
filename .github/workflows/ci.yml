@@ -65,3 +65,37 @@ jobs:
       - uses: EmbarkStudios/cargo-deny-action@v2
         with:
           command: check advisories bans licenses sources
+
+  web_artifacts:
+    name: Web Artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.85.0"
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - name: Install wasm-pack
+        run: cargo install wasm-pack --version 0.13.1 --locked
+      - name: Install lockfile-matched wasm-bindgen-cli
+        run: |
+          WASM_BINDGEN_VERSION="$(
+            awk '
+              $0 == "name = \"wasm-bindgen\"" {
+                getline
+                if ($1 == "version" && $2 == "=") {
+                  gsub(/"/, "", $3)
+                  print $3
+                  exit
+                }
+              }
+            ' Cargo.lock
+          )"
+          cargo install wasm-bindgen-cli --version "$WASM_BINDGEN_VERSION" --locked
+      - name: Rebuild web and extension artifacts
+        run: |
+          bash web/build.sh
+          REFRESH_WEB_WASM=0 bash extensions/browser/build.sh
+      - name: Verify committed generated artifacts are up to date
+        run: git diff --exit-code -- web/pkg extensions/browser/pkg

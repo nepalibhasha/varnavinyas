@@ -177,6 +177,36 @@ async function processWord(text) {
 
 // ── Renderers ──
 
+function formatOriginSourceMeta(source) {
+  const value = String(source || '').trim().toLowerCase();
+  if (value === 'kosha') return 'आधार: शब्दकोश';
+  if (value === 'override') return 'आधार: सूची-अपवाद';
+  if (value === 'heuristic') return 'आधार: नियम-आधारित अनुमान';
+  return '';
+}
+
+function formatOriginLabel(origin) {
+  const value = String(origin || '').trim().toLowerCase();
+  if (value === 'tatsam') return 'तत्सम';
+  if (value === 'tadbhav') return 'तद्भव';
+  if (value === 'deshaj') return 'देशज';
+  if (value === 'aagantuk') return 'आगन्तुक';
+  return 'अज्ञात';
+}
+
+function formatConfidenceBand(confidence) {
+  const value = Number(confidence || 0);
+  if (value >= 0.9) return 'उच्च';
+  if (value >= 0.75) return 'मध्यम';
+  if (value > 0) return 'न्यून';
+  return '';
+}
+
+function formatOriginConfidenceMeta(confidence) {
+  const band = formatConfidenceBand(confidence);
+  return band ? `विश्वास: ${band}` : '';
+}
+
 function renderResult(word, analysis, check, decomposition, splits, compounds) {
   showState('result');
 
@@ -193,11 +223,29 @@ function renderResult(word, analysis, check, decomposition, splits, compounds) {
   // Origin badge
   const originEl = document.getElementById('result-origin');
   const origin = (analysis.origin || 'unknown').toLowerCase();
-  originEl.textContent = analysis.origin || '';
+  originEl.textContent = formatOriginLabel(origin);
   originEl.className = `origin-badge ${origin}`;
+  const originMetaEl = document.getElementById('result-origin-meta');
+  originMetaEl.innerHTML = '';
+  const originMetaItems = [
+    formatOriginSourceMeta(analysis.origin_source),
+    formatOriginConfidenceMeta(analysis.origin_confidence),
+  ].filter(Boolean);
+  if (originMetaItems.length > 0) {
+    originMetaEl.style.display = 'flex';
+    for (const item of originMetaItems) {
+      const span = document.createElement('span');
+      span.className = 'origin-meta-item';
+      span.textContent = item;
+      originMetaEl.appendChild(span);
+    }
+  } else {
+    originMetaEl.style.display = 'none';
+  }
 
   // Correction
   const correctionEl = document.getElementById('result-correction');
+  const statusEl = document.getElementById('result-status');
   if (!analysis.is_correct && analysis.correction) {
     correctionEl.style.display = 'flex';
     document.getElementById('correction-wrong').textContent = word;
@@ -209,11 +257,18 @@ function renderResult(word, analysis, check, decomposition, splits, compounds) {
   } else {
     correctionEl.style.display = 'none';
   }
+  const hasCorrection = correctionEl.style.display !== 'none';
+  if (!hasCorrection) {
+    statusEl.textContent = 'यो रूप सही छ';
+    statusEl.style.display = 'block';
+  } else {
+    statusEl.style.display = 'none';
+  }
 
   // Rules
   const rulesEl = document.getElementById('result-rules');
   rulesEl.innerHTML = '';
-  if (analysis.rule_notes && analysis.rule_notes.length > 0) {
+  if (hasCorrection && analysis.rule_notes && analysis.rule_notes.length > 0) {
     for (const note of analysis.rule_notes) {
       const li = document.createElement('li');
       const tag = document.createElement('span');
@@ -282,15 +337,13 @@ function renderResult(word, analysis, check, decomposition, splits, compounds) {
     return authority === 'Likely' || authority === 'Authoritative';
   };
   const formatSamasaConfidence = (score) => {
-    const value = Number(score || 0);
-    if (value >= 0.9) return 'उच्च विश्वसनीयता';
-    if (value >= 0.75) return 'विश्वसनीय';
-    return '';
+    const band = formatConfidenceBand(score);
+    return band ? `विश्वास: ${band}` : '';
   };
   const formatSandhiConfidence = (authority) => {
     const value = String(authority || '').trim();
-    if (value === 'Authoritative') return 'उच्च विश्वसनीयता';
-    if (value === 'Likely') return 'विश्वसनीय';
+    if (value === 'Authoritative') return 'विश्वास: उच्च';
+    if (value === 'Likely') return 'विश्वास: मध्यम';
     return '';
   };
 
@@ -298,9 +351,7 @@ function renderResult(word, analysis, check, decomposition, splits, compounds) {
   const strongSplits = allSplits.filter(isStrongSandhi);
   const hasCompounds = strongCompounds.length > 0;
   const hasSandhi = strongSplits.length > 0;
-  const hasAnySignals = allCompounds.length > 0 || allSplits.length > 0;
-
-  if (hasCompounds || hasSandhi || hasAnySignals) {
+  if (hasCompounds || hasSandhi) {
     splitSection.style.display = 'block';
     // Compound candidates (top 2)
     if (hasCompounds) {
@@ -360,12 +411,6 @@ function renderResult(word, analysis, check, decomposition, splits, compounds) {
       }
     }
 
-    if (!hasCompounds && !hasSandhi) {
-      const li = document.createElement('li');
-      li.className = 'split-empty';
-      li.textContent = 'विश्वसनीय समास वा सन्धि विच्छेद भेटिएन';
-      splitContent.appendChild(li);
-    }
   } else {
     splitSection.style.display = 'none';
   }
@@ -395,16 +440,25 @@ function renderDictionary(data) {
   if (currentDictionaryHeadword && currentDictionaryHeadword !== currentWord) {
     const note = document.createElement('div');
     note.className = 'dict-lookup-note';
-    note.textContent = `${currentDictionaryHeadword}:`;
+    note.textContent = `शीर्षशब्द: ${currentDictionaryHeadword}`;
     el.appendChild(note);
   }
 
   // Part of speech
+  let hasPos = false;
   if (data.partOfSpeech) {
     const pos = document.createElement('div');
     pos.className = 'dict-pos';
-    pos.textContent = data.partOfSpeech;
+    pos.textContent = `पदवर्ग: ${data.partOfSpeech}`;
     el.appendChild(pos);
+    hasPos = true;
+  }
+
+  if (!hasPos) {
+    const posMissing = document.createElement('div');
+    posMissing.className = 'dict-pos dict-pos-muted';
+    posMissing.textContent = 'पदवर्ग: उपलब्ध छैन';
+    el.appendChild(posMissing);
   }
 
   // Definitions
@@ -462,6 +516,65 @@ function handlePopupSelectionLookup() {
   if (!/[\u0900-\u097F]/.test(text)) return;
   lastPopupSelection = text;
   processWord(text);
+}
+
+function isInteractiveElement(el) {
+  return Boolean(
+    el.closest(
+      'input, textarea, button, a, select, option, [contenteditable="true"]'
+    )
+  );
+}
+
+function extractWordFromTextAtOffset(text, offset) {
+  if (!text) return '';
+  const chars = Array.from(text);
+  if (!chars.length) return '';
+  const i0 = Math.max(0, Math.min(offset, chars.length - 1));
+  let i = i0;
+  const isDevanagari = (ch) => /[\u0900-\u097F]/.test(ch || '');
+  if (!isDevanagari(chars[i])) {
+    if (isDevanagari(chars[i - 1])) i -= 1;
+    else return '';
+  }
+
+  let start = i;
+  let end = i + 1;
+  while (start > 0 && isDevanagari(chars[start - 1])) start -= 1;
+  while (end < chars.length && isDevanagari(chars[end])) end += 1;
+  return chars.slice(start, end).join('').trim();
+}
+
+function readClickedWord(event) {
+  const target = event.target;
+  if (!(target instanceof Element) || isInteractiveElement(target)) return '';
+
+  // Firefox path
+  if (document.caretPositionFromPoint) {
+    const pos = document.caretPositionFromPoint(event.clientX, event.clientY);
+    if (pos?.offsetNode?.nodeType === Node.TEXT_NODE) {
+      return extractWordFromTextAtOffset(pos.offsetNode.textContent || '', pos.offset);
+    }
+  }
+
+  // Chromium/WebKit fallback
+  if (document.caretRangeFromPoint) {
+    const range = document.caretRangeFromPoint(event.clientX, event.clientY);
+    if (range?.startContainer?.nodeType === Node.TEXT_NODE) {
+      return extractWordFromTextAtOffset(
+        range.startContainer.textContent || '',
+        range.startOffset
+      );
+    }
+  }
+
+  return '';
+}
+
+function handleSidebarWordClick(event) {
+  const word = readClickedWord(event);
+  if (!word || word.length < 2) return;
+  processWord(word);
 }
 
 // ── Actions ──
@@ -584,6 +697,7 @@ document.addEventListener('keyup', (e) => {
     handlePopupSelectionLookup();
   }
 });
+document.addEventListener('click', handleSidebarWordClick);
 
 // ── Live updates (side panel mode) ──
 

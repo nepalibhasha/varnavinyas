@@ -6,21 +6,31 @@ ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 PKG_SRC="$ROOT_DIR/web/pkg"
 PKG_DST="$SCRIPT_DIR/pkg"
 DIST_DIR="$SCRIPT_DIR/dist"
+REFRESH_WEB_WASM="${REFRESH_WEB_WASM:-1}"
+FIREFOX_MANIFEST="$SCRIPT_DIR/manifest.firefox.json"
 
-# ── 1. Verify source artifacts ──
+# ── 1. Refresh web/pkg (default on) ──
+if [ "$REFRESH_WEB_WASM" = "1" ]; then
+  echo "Refreshing web/pkg via web/build.sh…"
+  bash "$ROOT_DIR/web/build.sh"
+else
+  echo "Skipping web/pkg refresh (REFRESH_WEB_WASM=$REFRESH_WEB_WASM)"
+fi
+
+# ── 2. Verify source artifacts ──
 if [ ! -f "$PKG_SRC/varnavinyas_bindings_wasm_bg.wasm" ]; then
   echo "Error: WASM artifacts not found at $PKG_SRC" >&2
   echo "Run 'bash web/build.sh' from the repo root first." >&2
   exit 1
 fi
 
-# ── 2. Copy WASM artifacts ──
+# ── 3. Copy WASM artifacts ──
 echo "Copying WASM artifacts…"
 mkdir -p "$PKG_DST"
 cp "$PKG_SRC/varnavinyas_bindings_wasm_bg.wasm" "$PKG_DST/"
 cp "$PKG_SRC/varnavinyas_bindings_wasm.js" "$PKG_DST/"
 
-# ── 3. Size report ──
+# ── 4. Size report ──
 echo ""
 echo "── Size report ──"
 
@@ -29,7 +39,7 @@ JS_RAW=$(wc -c < "$PKG_DST/varnavinyas_bindings_wasm.js")
 echo "  .wasm:  $(echo "$WASM_RAW" | awk '{printf "%.1f MB", $1/1048576}')"
 echo "  .js:    $(echo "$JS_RAW" | awk '{printf "%.1f KB", $1/1024}')"
 
-# ── 4. Package zip for store submission ──
+# ── 5. Package zip for store submission ──
 mkdir -p "$DIST_DIR"
 ZIP_PATH="$DIST_DIR/varnavinyas-extension.zip"
 rm -f "$ZIP_PATH"
@@ -51,7 +61,35 @@ else
   echo "  WARNING: exceeds 8 MB target"
 fi
 
+# ── 6. Firefox dev bundle (optional) ──
+FIREFOX_UNPACKED_PATH=""
+FIREFOX_ZIP_PATH=""
+if [ -f "$FIREFOX_MANIFEST" ]; then
+  FIREFOX_UNPACKED="$DIST_DIR/firefox-unpacked"
+  FIREFOX_ZIP_PATH="$DIST_DIR/varnavinyas-extension-firefox.zip"
+  rm -rf "$FIREFOX_UNPACKED"
+  mkdir -p "$FIREFOX_UNPACKED"
+  cp -R "$SCRIPT_DIR/icons" "$FIREFOX_UNPACKED/"
+  cp -R "$SCRIPT_DIR/src" "$FIREFOX_UNPACKED/"
+  cp -R "$SCRIPT_DIR/pkg" "$FIREFOX_UNPACKED/"
+  cp "$FIREFOX_MANIFEST" "$FIREFOX_UNPACKED/manifest.json"
+
+  rm -f "$FIREFOX_ZIP_PATH"
+  (cd "$FIREFOX_UNPACKED" && zip -qr "$FIREFOX_ZIP_PATH" \
+    manifest.json \
+    icons/ \
+    src/ \
+    pkg/ \
+    -x '*.DS_Store')
+
+  FIREFOX_UNPACKED_PATH="$FIREFOX_UNPACKED"
+fi
+
 echo ""
 echo "── Output ──"
 echo "  Unpacked: $SCRIPT_DIR"
 echo "  Zip:      $ZIP_PATH"
+if [ -n "$FIREFOX_UNPACKED_PATH" ]; then
+  echo "  Firefox unpacked: $FIREFOX_UNPACKED_PATH"
+  echo "  Firefox zip:      $FIREFOX_ZIP_PATH"
+fi

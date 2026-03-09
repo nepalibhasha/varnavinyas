@@ -186,6 +186,3 @@ function invalidateStaleCache() {
     }
   });
 }
-
-// Export for future use
-export { setCachedEntry };
