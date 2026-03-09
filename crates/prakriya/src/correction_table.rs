@@ -344,30 +344,6 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             },
         ),
         (
-            "फाउण्डेसन",
-            CorrectionEntry {
-                correct: "फाउन्डेसन",
-                rule: Rule::ShuddhaAshuddha("Section 4"),
-                description: "आगन्तुक शब्दमा न प्रयोग हुन्छ, ण होइन: फाउन्डेसन",
-            },
-        ),
-        (
-            "झण्डा",
-            CorrectionEntry {
-                correct: "झन्डा",
-                rule: Rule::ShuddhaAshuddha("Section 4"),
-                description: "ड अघि न प्रयोग हुन्छ, ण होइन: झन्डा",
-            },
-        ),
-        (
-            "इण्डिया",
-            CorrectionEntry {
-                correct: "इन्डिया",
-                rule: Rule::ShuddhaAshuddha("Section 4"),
-                description: "आगन्तुक शब्दमा न प्रयोग हुन्छ, ण होइन: इन्डिया",
-            },
-        ),
-        (
             "इंग्ल्याण्ड",
             CorrectionEntry {
                 correct: "इङ्ग्ल्यान्ड",
@@ -456,54 +432,6 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
                 correct: "अनुभूति",
                 rule: Rule::VarnaVinyasNiyam("3(क)"),
                 description: "तत्सम शब्द अनुभूति को अन्त्य ह्रस्व इमा हुन्छ",
-            },
-        ),
-        (
-            "हामि",
-            CorrectionEntry {
-                correct: "हामी",
-                rule: Rule::VarnaVinyasNiyam("3(ई)-ऊ-7"),
-                description: "सर्वनाममा दीर्घ हुन्छ: हामी (हामि होइन)",
-            },
-        ),
-        (
-            "दीदी",
-            CorrectionEntry {
-                correct: "दिदी",
-                rule: Rule::VarnaVinyasNiyam("3(इ)-ऊ-3"),
-                description: "नातागोता तद्भव शब्दमा सुरुको स्वर ह्रस्व र अन्त्य दीर्घ हुन्छ",
-            },
-        ),
-        (
-            "बहीनी",
-            CorrectionEntry {
-                correct: "बहिनी",
-                rule: Rule::VarnaVinyasNiyam("3(इ)-ऊ-3"),
-                description: "नातागोता तद्भव शब्दमा शब्दमध्यको स्वर ह्रस्व र अन्त्य दीर्घ हुन्छ",
-            },
-        ),
-        (
-            "भाउजु",
-            CorrectionEntry {
-                correct: "भाउजू",
-                rule: Rule::VarnaVinyasNiyam("3(ई)"),
-                description: "स्त्रीलिङ्गी नातागोता शब्दमा दीर्घ हुन्छ: भाउजू (भाउजु होइन)",
-            },
-        ),
-        (
-            "फुपु",
-            CorrectionEntry {
-                correct: "फुपू",
-                rule: Rule::VarnaVinyasNiyam("3(ई)"),
-                description: "स्त्रीलिङ्गी नातागोता शब्दमा दीर्घ हुन्छ: फुपू (फुपु होइन)",
-            },
-        ),
-        (
-            "मीतिनिले",
-            CorrectionEntry {
-                correct: "मितिनीले",
-                rule: Rule::VarnaVinyasNiyam("3(इ), 3(ई)"),
-                description: "नातागोता तद्भव शब्दमा सुरुमा ह्रस्व इ र अन्त्यमा दीर्घ ई हुन्छ",
             },
         ),
         (

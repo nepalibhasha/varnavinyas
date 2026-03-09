@@ -1,5 +1,6 @@
 use varnavinyas_prakriya::orthographic::{
-    rule_ba_va, rule_gya_gyan, rule_ksha_chhya, rule_ri_kri, rule_sibilant, rule_ya_e,
+    rule_ba_va, rule_chandrabindu, rule_gya_gyan, rule_ksha_chhya, rule_panchham_varna,
+    rule_ri_kri, rule_sibilant, rule_ya_e,
 };
 use varnavinyas_prakriya::{Rule, derive};
 
@@ -561,6 +562,688 @@ fn o8_ga_aa_o_3_tatsam_citation() {
     assert!(
         has_varna_niyam_code(&p, "3(ग)(आ)-ओ-3"),
         "Expected 3(ग)(आ)-ओ-3 citation, got: {:?}",
+        p.steps
+    );
+}
+
+// =================================================================
+// O9: Section 3(ङ) halanta/ajanta numbered-subrule regressions
+// =================================================================
+
+#[test]
+fn o9_nga_halanta_1_root_forms() {
+    let p = derive("पढ");
+    assert_eq!(p.output, "पढ्");
+    let p2 = derive("भन");
+    assert_eq!(p2.output, "भन्");
+}
+
+#[test]
+fn o9_nga_halanta_2_second_person_forms() {
+    assert_eq!(derive("गइस").output, "गइस्");
+    assert_eq!(derive("भन्छस").output, "भन्छस्");
+    assert_eq!(derive("लेख्छस").output, "लेख्छस्");
+}
+
+#[test]
+fn o9_nga_halanta_3_plural_honorific_forms() {
+    assert_eq!(derive("सुन्छन").output, "सुन्छन्");
+    assert_eq!(derive("गर्दैनन").output, "गर्दैनन्");
+}
+
+#[test]
+fn o9_nga_halanta_4_suffix_forms() {
+    assert_eq!(derive("गुणवान").output, "गुणवान्");
+    assert_eq!(derive("गुरुवत").output, "गुरुवत्");
+}
+
+#[test]
+fn o9_nga_ajanta_8_terminal_halanta_removed() {
+    assert_eq!(derive("कस्").output, "कस");
+    assert_eq!(derive("जवान्").output, "जवान");
+    assert_eq!(derive("कठोर्").output, "कठोर");
+}
+
+#[test]
+fn o9_nga_ajanta_1_singletons() {
+    assert_eq!(derive("र्").output, "र");
+    assert_eq!(derive("न्").output, "न");
+}
+
+#[test]
+fn o9_nga_ajanta_2_vowel_avyaya() {
+    assert_eq!(derive("बाहिर्").output, "बाहिर");
+    assert_eq!(derive("आज्").output, "आज");
+}
+
+#[test]
+fn o9_nga_ajanta_3_ajnartha() {
+    assert_eq!(derive("भन्").output, "भन");
+    assert_eq!(derive("लेख्").output, "लेख");
+}
+
+#[test]
+fn o9_nga_ajanta_4_negative_n() {
+    assert_eq!(derive("गर्दैन्").output, "गर्दैन");
+    assert_eq!(derive("भन्दैन्").output, "भन्दैन");
+}
+
+#[test]
+fn o9_nga_ajanta_6_asamapak() {
+    assert_eq!(derive("गर्न्").output, "गर्न");
+    assert_eq!(derive("हेर्न्").output, "हेर्न");
+}
+
+#[test]
+fn o9_nga_ajanta_7_onomatopoeic() {
+    assert_eq!(derive("टिलिक्क्").output, "टिलिक्क");
+    assert_eq!(derive("स्वाट्ट्").output, "स्वाट्ट");
+}
+
+// =================================================================
+// O10: Section 3(ख) numbered-subrule citation checks
+// =================================================================
+
+#[test]
+fn o10_kha_aa_1_tatsam_no_chandrabindu() {
+    let p = rule_chandrabindu("सँवाद").expect("expected chandrabindu correction");
+    assert_eq!(p.output, "संवाद");
+    assert!(
+        has_varna_niyam_code(&p, "3(ख)(आ)-1"),
+        "Expected 3(ख)(आ)-1 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o10_kha_aa_2_first_person_nasal() {
+    let p = rule_chandrabindu("जान्छौं").expect("expected first-person nasal correction");
+    assert_eq!(p.output, "जान्छौँ");
+    assert!(
+        has_varna_niyam_code(&p, "3(ख)(आ)-2"),
+        "Expected 3(ख)(आ)-2 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o10_kha_aa_3_da_dai_forms() {
+    let p = rule_chandrabindu("आउंदा").expect("expected da/dai nasal correction");
+    assert_eq!(p.output, "आउँदा");
+    assert!(
+        has_varna_niyam_code(&p, "3(ख)(आ)-3"),
+        "Expected 3(ख)(आ)-3 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o10_kha_aa_4_dvisvaranta_with_chha_tha() {
+    let p = rule_chandrabindu("आउंछ").expect("expected dvisvaranta chha/tha correction");
+    assert_eq!(p.output, "आउँछ");
+    assert!(
+        has_varna_niyam_code(&p, "3(ख)(आ)-4"),
+        "Expected 3(ख)(आ)-4 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o10_kha_a_2_ng_group_panchham() {
+    let p = rule_panchham_varna("संकेत").expect("expected panchham correction");
+    assert_eq!(p.output, "सङ्केत");
+    assert!(
+        has_varna_niyam_code(&p, "3(ख)(अ)-2-ङ्"),
+        "Expected 3(ख)(अ)-2-ङ् citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o10_kha_a_2_nya_group_panchham() {
+    let p = rule_panchham_varna("संचार").expect("expected panchham correction");
+    assert_eq!(p.output, "सञ्चार");
+    assert!(
+        has_varna_niyam_code(&p, "3(ख)(अ)-2-ञ्"),
+        "Expected 3(ख)(अ)-2-ञ् citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o10_kha_a_2_nna_group_panchham() {
+    let p = rule_panchham_varna("कंटक").expect("expected panchham correction");
+    assert_eq!(p.output, "कण्टक");
+    assert!(
+        has_varna_niyam_code(&p, "3(ख)(अ)-2-ण्"),
+        "Expected 3(ख)(अ)-2-ण् citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o10_kha_a_2_na_group_panchham() {
+    let p = rule_panchham_varna("संतोष").expect("expected panchham correction");
+    assert_eq!(p.output, "सन्तोष");
+    assert!(
+        has_varna_niyam_code(&p, "3(ख)(अ)-2-न्"),
+        "Expected 3(ख)(अ)-2-न् citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o10_kha_a_2_ma_group_panchham() {
+    let p = rule_panchham_varna("संपन्न").expect("expected panchham correction");
+    assert_eq!(p.output, "सम्पन्न");
+    assert!(
+        has_varna_niyam_code(&p, "3(ख)(अ)-2-म्"),
+        "Expected 3(ख)(अ)-2-म् citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o10_kha_a_3_non_tatsam_retroflex_cluster_normalization() {
+    let p = derive("झण्डा");
+    assert_eq!(p.output, "झन्डा");
+    assert!(
+        has_varna_niyam_code(&p, "3(ख)(अ)-3"),
+        "Expected 3(ख)(अ)-3 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o10_kha_a_3_non_tatsam_foreign_nd_cluster_normalization() {
+    let p = derive("फाउण्डेसन");
+    assert_eq!(p.output, "फाउन्डेसन");
+    assert!(
+        has_varna_niyam_code(&p, "3(ख)(अ)-3"),
+        "Expected 3(ख)(अ)-3 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o10_kha_a_3_non_tatsam_palatal_cluster_normalization() {
+    let p = rule_panchham_varna("इञ्जिन").expect("expected non-tatsam cluster normalization");
+    assert_eq!(p.output, "इन्जिन");
+    assert!(
+        has_varna_niyam_code(&p, "3(ख)(अ)-3"),
+        "Expected 3(ख)(अ)-3 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o11_ka_pronoun_final_dirgha() {
+    let p = derive("हामि");
+    assert_eq!(p.output, "हामी");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(ऊ)-7"),
+        "Expected 3(क)(ऊ)-7 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o11_ka_pronoun_initial_hrasva() {
+    let p = derive("तीमी");
+    assert_eq!(p.output, "तिमी");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(अ)-5"),
+        "Expected 3(क)(अ)-5 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o11_ka_kinship_initial_mid_hrasva() {
+    let p = derive("बहीनी");
+    assert_eq!(p.output, "बहिनी");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(अ)-12"),
+        "Expected 3(क)(अ)-12 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o11_ka_kinship_with_suffix_still_normalizes() {
+    let p = derive("मीतिनिले");
+    assert_eq!(p.output, "मितिनीले");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(अ)-12"),
+        "Expected 3(क)(अ)-12 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o11_ka_feminine_kinship_final_dirgha() {
+    let p = derive("भाउजु");
+    assert_eq!(p.output, "भाउजू");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(ऊ)-3"),
+        "Expected 3(क)(ऊ)-3 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o11_ka_bhavavachi_final_dirgha() {
+    let p = derive("गरिबि");
+    assert_eq!(p.output, "गरिबी");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(ऊ)-15"),
+        "Expected 3(क)(ऊ)-15 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o11_ka_honorific_final_dirgha() {
+    let p = derive("रामजि");
+    assert_eq!(p.output, "रामजी");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(ऊ)-16"),
+        "Expected 3(क)(ऊ)-16 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o11_ka_language_final_dirgha() {
+    let p = derive("नेपालि");
+    assert_eq!(p.output, "नेपाली");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(ऊ)-11"),
+        "Expected 3(क)(ऊ)-11 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o11_ka_river_final_dirgha() {
+    let p = derive("कोसि");
+    assert_eq!(p.output, "कोसी");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(ऊ)-11"),
+        "Expected 3(क)(ऊ)-11 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o11_ka_hi_final_dirgha() {
+    let p = derive("कोहि");
+    assert_eq!(p.output, "कोही");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(ऊ)-12"),
+        "Expected 3(क)(ऊ)-12 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o11_ka_ari_tari_adverb_dirgha() {
+    let p = derive("यसरि");
+    assert_eq!(p.output, "यसरी");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(ऊ)-13"),
+        "Expected 3(क)(ऊ)-13 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o11_ka_profession_jati_thar_i_dirgha() {
+    let p = derive("व्यापारि");
+    assert_eq!(p.output, "व्यापारी");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(ऊ)-5"),
+        "Expected 3(क)(ऊ)-5 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o11_ka_profession_jati_thar_u_dirgha() {
+    let p = derive("थारु");
+    assert_eq!(p.output, "थारू");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(ऊ)-5"),
+        "Expected 3(क)(ऊ)-5 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o12_ka_a_1_prefix_hrasva() {
+    let p = derive("नीबन्ध");
+    assert_eq!(p.output, "निबन्ध");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(अ)-1"),
+        "Expected 3(क)(अ)-1 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o12_ka_a_2_dvi_tri_hrasva() {
+    let p = derive("द्वीतीय");
+    assert_eq!(p.output, "द्वितीय");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(अ)-2"),
+        "Expected 3(क)(अ)-2 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o12_ka_a_3_avyutpanna_name_hrasva() {
+    let p = derive("कीसान");
+    assert_eq!(p.output, "किसान");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(अ)-3"),
+        "Expected 3(क)(अ)-3 citation, got: {:?}",
+        p.steps
+    );
+    assert_eq!(p.steps[0].description, "सबै अव्युत्पन्न नामहरू सुरुमा ह्रस्व हुन्छन्");
+}
+
+#[test]
+fn o12_ka_a_4_aagantuk_name_hrasva() {
+    let p = derive("ईन्साफ");
+    assert_eq!(p.output, "इन्साफ");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(अ)-4"),
+        "Expected 3(क)(अ)-4 citation, got: {:?}",
+        p.steps
+    );
+    assert_eq!(p.steps[0].description, "सबै आगन्तुक नामहरू सुरुमा ह्रस्व हुन्छन्");
+}
+
+#[test]
+fn o12_ka_a_1_upasarga_correct_form_passes() {
+    let p = derive("सुमार्ग");
+    assert!(
+        p.is_correct,
+        "Expected उपसर्ग form 'सुमार्ग' to remain correct"
+    );
+    assert_eq!(p.output, "सुमार्ग");
+}
+
+#[test]
+fn o12_ka_a_1_upasarga_dirgha_is_corrected() {
+    let p = derive("सूमार्ग");
+    assert_eq!(p.output, "सुमार्ग");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(अ)-1"),
+        "Expected 3(क)(अ)-1 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o12_ka_a_6_adjective_hrasva() {
+    let p = derive("ईमानदार");
+    assert_eq!(p.output, "इमानदार");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(अ)-6"),
+        "Expected 3(क)(अ)-6 citation, got: {:?}",
+        p.steps
+    );
+    assert_eq!(p.steps[0].description, "विशेषणको सुरुका इकार उकार ह्रस्व हुन्छन्");
+}
+
+#[test]
+fn o12_ka_a_7_number_hrasva() {
+    let p = derive("ऊन्नाइस");
+    assert_eq!(p.output, "उन्नाइस");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(अ)-7"),
+        "Expected 3(क)(अ)-7 citation, got: {:?}",
+        p.steps
+    );
+    assert_eq!(
+        p.steps[0].description,
+        "सङ्ख्यावाचक शब्दहरू 'तीन'बाहेक सबै सुरुमा ह्रस्व हुन्छन्"
+    );
+}
+
+#[test]
+fn o12_ka_a_7_three_exception_passes() {
+    let p = derive("तीन");
+    assert!(
+        p.is_correct,
+        "Expected Academy exception 'तीन' to remain correct"
+    );
+    assert_eq!(p.output, "तीन");
+}
+
+#[test]
+fn o12_ka_a_10_avyaya_hrasva() {
+    let p = derive("भीत्र");
+    assert_eq!(p.output, "भित्र");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(अ)-10"),
+        "Expected 3(क)(अ)-10 citation, got: {:?}",
+        p.steps
+    );
+    assert_eq!(p.steps[0].description, "अव्ययहरू सबै सुरुमा ह्रस्व हुन्छन्");
+}
+
+#[test]
+fn o12_ka_a_11_onomatopoeic_hrasva() {
+    let p = derive("कीटिक्क");
+    assert_eq!(p.output, "किटिक्क");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(अ)-11"),
+        "Expected 3(क)(अ)-11 citation, got: {:?}",
+        p.steps
+    );
+    assert_eq!(p.steps[0].description, "अनुकरणात्मक शब्दहरू सबै सुरुमा ह्रस्व हुन्छन्");
+}
+
+#[test]
+fn o13_ka_aa_1_medial_prefix_hrasva() {
+    let p = derive("अभीमान");
+    assert_eq!(p.output, "अभिमान");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(आ)-1"),
+        "Expected 3(क)(आ)-1 citation, got: {:?}",
+        p.steps
+    );
+    assert_eq!(
+        p.steps[0].description,
+        "अनु, अभि, अति, अधि, प्रति, परि उपसर्ग लागेका शब्दमा बिचमा ह्रस्व हुन्छ"
+    );
+}
+
+#[test]
+fn o13_ka_aa_2_medial_suffix_hrasva() {
+    let p = derive("भौतीक");
+    assert_eq!(p.output, "भौतिक");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(आ)-2"),
+        "Expected 3(क)(आ)-2 citation, got: {:?}",
+        p.steps
+    );
+    assert_eq!(
+        p.steps[0].description,
+        "इक, इका, इत, इम, इमा, इष्ठ, उक प्रत्यय लागेका शब्दमा बिचमा ह्रस्व हुन्छ"
+    );
+}
+
+#[test]
+fn o13_ka_aa_3_medial_derived_name_hrasva() {
+    let p = derive("बिसाऊनी");
+    assert_eq!(p.output, "बिसाउनी");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(आ)-3"),
+        "Expected 3(क)(आ)-3 citation, got: {:?}",
+        p.steps
+    );
+    assert_eq!(p.steps[0].description, "व्युत्पन्न नामहरू सबै बिचमा ह्रस्व हुन्छन्");
+}
+
+#[test]
+fn o13_ka_aa_4_medial_underived_name_hrasva() {
+    let p = derive("कुकूर");
+    assert_eq!(p.output, "कुकुर");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(आ)-4"),
+        "Expected 3(क)(आ)-4 citation, got: {:?}",
+        p.steps
+    );
+    assert_eq!(p.steps[0].description, "अव्युत्पन्न नामहरू सबै बिचमा ह्रस्व हुन्छन्");
+}
+
+#[test]
+fn o13_ka_aa_5_medial_aagantuk_name_hrasva() {
+    let p = derive("कानून");
+    assert_eq!(p.output, "कानुन");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(आ)-5"),
+        "Expected 3(क)(आ)-5 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o13_ka_aa_6_medial_adjective_hrasva() {
+    let p = derive("पोसीलो");
+    assert_eq!(p.output, "पोसिलो");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(आ)-6"),
+        "Expected 3(क)(आ)-6 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o13_ka_aa_9_medial_avyaya_hrasva() {
+    let p = derive("अहीले");
+    assert_eq!(p.output, "अहिले");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(आ)-9"),
+        "Expected 3(क)(आ)-9 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o13_ka_aa_10_medial_onomatopoeic_hrasva() {
+    let p = derive("टिलीक्क");
+    assert_eq!(p.output, "टिलिक्क");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(आ)-10"),
+        "Expected 3(क)(आ)-10 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o15_ka_u_2_suffix_family_preserves_dirgha_karana() {
+    let p = derive("एकिकरण");
+    assert_eq!(p.output, "एकीकरण");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(उ)-2"),
+        "Expected 3(क)(उ)-2 citation, got: {:?}",
+        p.steps
+    );
+    assert_eq!(
+        p.steps[0].description,
+        "करण, कृत, कार, भवन, भूत, भावसँग जोडिएका शब्दमा बिचमा दीर्घ हुन्छ"
+    );
+}
+
+#[test]
+fn o15_ka_u_2_suffix_family_preserves_dirgha_krita() {
+    let p = derive("एकिकृत");
+    assert_eq!(p.output, "एकीकृत");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(उ)-2"),
+        "Expected 3(क)(उ)-2 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o14_ka_i_2_location_inanimate_final_hrasva() {
+    let p = derive("आलू");
+    assert_eq!(p.output, "आलु");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(इ)-2"),
+        "Expected 3(क)(इ)-2 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o14_ka_i_3_suffix_family_final_hrasva() {
+    let p = derive("गराई");
+    assert_eq!(p.output, "गराइ");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(इ)-3"),
+        "Expected 3(क)(इ)-3 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o14_ka_i_4_adjective_suffix_final_hrasva() {
+    let p = derive("सिकारू");
+    assert_eq!(p.output, "सिकारु");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(इ)-4"),
+        "Expected 3(क)(इ)-4 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o14_ka_i_5_mula_avyaya_final_hrasva() {
+    let p = derive("अगाडी");
+    assert_eq!(p.output, "अगाडि");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(इ)-5"),
+        "Expected 3(क)(इ)-5 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o14_ka_i_6_vibhakti_final_hrasva() {
+    let p = derive("निम्ती");
+    assert_eq!(p.output, "निम्ति");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(इ)-6"),
+        "Expected 3(क)(इ)-6 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o14_ka_i_7_ti_avyaya_final_hrasva() {
+    let p = derive("त्यती");
+    assert_eq!(p.output, "त्यति");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(इ)-7"),
+        "Expected 3(क)(इ)-7 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o14_ka_i_9_ti_dhi_ni_ti_pi_final_hrasva() {
+    let p = derive("नीती");
+    assert_eq!(p.output, "नीति");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(इ)-9"),
+        "Expected 3(क)(इ)-9 citation, got: {:?}",
         p.steps
     );
 }
