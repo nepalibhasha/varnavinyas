@@ -1,12 +1,14 @@
+use super::helpers::hrasva_helpers;
 use crate::model::prakriya::Prakriya;
 use crate::model::rule::Rule;
 use crate::model::rule_spec::{DiagnosticKind, RuleCategory, RuleSpec};
 use crate::model::step::Step;
+use varnavinyas_shabda::{Origin, classify, decompose};
 
 // -----------------------------------------------------------------------------
 // 3(क)(ई) शब्दका सुरुमा दीर्घ ईकार/ऊकारको प्रयोग
 // Rule-book map:
-// - 1  TODO: संस्कृतबाट जस्ताको तस्तै आएका दीर्घ-आदि शब्द
+// - 1  implemented conservatively in `rule_initial_tatsam_dirgha`
 // - 2  implemented in `rule_su_prefix_preserves_dirgha`
 // -----------------------------------------------------------------------------
 // 3(क)(उ) शब्दका बिचमा दीर्घ ईकार/ऊकारको प्रयोग
@@ -14,6 +16,15 @@ use crate::model::step::Step;
 // - 1  implemented in `rule_suffix_preserves_dirgha`
 // - 2  implemented in `rule_suffix_family_preserves_dirgha`
 // -----------------------------------------------------------------------------
+pub const SPEC_INITIAL_TATSAM_DIRGHA: RuleSpec = RuleSpec {
+    id: "hd-initial-tatsam-dirgha",
+    category: RuleCategory::HrasvaDirgha,
+    kind: DiagnosticKind::Error,
+    priority: 218,
+    citation: Rule::VarnaVinyasNiyam("3(क)(ई)-1"),
+    examples: &[("इश्वर", "ईश्वर"), ("भुमि", "भूमि")],
+};
+
 pub const SPEC_SU_PREFIX_PRESERVES_DIRGHA: RuleSpec = RuleSpec {
     id: "hd-su-prefix-preserves-dirgha",
     category: RuleCategory::HrasvaDirgha,
@@ -40,6 +51,39 @@ pub const SPEC_SUFFIX_FAMILY_PRESERVES_DIRGHA: RuleSpec = RuleSpec {
     citation: Rule::VarnaVinyasNiyam("3(क)(उ)-2"),
     examples: &[("एकिकरण", "एकीकरण"), ("एकिकृत", "एकीकृत")],
 };
+
+pub fn rule_initial_tatsam_dirgha(input: &str) -> Option<Prakriya> {
+    if rule_su_prefix_preserves_dirgha(input).is_some() {
+        return None;
+    }
+
+    let output = hrasva_helpers::initial_hrasva_to_dirgha(input)?;
+    let kosha = varnavinyas_kosha::kosha();
+
+    if kosha.contains(input) || !kosha.contains(&output) {
+        return None;
+    }
+
+    if !matches!(classify(&output), Origin::Tatsam) {
+        return None;
+    }
+
+    let morphology = decompose(&output);
+    if !morphology.prefixes.is_empty() || !morphology.suffixes.is_empty() {
+        return None;
+    }
+
+    Some(Prakriya::corrected(
+        input,
+        &output,
+        vec![Step::new(
+            Rule::VarnaVinyasNiyam("3(क)(ई)-1"),
+            "संस्कृतबाट नेपालीमा जस्ताको तस्तै आएका शब्दका सुरुमा दीर्घ हुन्छ",
+            input,
+            &output,
+        )],
+    ))
+}
 
 pub fn rule_su_prefix_preserves_dirgha(input: &str) -> Option<Prakriya> {
     let lex = varnavinyas_kosha::kosha();

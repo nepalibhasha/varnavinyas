@@ -1198,6 +1198,54 @@ fn o15_ka_ii_2_su_prefix_preserves_dirgha_sukti() {
 }
 
 #[test]
+fn o15_ka_ii_1_initial_tatsam_dirgha_ishwar() {
+    let p = derive("इश्वर");
+    assert_eq!(p.output, "ईश्वर");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(ई)-1"),
+        "Expected 3(क)(ई)-1 citation, got: {:?}",
+        p.steps
+    );
+    assert_eq!(
+        p.steps[0].description,
+        "संस्कृतबाट नेपालीमा जस्ताको तस्तै आएका शब्दका सुरुमा दीर्घ हुन्छ"
+    );
+}
+
+#[test]
+fn o15_ka_ii_1_initial_tatsam_dirgha_irshya() {
+    let p = derive("इर्ष्या");
+    assert_eq!(p.output, "ईर्ष्या");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(ई)-1"),
+        "Expected 3(क)(ई)-1 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o15_ka_ii_1_initial_tatsam_dirgha_bhumi() {
+    let p = derive("भुमि");
+    assert_eq!(p.output, "भूमि");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(ई)-1"),
+        "Expected 3(क)(ई)-1 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o15_ka_ii_1_initial_tatsam_dirgha_suchana() {
+    let p = derive("सुचना");
+    assert_eq!(p.output, "सूचना");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(ई)-1"),
+        "Expected 3(क)(ई)-1 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
 fn o15_ka_ii_2_su_prefix_preserves_dirgha_sukta() {
     let p = derive("सुक्त");
     assert_eq!(p.output, "सूक्त");
@@ -1246,6 +1294,77 @@ fn o16_ka_uu_1_does_not_override_mula_avyaya_ani() {
     let p = derive("अनि");
     assert!(p.is_correct, "Expected मूल अव्यय 'अनि' to remain correct");
     assert_eq!(p.output, "अनि");
+}
+
+#[test]
+fn o16_ka_uu_2_final_vati_vi_dirgha_rupavati() {
+    let p = derive("रूपवति");
+    assert_eq!(p.output, "रूपवती");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(ऊ)-2"),
+        "Expected 3(क)(ऊ)-2 citation, got: {:?}",
+        p.steps
+    );
+    assert_eq!(
+        p.steps[0].description,
+        "वती, वी प्रत्यय लागेर बनेका शब्दहरू दीर्घ हुन्छन्"
+    );
+}
+
+#[test]
+fn o16_ka_uu_2_final_vati_vi_dirgha_gunavati() {
+    let p = derive("गुणवति");
+    assert_eq!(p.output, "गुणवती");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(ऊ)-2"),
+        "Expected 3(क)(ऊ)-2 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o16_ka_uu_2_final_vati_vi_dirgha_medhavi() {
+    let p = derive("मेधावि");
+    assert_eq!(p.output, "मेधावी");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(ऊ)-2"),
+        "Expected 3(क)(ऊ)-2 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o16_ka_uu_2_final_vati_vi_dirgha_tapasvi() {
+    let p = derive("तपस्वि");
+    assert_eq!(p.output, "तपस्वी");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(ऊ)-2"),
+        "Expected 3(क)(ऊ)-2 citation, got: {:?}",
+        p.steps
+    );
+}
+
+#[test]
+fn o16_ka_uu_8_adjective_final_dirgha_dhani() {
+    let p = derive("धनि");
+    assert_eq!(p.output, "धनी");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(ऊ)-8"),
+        "Expected 3(क)(ऊ)-8 citation, got: {:?}",
+        p.steps
+    );
+    assert_eq!(p.steps[0].description, "सबै ईकारान्त विशेषणहरू दीर्घ हुन्छन्");
+}
+
+#[test]
+fn o16_ka_uu_8_adjective_final_dirgha_rogi() {
+    let p = derive("रोगि");
+    assert_eq!(p.output, "रोगी");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(ऊ)-8"),
+        "Expected 3(क)(ऊ)-8 citation, got: {:?}",
+        p.steps
+    );
 }
 
 #[test]

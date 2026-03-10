@@ -108,6 +108,10 @@ fn ka_rules() -> Vec<PatternRule> {
             apply: hrasva_dirgha::rule_final_hrasva_endings,
         },
         PatternRule {
+            spec: hrasva_dirgha::SPEC_INITIAL_TATSAM_DIRGHA,
+            apply: hrasva_dirgha::rule_initial_tatsam_dirgha,
+        },
+        PatternRule {
             spec: hrasva_dirgha::SPEC_SU_PREFIX_PRESERVES_DIRGHA,
             apply: hrasva_dirgha::rule_su_prefix_preserves_dirgha,
         },
@@ -122,6 +126,14 @@ fn ka_rules() -> Vec<PatternRule> {
         PatternRule {
             spec: hrasva_dirgha::SPEC_FINAL_II_SUFFIX_DIRGHA,
             apply: hrasva_dirgha::rule_final_ii_suffix_dirgha,
+        },
+        PatternRule {
+            spec: hrasva_dirgha::SPEC_FINAL_VATI_VI_DIRGHA,
+            apply: hrasva_dirgha::rule_final_vati_vi_dirgha,
+        },
+        PatternRule {
+            spec: hrasva_dirgha::SPEC_FINAL_ADJECTIVE_DIRGHA,
+            apply: hrasva_dirgha::rule_final_adjective_dirgha,
         },
         PatternRule {
             spec: hrasva_dirgha::SPEC_DIRGHA_ENDINGS,

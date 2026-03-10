@@ -18,11 +18,22 @@ pub(super) mod final_classes {
             return ("3(क)(ऊ)-9", "सङ्ख्यावाचक शब्दहरू अन्त्यमा दीर्घ हुन्छन्".to_string());
         }
 
+        if is_vati_vi_suffix_dirgha(output) {
+            return (
+                "3(क)(ऊ)-2",
+                "वती, वी प्रत्यय लागेर बनेका शब्दहरू दीर्घ हुन्छन्".to_string(),
+            );
+        }
+
         if is_profession_jati_thar_dirgha(output) {
             return (
                 "3(क)(ऊ)-5",
                 "पेसा, जाति र थर बुझाउने शब्दमा दीर्घ हुन्छ".to_string(),
             );
+        }
+
+        if is_adjective_final_dirgha(output) {
+            return ("3(क)(ऊ)-8", "सबै ईकारान्त विशेषणहरू दीर्घ हुन्छन्".to_string());
         }
 
         if is_hi_final_dirgha(output) {
@@ -241,8 +252,31 @@ pub(super) mod final_classes {
         )
     }
 
+    pub(crate) fn is_adjective_final_dirgha(output: &str) -> bool {
+        if is_vati_vi_suffix_dirgha(output)
+            || is_profession_jati_thar_dirgha(output)
+            || is_place_river_language_dirgha(output)
+            || is_number_final_dirgha(output)
+            || is_hi_final_dirgha(output)
+            || is_ari_tari_adverb_dirgha(output)
+        {
+            return false;
+        }
+
+        let kosha = varnavinyas_kosha::kosha();
+        let Some(entry) = kosha.lookup(output) else {
+            return false;
+        };
+
+        super::hrasva_helpers::is_adjective_pos(entry.pos)
+    }
+
     pub(crate) fn is_number_final_dirgha(output: &str) -> bool {
         matches!(output, "दुई" | "साठी" | "सत्तरी" | "असी")
+    }
+
+    pub(crate) fn is_vati_vi_suffix_dirgha(output: &str) -> bool {
+        output.ends_with("वती") || output.ends_with("ावी") || output.ends_with("स्वी")
     }
 
     pub(crate) fn is_hi_final_dirgha(output: &str) -> bool {
@@ -627,6 +661,62 @@ pub(super) mod hrasva_helpers {
                     }
                     // पहिलो अक्षरमै अर्को स्वर आयो भने 3(क)(अ)-3/-4 लागू हुँदैन।
                     'अ' | 'आ' | 'इ' | 'उ' | 'ए' | 'ऐ' | 'ओ' | 'औ' | 'ऋ' | 'ा' | 'ि' | 'ु' | 'े'
+                    | 'ै' | 'ो' | 'ौ' | 'ृ' => return None,
+                    _ => {
+                        if varnavinyas_akshar::is_vyanjan(ch) {
+                            consonants_before_vowel += 1;
+                        }
+                    }
+                }
+            }
+            output.push(ch);
+        }
+
+        replaced.then_some(output)
+    }
+
+    /// शब्दको पहिलो अक्षर/मात्रामा आएको ह्रस्व इ/उलाई दीर्घमा बदल्छ।
+    /// 3(क)(ई)-1 मा संस्कृतबाट जस्ताको तस्तै आएका शब्द जाँच्दा यही helper प्रयोग हुन्छ।
+    pub(crate) fn initial_hrasva_to_dirgha(input: &str) -> Option<String> {
+        let mut output = String::with_capacity(input.len());
+        let mut replaced = false;
+        let mut saw_initial_vowel = false;
+        let mut consonants_before_vowel = 0usize;
+
+        for ch in input.chars() {
+            if !saw_initial_vowel {
+                match ch {
+                    'इ' => {
+                        output.push('ई');
+                        replaced = true;
+                        saw_initial_vowel = true;
+                        continue;
+                    }
+                    'उ' => {
+                        output.push('ऊ');
+                        replaced = true;
+                        saw_initial_vowel = true;
+                        continue;
+                    }
+                    'ि' => {
+                        if consonants_before_vowel > 1 {
+                            return None;
+                        }
+                        output.push('ी');
+                        replaced = true;
+                        saw_initial_vowel = true;
+                        continue;
+                    }
+                    'ु' => {
+                        if consonants_before_vowel > 1 {
+                            return None;
+                        }
+                        output.push('ू');
+                        replaced = true;
+                        saw_initial_vowel = true;
+                        continue;
+                    }
+                    'अ' | 'आ' | 'ई' | 'ऊ' | 'ए' | 'ऐ' | 'ओ' | 'औ' | 'ऋ' | 'ा' | 'ी' | 'ू' | 'े'
                     | 'ै' | 'ो' | 'ौ' | 'ृ' => return None,
                     _ => {
                         if varnavinyas_akshar::is_vyanjan(ch) {

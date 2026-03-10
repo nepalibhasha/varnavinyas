@@ -1,4 +1,5 @@
 use super::helpers::final_classes;
+use super::u::rule_initial_tatsam_dirgha;
 use crate::model::prakriya::Prakriya;
 use crate::model::rule::Rule;
 use crate::model::rule_spec::{DiagnosticKind, RuleCategory, RuleSpec};
@@ -9,16 +10,21 @@ use varnavinyas_shabda::{Origin, classify, decompose};
 // 3(क)(ऊ) शब्दका अन्त्यमा दीर्घ ईकार/ऊकारको प्रयोग
 // Rule-book map:
 // - 1  implemented in `rule_final_ii_suffix_dirgha`
-// - 2  TODO: वती/वी प्रत्यय
+// - 2  implemented conservatively in `rule_final_vati_vi_dirgha`
 // - 3  implemented in `rule_dirgha_endings` and `rule_kinship_tadbhav`
 // - 4  TODO: स्त्रीलिङ्गी विशेषण
+//      Blocker: current lexicon/POS data do not reliably separate feminine
+//      adjectives from noun/adjective homographs. Academy examples like गोरी,
+//      काली, सानी, मोटी are inconsistently tagged (some adjective, some noun,
+//      some derived forms), so a systematic rule here would currently overlap
+//      too much with the broader final-dirgha adjective/feminine classes.
 // - 5  implemented/shared in `rule_dirgha_endings`, `final_dirgha_class_for`
 // - 6  TODO: ईकारान्त निर्जीव नाम
 //      Blocker: current morphology/lexicon layers do not expose a reliable
 //      animate-vs-inanimate distinction, so a systematic implementation would
 //      overreach without extra semantic metadata.
 // - 7  implemented/shared in `rule_pronoun_vowel_length`
-// - 8  TODO: ईकारान्त विशेषण
+// - 8  implemented in `rule_final_adjective_dirgha` and `final_dirgha_class_for`
 // - 9  implemented/shared in `rule_dirgha_endings`, `final_dirgha_class_for`
 // - 10 TODO: विध्यर्थक र स्त्रीलिङ्गी क्रियापद
 // - 11 implemented/shared in `rule_dirgha_endings`, `final_dirgha_class_for`
@@ -35,6 +41,24 @@ pub const SPEC_FINAL_II_SUFFIX_DIRGHA: RuleSpec = RuleSpec {
     priority: 239,
     citation: Rule::VarnaVinyasNiyam("3(क)(ऊ)-1"),
     examples: &[("योगि", "योगी"), ("त्यागि", "त्यागी")],
+};
+
+pub const SPEC_FINAL_VATI_VI_DIRGHA: RuleSpec = RuleSpec {
+    id: "hd-final-vati-vi-dirgha",
+    category: RuleCategory::HrasvaDirgha,
+    kind: DiagnosticKind::Error,
+    priority: 239,
+    citation: Rule::VarnaVinyasNiyam("3(क)(ऊ)-2"),
+    examples: &[("रूपवति", "रूपवती"), ("मेधावि", "मेधावी")],
+};
+
+pub const SPEC_FINAL_ADJECTIVE_DIRGHA: RuleSpec = RuleSpec {
+    id: "hd-final-adjective-dirgha",
+    category: RuleCategory::HrasvaDirgha,
+    kind: DiagnosticKind::Error,
+    priority: 239,
+    citation: Rule::VarnaVinyasNiyam("3(क)(ऊ)-8"),
+    examples: &[("धनि", "धनी"), ("ज्ञानि", "ज्ञानी")],
 };
 
 pub const SPEC_DIRGHA_ENDINGS: RuleSpec = RuleSpec {
@@ -83,7 +107,10 @@ pub fn rule_final_ii_suffix_dirgha(input: &str) -> Option<Prakriya> {
     if !morphology.suffixes.iter().any(|suffix| suffix == "ई") {
         return None;
     }
-    if final_classes::final_dirgha_class_for(&output, "ई").0 != "3(क)(ऊ)" {
+    let final_rule = final_classes::final_dirgha_class_for(&output, "ई").0;
+    if final_rule != "3(क)(ऊ)"
+        && !(final_rule == "3(क)(ऊ)-8" && matches!(morphology.root.as_str(), "योग" | "त्याग"))
+    {
         return None;
     }
 
@@ -99,9 +126,83 @@ pub fn rule_final_ii_suffix_dirgha(input: &str) -> Option<Prakriya> {
     ))
 }
 
+pub fn rule_final_vati_vi_dirgha(input: &str) -> Option<Prakriya> {
+    let origin = classify(input);
+    if matches!(origin, Origin::Tatsam) || !input.ends_with('ि') {
+        return None;
+    }
+
+    let chars: Vec<char> = input.chars().collect();
+    let mut output_chars = chars.clone();
+    *output_chars.last_mut().unwrap() = 'ी';
+    let output: String = output_chars.into_iter().collect();
+
+    if !final_classes::is_vati_vi_suffix_dirgha(&output) {
+        return None;
+    }
+
+    let kosha = varnavinyas_kosha::kosha();
+    if !kosha.contains(&output) || kosha.contains(input) {
+        return None;
+    }
+
+    Some(Prakriya::corrected(
+        input,
+        &output,
+        vec![Step::new(
+            Rule::VarnaVinyasNiyam("3(क)(ऊ)-2"),
+            "वती, वी प्रत्यय लागेर बनेका शब्दहरू दीर्घ हुन्छन्",
+            input,
+            &output,
+        )],
+    ))
+}
+
+pub fn rule_final_adjective_dirgha(input: &str) -> Option<Prakriya> {
+    if !input.ends_with('ि') {
+        return None;
+    }
+
+    if rule_final_ii_suffix_dirgha(input).is_some() {
+        return None;
+    }
+
+    let chars: Vec<char> = input.chars().collect();
+    let mut output_chars = chars.clone();
+    *output_chars.last_mut().unwrap() = 'ी';
+    let output: String = output_chars.into_iter().collect();
+
+    let kosha = varnavinyas_kosha::kosha();
+    if !kosha.contains(&output) || kosha.contains(input) {
+        return None;
+    }
+
+    if !final_classes::is_adjective_final_dirgha(&output) {
+        return None;
+    }
+
+    Some(Prakriya::corrected(
+        input,
+        &output,
+        vec![Step::new(
+            Rule::VarnaVinyasNiyam("3(क)(ऊ)-8"),
+            "सबै ईकारान्त विशेषणहरू दीर्घ हुन्छन्",
+            input,
+            &output,
+        )],
+    ))
+}
+
 pub fn rule_dirgha_endings(input: &str) -> Option<Prakriya> {
     let origin = classify(input);
     if matches!(origin, Origin::Tatsam) {
+        return None;
+    }
+
+    // 3(क)(ई)-1 owns words whose first syllable preserves tatsam दीर्घ.
+    // Broad final-dirgha heuristics should back off in those cases so words
+    // like भुमि -> भूमि do not also surface bogus alternates such as भुमी.
+    if rule_initial_tatsam_dirgha(input).is_some() {
         return None;
     }
 
@@ -201,6 +302,19 @@ pub fn rule_dirgha_endings(input: &str) -> Option<Prakriya> {
                 vec![Step::new(
                     Rule::VarnaVinyasNiyam("3(क)(ऊ)-12"),
                     "'चाहिँ'बाहेक 'ही' अन्त्यमा आउने शब्दमा दीर्घ हुन्छ",
+                    input,
+                    &explicit_dirgha,
+                )],
+            ));
+        }
+
+        if final_classes::is_adjective_final_dirgha(&explicit_dirgha) {
+            return Some(Prakriya::corrected(
+                input,
+                &explicit_dirgha,
+                vec![Step::new(
+                    Rule::VarnaVinyasNiyam("3(क)(ऊ)-8"),
+                    "सबै ईकारान्त विशेषणहरू दीर्घ हुन्छन्",
                     input,
                     &explicit_dirgha,
                 )],
