@@ -29,7 +29,9 @@ function getSelectedText() {
 
 function isInteractiveElement(el) {
   return Boolean(
-    el.closest('input, textarea, button, a, select, option, [contenteditable="true"]')
+    el.closest(
+      'input, textarea, button, a, select, option, [contenteditable]:not([contenteditable="false"])'
+    )
   );
 }
 
@@ -85,8 +87,13 @@ function onSelectionChange() {
   debounceTimer = setTimeout(() => {
     const text = getSelectedText();
 
+    if (!text) {
+      lastSelection = '';
+      return;
+    }
+
     // Skip empty, non-Devanagari, or duplicate selections
-    if (!text || !hasDevanagari(text) || text === lastSelection) return;
+    if (!hasDevanagari(text) || text === lastSelection) return;
 
     lastSelection = text;
 

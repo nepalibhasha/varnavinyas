@@ -2,7 +2,9 @@ mod morphology;
 mod origin;
 pub mod tables;
 
-pub use morphology::{Morpheme, decompose};
+pub use morphology::{
+    Morpheme, RootCandidate, best_root, decompose, has_known_root, lookup_root_candidates,
+};
 pub use origin::{
     Origin, OriginDecision, OriginSource, classify, classify_with_provenance, source_language,
 };

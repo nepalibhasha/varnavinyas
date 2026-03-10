@@ -37,13 +37,13 @@ pub use i::{
 };
 pub use u::{
     SPEC_INITIAL_TATSAM_DIRGHA, SPEC_SU_PREFIX_PRESERVES_DIRGHA,
-    SPEC_SUFFIX_FAMILY_PRESERVES_DIRGHA, SPEC_SUFFIX_PRESERVES,
-    rule_initial_tatsam_dirgha, rule_su_prefix_preserves_dirgha,
-    rule_suffix_family_preserves_dirgha, rule_suffix_preserves_dirgha,
+    SPEC_SUFFIX_FAMILY_PRESERVES_DIRGHA, SPEC_SUFFIX_PRESERVES, rule_initial_tatsam_dirgha,
+    rule_su_prefix_preserves_dirgha, rule_suffix_family_preserves_dirgha,
+    rule_suffix_preserves_dirgha,
 };
 pub use uu::{
     SPEC_DIRGHA_ENDINGS, SPEC_FINAL_ADJECTIVE_DIRGHA, SPEC_FINAL_II_SUFFIX_DIRGHA,
-    SPEC_FINAL_VATI_VI_DIRGHA,
-    SPEC_KOSHA_BACKED, kosha_backed_dirgha_correction, rule_dirgha_endings,
-    rule_final_adjective_dirgha, rule_final_ii_suffix_dirgha, rule_final_vati_vi_dirgha,
+    SPEC_FINAL_VATI_VI_DIRGHA, SPEC_KOSHA_BACKED, kosha_backed_dirgha_correction,
+    rule_dirgha_endings, rule_final_adjective_dirgha, rule_final_ii_suffix_dirgha,
+    rule_final_vati_vi_dirgha,
 };

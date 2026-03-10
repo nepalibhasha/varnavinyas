@@ -1,5 +1,6 @@
 use varnavinyas_shabda::{
-    Origin, OriginSource, classify, classify_with_provenance, decompose, tables,
+    Origin, OriginSource, best_root, classify, classify_with_provenance, decompose, has_known_root,
+    lookup_root_candidates, tables,
 };
 
 // S1: Classifies विज्ञान as Tatsam
@@ -188,4 +189,40 @@ fn decompose_nepali_to_nepal_plus_long_i() {
     let m = decompose("नेपाली");
     assert_eq!(m.root, "नेपाल");
     assert!(m.suffixes.contains(&"ई".to_string()));
+}
+
+#[test]
+fn root_candidates_include_known_suffix_root() {
+    let candidates = lookup_root_candidates("नेपाली");
+    assert!(candidates.iter().any(|candidate| {
+        candidate.root == "नेपाल" && candidate.suffixes.iter().any(|suffix| suffix == "ई")
+    }));
+}
+
+#[test]
+fn best_root_prefers_known_decomposition() {
+    let candidate = best_root("नेपाली").expect("नेपाली should produce a known root");
+    assert_eq!(candidate.root, "नेपाल");
+    assert!(candidate.suffixes.iter().any(|suffix| suffix == "ई"));
+}
+
+#[test]
+fn has_known_root_false_for_gibberish() {
+    assert!(!has_known_root("क्षत्र्यझ्फ"));
+}
+
+#[cfg(feature = "iterative-decompose")]
+#[test]
+fn iterative_root_candidates_handle_case_suffixes() {
+    let candidate = best_root("नेपालमा").expect("नेपालमा should resolve to नेपाल");
+    assert_eq!(candidate.root, "नेपाल");
+    assert_eq!(candidate.suffixes, vec!["मा"]);
+}
+
+#[cfg(feature = "iterative-decompose")]
+#[test]
+fn iterative_root_candidates_handle_plural_suffixes() {
+    let candidate = best_root("घरहरु").expect("घरहरु should resolve to घर");
+    assert_eq!(candidate.root, "घर");
+    assert_eq!(candidate.suffixes, vec!["हरु"]);
 }

@@ -14,7 +14,7 @@ crate-type = ["cdylib"]
 pyo3 = { workspace = true }
 varnavinyas-akshar = { workspace = true }
 varnavinyas-lipi = { workspace = true }
-varnavinyas-shabda = { workspace = true }
+varnavinyas-shabda = { workspace = true, features = ["iterative-decompose"] }
 varnavinyas-sandhi = { workspace = true }
 varnavinyas-prakriya = { workspace = true }
 varnavinyas-kosha = { workspace = true }

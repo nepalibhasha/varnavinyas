@@ -37,6 +37,19 @@ let currentDefinitions = [];
 let currentDictionaryHeadword = '';
 let activeLookupToken = 0;
 let lastPopupSelection = '';
+let localAnalysisAvailable = false;
+
+function currentSabdasakhaWord() {
+  return currentDictionaryHeadword || currentWord;
+}
+
+function updateOpenLink() {
+  const openBtn = document.getElementById('btn-open');
+  const targetWord = currentSabdasakhaWord();
+  openBtn.href = targetWord
+    ? `https://sabdasakha.com/word/${encodeURIComponent(targetWord)}`
+    : 'https://sabdasakha.com/';
+}
 
 // ── Theme ──
 
@@ -146,16 +159,20 @@ async function processWord(text) {
     const elapsed = performance.now() - t0;
 
     if (analysis && !analysis.error) {
+      localAnalysisAvailable = true;
       renderResult(word, analysis, check, decomposition, splits, compounds);
       footerEl.textContent = `${elapsed.toFixed(1)}ms`;
     } else {
-      // WASM not available or error — show word with minimal info
-      renderNotFound(word);
+      // WASM not available or error — keep a visible result shell so
+      // dictionary lookup can still populate useful information.
+      localAnalysisAvailable = false;
+      renderFallbackResult(word);
     }
 
     // Request dictionary lookup from background (async, updates UI when ready)
     const normalized = wasmReady ? normalizeQuery(word) : word;
     currentDictionaryHeadword = normalized;
+    updateOpenLink();
     chrome.runtime.sendMessage(
       { type: 'LOOKUP_REQUEST', payload: { query: normalized } },
       (response) => {
@@ -216,9 +233,8 @@ function renderResult(word, analysis, check, decomposition, splits, compounds) {
   document.getElementById('result-word').textContent = currentWord;
 
   // Set open link
-  const openBtn = document.getElementById('btn-open');
-  openBtn.href = `https://sabdasakha.com/word/${encodeURIComponent(currentWord)}`;
   document.getElementById('actions').style.display = 'flex';
+  updateOpenLink();
 
   // Origin badge
   const originEl = document.getElementById('result-origin');
@@ -420,21 +436,72 @@ function renderResult(word, analysis, check, decomposition, splits, compounds) {
     '<span class="dict-stub">शब्दकोश खोज्दै…</span>';
 }
 
+function renderFallbackResult(word) {
+  showState('result');
+
+  currentWord = word;
+  currentDefinitions = [];
+  document.getElementById('result-word').textContent = word;
+  document.getElementById('actions').style.display = 'flex';
+  updateOpenLink();
+
+  const originEl = document.getElementById('result-origin');
+  originEl.textContent = 'स्थानीय विश्लेषण छैन';
+  originEl.className = 'origin-badge unknown';
+
+  const originMetaEl = document.getElementById('result-origin-meta');
+  originMetaEl.innerHTML = '';
+  originMetaEl.style.display = 'none';
+
+  const correctionEl = document.getElementById('result-correction');
+  correctionEl.style.display = 'none';
+
+  const statusEl = document.getElementById('result-status');
+  statusEl.textContent = 'शब्दकोश खोजी जारी छ';
+  statusEl.style.display = 'block';
+
+  document.getElementById('result-rules').innerHTML = '';
+  document.getElementById('morph-section').style.display = 'none';
+  document.getElementById('split-section').style.display = 'none';
+  document.getElementById('dict-content').innerHTML =
+    '<span class="dict-stub">शब्दकोश खोज्दै…</span>';
+}
+
 function renderDictionary(data) {
+  if (!localAnalysisAvailable) {
+    showState('result');
+  }
   const el = document.getElementById('dict-content');
+  const statusEl = document.getElementById('result-status');
   el.innerHTML = '';
 
+  if (data.word) {
+    currentDictionaryHeadword = data.word;
+    updateOpenLink();
+  }
+
   if (data.error) {
+    if (!localAnalysisAvailable) {
+      statusEl.textContent = 'शब्दकोश त्रुटि';
+      statusEl.style.display = 'block';
+    }
     el.innerHTML = `<span class="dict-stub">${data.error}</span>`;
     return;
   }
 
   if (!data.definitions || data.definitions.length === 0) {
+    if (!localAnalysisAvailable) {
+      statusEl.textContent = 'शब्दकोशमा भेटिएन';
+      statusEl.style.display = 'block';
+    }
     el.innerHTML = '<span class="dict-stub">शब्दकोशमा भेटिएन</span>';
     currentDefinitions = [];
     return;
   }
 
+  if (!localAnalysisAvailable) {
+    statusEl.style.display = 'none';
+  }
   currentDefinitions = data.definitions;
 
   if (currentDictionaryHeadword && currentDictionaryHeadword !== currentWord) {
@@ -490,6 +557,7 @@ function renderNotFound(word) {
 
 function renderError(message) {
   showState('error');
+  localAnalysisAvailable = false;
   currentDefinitions = [];
   currentDictionaryHeadword = '';
   document.getElementById('error-message').textContent = message;
@@ -512,7 +580,11 @@ function readPopupSelectedText() {
 
 function handlePopupSelectionLookup() {
   const text = readPopupSelectedText();
-  if (!text || text === lastPopupSelection) return;
+  if (!text) {
+    lastPopupSelection = '';
+    return;
+  }
+  if (text === lastPopupSelection) return;
   if (!/[\u0900-\u097F]/.test(text)) return;
   lastPopupSelection = text;
   processWord(text);
@@ -521,7 +593,7 @@ function handlePopupSelectionLookup() {
 function isInteractiveElement(el) {
   return Boolean(
     el.closest(
-      'input, textarea, button, a, select, option, [contenteditable="true"]'
+      'input, textarea, button, a, select, option, [contenteditable]:not([contenteditable="false"])'
     )
   );
 }
