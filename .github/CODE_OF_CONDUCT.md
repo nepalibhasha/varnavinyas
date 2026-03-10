@@ -61,7 +61,7 @@ representative at an online or offline event.
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
 reported to the community leaders responsible for enforcement at:
 
-- Open a private security/administration contact per `SECURITY.md`
+- Open a private security/administration contact per `.github/SECURITY.md`
 - Or contact project maintainers through repository owner channels
 
 All complaints will be reviewed and investigated promptly and fairly.

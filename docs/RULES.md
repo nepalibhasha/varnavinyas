@@ -8,7 +8,7 @@ One of the key sources we leverage is the Nepal Academy orthography standard pub
 
 **[https://mofaga.gov.np/notice-file/Notices-20211029142422901.pdf](https://mofaga.gov.np/notice-file/Notices-20211029142422901.pdf)**
 
-A local copy is kept at `docs/Notices-pages-77-99.pdf` (pages 77–99 of the notice).
+A local excerpt/reference is kept at `docs/Notices-pages-77-99.md` (pages 77–99 of the notice).
 
 ## Rule Categories
 

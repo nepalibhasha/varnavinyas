@@ -27,7 +27,3 @@ Start here:
 
 - **[../crates/prakriya/ARCHITECTURE.md](../crates/prakriya/ARCHITECTURE.md)**: Token-level orthography engine design, runtime dispatch, and rule-hit model.
 - **[../crates/parikshak/ARCHITECTURE.md](../crates/parikshak/ARCHITECTURE.md)**: Text-checking pipeline, diagnostic model, and pass ownership.
-
-## Archive
-
-- **[archive/](archive/)**: Deprecated documentation (Old PRD, Roadmap).

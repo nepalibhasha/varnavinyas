@@ -61,7 +61,7 @@ Usage in Varnavinyas:
 
 Every entry in our datasets must have a traceback to an authoritative source.
 
-1.  **Key Source**: *Nepal Academy Orthography Standard* — published by MoFAGA ([PDF](https://mofaga.gov.np/notice-file/Notices-20211029142422901.pdf)). Local copy: `docs/Notices-pages-77-99.pdf`.
+1.  **Key Source**: *Nepal Academy Orthography Standard* — published by MoFAGA ([PDF](https://mofaga.gov.np/notice-file/Notices-20211029142422901.pdf)). Local excerpt/reference: `docs/Notices-pages-77-99.md`.
 2.  **Secondary Sources**: *LDTA Training Materials* (Government training docs).
 
 ### Promotion Flow

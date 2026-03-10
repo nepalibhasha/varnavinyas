@@ -1,6 +1,6 @@
 # Varnavinyas Feature Status
 
-> **Last Updated**: 2026-03-08
+> **Last Updated**: 2026-03-10
 
 This page is a coarse status snapshot, not a rule-by-rule checklist.
 
@@ -36,8 +36,8 @@ Some Academy areas -> still partial / TODO
 | Browser extension | Active | Packaging/build flow exists for Chrome and Firefox artifacts |
 | CLI | Active | Suitable for local workflows and CI |
 | WASM bindings | Active | Used by the web app |
-| Python bindings | Active | Core module surface exists; packaging/release story can improve |
-| LSP | Active | Working editor integration with room for performance/UX improvements |
+| Python bindings | Active | Core module surface exists; packaging metadata and release workflow can improve |
+| LSP | Active | Server crate and editor-facing integration exist; performance and UX can still improve |
 | C / UniFFI bindings | Active | Available for integration scenarios |
 
 ## Rule Coverage Snapshot

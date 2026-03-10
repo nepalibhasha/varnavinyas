@@ -5,8 +5,6 @@ Open-source Nepali orthography tooling based on Nepal Academy standards.
 *शुद्ध नेपाली, सबैका लागि।*  
 *(Correct Nepali, for everyone.)*
 
-**[Try it in your browser](https://nepalibhasha.github.io/varnavinyas/)** — no install required.
-
 ## What This Project Is
 
 Varnavinyas is a Rust workspace for checking and normalizing Nepali text.
@@ -28,9 +26,7 @@ Diagnostics use stable `category_code` values across the web app, CLI, LSP, and 
 
 ### Browser
 
-Use the hosted web app:
-
-- <https://nepalibhasha.github.io/varnavinyas/>
+Use the hosted web app linked from the repository homepage.
 
 The web app includes:
 - text checker
@@ -121,13 +117,28 @@ web/
 docs/
 ```
 
-- `crates/akshar`, `crates/lipi`: Devanagari text utilities
-- `crates/shabda`, `crates/sandhi`, `crates/types`: morphology and shared language/data types
-- `crates/prakriya`, `crates/parikshak`, `crates/lekhya`, `crates/kosha`: core checking stack
-- `crates/vyakaran`, `crates/samasa`: grammar and samasa libraries
-- `crates/eval`: evaluation harnesses
-- `web/`: web UI and WASM bridge
-- `docs/tests/*.toml`: gold and eval fixtures
+For new contributors, the crate split is easiest to read as four groups:
+
+- Foundation crates
+  - `crates/akshar`: Devanagari normalization, classification, and akshara utilities
+  - `crates/lipi`: transliteration and legacy-font conversion helpers
+  - `crates/types`: shared domain enums and data types
+
+- Language knowledge crates
+  - `crates/kosha`: lexicon lookup and headword metadata
+  - `crates/shabda`: origin classification and lightweight decomposition
+  - `crates/sandhi`: sandhi rules and helpers
+
+- Checking engine crates
+  - `crates/prakriya`: token-level orthography derivation and rule tracing
+  - `crates/lekhya`: punctuation diagnostics
+  - `crates/parikshak`: full-text checker pipeline that composes the lower layers
+
+- Analysis and surface crates
+  - `crates/vyakaran`, `crates/samasa`: grammar and compound-analysis support
+  - `crates/eval`: evaluation harnesses over curated fixtures
+  - `crates/cli`, `crates/lsp`, `crates/bindings-*`: user-facing delivery surfaces
+  - `web/`: browser UI backed by the WASM bindings
 
 ## Build And Test
 
@@ -187,14 +198,14 @@ Crate-specific architecture docs:
 Technical and non-technical contributions are welcome.
 
 Start with:
-- [CONTRIBUTING.md](CONTRIBUTING.md)
+- [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md)
 - [docs/RUST_GUIDE.md](docs/RUST_GUIDE.md)
 - [docs/BACKLOG.md](docs/BACKLOG.md)
 
 Community and process files:
-- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
-- [SECURITY.md](SECURITY.md)
-- [SUPPORT.md](SUPPORT.md)
+- [.github/CODE_OF_CONDUCT.md](.github/CODE_OF_CONDUCT.md)
+- [.github/SECURITY.md](.github/SECURITY.md)
+- [.github/SUPPORT.md](.github/SUPPORT.md)
 
 ## License
 

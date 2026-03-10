@@ -71,8 +71,8 @@ Use the `Feature request` issue form.
 Describe user value and whether the change targets linguists, developers, or both.
 
 ## Code of Conduct
-By participating, you agree to follow `CODE_OF_CONDUCT.md`.
+By participating, you agree to follow `.github/CODE_OF_CONDUCT.md`.
 
 ## Security
 Do not open public issues for sensitive vulnerabilities.
-See `SECURITY.md` for responsible disclosure instructions.
+See `.github/SECURITY.md` for responsible disclosure instructions.
