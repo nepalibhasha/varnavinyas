@@ -62,7 +62,7 @@ pub const SPEC_SIBILANT: RuleSpec = RuleSpec {
 // - 'ओ' logic is currently not a dedicated generalized rule in this module.
 pub const SPEC_BA_VA: RuleSpec = RuleSpec {
     id: "ortho-ba-va",
-    category: RuleCategory::ShaShaS,
+    category: RuleCategory::BaVa,
     kind: DiagnosticKind::Error,
     priority: 315,
     citation: Rule::VarnaVinyasNiyam("3(ग)(आ)"),

@@ -43,7 +43,24 @@ impl Rule {
             Rule::VarnaVinyasNiyam(code) => match *code {
                 c if c.starts_with("3(क)") => "ह्रस्व/दीर्घ स्वर नियम",
                 c if c.starts_with("3(ख)") => "चन्द्रबिन्दु/शिरबिन्दु नियम",
-                c if c.starts_with("3(ग)") => "श/ष/स प्रयोग नियम",
+                c if c.starts_with("3(ग)(अ)") => "श/ष/स प्रयोग नियम",
+                c if c.starts_with("3(ग)(आ)") || c.starts_with("3(ग)-बव") => {
+                    "ब/व प्रयोग नियम"
+                }
+                c if c.starts_with("3(ग)(ई)")
+                    || c.starts_with("3(ग)-ऋ")
+                    || c.starts_with("3(ग)-कृ") =>
+                {
+                    "ऋ/कृ प्रयोग नियम"
+                }
+                c if c.starts_with("3(ग)(इ)") || c == "3(छ)" => "य/ए भेद नियम",
+                c if c.starts_with("3(ग)(उ)") || c.starts_with("3(छ)-क्ष") => {
+                    "क्ष/छ भेद नियम"
+                }
+                c if c.starts_with("3(ग)(ऊ)") || c.starts_with("3(छ)-ज्ञ") => {
+                    "ज्ञ/ग्य भेद नियम"
+                }
+                c if c.starts_with("3(ग)") => "उस्तै उच्चारण हुने वर्ण प्रयोग नियम",
                 c if c.starts_with("3(घ)") => "ऋ/कृ प्रयोग नियम",
                 c if c.starts_with("3(ङ)") => "हलन्त नियम",
                 c if c.starts_with("3(इ)") => "य/ए भेद नियम",

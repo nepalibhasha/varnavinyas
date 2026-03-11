@@ -160,6 +160,16 @@ fn halanta_word_gets_halanta_category() {
 }
 
 #[test]
+fn ba_va_word_gets_ba_va_category() {
+    let diag = check_word("बिकास").expect("Expected diagnostic for बिकास");
+    assert_eq!(diag.correction, "विकास");
+    assert_eq!(
+        diag.category,
+        varnavinyas_parikshak::DiagnosticCategory::BaVa
+    );
+}
+
+#[test]
 fn tatsam_padanta_halanta_beats_edit_distance() {
     let diag = check_word("जगत").expect("Expected diagnostic for जगत");
     assert_eq!(diag.correction, "जगत्");

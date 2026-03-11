@@ -19,6 +19,7 @@
   --cat-hrasva-dirgha: #7c3aed;
   --cat-chandrabindu: #0891b2;
   --cat-sha-sha-s: #c2410c;
+  --cat-ba-va: #0f766e;
   --cat-ri-kri: #4f46e5;
   --cat-halanta: #0d9488;
   --cat-aadhi-vriddhi: #dc2626;
@@ -339,6 +340,7 @@ body {
 .editor-backdrop mark[data-category="HrasvaDirgha"] { border-bottom-color: var(--cat-hrasva-dirgha); }
 .editor-backdrop mark[data-category="Chandrabindu"] { border-bottom-color: var(--cat-chandrabindu); }
 .editor-backdrop mark[data-category="ShaShaS"] { border-bottom-color: var(--cat-sha-sha-s); }
+.editor-backdrop mark[data-category="BaVa"] { border-bottom-color: var(--cat-ba-va); }
 .editor-backdrop mark[data-category="RiKri"] { border-bottom-color: var(--cat-ri-kri); }
 .editor-backdrop mark[data-category="Halanta"] { border-bottom-color: var(--cat-halanta); }
 .editor-backdrop mark[data-category="AadhiVriddhi"] { border-bottom-color: var(--cat-aadhi-vriddhi); }
@@ -614,6 +616,7 @@ body {
 .diag-card[data-category="HrasvaDirgha"] { border-left-color: var(--cat-hrasva-dirgha); }
 .diag-card[data-category="Chandrabindu"] { border-left-color: var(--cat-chandrabindu); }
 .diag-card[data-category="ShaShaS"] { border-left-color: var(--cat-sha-sha-s); }
+.diag-card[data-category="BaVa"] { border-left-color: var(--cat-ba-va); }
 .diag-card[data-category="RiKri"] { border-left-color: var(--cat-ri-kri); }
 .diag-card[data-category="Halanta"] { border-left-color: var(--cat-halanta); }
 .diag-card[data-category="AadhiVriddhi"] { border-left-color: var(--cat-aadhi-vriddhi); }
@@ -640,6 +643,7 @@ body {
 .diag-badge[data-category="HrasvaDirgha"] { background: var(--cat-hrasva-dirgha); }
 .diag-badge[data-category="Chandrabindu"] { background: var(--cat-chandrabindu); }
 .diag-badge[data-category="ShaShaS"] { background: var(--cat-sha-sha-s); }
+.diag-badge[data-category="BaVa"] { background: var(--cat-ba-va); }
 .diag-badge[data-category="RiKri"] { background: var(--cat-ri-kri); }
 .diag-badge[data-category="Halanta"] { background: var(--cat-halanta); }
 .diag-badge[data-category="AadhiVriddhi"] { background: var(--cat-aadhi-vriddhi); }

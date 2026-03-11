@@ -30,6 +30,7 @@ pub enum RuleCategory {
     HrasvaDirgha,
     Chandrabindu,
     ShaShaS,
+    BaVa,
     RiKri,
     Halanta,
     Structural,

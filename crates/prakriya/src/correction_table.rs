@@ -88,22 +88,6 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             },
         ),
         (
-            "संसद",
-            CorrectionEntry {
-                correct: "संसद्",
-                rule: Rule::VarnaVinyasNiyam("3(ङ)"),
-                description: "हलन्त अनिवार्य: संस्कृत मूलको अन्त्य द् मा हुन्छ (संसद्)",
-            },
-        ),
-        (
-            "परिषद",
-            CorrectionEntry {
-                correct: "परिषद्",
-                rule: Rule::VarnaVinyasNiyam("3(ङ)"),
-                description: "हलन्त अनिवार्य: संस्कृत मूलको अन्त्य द् मा हुन्छ (परिषद्)",
-            },
-        ),
-        (
             "संघीय",
             CorrectionEntry {
                 correct: "सङ्घीय",
@@ -622,95 +606,15 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
         // =================================================================
         // हलन्त entries (Section 3(ङ))
         // =================================================================
-        (
-            "अर्थात",
-            CorrectionEntry {
-                correct: "अर्थात्",
-                rule: Rule::VarnaVinyasNiyam("3(ङ)"),
-                description: "अव्यय अर्थात् मा हलन्त अनिवार्य हुन्छ",
-            },
-        ),
-        (
-            "बुद्धिमान",
-            CorrectionEntry {
-                correct: "बुद्धिमान्",
-                rule: Rule::VarnaVinyasNiyam("3(ङ)"),
-                description: "-मान् प्रत्ययमा हलन्त अनिवार्य हुन्छ (बुद्धिमान्)",
-            },
-        ),
-        (
-            "भगवान",
-            CorrectionEntry {
-                correct: "भगवान्",
-                rule: Rule::VarnaVinyasNiyam("3(ङ)"),
-                description: "-वान् प्रत्ययमा हलन्त अनिवार्य हुन्छ (भगवान्)",
-            },
-        ),
-        (
-            "महान",
-            CorrectionEntry {
-                correct: "महान्",
-                rule: Rule::VarnaVinyasNiyam("3(ङ)"),
-                description: "हलन्त अनिवार्य: तत्सम मूलको अन्त्य न् मा हुन्छ (महान्)",
-            },
-        ),
-        (
-            "विद्वान",
-            CorrectionEntry {
-                correct: "विद्वान्",
-                rule: Rule::VarnaVinyasNiyam("3(ङ)"),
-                description: "-वान् प्रत्ययमा हलन्त अनिवार्य हुन्छ (विद्वान्)",
-            },
-        ),
-        (
-            "श्रीमान",
-            CorrectionEntry {
-                correct: "श्रीमान्",
-                rule: Rule::VarnaVinyasNiyam("3(ङ)"),
-                description: "-मान् प्रत्ययमा हलन्त अनिवार्य हुन्छ (श्रीमान्)",
-            },
-        ),
         // =================================================================
         // b_v entries (Section 3(ग)-बव)
         // =================================================================
-        (
-            "बिद्या",
-            CorrectionEntry {
-                correct: "विद्या",
-                rule: Rule::VarnaVinyasNiyam("3(ग)-बव"),
-                description: "तत्सम शब्दमा व (ब होइन): विद्या",
-            },
-        ),
         (
             "बिद्वान",
             CorrectionEntry {
                 correct: "विद्वान्",
                 rule: Rule::VarnaVinyasNiyam("3(ग)-बव"),
                 description: "तत्सम शब्दमा व (ब होइन) र हलन्त: विद्वान्",
-            },
-        ),
-        (
-            "बिदेश",
-            CorrectionEntry {
-                correct: "विदेश",
-                rule: Rule::VarnaVinyasNiyam("3(ग)-बव"),
-                description: "तत्सम शब्दमा व (ब होइन): विदेश",
-            },
-        ),
-        (
-            "बिकास",
-            CorrectionEntry {
-                correct: "विकास",
-                rule: Rule::VarnaVinyasNiyam("3(ग)-बव"),
-                description: "तत्सम शब्दमा व (ब होइन): विकास",
-            },
-        ),
-        (
-            "बिज्ञान",
-            CorrectionEntry {
-                correct: "विज्ञान",
-                rule: Rule::VarnaVinyasNiyam("3(ग)-बव"),
-                description: "तत्सम शब्दमा व (ब होइन): विज्ञान",
             },
         ),
         // =================================================================
@@ -824,7 +728,17 @@ mod tests {
         shuddha_table: Vec<GoldEntry>,
     }
 
-    const RULE_BACKED_SHUDDHA_TABLE_EXCEPTIONS: &[&str] = &["इण्डिया", "झण्डा", "फाउण्डेसन"];
+    const RULE_BACKED_SHUDDHA_TABLE_EXCEPTIONS: &[&str] = &[
+        "इण्डिया",
+        "झण्डा",
+        "फाउण्डेसन",
+        "संसद",
+        "परिषद",
+        "बिद्या",
+        "बिदेश",
+        "बिकास",
+        "बिज्ञान",
+    ];
 
     #[test]
     fn shuddha_table_fixture_entries_exist_in_correction_table() {
@@ -839,7 +753,9 @@ mod tests {
         let gold_keys: BTreeSet<&str> = gold
             .shuddha_table
             .iter()
-            .filter(|entry| !RULE_BACKED_SHUDDHA_TABLE_EXCEPTIONS.contains(&entry.incorrect.as_str()))
+            .filter(|entry| {
+                !RULE_BACKED_SHUDDHA_TABLE_EXCEPTIONS.contains(&entry.incorrect.as_str())
+            })
             .map(|entry| entry.incorrect.as_str())
             .collect();
 

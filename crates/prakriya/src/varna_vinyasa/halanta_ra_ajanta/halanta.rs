@@ -128,9 +128,10 @@ pub(super) fn rule_halanta_required(input: &str) -> Option<Prakriya> {
     // when the exact halanta-restored form is attested and tatsam.
     if !input.ends_with('्') {
         let output = format!("{input}्");
-        if !lex.contains(input)
-            && lex.contains(&output)
+        let input_is_headword = lex.lookup(input).is_some();
+        if lex.contains(&output)
             && matches!(classify(&output), Origin::Tatsam)
+            && (!lex.contains(input) || !input_is_headword)
         {
             return Some(Prakriya::corrected(
                 input,

@@ -6,6 +6,7 @@ pub enum DiagnosticCategory {
     HrasvaDirgha,
     Chandrabindu,
     ShaShaS,
+    BaVa,
     RiKri,
     Halanta,
     AadhiVriddhi,
@@ -25,6 +26,7 @@ impl DiagnosticCategory {
             Self::HrasvaDirgha => "HrasvaDirgha",
             Self::Chandrabindu => "Chandrabindu",
             Self::ShaShaS => "ShaShaS",
+            Self::BaVa => "BaVa",
             Self::RiKri => "RiKri",
             Self::Halanta => "Halanta",
             Self::AadhiVriddhi => "AadhiVriddhi",
@@ -51,6 +53,11 @@ impl DiagnosticCategory {
                     || code.contains("3(ग)-कृ")
                 {
                     DiagnosticCategory::RiKri
+                } else if code.contains("ब/व")
+                    || code.contains("3(ग)-बव")
+                    || code.contains("3(ग)(आ)")
+                {
+                    DiagnosticCategory::BaVa
                 } else if code.contains("क्ष") || code.contains("छ्य") || code.contains("3(छ)-क्ष")
                 {
                     DiagnosticCategory::KshaChhya
@@ -91,6 +98,7 @@ impl DiagnosticCategory {
             RuleCategory::HrasvaDirgha => DiagnosticCategory::HrasvaDirgha,
             RuleCategory::Chandrabindu => DiagnosticCategory::Chandrabindu,
             RuleCategory::ShaShaS => DiagnosticCategory::ShaShaS,
+            RuleCategory::BaVa => DiagnosticCategory::BaVa,
             RuleCategory::RiKri => DiagnosticCategory::RiKri,
             RuleCategory::Halanta => DiagnosticCategory::Halanta,
             RuleCategory::Sandhi => DiagnosticCategory::Sandhi,
@@ -129,6 +137,7 @@ impl std::fmt::Display for DiagnosticCategory {
             Self::HrasvaDirgha => write!(f, "ह्रस्व/दीर्घ"),
             Self::Chandrabindu => write!(f, "चन्द्रबिन्दु"),
             Self::ShaShaS => write!(f, "श/ष/स"),
+            Self::BaVa => write!(f, "ब/व"),
             Self::RiKri => write!(f, "ऋ/कृ"),
             Self::Halanta => write!(f, "हलन्त"),
             Self::AadhiVriddhi => write!(f, "आदिवृद्धि"),

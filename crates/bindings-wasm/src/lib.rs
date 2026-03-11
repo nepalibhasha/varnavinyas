@@ -286,8 +286,13 @@ pub fn sandhi_split_best_for_compound(word: &str) -> String {
 #[wasm_bindgen]
 pub fn sandhi_split_best_for_compound_value(word: &str) -> Result<JsValue, JsError> {
     match varnavinyas_sandhi::split_best_for_compound(word) {
-        Some(candidate) => serde_wasm_bindgen::to_value(&sandhi_split_to_js(candidate))
-            .map_err(|e| JsError::new(&format!("failed to serialize best sandhi split result: {e}"))),
+        Some(candidate) => {
+            serde_wasm_bindgen::to_value(&sandhi_split_to_js(candidate)).map_err(|e| {
+                JsError::new(&format!(
+                    "failed to serialize best sandhi split result: {e}"
+                ))
+            })
+        }
         None => Ok(JsValue::NULL),
     }
 }

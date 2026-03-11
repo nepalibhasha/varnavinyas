@@ -85,6 +85,7 @@ const FILTER_CATEGORY_ORDER = [
   "Halanta",
   "Punctuation",
   "ShaShaS",
+  "BaVa",
   "RiKri",
   "YaE",
   "KshaChhya",
@@ -163,6 +164,7 @@ function primaryCategoryLabel(diag) {
     case "Halanta":
       return "हलन्त/अजन्त";
     case "ShaShaS":
+    case "BaVa":
     case "RiKri":
     case "YaE":
     case "KshaChhya":

@@ -19,3 +19,15 @@ fn o7_bv_bidesh() {
     let p = derive("बिदेश");
     assert_eq!(p.output, "विदेश");
 }
+
+#[test]
+fn o7_bv_bikas() {
+    let p = derive("बिकास");
+    assert_eq!(p.output, "विकास");
+}
+
+#[test]
+fn o7_bv_bigyan() {
+    let p = derive("बिज्ञान");
+    assert_eq!(p.output, "विज्ञान");
+}
