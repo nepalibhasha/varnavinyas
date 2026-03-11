@@ -22,13 +22,41 @@ pub struct OriginDecision {
 
 /// नेपाली शब्दलाई उत्पत्तिका आधारमा वर्गीकृत गर्ने।
 ///
-/// त्रिस्तरीय lookup:
+/// चार-स्तरीय lookup:
 /// 1. Override तालिका (dictionary/heuristic ले छुटाउन सक्ने किनाराका केस)
 /// 2. Kosha lookup (~130K headwords, Brihat + Pragya Shabdakosha metadata सहित)
+/// 2b. Suffix-stripped kosha lookup (विभक्ति/बहुवचन रूपका लागि)
 /// 3. Heuristic वर्गीकरण (ध्वन्यात्मक ढाँचा)
 pub fn classify(word: &str) -> Origin {
     classify_with_provenance(word).origin
 }
+
+/// विभक्ति र बहुवचन suffix हरू जुन stem lookup का लागि छुटाइन्छ।
+/// लामो suffix पहिले राख्नु ताकि "हरूले" → stem सही निस्किओस् (greedy)।
+const STRIP_SUFFIXES: &[&str] = &[
+    "हरूलाई",
+    "हरूको",
+    "हरूले",
+    "हरूबाट",
+    "हरूमा",
+    "हरूसँग",
+    "भित्र",
+    "प्रति",
+    "देखि",
+    "सँगै",
+    "सम्म",
+    "हरु",
+    "हरू",
+    "लाई",
+    "बाट",
+    "सँग",
+    "तिर",
+    "का",
+    "की",
+    "ले",
+    "को",
+    "मा",
+];
 
 /// provenance र confidence सहित वर्गीकरण।
 pub fn classify_with_provenance(word: &str) -> OriginDecision {
@@ -66,6 +94,30 @@ pub fn classify_with_provenance(word: &str) -> OriginDecision {
             source: OriginSource::Kosha,
             confidence: 0.85,
         };
+    }
+
+    // 2b. Suffix-stripped kosha lookup — विभक्ति/बहुवचन रूपलाई stem मा घटाएर हेर्ने।
+    // उदाहरण: "संस्कृतमा" → "संस्कृत" ([सं.] → Tatsam), confidence थोरै कम।
+    for suffix in STRIP_SUFFIXES {
+        if let Some(stem) = word.strip_suffix(suffix) {
+            // कम्तिमा २ अक्षर नभए stem ग्राह्य छैन
+            if stem.chars().count() > 1 {
+                if let Some(tag) = kosha.origin_of(stem) {
+                    return OriginDecision {
+                        origin: tag,
+                        source: OriginSource::Kosha,
+                        confidence: 0.90,
+                    };
+                }
+                if kosha.lookup(stem).is_some() {
+                    return OriginDecision {
+                        origin: Origin::Deshaj,
+                        source: OriginSource::Kosha,
+                        confidence: 0.80,
+                    };
+                }
+            }
+        }
     }
 
     // 3. Heuristic वर्गीकरण
@@ -143,6 +195,7 @@ fn has_tatsam_markers(word: &str, chars: &[char]) -> bool {
     }
 
     // श्र/त्र/त्त/द्ध/द्य/द्व जस्ता तत्सम-उन्मुख संयुक्ताक्षर
+    // नोट: ध्य यहाँ राखिएको छैन — अँध्यार जस्ता देशज परिवारमा पनि यो क्लस्टर आउँछ।
     if word.contains("त्र")
         || word.contains("त्त")
         || word.contains("द्ध")
@@ -160,6 +213,45 @@ fn has_tatsam_markers(word: &str, chars: &[char]) -> bool {
 /// kosha को origin tag प्रयोग हुन्छ। शब्दमा मान्य भाषा tag नभए `None`।
 pub fn source_language(word: &str) -> Option<&'static str> {
     varnavinyas_kosha::kosha().source_language_of(word)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// अँध्यार परिवार देशज हो — ध्य क्लस्टर भए पनि तत्सम होइन।
+    /// Regression: adding ध्य to tatsam markers caused false positives here.
+    #[test]
+    fn andhyaar_family_is_deshaj_not_tatsam() {
+        // Base form (in words.txt; kosha lookup handles this)
+        let d = classify_with_provenance("अँध्यार");
+        assert_ne!(
+            d.origin,
+            Origin::Tatsam,
+            "अँध्यार should not be Tatsam (got {:?})",
+            d
+        );
+
+        // Inflected forms that fall through to heuristic
+        for word in &["अँध्यारोपन", "अँध्यारिन्थ्यो"]
+        {
+            let d = classify_with_provenance(word);
+            assert_ne!(
+                d.origin,
+                Origin::Tatsam,
+                "{word} should not be Tatsam (got {:?})",
+                d
+            );
+        }
+    }
+
+    /// अध्ययन kosha मा [सं.] tag सहित छ — heuristic बिनै पनि Tatsam निस्कन्छ।
+    #[test]
+    fn adhyayan_is_tatsam_via_kosha() {
+        let d = classify_with_provenance("अध्ययन");
+        assert_eq!(d.origin, Origin::Tatsam, "अध्ययन should be Tatsam");
+        assert_eq!(d.source, OriginSource::Kosha, "should come from kosha");
+    }
 }
 
 fn has_tadbhav_markers(word: &str, chars: &[char]) -> bool {

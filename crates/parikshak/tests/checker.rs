@@ -103,14 +103,18 @@ fn c6_no_false_positives_on_correct() {
 }
 
 #[test]
-fn unknown_word_with_close_match_is_flagged_as_ambiguous() {
+fn adhyan_misspelling_is_flagged_as_error() {
     let diag = check_word("अध्यन");
     assert!(
         diag.is_some(),
-        "Unknown form with close lexicon match should be flagged"
+        "Known misspelling अध्यन should produce a diagnostic"
     );
     let diag = diag.unwrap();
-    assert!(matches!(diag.kind, DiagnosticKind::Ambiguous));
+    assert!(
+        matches!(diag.kind, DiagnosticKind::Error),
+        "अध्यन should be an Error (correction table), got: {:?}",
+        diag.kind
+    );
     assert_eq!(diag.incorrect, "अध्यन");
     assert_eq!(diag.correction, "अध्ययन");
 }

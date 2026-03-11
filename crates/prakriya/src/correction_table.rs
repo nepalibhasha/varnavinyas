@@ -771,6 +771,14 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             },
         ),
         (
+            "अध्यन",
+            CorrectionEntry {
+                correct: "अध्ययन",
+                rule: Rule::Vyakaran("kosha"),
+                description: "शब्दकोशमा अध्ययन मात्र छ; अध्यन रूप भेटिँदैन",
+            },
+        ),
+        (
             "सन्सारमा",
             CorrectionEntry {
                 correct: "संसारमा",

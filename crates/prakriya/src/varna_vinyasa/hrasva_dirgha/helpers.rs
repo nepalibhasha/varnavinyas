@@ -194,7 +194,7 @@ pub(super) mod final_classes {
     }
 
     pub(crate) fn is_vibhakti_final_hrasva(output: &str) -> bool {
-        matches!(output, "देखि" | "निम्ति")
+        matches!(output, "देखि" | "निम्ति" | "लागि")
     }
 
     pub(crate) fn is_ti_avyaya_final_hrasva(output: &str) -> bool {
@@ -223,6 +223,17 @@ pub(super) mod final_classes {
 
         if let Some(p) = kosha_backed_dirgha_correction(&hrasva) {
             if p.output == input {
+                return true;
+            }
+        }
+
+        // If the hrasva form is a known vibhakti (e.g. लागि, देखि) and the dirgha
+        // form also exists in the lexicon, it is a legitimate separate word — most
+        // commonly an asamapaka (gerund) form of the same root (e.g. लागी = "having
+        // applied").  Treat it as correctly spelled rather than a vibhakti misspelling.
+        if is_vibhakti_final_hrasva(&hrasva) {
+            let kosha = varnavinyas_kosha::kosha();
+            if kosha.contains(input) {
                 return true;
             }
         }

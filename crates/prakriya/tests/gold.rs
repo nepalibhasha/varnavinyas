@@ -77,8 +77,8 @@ fn p5_all_gold_entries() {
 
     assert_eq!(
         all_entries.len(),
-        91,
-        "Expected 91 gold entries, found {}",
+        92,
+        "Expected 92 gold entries, found {}",
         all_entries.len()
     );
 

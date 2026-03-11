@@ -76,6 +76,16 @@ fn classify_deshaj_words() {
 }
 
 #[test]
+fn classify_adhyaro_family_as_non_tatsam() {
+    let d = classify_with_provenance("अँध्यारोपन");
+    assert_ne!(
+        d.origin,
+        Origin::Tatsam,
+        "अँध्यारोपन should not be forced into tatsam classification by a broad ध्य heuristic"
+    );
+}
+
+#[test]
 fn classify_with_provenance_override_source() {
     let d = classify_with_provenance("विज्ञान");
     assert_eq!(d.origin, Origin::Tatsam);
