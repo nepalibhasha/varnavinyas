@@ -15,6 +15,7 @@ let dismissedDiagnosticKeys = new Set();
 let activeCardIndex = -1;
 let runtimeErrorMessage = null;
 const mobileDiagOverlay = document.getElementById('mobile-diag-overlay');
+const mobileInspectorOverlay = document.getElementById('mobile-inspector-overlay');
 
 const editorInput = document.getElementById('editor-input');
 const editorBackdrop = document.getElementById('editor-backdrop');
@@ -62,6 +63,7 @@ export function initChecker() {
     initInspector(panelContent, {
       onFix: handleInspectorFix,
       onBack: handleInspectorBack,
+      mobileHost: mobileInspectorOverlay,
     });
   }
 }
@@ -689,6 +691,7 @@ function isMobileView() {
  */
 function showMobileDiagOverlay(d, idx) {
   if (!mobileDiagOverlay) return;
+  hideInspector();
   const visible = getVisibleDiagnosticsWithIndex();
   const visiblePos = visible.findIndex(({ index }) => index === idx);
   const hasChange = d.incorrect !== d.correction;
@@ -846,10 +849,16 @@ function onEditorClick() {
     hideMobileDiagOverlay();
   }
 
-  // Show inspector for clicked word (desktop only — on mobile the panel is hidden)
-  if (isMobileView()) return;
-
   const wordInfo = getWordAtCursor(text, pos);
+  if (isMobileView()) {
+    if (wordInfo) {
+      showInspector(wordInfo.word, wordInfo.start, wordInfo.end, { mobile: true });
+    } else if (isInspectorActive()) {
+      hideInspector();
+    }
+    return;
+  }
+
   if (wordInfo) {
     // Hide diagnostics panel content, show inspector
     hideDiagnosticsPanel();
@@ -903,6 +912,7 @@ function restoreDiagnosticsPanel() {
 function handleInspectorFix(start, end, correction) {
   const text = editorInput.value;
   editorInput.value = text.slice(0, start) + correction + text.slice(end);
+  hideMobileDiagOverlay();
   restoreDiagnosticsPanel();
   runCheck();
 }

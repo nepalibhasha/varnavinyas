@@ -1186,6 +1186,26 @@ body {
   margin-bottom: 1.25rem;
 }
 
+.reference-focus-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.reference-focus-kicker {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #1d4ed8;
+}
+
+.reference-focus-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
 .reference-search {
   width: 100%;
   padding: 0.75rem 0.9rem;
@@ -1585,6 +1605,10 @@ body {
   display: none;
 }
 
+.mobile-inspector-overlay {
+  display: none;
+}
+
 /* Mobile: stack to single column */
 @media (max-width: 768px) {
   /* Switch from viewport-clipped layout to natural page scroll */
@@ -1650,6 +1674,37 @@ body {
 
   .mobile-diag-overlay.visible {
     display: block;
+  }
+
+  .mobile-inspector-overlay {
+    display: none; /* shown via JS when tapping a non-diagnostic word */
+    margin-top: 0.6rem;
+    background: color-mix(in srgb, var(--color-surface) 96%, white 4%);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    padding: 0.75rem;
+    animation: fadeIn 0.15s ease;
+    max-height: min(44svh, 26rem);
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mobile-inspector-overlay.visible {
+    display: block;
+  }
+
+  .inspector-container-mobile {
+    max-height: 100%;
+    overflow: auto;
+    padding-right: 0.1rem;
+  }
+
+  .inspector-container-mobile .panel-back-btn {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--color-surface);
   }
 
   .mobile-diag-overlay .diag-correction {

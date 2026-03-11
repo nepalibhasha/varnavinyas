@@ -6,30 +6,95 @@ import { escapeHtml, CATEGORY_COLORS, CATEGORY_LABELS } from './utils.js';
 
 const container = document.getElementById('reference-content');
 
+let currentContext = null;
+let focusedCategoryCode = null;
+let focusedTargetId = null;
+let currentSearch = '';
+
 /**
  * Initialize the reference tab by rendering all rule sections.
  */
 export function initReference() {
   if (!container) return;
+  renderReferenceView();
+}
+
+export function setReferenceContext(context) {
+  currentContext = context && (context.incorrect || context.word) ? context : null;
+  focusedCategoryCode = currentContext?.categoryCode || null;
+  focusedTargetId = currentContext?.targetId || null;
+  currentSearch = '';
+  renderReferenceView();
+}
+
+/**
+ * Scroll to and briefly highlight the ref-card or subsection for the given categoryCode.
+ */
+export function highlightCard(categoryCode, targetId = null) {
+  if (!categoryCode) return;
+
+  if (focusedCategoryCode !== categoryCode || focusedTargetId !== targetId) {
+    focusedCategoryCode = categoryCode;
+    focusedTargetId = targetId;
+    renderReferenceView();
+  }
+
+  const target = targetId
+    ? document.getElementById(`ref-${categoryCode}-${targetId}`)
+    : null;
+  const card = target || document.getElementById(`ref-${categoryCode}`);
+  if (!card) return;
+
+  if (target && typeof target.open === 'boolean') {
+    target.open = true;
+  }
+
+  card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  card.classList.add('ref-card-highlight');
+  setTimeout(() => card.classList.remove('ref-card-highlight'), 1500);
+}
+
+function renderReferenceView() {
+  if (!container) return;
+
+  const sections = getVisibleSections();
+  const focusedLabel = focusedCategoryCode
+    ? (CATEGORY_LABELS[focusedCategoryCode] || focusedCategoryCode)
+    : '';
+
   container.innerHTML = `
-    <div class="reference-context-banner" id="reference-context-banner" hidden></div>
+    ${renderContextBanner()}
     <div class="reference-tools">
-      <input
-        type="search"
-        id="reference-search"
-        class="reference-search"
-        placeholder="नियम, उदाहरण, वा श्रेणी खोज्नुहोस्…"
-        aria-label="Search rules reference"
-      />
-      <div class="reference-jump" id="reference-jump">
-        ${renderJumpChips()}
-      </div>
+      ${focusedCategoryCode
+        ? `<div class="reference-focus-bar">
+            <div class="reference-focus-copy">
+              <div class="reference-focus-kicker">सम्बन्धित नियम</div>
+              <div class="reference-focus-title">${escapeHtml(focusedLabel)}${focusedTargetId ? ' · लागू उपनियम' : ''}</div>
+            </div>
+            <button class="btn btn-sm" id="reference-show-all-btn">सबै नियम हेर्नुहोस्</button>
+          </div>`
+        : `<input
+            type="search"
+            id="reference-search"
+            class="reference-search"
+            placeholder="नियम, उदाहरण, वा श्रेणी खोज्नुहोस्…"
+            aria-label="Search rules reference"
+            value="${escapeHtml(currentSearch)}"
+          />
+          <div class="reference-jump" id="reference-jump">
+            ${renderJumpChips()}
+          </div>`
+      }
     </div>
     <div class="reference-sections" id="reference-sections">
-      ${renderSections()}
+      ${sections.length > 0 ? sections.map((section) => renderSection(section)).join('') : '<p class="diag-empty">मिल्दो नियम भेटिएन।</p>'}
     </div>
   `;
 
+  bindReferenceEvents();
+}
+
+function bindReferenceEvents() {
   container.querySelector('#reference-search')
     ?.addEventListener('input', onSearchInput);
 
@@ -40,117 +105,137 @@ export function initReference() {
         if (categoryCode) highlightCard(categoryCode);
       });
     });
+
+  container.querySelector('#reference-show-all-btn')
+    ?.addEventListener('click', () => {
+      focusedCategoryCode = null;
+      focusedTargetId = null;
+      renderReferenceView();
+    });
 }
 
-export function setReferenceContext(context) {
-  const banner = container?.querySelector('#reference-context-banner');
-  if (!banner) return;
-
-  if (!context || (!context.incorrect && !context.word)) {
-    banner.hidden = true;
-    banner.innerHTML = '';
-    return;
+function renderContextBanner() {
+  if (!currentContext || (!currentContext.incorrect && !currentContext.word)) {
+    return '<div class="reference-context-banner" id="reference-context-banner" hidden></div>';
   }
 
-  const shownWord = context.incorrect || context.word;
-  const correction = context.correction || '';
-  const explanation = context.explanation || '';
-  const rule = context.rule || '';
+  const shownWord = currentContext.incorrect || currentContext.word;
+  const correction = currentContext.correction || '';
+  const explanation = currentContext.explanation || '';
+  const rule = currentContext.rule || '';
 
-  banner.innerHTML = `
-    <div class="reference-context-kicker">यो शब्द किन अशुद्ध/सुधारयोग्य देखियो?</div>
-    <div class="reference-context-main">
-      <span class="reference-context-wrong">${escapeHtml(shownWord)}</span>
-      ${correction ? `<span class="reference-context-arrow">→</span><span class="reference-context-right">${escapeHtml(correction)}</span>` : ''}
+  return `
+    <div class="reference-context-banner" id="reference-context-banner">
+      <div class="reference-context-kicker">यो शब्द किन अशुद्ध/सुधारयोग्य देखियो?</div>
+      <div class="reference-context-main">
+        <span class="reference-context-wrong">${escapeHtml(shownWord)}</span>
+        ${correction ? `<span class="reference-context-arrow">→</span><span class="reference-context-right">${escapeHtml(correction)}</span>` : ''}
+      </div>
+      ${rule ? `<div class="reference-context-rule">${escapeHtml(rule)}</div>` : ''}
+      ${explanation ? `<div class="reference-context-text">${escapeHtml(explanation)}</div>` : ''}
     </div>
-    ${rule ? `<div class="reference-context-rule">${escapeHtml(rule)}</div>` : ''}
-    ${explanation ? `<div class="reference-context-text">${escapeHtml(explanation)}</div>` : ''}
   `;
-  banner.hidden = false;
 }
 
-/**
- * Scroll to and briefly highlight the ref-card or subsection for the given categoryCode.
- */
-export function highlightCard(categoryCode, targetId = null) {
-  if (!categoryCode) return;
-  const target = targetId
-    ? document.getElementById(`ref-${categoryCode}-${targetId}`)
-    : null;
-  const card = target || document.getElementById(`ref-${categoryCode}`);
-  if (!card) return;
+function getVisibleSections() {
+  let sections = RULES_SECTIONS;
 
-  card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  card.classList.add('ref-card-highlight');
-  setTimeout(() => card.classList.remove('ref-card-highlight'), 1500);
+  if (focusedCategoryCode) {
+    sections = sections.filter((section) => section.categoryCode === focusedCategoryCode);
+  }
+
+  if (!focusedCategoryCode && currentSearch) {
+    const q = currentSearch.toLowerCase();
+    sections = sections.filter((section) => sectionText(section).includes(q));
+  }
+
+  return sections;
 }
 
-function renderSections() {
-  return RULES_SECTIONS.map((section) => {
-    const color = CATEGORY_COLORS[section.categoryCode] || 'var(--cat-default)';
+function sectionText(section) {
+  const targets = (section.referenceTargets || [])
+    .flatMap((t) => [t.label, t.summary || '', ...(t.examples || [])]);
+  return [
+    section.title,
+    section.summary,
+    ...(section.subRules || []),
+    ...(section.examples || []).flatMap((ex) => [ex.wrong, ex.correct]),
+    ...targets,
+    CATEGORY_LABELS[section.categoryCode] || section.categoryCode,
+  ].join(' ').toLowerCase();
+}
 
-    const examplesHtml =
-      section.examples.length > 0
-        ? `<table class="ref-examples">
-            <thead>
-              <tr><th>अशुद्ध</th><th></th><th>शुद्ध</th></tr>
-            </thead>
-            <tbody>
-              ${section.examples
-                .map(
-                  (ex) => `<tr>
-                  <td class="ref-wrong">${escapeHtml(ex.wrong)}</td>
-                  <td class="ref-arrow">\u2192</td>
-                  <td class="ref-right">${escapeHtml(ex.correct)}</td>
-                </tr>`
-                )
-                .join('')}
-            </tbody>
-          </table>`
-        : '';
+function renderSection(section) {
+  const color = CATEGORY_COLORS[section.categoryCode] || 'var(--cat-default)';
+  const label = CATEGORY_LABELS[section.categoryCode] || section.categoryCode;
 
-    const subRulesHtml =
-      section.subRules.length > 0
-        ? `<ul class="ref-subrules">
-            ${section.subRules.map((r) => `<li>${escapeHtml(r)}</li>`).join('')}
-          </ul>`
-        : '';
+  const filteredTargets = focusedCategoryCode && focusedTargetId
+    ? (section.referenceTargets || []).filter((t) => t.id === focusedTargetId)
+    : (section.referenceTargets || []);
 
-    const targetsHtml =
-      (section.referenceTargets && section.referenceTargets.length > 0)
-        ? `<div class="ref-targets-kicker">कहिले लागू हुन्छ?</div>
-          <div class="ref-targets">
-            ${section.referenceTargets.map((t) => `
-              <details class="ref-target ref-target-status-${t.status || 'unknown'}" id="ref-${escapeHtml(section.categoryCode)}-${escapeHtml(t.id)}">
-                <summary class="ref-target-summary">
-                  <span class="ref-target-title">${escapeHtml(t.label)}</span>
-                  <span class="ref-status-dot ref-status-${t.status || 'unknown'}"></span>
-                </summary>
-                <div class="ref-target-body">
-                  ${t.summary ? `<p class="ref-target-text">${escapeHtml(t.summary)}</p>` : ''}
-                  ${renderTargetExamples(t.examples)}
-                </div>
-              </details>
-            `).join('')}
-          </div>`
-        : '';
+  const examplesHtml =
+    section.examples.length > 0
+      ? `<table class="ref-examples">
+          <thead>
+            <tr><th>अशुद्ध</th><th></th><th>शुद्ध</th></tr>
+          </thead>
+          <tbody>
+            ${section.examples
+              .map(
+                (ex) => `<tr>
+                <td class="ref-wrong">${escapeHtml(ex.wrong)}</td>
+                <td class="ref-arrow">\u2192</td>
+                <td class="ref-right">${escapeHtml(ex.correct)}</td>
+              </tr>`
+              )
+              .join('')}
+          </tbody>
+        </table>`
+      : '';
 
-    const label = CATEGORY_LABELS[section.categoryCode] || section.categoryCode;
+  const subRulesHtml =
+    section.subRules.length > 0
+      ? `<ul class="ref-subrules">
+          ${section.subRules.map((r) => `<li>${escapeHtml(r)}</li>`).join('')}
+        </ul>`
+      : '';
 
-    return `
-      <article class="ref-card" id="ref-${escapeHtml(section.categoryCode)}" data-category="${escapeHtml(section.categoryCode)}" style="--ref-accent: ${color}">
-        <div class="ref-card-header">
-          <div class="ref-card-heading">
-            <span class="ref-badge" style="background: ${color};">${escapeHtml(label)}</span>
-            <h3 class="ref-title">${escapeHtml(section.title)}</h3>
-          </div>
+  const targetsHtml =
+    filteredTargets.length > 0
+      ? `<div class="ref-targets-kicker">कहिले लागू हुन्छ?</div>
+        <div class="ref-targets">
+          ${filteredTargets.map((t) => `
+            <details
+              class="ref-target ref-target-status-${t.status || 'unknown'}"
+              id="ref-${escapeHtml(section.categoryCode)}-${escapeHtml(t.id)}"
+              ${focusedCategoryCode ? 'open' : ''}
+            >
+              <summary class="ref-target-summary">
+                <span class="ref-target-title">${escapeHtml(t.label)}</span>
+                <span class="ref-status-dot ref-status-${t.status || 'unknown'}"></span>
+              </summary>
+              <div class="ref-target-body">
+                ${t.summary ? `<p class="ref-target-text">${escapeHtml(t.summary)}</p>` : ''}
+                ${renderTargetExamples(t.examples)}
+              </div>
+            </details>
+          `).join('')}
+        </div>`
+      : '';
+
+  return `
+    <article class="ref-card" id="ref-${escapeHtml(section.categoryCode)}" data-category="${escapeHtml(section.categoryCode)}" style="--ref-accent: ${color}">
+      <div class="ref-card-header">
+        <div class="ref-card-heading">
+          <span class="ref-badge" style="background: ${color};">${escapeHtml(label)}</span>
+          <h3 class="ref-title">${escapeHtml(section.title)}</h3>
         </div>
-        <p class="ref-summary">${escapeHtml(section.summary)}</p>
-        ${subRulesHtml}
-        ${targetsHtml}
-        ${examplesHtml}
-      </article>`;
-  }).join('');
+      </div>
+      <p class="ref-summary">${escapeHtml(section.summary)}</p>
+      ${subRulesHtml}
+      ${targetsHtml}
+      ${examplesHtml}
+    </article>`;
 }
 
 function renderJumpChips() {
@@ -177,13 +262,8 @@ function renderTargetExamples(examples = []) {
 }
 
 function onSearchInput(e) {
-  const q = (e.target.value || '').trim().toLowerCase();
-  const sectionEls = container.querySelectorAll('.ref-card');
-
-  sectionEls.forEach((card) => {
-    const text = card.textContent.toLowerCase();
-    card.hidden = q ? !text.includes(q) : false;
-  });
+  currentSearch = (e.target.value || '').trim();
+  renderReferenceView();
 }
 
 document.addEventListener('click', (e) => {

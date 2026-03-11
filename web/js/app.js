@@ -126,6 +126,8 @@ function initRuleNavigation() {
     const targetId = ruleRef.dataset.target || null;
     if (!categoryCode) return;
     const context = {
+      categoryCode,
+      targetId,
       word: ruleRef.dataset.word || '',
       incorrect: ruleRef.dataset.incorrect || '',
       correction: ruleRef.dataset.correction || '',

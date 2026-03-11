@@ -44,9 +44,11 @@ function classifySuffix(s) {
 }
 
 let panelEl = null;
+let mobileOverlayEl = null;
 let callbacks = {};
 let active = false;
 let currentWord = '';
+let activeMode = 'panel';
 
 /**
  * Initialize the inspector on a given panel element.
@@ -56,6 +58,7 @@ let currentWord = '';
 export function initInspector(el, cbs) {
   panelEl = el;
   callbacks = cbs || {};
+  mobileOverlayEl = callbacks.mobileHost || null;
 }
 
 /**
@@ -64,17 +67,20 @@ export function initInspector(el, cbs) {
  * @param {number} start - Char start index in editor
  * @param {number} end - Char end index in editor
  */
-export function showInspector(word, start, end) {
+export function showInspector(word, start, end, options = {}) {
   if (!FEATURE_WORD_INSPECTOR || !panelEl) return;
   if (!word || !word.trim()) return;
 
   active = true;
   currentWord = word;
+  activeMode = options.mobile ? 'mobile' : 'panel';
+  const targetEl = activeMode === 'mobile' ? mobileOverlayEl : panelEl;
+  if (!targetEl) return;
 
   let html = '';
 
   // Back button
-  html += `<button class="btn btn-sm panel-back-btn" id="inspector-back">\u2190 \u0924\u094D\u0930\u0941\u091F\u093F \u0938\u0942\u091A\u0940</button>`;
+  html += `<button class="btn btn-sm panel-back-btn" id="inspector-back">\u2190 ${activeMode === 'mobile' ? '\u090F\u0921\u093F\u091F\u0930' : '\u0924\u094D\u0930\u0941\u091F\u093F \u0938\u0942\u091A\u0940'}</button>`;
 
   // --- Header: word + origin + correctness ---
   let analysis = null;
@@ -165,10 +171,14 @@ export function showInspector(word, start, end) {
     html += '</div></div>';
   }
 
-  panelEl.innerHTML = `<div class="inspector-container">${html}</div>`;
+  targetEl.innerHTML = `<div class="inspector-container${activeMode === 'mobile' ? ' inspector-container-mobile' : ''}">${html}</div>`;
+  if (activeMode === 'mobile') {
+    targetEl.classList.add('visible');
+    targetEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
 
   // Attach event handlers
-  const backBtn = panelEl.querySelector('#inspector-back');
+  const backBtn = targetEl.querySelector('#inspector-back');
   if (backBtn) {
     backBtn.addEventListener('click', () => {
       hideInspector();
@@ -176,7 +186,7 @@ export function showInspector(word, start, end) {
     });
   }
 
-  const fixBtn = panelEl.querySelector('#inspector-fix');
+  const fixBtn = targetEl.querySelector('#inspector-fix');
   if (fixBtn) {
     fixBtn.addEventListener('click', () => {
       const s = parseInt(fixBtn.dataset.start);
@@ -194,7 +204,12 @@ export function showInspector(word, start, end) {
 export function hideInspector() {
   active = false;
   currentWord = '';
+  activeMode = 'panel';
   if (panelEl) panelEl.innerHTML = '';
+  if (mobileOverlayEl) {
+    mobileOverlayEl.classList.remove('visible');
+    mobileOverlayEl.innerHTML = '';
+  }
 }
 
 /**
