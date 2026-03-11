@@ -85,6 +85,13 @@ fn correct_word_passes_through() {
 }
 
 #[test]
+fn aadhi_vriddhi_does_not_overcorrect_attested_non_derivative_word() {
+    let p = derive("अधिक");
+    assert!(p.is_correct, "अधिक should remain correct, got: {p:?}");
+    assert_eq!(p.output, "अधिक");
+}
+
+#[test]
 fn empty_input() {
     let p = derive("");
     assert!(p.is_correct);

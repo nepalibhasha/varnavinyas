@@ -4,7 +4,7 @@
  * Shows origin, correction, morphology, sandhi splits, derivation steps,
  * and rule notes for the selected word.
  */
-import { analyzeWord, deriveWord, decomposeWord, sandhiSplit } from './wasm-bridge.js';
+import { analyzeWord, deriveWord, decomposeWord, sandhiSplitBestForCompound } from './wasm-bridge.js';
 import { escapeHtml, ORIGIN_LABELS } from './utils.js';
 import { wrapRuleTooltip } from './rules-data.js';
 
@@ -264,32 +264,21 @@ function renderMorphologySection(word) {
 
 function renderSandhiSection(word) {
   try {
-    const raw = sandhiSplit(word);
-    if (!raw || raw.length === 0) return '';
+    const r = sandhiSplitBestForCompound(word);
+    if (!r) return '';
 
-    // Deduplicate by (left, right) pair
-    const seen = new Set();
-    const results = raw.filter((r) => {
-      const key = `${r.left}\0${r.right}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-
-    const rows = results.map((r) => {
-      const typeLabel = SANDHI_TYPE_LABELS[r.sandhi_type] || r.sandhi_type;
-      const typeClass = SANDHI_TYPE_CLASS[r.sandhi_type] || '';
-      return `
-        <div class="sandhi-split-row">
-          <span class="sandhi-split-parts">${escapeHtml(r.left)} + ${escapeHtml(r.right)}</span>
-          <span class="sandhi-type-badge ${typeClass}">${escapeHtml(typeLabel)}</span>
-          <span class="sandhi-citation">${escapeHtml(r.rule_citation)}</span>
-        </div>`;
-    }).join('');
+    const typeLabel = SANDHI_TYPE_LABELS[r.sandhi_type] || r.sandhi_type;
+    const typeClass = SANDHI_TYPE_CLASS[r.sandhi_type] || '';
+    const rows = `
+      <div class="sandhi-split-row">
+        <span class="sandhi-split-parts">${escapeHtml(r.left)} + ${escapeHtml(r.right)}</span>
+        <span class="sandhi-type-badge ${typeClass}">${escapeHtml(typeLabel)}</span>
+        <span class="sandhi-citation">${escapeHtml(r.rule_citation)}</span>
+      </div>`;
 
     return `
     <div class="inspector-section">
-      <div class="inspector-section-title">\u0938\u0928\u094D\u0927\u093F \u0935\u093F\u091A\u094D\u091B\u0947\u0926 <span class="inspector-section-label">Sandhi Splits</span></div>
+      <div class="inspector-section-title">\u0938\u0928\u094D\u0927\u093F \u0935\u093F\u091A\u094D\u091B\u0947\u0926 <span class="inspector-section-label">Sandhi Split</span></div>
       ${rows}
     </div>`;
   } catch {

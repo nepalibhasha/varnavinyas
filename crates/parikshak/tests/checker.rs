@@ -203,6 +203,15 @@ fn aadhi_vriddhi_correction_gets_aadhi_vriddhi_category() {
     );
 }
 
+#[test]
+fn attested_non_derivative_word_is_not_flagged_by_aadhi_vriddhi() {
+    let diag = check_word("अधिक");
+    assert!(
+        diag.is_none(),
+        "अधिक should not be flagged by aadhi-vriddhi, got: {diag:?}"
+    );
+}
+
 /// Punctuation diagnostics integrated into check_text.
 #[test]
 fn punctuation_in_check_text() {

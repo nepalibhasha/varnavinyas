@@ -82,7 +82,7 @@ pub fn rule_aadhi_vriddhi(input: &str) -> Option<Prakriya> {
     }
     let corrected_chars = apply_vriddhi(&chars)?;
     let output: String = corrected_chars.into_iter().collect();
-    if output == input {
+    if output == input || !kosha.contains(&output) {
         return None;
     }
     Some(Prakriya::corrected(

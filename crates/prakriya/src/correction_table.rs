@@ -775,6 +775,8 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "अध्ययन",
                 rule: Rule::Vyakaran("kosha"),
+                // Temporary stopgap: this is tracked in docs/CORRECTION_TABLE_AUDIT.md
+                // until we replace it with direct source support or a rule-backed path.
                 description: "शब्दकोशमा अध्ययन मात्र छ; अध्यन रूप भेटिँदैन",
             },
         ),
@@ -803,4 +805,53 @@ pub fn lookup(word: &str) -> Option<&'static CorrectionEntry> {
 /// Check if a word exists in the correction table (as an incorrect form).
 pub fn contains(word: &str) -> bool {
     lookup(word).is_some()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::CORRECTION_TABLE;
+    use serde::Deserialize;
+    use std::collections::BTreeSet;
+
+    #[derive(Debug, Deserialize)]
+    struct GoldEntry {
+        incorrect: String,
+    }
+
+    #[derive(Debug, Deserialize)]
+    struct GoldData {
+        #[serde(default)]
+        shuddha_table: Vec<GoldEntry>,
+    }
+
+    const RULE_BACKED_SHUDDHA_TABLE_EXCEPTIONS: &[&str] = &["इण्डिया", "झण्डा", "फाउण्डेसन"];
+
+    #[test]
+    fn shuddha_table_fixture_entries_exist_in_correction_table() {
+        let gold_toml = std::fs::read_to_string(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../docs/tests/gold.toml"
+        ))
+        .expect("Failed to read gold.toml");
+
+        let gold: GoldData = toml::from_str(&gold_toml).expect("Failed to parse gold.toml");
+
+        let gold_keys: BTreeSet<&str> = gold
+            .shuddha_table
+            .iter()
+            .filter(|entry| !RULE_BACKED_SHUDDHA_TABLE_EXCEPTIONS.contains(&entry.incorrect.as_str()))
+            .map(|entry| entry.incorrect.as_str())
+            .collect();
+
+        let table_keys: BTreeSet<&str> = CORRECTION_TABLE
+            .iter()
+            .map(|(incorrect, _)| *incorrect)
+            .collect();
+
+        let missing: Vec<&str> = gold_keys.difference(&table_keys).copied().collect();
+        assert!(
+            missing.is_empty(),
+            "All non-rule-backed docs/tests/gold.toml [[shuddha_table]] entries must exist in correction_table; missing: {missing:?}"
+        );
+    }
 }

@@ -18,6 +18,8 @@ import init, {
   sandhi_apply,
   sandhi_apply_value,
   sandhi_split,
+  sandhi_split_best_for_compound,
+  sandhi_split_best_for_compound_value,
   sandhi_split_value,
 } from '../pkg/varnavinyas_bindings_wasm.js';
 
@@ -163,5 +165,16 @@ export function sandhiSplit(word) {
     return sandhi_split_value(word);
   } catch (_err) {
     return JSON.parse(sandhi_split(word));
+  }
+}
+
+/**
+ * Return the safest compound-oriented split candidate, or null.
+ */
+export function sandhiSplitBestForCompound(word) {
+  try {
+    return sandhi_split_best_for_compound_value(word);
+  } catch (_err) {
+    return JSON.parse(sandhi_split_best_for_compound(word));
   }
 }
