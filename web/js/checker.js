@@ -560,7 +560,7 @@ function renderDiagnostics() {
         <div class="diag-meta">
           <span class="diag-badge" data-category="${code}">${escapeHtml(label)}</span>
           ${kindLabel ? `<span class="diag-kind-chip diag-kind-${kindClass}">${escapeHtml(kindLabel)}</span>` : ""}
-          <span class="diag-confidence">${confidence}%</span>
+          ${confidence < 100 ? `<span class="diag-confidence">${confidence}%</span>` : ''}
         </div>
         ${correctionRow}
         <div class="diag-guidance">${escapeHtml(guidance)}</div>

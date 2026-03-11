@@ -118,12 +118,13 @@ function renderSections() {
 
     const targetsHtml =
       (section.referenceTargets && section.referenceTargets.length > 0)
-        ? `<div class="ref-targets">
+        ? `<div class="ref-targets-kicker">कहिले लागू हुन्छ?</div>
+          <div class="ref-targets">
             ${section.referenceTargets.map((t) => `
-              <details class="ref-target" id="ref-${escapeHtml(section.categoryCode)}-${escapeHtml(t.id)}">
+              <details class="ref-target ref-target-status-${t.status || 'unknown'}" id="ref-${escapeHtml(section.categoryCode)}-${escapeHtml(t.id)}">
                 <summary class="ref-target-summary">
-                  <span class="ref-target-kicker">कहिले लागू हुन्छ?</span>
                   <span class="ref-target-title">${escapeHtml(t.label)}</span>
+                  <span class="ref-status-dot ref-status-${t.status || 'unknown'}"></span>
                 </summary>
                 <div class="ref-target-body">
                   ${t.summary ? `<p class="ref-target-text">${escapeHtml(t.summary)}</p>` : ''}
@@ -143,14 +144,11 @@ function renderSections() {
             <span class="ref-badge" style="background: ${color};">${escapeHtml(label)}</span>
             <h3 class="ref-title">${escapeHtml(section.title)}</h3>
           </div>
-          <div class="ref-card-tools">
-            <button class="btn btn-sm ref-jump-btn" data-category="${escapeHtml(section.categoryCode)}">यो खण्डमा जानुहोस्</button>
-          </div>
         </div>
         <p class="ref-summary">${escapeHtml(section.summary)}</p>
+        ${subRulesHtml}
         ${targetsHtml}
         ${examplesHtml}
-        ${subRulesHtml}
       </article>`;
   }).join('');
 }
