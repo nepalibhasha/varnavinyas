@@ -103,6 +103,21 @@ export function sandhiSplit(word) {
 }
 
 /**
+ * Return the single best compound-safe sandhi split, or null.
+ * Applies lexicon and minimum-length guards (mirrors wasm-bridge.js).
+ */
+export function sandhiSplitBestForCompound(word) {
+  try {
+    if (typeof wasmBindings.sandhi_split_best_for_compound_value !== 'function') {
+      return null;
+    }
+    return wasmBindings.sandhi_split_best_for_compound_value(word);
+  } catch (err) {
+    return null;
+  }
+}
+
+/**
  * Analyze a word as a potential compound (samasa).
  * Returns [{ left, right, samasa_type, score, vigraha }, ...]
  */
@@ -119,16 +134,28 @@ export function analyzeCompound(word) {
 
 /**
  * Normalize a word for dictionary lookup.
- * Strips suffixes to find the base/lemma form.
+ * Falls back to the decomposition root only when the original word is not
+ * itself a known headword — prevents प्रयोग → योग mis-lookups where the
+ * input is already a valid dictionary entry.
  */
 export function normalizeQuery(word) {
+  const analysis = analyzeWord(word);
+
+  // If the word is a known lexicon headword, look it up directly.
+  // origin_source === 'kosha' means it matched a dictionary entry — don't
+  // strip it to a root (prevents प्रयोग → योग mis-lookups).
+  if (analysis && !analysis.error && analysis.origin_source === 'kosha') {
+    return word;
+  }
+
+  // Unknown word: try the decomposed root (suffix-stripped lemma).
   const decomposition = decomposeWord(word);
   if (decomposition.root && decomposition.root !== word) {
     return decomposition.root;
   }
 
-  const analysis = analyzeWord(word);
-  if (analysis.correction) {
+  // Last resort: if there's a correction, look that up instead.
+  if (analysis && analysis.correction) {
     return analysis.correction;
   }
 

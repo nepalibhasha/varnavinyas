@@ -5,7 +5,7 @@
  * State machine: idle → loading → result | not-found | error
  */
 
-import { ensureInit, analyzeWord, checkWord, decomposeWord, sandhiSplit, analyzeCompound, normalizeQuery } from './wasm-adapter.js';
+import { ensureInit, analyzeWord, checkWord, decomposeWord, sandhiSplitBestForCompound, analyzeCompound, normalizeQuery } from './wasm-adapter.js';
 
 // ── DOM refs ──
 
@@ -38,17 +38,30 @@ let currentDictionaryHeadword = '';
 let activeLookupToken = 0;
 let lastPopupSelection = '';
 let localAnalysisAvailable = false;
+const DOWNSTREAM_HOME_URL = 'https://dictionary.example.invalid/';
+const DOWNSTREAM_WORD_URL_BASE = 'https://dictionary.example.invalid/word/';
 
-function currentSabdasakhaWord() {
+function currentLookupWord() {
   return currentDictionaryHeadword || currentWord;
+}
+
+function hasConfiguredDownstreamLinks() {
+  return !DOWNSTREAM_HOME_URL.includes('example.invalid');
 }
 
 function updateOpenLink() {
   const openBtn = document.getElementById('btn-open');
-  const targetWord = currentSabdasakhaWord();
+  if (!openBtn) return;
+  if (!hasConfiguredDownstreamLinks()) {
+    openBtn.hidden = true;
+    openBtn.removeAttribute('href');
+    return;
+  }
+  openBtn.hidden = false;
+  const targetWord = currentLookupWord();
   openBtn.href = targetWord
-    ? `https://sabdasakha.com/word/${encodeURIComponent(targetWord)}`
-    : 'https://sabdasakha.com/';
+    ? `${DOWNSTREAM_WORD_URL_BASE}${encodeURIComponent(targetWord)}`
+    : DOWNSTREAM_HOME_URL;
 }
 
 // ── Theme ──
@@ -154,7 +167,7 @@ async function processWord(text) {
     const analysis = wasmReady ? analyzeWord(word) : null;
     const check = wasmReady ? checkWord(word) : null;
     const decomposition = wasmReady ? decomposeWord(word) : null;
-    const splits = wasmReady ? sandhiSplit(word) : [];
+    const splits = wasmReady ? sandhiSplitBestForCompound(word) : null;
     const compounds = wasmReady ? analyzeCompound(word) : [];
     const elapsed = performance.now() - t0;
 
@@ -341,17 +354,13 @@ function renderResult(word, analysis, check, decomposition, splits, compounds) {
   const splitContent = document.getElementById('split-content');
   splitContent.innerHTML = '';
   const allCompounds = Array.isArray(compounds) ? compounds : [];
-  const allSplits = Array.isArray(splits) ? splits : [];
+  // splits is now a single best-candidate object or null (sandhiSplitBestForCompound)
   const isUnknownSamasa = (samasaType) => {
     const t = String(samasaType || '').trim().toLowerCase();
     return t === 'अज्ञात' || t === 'unknown';
   };
   const isStrongCompound = (candidate) =>
     !isUnknownSamasa(candidate.samasa_type) && Number(candidate.score || 0) >= 0.75;
-  const isStrongSandhi = (candidate) => {
-    const authority = String(candidate.authority || '').trim();
-    return authority === 'Likely' || authority === 'Authoritative';
-  };
   const formatSamasaConfidence = (score) => {
     const band = formatConfidenceBand(score);
     return band ? `विश्वास: ${band}` : '';
@@ -364,9 +373,8 @@ function renderResult(word, analysis, check, decomposition, splits, compounds) {
   };
 
   const strongCompounds = allCompounds.filter(isStrongCompound);
-  const strongSplits = allSplits.filter(isStrongSandhi);
   const hasCompounds = strongCompounds.length > 0;
-  const hasSandhi = strongSplits.length > 0;
+  const hasSandhi = splits !== null && splits !== undefined && !splits.error;
   if (hasCompounds || hasSandhi) {
     splitSection.style.display = 'block';
     // Compound candidates (top 2)
@@ -398,13 +406,11 @@ function renderResult(word, analysis, check, decomposition, splits, compounds) {
         splitContent.appendChild(li);
       }
     }
-    // Sandhi splits (that aren't duplicates of compound candidates)
+    // Best sandhi split (if not already shown as a compound candidate)
     if (hasSandhi) {
-      const compoundKeys = new Set(
-        strongCompounds.map((c) => `${c.left}|${c.right}`)
-      );
-      for (const s of strongSplits) {
-        if (compoundKeys.has(`${s.left}|${s.right}`)) continue;
+      const s = splits;
+      const isDuplicate = strongCompounds.some((c) => c.left === s.left && c.right === s.right);
+      if (!isDuplicate) {
         const li = document.createElement('li');
         const parts = document.createElement('span');
         parts.className = 'sandhi-parts';
@@ -539,10 +545,10 @@ function renderDictionary(data) {
   el.appendChild(ol);
 
   // Source attribution
-  if (data.source === 'sabdasakha') {
+  if (data.source === 'api') {
     const src = document.createElement('div');
     src.className = 'dict-source';
-    src.textContent = 'शब्दसखा';
+    src.textContent = 'API';
     el.appendChild(src);
   }
 }

@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "description": "Select Nepali text on any page to see analysis, corrections, and dictionary definitions.",
   "permissions": ["storage", "activeTab", "sidePanel"],
-  "host_permissions": ["https://sabdasakha.com/*"],
+  "optional_host_permissions": ["https://*/*", "http://*/*"],
   "action": {
     "default_popup": "src/popup.html",
     "default_icon": {

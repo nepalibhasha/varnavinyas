@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# DEPRECATED:
+# Browser-extension product ownership has moved to a downstream client repo.
+# This script remains only as a temporary compatibility path while the
+# migration is in progress. New popup/background/content/manifest changes
+# should be made in the downstream client repo, not here.
+# varnavinyas should own only the offline browser artifact (`web/pkg`,
+# `web/package-artifact.sh`) and the WASM contract consumed downstream.
+
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 PKG_SRC="$ROOT_DIR/web/pkg"
@@ -8,6 +16,9 @@ PKG_DST="$SCRIPT_DIR/pkg"
 DIST_DIR="$SCRIPT_DIR/dist"
 REFRESH_WEB_WASM="${REFRESH_WEB_WASM:-1}"
 FIREFOX_MANIFEST="$SCRIPT_DIR/manifest.firefox.json"
+
+echo "WARNING: extensions/browser/ in varnavinyas is deprecated."
+echo "WARNING: make extension product changes in the downstream client repo instead."
 
 # ── 1. Refresh web/pkg (default on) ──
 if [ "$REFRESH_WEB_WASM" = "1" ]; then

@@ -14,6 +14,9 @@ fst = { workspace = true }
 thiserror = { workspace = true }
 varnavinyas-types = { workspace = true }
 
+[build-dependencies]
+fst = { workspace = true }
+
 [dev-dependencies]
 serde = { workspace = true }
 toml = { workspace = true }

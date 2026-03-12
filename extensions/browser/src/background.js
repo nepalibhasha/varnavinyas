@@ -78,15 +78,30 @@ function handleGetSelection(sendResponse) {
   });
 }
 
-// ── Sabdasakha Dictionary API ──
-
-const API_BASE = 'https://sabdasakha.com/api/v1';
+// ── Downstream dictionary API ──
+//
+// This legacy extension copy is deprecated in varnavinyas. Keep the remote
+// service generic so downstream clients can replace it without product-specific
+// coupling in this repo.
+const API_BASE = 'https://dictionary.example.invalid/api/v1';
 const FETCH_TIMEOUT_MS = 5000;
+
+function hasConfiguredLookupService() {
+  return !API_BASE.includes('example.invalid');
+}
 
 async function handleLookupRequest(payload, sendResponse) {
   const { query } = payload;
 
   try {
+    if (!hasConfiguredLookupService()) {
+      sendResponse({
+        type: 'LOOKUP_ERROR',
+        error: 'No downstream lookup service configured',
+      });
+      return;
+    }
+
     // Check cache first
     const cached = await getCachedEntry(query);
     if (cached) {
@@ -94,7 +109,7 @@ async function handleLookupRequest(payload, sendResponse) {
       return;
     }
 
-    // Fetch from Sabdasakha API
+    // Fetch from downstream API
     const url = `${API_BASE}/dictionary/word?q=${encodeURIComponent(query)}`;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
@@ -125,7 +140,7 @@ async function handleLookupRequest(payload, sendResponse) {
       word: data.word,
       partOfSpeech: data.part_of_speech,
       definitions: data.definitions || [],
-      source: 'sabdasakha',
+      source: 'api',
     };
 
     // Cache the result

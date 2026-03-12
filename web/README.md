@@ -11,6 +11,7 @@ web/
   js/*.js             app modules
   pkg/                generated WASM glue
   build.sh            WASM build helper
+  package-artifact.sh downstream browser artifact packager
   smoke-test.sh       static consistency checks
 ```
 
@@ -19,6 +20,7 @@ web/
 - `js/*.js`: app modules (checker, inspector, rules reference, wasm bridge)
 - `pkg/`: generated WASM bindings consumed by the browser
 - `build.sh`: builds `pkg/` from Rust WASM bindings
+- `package-artifact.sh`: packages `pkg/` + metadata for downstream browser clients
 - `smoke-test.sh`: quick end-to-end static checks
 
 ## Local Run
@@ -27,6 +29,7 @@ From repo root:
 
 ```bash
 bash web/build.sh
+bash web/package-artifact.sh
 python3 -m http.server 8080 --directory web/
 ```
 
@@ -55,6 +58,21 @@ The smoke test validates:
 - WASM artifacts and exported functions
 - category mapping consistency (Rust -> JS -> CSS)
 - key static assets served by a local HTTP server
+
+## Downstream Clients
+
+This repo can also produce a browser-consumable artifact for downstream extension clients.
+
+From repo root:
+
+```bash
+bash web/package-artifact.sh
+```
+
+This emits:
+
+- `web/dist/varnavinyas-browser-artifact/`
+- `web/dist/varnavinyas-browser-artifact.zip`
 
 ## Editing Notes
 

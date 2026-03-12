@@ -1,3 +1,4 @@
+#[cfg(any(test, feature = "test-seam"))]
 mod builder;
 mod kosha;
 pub mod origin_tag;
