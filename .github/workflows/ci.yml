@@ -93,9 +93,9 @@ jobs:
             ' Cargo.lock
           )"
           cargo install wasm-bindgen-cli --version "$WASM_BINDGEN_VERSION" --locked
-      - name: Rebuild web and extension artifacts
+      - name: Rebuild web and browser artifact
         run: |
           bash web/build.sh
-          REFRESH_WEB_WASM=0 bash extensions/browser/build.sh
+          REFRESH_WEB_WASM=0 bash web/package-artifact.sh
       - name: Verify committed generated artifacts are up to date
-        run: git diff --exit-code -- web/pkg extensions/browser/pkg
+        run: git diff --exit-code -- web/pkg web/build-info.json

@@ -7,7 +7,7 @@ WebAssembly bridge for browser and JavaScript consumers.
 This crate exposes core Varnavinyas functionality to JavaScript through `wasm-bindgen`. It is the runtime bridge used by:
 
 - the web app
-- the browser extension
+- downstream browser clients, including extensions
 - other JS/TS consumers that need in-browser analysis
 
 ## Main APIs
@@ -43,7 +43,7 @@ const splits = sandhi_split_value("अत्यधिक");
 ## Used By
 
 - `web/`
-- `extensions/browser/`
+- downstream browser clients consuming the packaged artifact in `web/dist/`
 
 ## Current Limits
 

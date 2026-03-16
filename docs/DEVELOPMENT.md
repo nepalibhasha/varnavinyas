@@ -16,7 +16,7 @@
 | `cargo clippy --workspace --all-targets -- -D warnings` | Strict lint gate |
 | `cargo deny check advisories bans licenses sources` | Dependency/license/advisory checks |
 | `bash web/build.sh` | Build `web/pkg` from WASM bindings |
-| `bash extensions/browser/build.sh` | Build browser extension artifacts |
+| `bash web/package-artifact.sh` | Build downstream browser artifact package |
 | `bash web/smoke-test.sh` | Check web static/WASM asset consistency |
 
 ### Cargo Aliases
@@ -43,7 +43,7 @@ flowchart TD
     B[Run focused tests]
     C[Run fmt + clippy]
     D[Run broader crate/workspace tests]
-    E[Build web or extension if relevant]
+    E[Build web or browser artifact if relevant]
     F[Commit one scoped concern]
 
     A --> B --> C --> D --> E --> F
@@ -70,7 +70,7 @@ We use `proptest` to verify invariants, such as:
 - `transliterate(transliterate(x)) == x` (Round-trip)
 - `normalize(normalize(x)) == normalize(x)` (Idempotence)
 
-## Web And Extension Workflow
+## Web And Browser Artifact Workflow
 
 ```text
 Rust/WASM code
@@ -81,12 +81,12 @@ web/pkg
     ↓
 web/smoke-test.sh
     ↓
-bash extensions/browser/build.sh
+bash web/package-artifact.sh
 ```
 
 - `web/js/rules-data.js` is the source of truth for rule-to-category mapping in the browser UI.
 - Keep diagnostics keyed by stable `category_code`, not display labels.
-- `extensions/browser/build.sh` refreshes `web/pkg` by default so the extension does not drift from the Rust/WASM code.
+- `web/package-artifact.sh` is the supported handoff for downstream browser/extension clients.
 - In sandbox-restricted environments, `web/smoke-test.sh` may skip HTTP-serving checks. Treat that as expected when the static asset checks still pass.
 
 ## CI
@@ -96,4 +96,4 @@ The GitHub Actions pipeline enforces:
 1. build and test coverage on the Rust workspace
 2. formatting and clippy
 3. dependency/license/advisory checks
-4. web and extension packaging checks where configured
+4. web and browser-artifact packaging checks where configured

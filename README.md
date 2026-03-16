@@ -187,6 +187,7 @@ Key docs:
 - [docs/DATASETS.md](docs/DATASETS.md) — datasets and provenance
 - [docs/RULES.md](docs/RULES.md) — rule implementation notes
 - [docs/STATUS.md](docs/STATUS.md) — current feature matrix
+- [docs/EXTENSION_WASM_CONTRACT.md](docs/EXTENSION_WASM_CONTRACT.md) — downstream browser artifact and WASM contract
 - [docs/Notices-pages-77-99.md](docs/Notices-pages-77-99.md) — Academy reference used for rule alignment
 
 Crate-specific architecture docs:

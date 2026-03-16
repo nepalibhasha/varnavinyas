@@ -33,9 +33,9 @@ Some Academy areas -> still partial / TODO
 | Surface | Status | Notes |
 |---|---|---|
 | Web app | Active | Checker, inspector, and rules reference are usable |
-| Browser extension | Active | Packaging/build flow exists for Chrome and Firefox artifacts |
+| Browser extension product | Migrated downstream | Shipped extension ownership is downstream; this repo keeps only the browser artifact contract and packaging path |
 | CLI | Active | Suitable for local workflows and CI |
-| WASM bindings | Active | Used by the web app |
+| WASM bindings | Active | Used by the web app and packaged for downstream browser clients |
 | Python bindings | Active | Core module surface exists; packaging metadata and release workflow can improve |
 | LSP | Active | Server crate and editor-facing integration exist; performance and UX can still improve |
 | C / UniFFI bindings | Active | Available for integration scenarios |

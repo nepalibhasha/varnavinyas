@@ -1,5 +1,0 @@
-# Copied WASM artifacts — regenerate with build.sh
-pkg/
-
-# Packaged zip
-dist/
