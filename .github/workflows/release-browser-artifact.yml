@@ -1,0 +1,66 @@
+name: Release Browser Artifact
+
+on:
+  push:
+    tags:
+      - "browser-artifact-v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build And Release Browser Artifact
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.85.0"
+          targets: wasm32-unknown-unknown
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Install wasm-pack
+        run: cargo install wasm-pack --version 0.13.1 --locked
+
+      - name: Install lockfile-matched wasm-bindgen-cli
+        run: |
+          WASM_BINDGEN_VERSION="$(
+            awk '
+              $0 == "name = \"wasm-bindgen\"" {
+                getline
+                if ($1 == "version" && $2 == "=") {
+                  gsub(/"/, "", $3)
+                  print $3
+                  exit
+                }
+              }
+            ' Cargo.lock
+          )"
+          cargo install wasm-bindgen-cli --version "$WASM_BINDGEN_VERSION" --locked
+
+      - name: Derive artifact version
+        id: version
+        run: echo "artifact_version=${GITHUB_REF_NAME#browser-artifact-}" >> "$GITHUB_OUTPUT"
+
+      - name: Build browser artifact
+        run: REFRESH_WEB_WASM=1 ARTIFACT_VERSION="${{ steps.version.outputs.artifact_version }}" bash web/package-artifact.sh
+
+      - name: Upload browser artifact to workflow
+        uses: actions/upload-artifact@v4
+        with:
+          name: varnavinyas-browser-artifact-${{ steps.version.outputs.artifact_version }}
+          path: |
+            web/dist/varnavinyas-browser-artifact/
+            web/dist/varnavinyas-browser-artifact-${{ steps.version.outputs.artifact_version }}.zip
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Browser Artifact ${{ steps.version.outputs.artifact_version }}
+          generate_release_notes: true
+          files: |
+            web/dist/varnavinyas-browser-artifact-${{ steps.version.outputs.artifact_version }}.zip

@@ -25,6 +25,12 @@ Output:
 
 - `web/dist/varnavinyas-browser-artifact/`
 - `web/dist/varnavinyas-browser-artifact.zip`
+- `web/dist/varnavinyas-browser-artifact-<version>.zip`
+
+Published release path:
+
+- GitHub releases tagged as `browser-artifact-v*`
+- release asset: `varnavinyas-browser-artifact-v<semver>.zip`
 
 ## Required Exports
 
@@ -59,6 +65,8 @@ The following should be treated as downstream contract:
 - export names
 - object-vs-null return shape
 - top-level field names returned by typed APIs
+- artifact manifest fields
+- artifact zip contents
 
 Breaking changes should be deliberate and documented.
 

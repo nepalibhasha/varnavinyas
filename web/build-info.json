@@ -1,13 +1,13 @@
 {
-  "built_at_utc": "2026-03-12T01:02:26Z",
-  "git_sha": "8ae6531",
-  "version": "git-8ae6531",
+  "built_at_utc": "2026-03-16T16:58:57Z",
+  "git_sha": "b94424a",
+  "version": "git-b94424a",
   "wasm_bindgen_cli": "0.2.108",
   "wasm_opt": {
     "applied": false,
     "version": null,
     "flags": "-Oz",
-    "size_before":  8702637,
-    "size_after":  8702637
+    "size_before":  8791131,
+    "size_after":  8791131
   }
 }

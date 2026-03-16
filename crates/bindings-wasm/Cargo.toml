@@ -6,6 +6,9 @@ rust-version.workspace = true
 license.workspace = true
 description = "WASM bindings for varnavinyas"
 
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
 [lib]
 crate-type = ["cdylib"]
 

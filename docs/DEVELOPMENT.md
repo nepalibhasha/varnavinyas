@@ -87,6 +87,7 @@ bash web/package-artifact.sh
 - `web/js/rules-data.js` is the source of truth for rule-to-category mapping in the browser UI.
 - Keep diagnostics keyed by stable `category_code`, not display labels.
 - `web/package-artifact.sh` is the supported handoff for downstream browser/extension clients.
+- Browser artifact releases are published from tags matching `browser-artifact-v*`.
 - In sandbox-restricted environments, `web/smoke-test.sh` may skip HTTP-serving checks. Treat that as expected when the static asset checks still pass.
 
 ## CI
