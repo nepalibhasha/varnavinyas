@@ -1,3 +1,4 @@
+use crate::tokenizer::is_supported_stem;
 use varnavinyas_kosha::kosha;
 use varnavinyas_prakriya::DiagnosticKind;
 use varnavinyas_prakriya::{Rule, RuleHit, collect_rule_hits};
@@ -55,7 +56,7 @@ pub(crate) fn check_word_impl(word: &str) -> Option<Diagnostic> {
     }
 
     let lex = kosha();
-    if lex.contains(word) {
+    if is_supported_stem(word, lex) {
         return None;
     }
 

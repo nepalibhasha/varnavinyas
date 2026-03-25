@@ -88,6 +88,7 @@ bash web/package-artifact.sh
 - Keep diagnostics keyed by stable `category_code`, not display labels.
 - `web/package-artifact.sh` is the supported handoff for downstream browser/extension clients.
 - Browser artifact releases are published from tags matching `browser-artifact-v*`.
+- Downstream consumers should fetch published browser artifacts from GitHub Releases, not from this repo layout.
 - In sandbox-restricted environments, `web/smoke-test.sh` may skip HTTP-serving checks. Treat that as expected when the static asset checks still pass.
 
 ## CI

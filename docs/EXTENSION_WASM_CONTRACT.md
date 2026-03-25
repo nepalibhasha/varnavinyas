@@ -31,6 +31,21 @@ Published release path:
 
 - GitHub releases tagged as `browser-artifact-v*`
 - release asset: `varnavinyas-browser-artifact-v<semver>.zip`
+- first published artifact: `browser-artifact-v0.1.0`
+
+Downstream consumption model:
+
+- downstream clients should fetch the browser artifact from GitHub Releases
+- downstream clients should not depend on repo-relative paths or ad hoc copied `web/pkg` contents
+- downstream clients should validate `manifest.json` and required exports during their build
+
+Example:
+
+```bash
+gh release download browser-artifact-v0.1.0 \
+  --repo nepalibhasha/varnavinyas \
+  --pattern 'varnavinyas-browser-artifact-v0.1.0.zip'
+```
 
 ## Required Exports
 

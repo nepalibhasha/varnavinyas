@@ -31,6 +31,15 @@ fn c2_correct_paragraph() {
     );
 }
 
+#[test]
+fn attested_sibling_inflection_allows_unlisted_case_form() {
+    let diags = check_text("मच्छिन्द्रनाथको मन्दिर");
+    assert!(
+        diags.is_empty(),
+        "Attested sibling inflections should allow supported case forms, got: {diags:?}"
+    );
+}
+
 /// C3: Diagnostics have span, correction, rule, explanation.
 #[test]
 fn c3_diagnostic_fields() {

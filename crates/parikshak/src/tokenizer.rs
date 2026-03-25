@@ -1,4 +1,4 @@
-use varnavinyas_kosha::kosha;
+use varnavinyas_kosha::{Kosha, kosha};
 use varnavinyas_prakriya::is_in_correction_table;
 
 /// A token extracted from text.
@@ -26,7 +26,7 @@ pub struct AnalyzedToken {
 }
 
 /// Known Nepali postpositions and plural markers, ordered longest-first for greedy matching.
-const SUFFIXES: &[&str] = &[
+pub(crate) const SUFFIXES: &[&str] = &[
     "भित्र",
     "प्रति",
     "देखि",
@@ -42,6 +42,25 @@ const SUFFIXES: &[&str] = &[
     "को",
     "मा",
 ];
+
+pub(crate) fn is_supported_stem(stem: &str, lex: &Kosha) -> bool {
+    if stem.is_empty() {
+        return false;
+    }
+
+    if lex.contains(stem) || lex.lookup(stem).is_some() || is_in_correction_table(stem) {
+        return true;
+    }
+
+    // Some stems are absent as bare forms in `words.txt` but are still clearly
+    // supported by attested inflected siblings (e.g., proper names listed with
+    // oblique/case-marked forms). Treat those stems as valid for suffix-aware
+    // tokenization and downstream checking.
+    SUFFIXES.iter().any(|suffix| {
+        let candidate = format!("{stem}{suffix}");
+        lex.contains(&candidate)
+    })
+}
 
 /// Vocative case markers. Only active behind `vocative-tokenization` feature.
 #[cfg(feature = "vocative-tokenization")]
@@ -95,7 +114,7 @@ pub fn tokenize_analyzed(text: &str) -> Vec<AnalyzedToken> {
         .map(|tok| {
             for sfx in SUFFIXES {
                 if let Some(stem) = tok.text.strip_suffix(sfx) {
-                    if !stem.is_empty() && (lex.contains(stem) || is_in_correction_table(stem)) {
+                    if is_supported_stem(stem, lex) {
                         return AnalyzedToken {
                             stem: stem.to_string(),
                             suffix: Some(sfx.to_string()),
@@ -366,5 +385,13 @@ mod tests {
         assert_eq!(tokens.len(), 2);
         assert_eq!(&text[tokens[0].start..tokens[0].end], "रामलाई");
         assert_eq!(&text[tokens[1].start..tokens[1].end], "नेपालमा");
+    }
+
+    #[test]
+    fn detaches_suffix_for_stem_supported_by_attested_sibling_form() {
+        let tokens = tokenize_analyzed("मच्छिन्द्रनाथको");
+        assert_eq!(tokens.len(), 1);
+        assert_eq!(tokens[0].stem, "मच्छिन्द्रनाथ");
+        assert_eq!(tokens[0].suffix.as_deref(), Some("को"));
     }
 }

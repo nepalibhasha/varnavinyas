@@ -202,6 +202,13 @@ fn decompose_nepali_to_nepal_plus_long_i() {
 }
 
 #[test]
+fn decompose_karunamaya_to_karuna_plus_maya() {
+    let m = decompose("करुणामय");
+    assert_eq!(m.root, "करुणा");
+    assert!(m.suffixes.contains(&"मय".to_string()));
+}
+
+#[test]
 fn root_candidates_include_known_suffix_root() {
     let candidates = lookup_root_candidates("नेपाली");
     assert!(candidates.iter().any(|candidate| {
