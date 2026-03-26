@@ -197,6 +197,50 @@ fn text_with_devanagari_numbers_remains_unflagged() {
 }
 
 #[test]
+fn productive_forms_and_known_compounds_do_not_trigger_nearby_suggestions() {
+    for word in ["पुष्पकमल", "बनाइयो", "रहेन", "ढाल्दै", "रामकै"]
+    {
+        let diag = check_word(word);
+        assert!(
+            diag.is_none(),
+            "Valid or analyzable form '{word}' should not produce edit-distance noise, got: {diag:?}"
+        );
+    }
+}
+
+#[test]
+fn punctuation_boundaries_do_not_merge_words_into_false_suggestions() {
+    let diags = check_text("नेकपा (माओवादी केन्द्र)को बैठक");
+    assert!(
+        diags.iter().all(|d| d.incorrect != "केन्द्र)को"),
+        "Internal punctuation should split tokens before suggestion fallback, got: {diags:?}"
+    );
+}
+
+#[test]
+fn unicode_dash_after_quote_verb_does_not_trigger_false_suggestion() {
+    let diags = check_text("राम भने– ‘घर जाऔँ।’");
+    assert!(
+        diags.iter().all(|d| d.incorrect != "भने–"),
+        "Unicode dash punctuation should not be attached to भने, got: {diags:?}"
+    );
+}
+
+#[test]
+fn tatsam_sibilant_word_gets_rule_backed_correction() {
+    let diag = check_word("सपथ").expect("Expected diagnostic for सपथ");
+    assert_eq!(diag.correction, "शपथ");
+    assert_eq!(
+        diag.category,
+        varnavinyas_parikshak::DiagnosticCategory::ShaShaS
+    );
+    assert!(
+        !matches!(diag.kind, DiagnosticKind::Ambiguous),
+        "सपथ should be a rule-backed sibilant correction, not edit-distance fallback: {diag:?}"
+    );
+}
+
+#[test]
 fn common_mula_avyaya_are_not_overcorrected() {
     for word in ["पनि", "अनि"] {
         let diag = check_word(word);

@@ -29,6 +29,84 @@ fn is_numeric_token(word: &str) -> bool {
     saw_digit
 }
 
+fn lexically_supported(word: &str, lex: &varnavinyas_kosha::Kosha) -> bool {
+    lex.contains(word) || lex.lookup(word).is_some()
+}
+
+fn has_known_compound_split(word: &str, lex: &varnavinyas_kosha::Kosha) -> bool {
+    let total_chars = word.chars().count();
+    if total_chars < 4 {
+        return false;
+    }
+
+    for (idx, _) in word.char_indices().skip(1) {
+        let left = &word[..idx];
+        let right = &word[idx..];
+        if left.chars().count() < 2 || right.chars().count() < 2 {
+            continue;
+        }
+        if lexically_supported(left, lex) && lexically_supported(right, lex) {
+            return true;
+        }
+    }
+
+    false
+}
+
+fn has_known_infinitive_candidate(stem: &str, lex: &varnavinyas_kosha::Kosha) -> bool {
+    let mut candidates = Vec::new();
+
+    if stem.ends_with('्') {
+        candidates.push(format!("{stem}नु"));
+    } else {
+        candidates.push(format!("{stem}नु"));
+        candidates.push(format!("{stem}्नु"));
+    }
+
+    if stem.ends_with('ा') {
+        candidates.push(format!("{stem}उनु"));
+        candidates.push(format!("{stem}इनु"));
+    }
+
+    candidates
+        .into_iter()
+        .any(|candidate| lexically_supported(&candidate, lex))
+}
+
+fn has_supported_productive_verb_form(word: &str, lex: &varnavinyas_kosha::Kosha) -> bool {
+    for suffix in ["दै", "ँदै"] {
+        if let Some(stem) = word.strip_suffix(suffix) {
+            if stem.chars().count() >= 2 && has_known_infinitive_candidate(stem, lex) {
+                return true;
+            }
+        }
+    }
+
+    if let Some(stem) = word.strip_suffix("ेन") {
+        if stem.chars().count() >= 2 && has_known_infinitive_candidate(stem, lex) {
+            return true;
+        }
+    }
+
+    if let Some(stem) = word.strip_suffix("इयो") {
+        if stem.chars().count() >= 2 && has_known_infinitive_candidate(stem, lex) {
+            return true;
+        }
+    }
+
+    false
+}
+
+fn should_offer_nearby_suggestion(word: &str, suggestion: &str) -> bool {
+    let word_chars: Vec<char> = word.chars().collect();
+    let suggestion_chars: Vec<char> = suggestion.chars().collect();
+    if word_chars.is_empty() || suggestion_chars.is_empty() {
+        return false;
+    }
+
+    word_chars.first() == suggestion_chars.first() && word_chars.last() == suggestion_chars.last()
+}
+
 /// Check a single word and return a diagnostic if it's incorrect.
 ///
 /// Pipeline:
@@ -81,9 +159,15 @@ pub(crate) fn check_word_impl(word: &str) -> Option<Diagnostic> {
     if is_supported_stem(word, lex) {
         return None;
     }
+    if has_known_compound_split(word, lex) || has_supported_productive_verb_form(word, lex) {
+        return None;
+    }
 
     if let Some(suggestion) = lex.suggest_nearby(word, 1) {
         if suggestion == word {
+            return None;
+        }
+        if !should_offer_nearby_suggestion(word, &suggestion) {
             return None;
         }
         return Some(Diagnostic {

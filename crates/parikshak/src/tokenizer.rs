@@ -55,26 +55,36 @@ const NIPATS: &[&str] = &["क्यारे", "नै", "पो", "रे", "�
 
 /// Tokenize text into word tokens with byte offsets.
 ///
-/// Splits on whitespace and strips surrounding punctuation from each token.
+/// Splits on whitespace and punctuation boundaries.
 /// Only returns tokens that contain at least one Devanagari character.
 pub fn tokenize(text: &str) -> Vec<Token> {
     let mut tokens = Vec::new();
-    let mut pos = 0;
+    let mut start = None;
 
-    for segment in text.split_whitespace() {
-        // Find the byte offset of this segment in the original text
-        let seg_start = text[pos..].find(segment).map(|i| pos + i).unwrap_or(pos);
-        let seg_end = seg_start + segment.len();
-        pos = seg_end;
+    for (idx, ch) in text.char_indices() {
+        if ch.is_whitespace() || is_punctuation(ch) {
+            if let Some(word_start) = start.take() {
+                let word = &text[word_start..idx];
+                if has_devanagari(word) {
+                    tokens.push(Token {
+                        text: word.to_string(),
+                        start: word_start,
+                        end: idx,
+                    });
+                }
+            }
+        } else if start.is_none() {
+            start = Some(idx);
+        }
+    }
 
-        // Strip leading/trailing punctuation to get the word core
-        let (word, word_start, word_end) = strip_punctuation(segment, seg_start);
-
-        if !word.is_empty() && has_devanagari(&word) {
+    if let Some(word_start) = start {
+        let word = &text[word_start..];
+        if has_devanagari(word) {
             tokens.push(Token {
-                text: word,
+                text: word.to_string(),
                 start: word_start,
-                end: word_end,
+                end: text.len(),
             });
         }
     }
@@ -197,41 +207,6 @@ pub fn tokenize_analyzed(text: &str) -> Vec<AnalyzedToken> {
         .collect()
 }
 
-/// Strip leading and trailing punctuation from a token.
-/// Returns (stripped_word, adjusted_start, adjusted_end).
-fn strip_punctuation(token: &str, offset: usize) -> (String, usize, usize) {
-    let chars: Vec<char> = token.chars().collect();
-
-    // Find first non-punctuation char
-    let start = chars
-        .iter()
-        .position(|c| !is_punctuation(*c))
-        .unwrap_or(chars.len());
-
-    // Find last non-punctuation char
-    let end = chars
-        .iter()
-        .rposition(|c| !is_punctuation(*c))
-        .map(|i| i + 1)
-        .unwrap_or(0);
-
-    if start >= end {
-        return (String::new(), offset, offset);
-    }
-
-    let word: String = chars[start..end].iter().collect();
-
-    // Calculate byte offsets
-    let leading_bytes: usize = chars[..start].iter().map(|c| c.len_utf8()).sum();
-    let word_bytes: usize = chars[start..end].iter().map(|c| c.len_utf8()).sum();
-
-    (
-        word,
-        offset + leading_bytes,
-        offset + leading_bytes + word_bytes,
-    )
-}
-
 /// Check if a character is punctuation (for tokenization purposes).
 fn is_punctuation(c: char) -> bool {
     matches!(
@@ -251,6 +226,8 @@ fn is_punctuation(c: char) -> bool {
             | '"'
             | '\''
             | '/'
+            | '–'
+            | '—'
             | '।'
             | '…'
             | '“'
@@ -289,6 +266,20 @@ mod tests {
         let tokens = tokenize("“अत्याधिक”");
         assert_eq!(tokens.len(), 1);
         assert_eq!(tokens[0].text, "अत्याधिक");
+    }
+
+    #[test]
+    fn splits_on_internal_punctuation_boundaries() {
+        let tokens = tokenize("नेकपा (माओवादी केन्द्र)को");
+        let words: Vec<_> = tokens.iter().map(|t| t.text.as_str()).collect();
+        assert_eq!(words, vec!["नेकपा", "माओवादी", "केन्द्र", "को"]);
+    }
+
+    #[test]
+    fn splits_on_unicode_dash_boundaries() {
+        let tokens = tokenize("राम भने– ‘घर जाऔँ।’");
+        let words: Vec<_> = tokens.iter().map(|t| t.text.as_str()).collect();
+        assert_eq!(words, vec!["राम", "भने", "घर", "जाऔँ"]);
     }
 
     #[test]

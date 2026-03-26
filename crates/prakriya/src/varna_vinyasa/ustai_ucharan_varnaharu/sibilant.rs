@@ -225,5 +225,51 @@ pub fn rule_sibilant(input: &str) -> Option<Prakriya> {
             }
         }
     }
+
+    // Conservative tatsam lexical fallback:
+    // when one sibilant substitution yields a known tatsam form and the input
+    // itself is unattested, prefer the attested tatsam sibilant. Keep this
+    // below the numbered contextual rules so explicit Academy environments win.
+    if !matches!(origin, Origin::Aagantuk) && !lex.contains(input) {
+        let chars: Vec<char> = input.chars().collect();
+        let mut candidates = Vec::new();
+
+        for (idx, ch) in chars.iter().enumerate() {
+            let replacements: &[char] = match ch {
+                'स' => &['श', 'ष'],
+                'श' => &['ष'],
+                'ष' => &['श'],
+                _ => continue,
+            };
+
+            for replacement in replacements {
+                let mut candidate = chars.clone();
+                candidate[idx] = *replacement;
+                let output: String = candidate.into_iter().collect();
+                if output != input
+                    && lex.contains(&output)
+                    && matches!(classify(&output), Origin::Tatsam)
+                {
+                    candidates.push(output);
+                }
+            }
+        }
+
+        candidates.sort();
+        candidates.dedup();
+        if candidates.len() == 1 {
+            return Some(Prakriya::corrected(
+                input,
+                &candidates[0],
+                vec![Step::new(
+                    Rule::VarnaVinyasNiyam("3(ग)(अ)-तत्सम-lex"),
+                    "तत्सम शब्दमा मूल श/ष/स रूप कायम राखिन्छ",
+                    input,
+                    &candidates[0],
+                )],
+            ));
+        }
+    }
+
     None
 }

@@ -150,6 +150,12 @@ fn sibilant_correction() {
 }
 
 #[test]
+fn lexicon_backed_tatsam_sibilant_correction() {
+    let p = derive("सपथ");
+    assert_eq!(p.output, "शपथ");
+}
+
+#[test]
 fn panchham_correction() {
     let p = derive("संघीय");
     assert_eq!(p.output, "सङ्घीय");
