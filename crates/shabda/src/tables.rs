@@ -174,7 +174,7 @@ pub static PLURAL_MARKERS: &[&str] = &["हरू", "हरु"];
 
 /// Outer discourse particles that can follow a noun/case-marked form.
 /// Keep this list conservative to avoid over-accepting short lexical endings.
-pub static PARTICLES: &[&str] = &["क्यारे", "पनि", "नै", "पो", "रे", "खै"];
+pub static PARTICLES: &[&str] = &["क्यारे", "पनि", "नै", "कै", "पो", "रे", "खै"];
 
 /// Known suffixes.
 ///
