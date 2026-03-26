@@ -13,8 +13,12 @@ import init, {
   derive_value,
   analyze_word,
   analyze_word_value,
+  best_affix_analysis,
+  best_affix_analysis_value,
   decompose_word,
   decompose_word_value,
+  analyze_compound,
+  analyze_compound_value,
   sandhi_apply,
   sandhi_apply_value,
   sandhi_split,
@@ -141,6 +145,30 @@ export function decomposeWord(word) {
     return decompose_word_value(word);
   } catch (_err) {
     return JSON.parse(decompose_word(word));
+  }
+}
+
+/**
+ * Return the highest-ranked outer affix analysis for a word, or null.
+   * Returns { surface, stem, root, prefixes, prefix_segments, suffixes, suffix_segments, score }
+ */
+export function bestAffixAnalysis(word) {
+  try {
+    return best_affix_analysis_value(word);
+  } catch (_err) {
+    return JSON.parse(best_affix_analysis(word));
+  }
+}
+
+/**
+ * Analyze a word as a potential compound (samasa).
+ * Returns [{ left, right, samasa_type, score, vigraha }, ...]
+ */
+export function analyzeCompound(word) {
+  try {
+    return analyze_compound_value(word);
+  } catch (_err) {
+    return JSON.parse(analyze_compound(word));
   }
 }
 

@@ -6,7 +6,7 @@
  */
 import { checkText } from './wasm-bridge.js';
 import { debounce, escapeHtml, CATEGORY_COLORS, CATEGORY_LABELS } from './utils.js';
-import { wrapRuleTooltip } from './rules-data.js';
+import { wrapRuleTooltip, getRuleSummary } from './rules-data.js';
 import { initInspector, showInspector, hideInspector, isInspectorActive } from './inspector.js';
 
 let diagnostics = [];
@@ -187,6 +187,10 @@ function diagnosticKindClass(diag) {
   return "error";
 }
 
+function normalizeCopy(text) {
+  return (text || "").replace(/\s+/g, " ").trim();
+}
+
 function diagnosticGuidance(diag) {
   if (isHeuristicDiagnostic(diag)) {
     return "यो सन्दर्भअनुसार छान्ने सुझाव हो।";
@@ -194,7 +198,11 @@ function diagnosticGuidance(diag) {
   if (diag.kind === "Variant") {
     return "यो अनिवार्य त्रुटि होइन; मानक वैकल्पिक रूपसम्बन्धी सूचना हो।";
   }
-  return "यो मुख्य मानक त्रुटि हो। चाहनुहुन्छ भने सिधै सच्याउन सकिन्छ।";
+  const summary = getRuleSummary(diag.rule, diag.category_code);
+  if (summary && normalizeCopy(summary) !== normalizeCopy(diag.explanation)) {
+    return summary;
+  }
+  return null;
 }
 
 function diagnosticKey(d) {
@@ -544,6 +552,9 @@ function renderDiagnostics() {
       const kindLabel = diagnosticStateLabel(d);
       const kindClass = diagnosticKindClass(d);
       const guidance = diagnosticGuidance(d);
+      const guidanceBlock = guidance
+        ? `<div class="diag-guidance">${escapeHtml(guidance)}</div>`
+        : "";
       const hasChange = d.incorrect !== d.correction;
       const correctionRow = hasChange
         ? `<div class="diag-correction">
@@ -567,7 +578,7 @@ function renderDiagnostics() {
           ${confidence < 100 ? `<span class="diag-confidence">${confidence}%</span>` : ''}
         </div>
         ${correctionRow}
-        <div class="diag-guidance">${escapeHtml(guidance)}</div>
+        ${guidanceBlock}
         <div class="diag-explanation">${escapeHtml(d.explanation)}</div>
         <div class="diag-rule">${wrapRuleTooltip(d.rule, d.category_code, {
           incorrect: d.incorrect,
@@ -702,6 +713,9 @@ function showMobileDiagOverlay(d, idx) {
   const kindLabel = diagnosticStateLabel(d);
   const kindClass = diagnosticKindClass(d);
   const guidance = diagnosticGuidance(d);
+  const guidanceBlock = guidance
+    ? `<div class="diag-guidance">${escapeHtml(guidance)}</div>`
+    : "";
   mobileDiagOverlay.innerHTML = `
     <div class="diag-meta">
       <span class="diag-badge" data-category="${code}">${escapeHtml(label)}</span>
@@ -717,7 +731,7 @@ function showMobileDiagOverlay(d, idx) {
         </div>`
       : `<div class="diag-correction"><span class="diag-incorrect">${escapeHtml(d.incorrect)}</span></div>`
     }
-    <div class="diag-guidance">${escapeHtml(guidance)}</div>
+    ${guidanceBlock}
     <div class="diag-explanation">${escapeHtml(d.explanation)}</div>
     <div class="diag-rule">${wrapRuleTooltip(d.rule, d.category_code, {
       incorrect: d.incorrect,

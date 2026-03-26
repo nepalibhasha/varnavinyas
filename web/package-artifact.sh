@@ -34,6 +34,7 @@ fi
 REQUIRED_EXPORTS="
 check_word_value
 analyze_word_value
+best_affix_analysis_value
 decompose_word_value
 sandhi_split_value
 analyze_compound_value
@@ -96,6 +97,7 @@ cat > "$ARTIFACT_DIR/manifest.json" <<EOF
   "required_exports": [
     "check_word_value",
     "analyze_word_value",
+    "best_affix_analysis_value",
     "decompose_word_value",
     "sandhi_split_value",
     "analyze_compound_value"

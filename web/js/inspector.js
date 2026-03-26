@@ -1,10 +1,17 @@
 /**
  * Word Inspector module — contextual analysis panel for clicked words.
  *
- * Shows origin, correction, morphology, sandhi splits, derivation steps,
- * and rule notes for the selected word.
+ * Shows origin, correction, affix structure, morphology, compound hints,
+ * sandhi splits, derivation steps, and rule notes for the selected word.
  */
-import { analyzeWord, deriveWord, decomposeWord, sandhiSplitBestForCompound } from './wasm-bridge.js';
+import {
+  analyzeCompound,
+  analyzeWord,
+  bestAffixAnalysis,
+  deriveWord,
+  decomposeWord,
+  sandhiSplitBestForCompound,
+} from './wasm-bridge.js';
 import { escapeHtml, ORIGIN_LABELS } from './utils.js';
 import { wrapRuleTooltip } from './rules-data.js';
 
@@ -25,7 +32,8 @@ const SANDHI_TYPE_CLASS = {
 
 /** Case markers (postpositions) — matches Rust tables::CASE_MARKERS */
 const CASE_MARKERS = new Set([
-  '\u092D\u093F\u0924\u094D\u0930', '\u0926\u0947\u0916\u093F',
+  '\u0926\u094D\u0935\u093E\u0930\u093E', '\u092D\u093F\u0924\u094D\u0930', '\u0926\u0947\u0916\u093F',
+  '\u0938\u0901\u0917\u0948', '\u0938\u092E\u094D\u092E',
   '\u0932\u093E\u0908', '\u092C\u093E\u091F', '\u0938\u0901\u0917',
   '\u0924\u093F\u0930', '\u0915\u093E', '\u0915\u0940',
   '\u0932\u0947', '\u0915\u094B', '\u092E\u093E',
@@ -34,13 +42,33 @@ const CASE_MARKERS = new Set([
 /** Plural markers — matches Rust tables::PLURAL_MARKERS */
 const PLURAL_MARKERS = new Set(['\u0939\u0930\u0942', '\u0939\u0930\u0941']);
 
+/** Particles — matches Rust tables::PARTICLES */
+const PARTICLES = new Set([
+  '\u0915\u094D\u092F\u093E\u0930\u0947',
+  '\u092A\u0928\u093F',
+  '\u0928\u0948',
+  '\u092A\u094B',
+  '\u0930\u0947',
+  '\u0916\u0948',
+]);
+
 /**
  * Classify a suffix and return { cssClass, label }.
  */
 function classifySuffix(s) {
   if (CASE_MARKERS.has(s)) return { cssClass: 'morpheme-case', label: '\u0935\u093F\u092D\u0915\u094D\u0924\u093F' };
   if (PLURAL_MARKERS.has(s)) return { cssClass: 'morpheme-plural', label: '\u092C\u0939\u0941\u0935\u091A\u0928' };
+  if (PARTICLES.has(s)) return { cssClass: 'morpheme-particle', label: '\u0928\u093F\u092A\u093E\u0924' };
   return { cssClass: 'morpheme-suffix', label: '\u092A\u094D\u0930\u0924\u094D\u092F\u092F' };
+}
+
+function classifyAffixSegment(segment) {
+  const kind = segment?.kind || '';
+  if (kind === 'prefix') return { cssClass: 'morpheme-prefix', label: '\u0909\u092A\u0938\u0930\u094D\u0917' };
+  if (kind === 'case_marker') return { cssClass: 'morpheme-case', label: '\u0935\u093F\u092D\u0915\u094D\u0924\u093F' };
+  if (kind === 'plural_marker') return { cssClass: 'morpheme-plural', label: '\u092C\u0939\u0941\u0935\u091A\u0928' };
+  if (kind === 'particle') return { cssClass: 'morpheme-particle', label: '\u0928\u093F\u092A\u093E\u0924' };
+  return { cssClass: 'morpheme-suffix', label: '\u0905\u0935\u092F\u0935' };
 }
 
 let panelEl = null;
@@ -118,18 +146,15 @@ export function showInspector(word, start, end, options = {}) {
     </div>`;
   }
 
-  // --- Morphology ---
-  // Get morphological root so sandhi splitting operates on the stem,
-  // not the inflected form (e.g., "रामसँग" → root "राम").
-  let morphRoot = word;
-  try {
-    const m = decomposeWord(word);
-    if (m.root) morphRoot = m.root;
-  } catch { /* use full word as fallback */ }
-  html += renderMorphologySection(word);
+  const structure = buildStructureViewModel(word);
+  html += renderAffixStructureSection(structure.affix);
+  html += renderMorphologySection(structure.morphology);
+
+  // --- Compound depth on recovered base/root ---
+  html += renderCompoundSection(structure.baseWord, structure.compoundSourceLabel);
 
   // --- Sandhi splits (on morphological root) ---
-  html += renderSandhiSection(morphRoot);
+  html += renderSandhiSection(structure.baseWord);
 
   // --- Derivation steps ---
   html += renderDerivationSection(word);
@@ -221,41 +246,174 @@ export function isInspectorActive() {
 
 // --- Internal rendering helpers ---
 
-function renderMorphologySection(word) {
+function safeBestAffixAnalysis(word) {
   try {
-    const m = decomposeWord(word);
-    const hasPrefixes = m.prefixes && m.prefixes.length > 0;
-    const hasSuffixes = m.suffixes && m.suffixes.length > 0;
-    if (!hasPrefixes && !hasSuffixes) return '';
+    return bestAffixAnalysis(word);
+  } catch {
+    return null;
+  }
+}
 
-    let parts = '';
-    for (const p of (m.prefixes || [])) {
-      parts += `
-        <span class="morpheme morpheme-prefix">
-          ${escapeHtml(p)}
-          <span class="morpheme-label">\u0909\u092A\u0938\u0930\u094D\u0917</span>
-        </span>
-        <span class="morpheme-sep">+</span>`;
-    }
+function safeDecomposeWord(word) {
+  try {
+    return decomposeWord(word);
+  } catch {
+    return null;
+  }
+}
+
+function hasOuterAffixes(affix) {
+  return Boolean(
+    affix
+      && ((affix.prefix_segments && affix.prefix_segments.length > 0)
+        || (affix.suffix_segments && affix.suffix_segments.length > 0))
+  );
+}
+
+function normalizeMorphologyLike(prefixes, root, suffixes) {
+  return JSON.stringify({
+    prefixes: prefixes || [],
+    root: root || '',
+    suffixes: suffixes || [],
+  });
+}
+
+function isDuplicateMorphology(affix, morph) {
+  if (!hasOuterAffixes(affix) || !morph) {
+    return false;
+  }
+
+  return normalizeMorphologyLike(
+    affix.prefixes || [],
+    affix.root || affix.stem || '',
+    affix.suffixes || [],
+  ) === normalizeMorphologyLike(
+    morph.prefixes || [],
+    morph.root || '',
+    morph.suffixes || [],
+  );
+}
+
+function buildStructureViewModel(word) {
+  const affix = safeBestAffixAnalysis(word);
+  const morph = safeDecomposeWord(word);
+  const baseWord = affix?.root || affix?.stem || morph?.root || word;
+  const showAffix = hasOuterAffixes(affix);
+  const showMorphology = Boolean(
+    morph
+      && ((morph.prefixes && morph.prefixes.length > 0)
+        || (morph.suffixes && morph.suffixes.length > 0))
+      && !isDuplicateMorphology(affix, morph)
+  );
+  const compoundSourceLabel = showAffix ? baseWord : null;
+
+  return {
+    affix: showAffix ? affix : null,
+    morphology: showMorphology ? morph : null,
+    baseWord,
+    compoundSourceLabel,
+  };
+}
+
+function renderAffixStructureSection(affix) {
+  if (!hasOuterAffixes(affix)) return '';
+
+  let parts = '';
+  for (const segment of (affix.prefix_segments || [])) {
+    const { cssClass, label } = classifyAffixSegment(segment);
     parts += `
-      <span class="morpheme morpheme-root">
-        ${escapeHtml(m.root)}
-        <span class="morpheme-label">\u092E\u0942\u0932</span>
+      <span class="morpheme ${cssClass}">
+        ${escapeHtml(segment.text)}
+        <span class="morpheme-label">${escapeHtml(label)}</span>
+      </span>
+      <span class="morpheme-sep">+</span>`;
+  }
+  parts += `
+    <span class="morpheme morpheme-base">
+      ${escapeHtml(affix.root || affix.stem || word)}
+      <span class="morpheme-label">\u0906\u0927\u093E\u0930</span>
+    </span>`;
+  for (const segment of (affix.suffix_segments || [])) {
+    const { cssClass, label } = classifyAffixSegment(segment);
+    parts += `
+      <span class="morpheme-sep">+</span>
+      <span class="morpheme ${cssClass}">
+        ${escapeHtml(segment.text)}
+        <span class="morpheme-label">${escapeHtml(label)}</span>
       </span>`;
-    for (const s of (m.suffixes || [])) {
-      const { cssClass, label } = classifySuffix(s);
-      parts += `
-        <span class="morpheme-sep">+</span>
-        <span class="morpheme ${cssClass}">
-          ${escapeHtml(s)}
-          <span class="morpheme-label">${escapeHtml(label)}</span>
-        </span>`;
+  }
+
+  return `
+    <div class="inspector-section">
+      <div class="inspector-section-title">\u092C\u093E\u0939\u093F\u0930\u0940 \u092C\u0928\u094B\u091F <span class="inspector-section-label">Outer Affix Structure</span></div>
+      <div class="morphology-display">${parts}</div>
+    </div>`;
+}
+
+function renderMorphologySection(morph) {
+  if (!morph) return '';
+
+  let parts = '';
+  for (const p of (morph.prefixes || [])) {
+    parts += `
+      <span class="morpheme morpheme-prefix">
+        ${escapeHtml(p)}
+        <span class="morpheme-label">\u0909\u092A\u0938\u0930\u094D\u0917</span>
+      </span>
+      <span class="morpheme-sep">+</span>`;
+  }
+  parts += `
+    <span class="morpheme morpheme-root">
+      ${escapeHtml(morph.root)}
+      <span class="morpheme-label">\u092E\u0942\u0932</span>
+    </span>`;
+  for (const s of (morph.suffixes || [])) {
+    const { cssClass, label } = classifySuffix(s);
+    parts += `
+      <span class="morpheme-sep">+</span>
+      <span class="morpheme ${cssClass}">
+        ${escapeHtml(s)}
+        <span class="morpheme-label">${escapeHtml(label)}</span>
+      </span>`;
+  }
+
+  return `
+  <div class="inspector-section">
+    <div class="inspector-section-title">\u0936\u092C\u094D\u0926 \u0935\u093F\u0936\u094D\u0932\u0947\u0937\u0923 <span class="inspector-section-label">Morphology</span></div>
+    <div class="morphology-display">${parts}</div>
+  </div>`;
+}
+
+function renderCompoundSection(baseWord, sourceWord = null) {
+  if (!baseWord) return '';
+  try {
+    const candidates = analyzeCompound(baseWord);
+    if (!candidates || candidates.length === 0) return '';
+
+    const top = candidates[0];
+    if (!top.left || !top.right || typeof top.score !== 'number' || top.score < 0.75) {
+      return '';
     }
+
+    const sourceChip = sourceWord && sourceWord !== currentWord
+      ? `<span class="inspector-section-label">${escapeHtml(sourceWord)} \u092D\u093F\u0924\u094D\u0930</span>`
+      : '';
 
     return `
     <div class="inspector-section">
-      <div class="inspector-section-title">\u0936\u092C\u094D\u0926 \u0935\u093F\u0936\u094D\u0932\u0947\u0937\u0923 <span class="inspector-section-label">Morphology</span></div>
-      <div class="morphology-display">${parts}</div>
+      <div class="inspector-section-title">\u0906\u0928\u094D\u0924\u0930\u093F\u0915 \u092C\u0928\u094B\u091F <span class="inspector-section-label">Compound Depth</span>${sourceChip}</div>
+      <div class="compound-structure-card">
+        <div class="compound-structure-head">
+          <span class="compound-surface">${escapeHtml(baseWord)}</span>
+          <span class="compound-type-badge">${escapeHtml(top.samasa_type || '\u0938\u092E\u093E\u0938')}</span>
+        </div>
+        <div class="compound-structure-split">
+          <span class="morpheme morpheme-root">${escapeHtml(top.left)}</span>
+          <span class="morpheme-sep">+</span>
+          <span class="morpheme morpheme-root">${escapeHtml(top.right)}</span>
+        </div>
+        ${top.vigraha ? `<div class="compound-vigraha">${escapeHtml(top.vigraha)}</div>` : ''}
+      </div>
     </div>`;
   } catch {
     return '';

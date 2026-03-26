@@ -975,6 +975,12 @@ body {
   border: 1.5px solid var(--color-border);
 }
 
+.morpheme-base {
+  background: #f3f4f6;
+  color: #111827;
+  border: 1.5px solid #d1d5db;
+}
+
 .morpheme-suffix {
   background: #ccfbf1;
   color: #0f766e;
@@ -993,6 +999,12 @@ body {
   border: 1px solid #fcd34d;
 }
 
+.morpheme-particle {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+}
+
 .morpheme-sep {
   align-self: center;
   color: var(--color-text-secondary);
@@ -1007,6 +1019,61 @@ body {
   font-weight: 500;
   color: var(--color-text-secondary);
   margin-top: 0.15rem;
+}
+
+.affix-structure-note {
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+  margin-top: 0.25rem;
+}
+
+.compound-structure-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, #fffdf8 0%, #fff 100%);
+}
+
+.compound-structure-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.compound-surface {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.compound-type-badge {
+  display: inline-block;
+  padding: 0.18rem 0.6rem;
+  border-radius: 999px;
+  background: #e0f2fe;
+  color: #0c4a6e;
+  border: 1px solid #7dd3fc;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.compound-structure-split {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.compound-vigraha {
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+  padding: 0.5rem 0.65rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
 }
 
 /* === Sandhi type badges (shared by inspector) === */

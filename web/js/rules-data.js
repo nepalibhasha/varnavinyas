@@ -436,6 +436,28 @@ export function getReferenceTargetForRule(ruleText, categoryCode) {
 }
 
 /**
+ * Resolve the best available reference summary for a rule citation.
+ * Prefers a matched subsection summary, then falls back to the category summary.
+ */
+export function getRuleSummary(ruleText, categoryCode) {
+  const cat = categoryCode || getCategoryForRule(ruleText);
+  if (!cat) return null;
+
+  const section = RULES_SECTIONS.find((item) => item.categoryCode === cat);
+  if (!section) return null;
+
+  const target = getReferenceTargetForRule(ruleText, cat);
+  if (target?.targetId && Array.isArray(section.referenceTargets)) {
+    const referenceTarget = section.referenceTargets.find((item) => item.id === target.targetId);
+    if (referenceTarget?.summary) {
+      return referenceTarget.summary;
+    }
+  }
+
+  return section.summary || null;
+}
+
+/**
  * Wrap a rule citation in a tooltip-enabled span.
  * Shared by checker.js and inspector.js.
  */
