@@ -1,5 +1,5 @@
 use pyo3::prelude::*;
-use varnavinyas_shabda::{self as shabda_core, Origin};
+use varnavinyas_shabda::{self as shabda_core, AffixKind, Origin};
 
 #[pyclass(name = "Origin", eq, frozen, hash)]
 #[derive(Clone, PartialEq, Eq, Hash)]
@@ -40,6 +40,46 @@ pub struct PyMorpheme {
     pub prefixes: Vec<String>,
     pub suffixes: Vec<String>,
     pub origin: PyOrigin,
+}
+
+#[pyclass(name = "AffixKind", eq, frozen, hash)]
+#[derive(Clone, PartialEq, Eq, Hash)]
+pub enum PyAffixKind {
+    Prefix,
+    PluralMarker,
+    CaseMarker,
+    Particle,
+}
+
+impl From<AffixKind> for PyAffixKind {
+    fn from(kind: AffixKind) -> Self {
+        match kind {
+            AffixKind::Prefix => PyAffixKind::Prefix,
+            AffixKind::PluralMarker => PyAffixKind::PluralMarker,
+            AffixKind::CaseMarker => PyAffixKind::CaseMarker,
+            AffixKind::Particle => PyAffixKind::Particle,
+        }
+    }
+}
+
+#[pyclass(name = "AffixSegment", get_all, frozen)]
+#[derive(Clone)]
+pub struct PyAffixSegment {
+    pub text: String,
+    pub kind: PyAffixKind,
+}
+
+#[pyclass(name = "AffixAnalysis", get_all, frozen)]
+#[derive(Clone)]
+pub struct PyAffixAnalysis {
+    pub surface: String,
+    pub stem: String,
+    pub root: String,
+    pub prefixes: Vec<String>,
+    pub prefix_segments: Vec<PyAffixSegment>,
+    pub suffixes: Vec<String>,
+    pub suffix_segments: Vec<PyAffixSegment>,
+    pub score: u16,
 }
 
 #[pyclass(name = "RootCandidate", get_all, frozen)]
@@ -96,6 +136,38 @@ impl From<shabda_core::RootCandidate> for PyRootCandidate {
     }
 }
 
+impl From<shabda_core::AffixSegment> for PyAffixSegment {
+    fn from(segment: shabda_core::AffixSegment) -> Self {
+        Self {
+            text: segment.text,
+            kind: segment.kind.into(),
+        }
+    }
+}
+
+impl From<shabda_core::AffixAnalysis> for PyAffixAnalysis {
+    fn from(analysis: shabda_core::AffixAnalysis) -> Self {
+        Self {
+            surface: analysis.surface,
+            stem: analysis.stem,
+            root: analysis.root,
+            prefixes: analysis.prefixes,
+            prefix_segments: analysis
+                .prefix_segments
+                .into_iter()
+                .map(Into::into)
+                .collect(),
+            suffixes: analysis.suffixes,
+            suffix_segments: analysis
+                .suffix_segments
+                .into_iter()
+                .map(Into::into)
+                .collect(),
+            score: analysis.score,
+        }
+    }
+}
+
 /// Classify a word by its origin.
 #[pyfunction]
 pub fn classify(word: &str) -> PyOrigin {
@@ -135,9 +207,33 @@ pub fn best_root(word: &str) -> Option<PyRootCandidate> {
     shabda_core::best_root(word).map(Into::into)
 }
 
+/// Collect conservative affix analyses for a word.
+#[pyfunction]
+pub fn analyze_affixes(word: &str) -> Vec<PyAffixAnalysis> {
+    shabda_core::analyze_affixes(word)
+        .into_iter()
+        .map(Into::into)
+        .collect()
+}
+
+/// Return the best affix analysis for a word.
+#[pyfunction]
+pub fn best_analysis(word: &str) -> Option<PyAffixAnalysis> {
+    shabda_core::best_analysis(word).map(Into::into)
+}
+
+/// Return whether the word has any supported affix analysis.
+#[pyfunction]
+pub fn has_supported_analysis(word: &str) -> bool {
+    shabda_core::has_supported_analysis(word)
+}
+
 #[pymodule]
 pub fn shabda(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyOrigin>()?;
+    m.add_class::<PyAffixKind>()?;
+    m.add_class::<PyAffixSegment>()?;
+    m.add_class::<PyAffixAnalysis>()?;
     m.add_class::<PyMorpheme>()?;
     m.add_class::<PyRootCandidate>()?;
     m.add_function(wrap_pyfunction!(classify, m)?)?;
@@ -145,5 +241,8 @@ pub fn shabda(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(lookup_root_candidates, m)?)?;
     m.add_function(wrap_pyfunction!(has_known_root, m)?)?;
     m.add_function(wrap_pyfunction!(best_root, m)?)?;
+    m.add_function(wrap_pyfunction!(analyze_affixes, m)?)?;
+    m.add_function(wrap_pyfunction!(best_analysis, m)?)?;
+    m.add_function(wrap_pyfunction!(has_supported_analysis, m)?)?;
     Ok(())
 }

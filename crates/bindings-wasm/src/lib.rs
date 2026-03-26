@@ -134,6 +134,26 @@ struct JsMorpheme {
     origin: String,
 }
 
+#[derive(Serialize, Tsify)]
+#[tsify(into_wasm_abi)]
+struct JsAffixSegment {
+    text: String,
+    kind: String,
+}
+
+#[derive(Serialize, Tsify)]
+#[tsify(into_wasm_abi)]
+struct JsAffixAnalysis {
+    surface: String,
+    stem: String,
+    root: String,
+    prefixes: Vec<String>,
+    prefix_segments: Vec<JsAffixSegment>,
+    suffixes: Vec<String>,
+    suffix_segments: Vec<JsAffixSegment>,
+    score: u16,
+}
+
 /// Decompose a word into root, prefixes, suffixes, and origin.
 /// Returns a JSON object with root, prefixes, suffixes, and origin.
 #[wasm_bindgen]
@@ -148,6 +168,53 @@ pub fn decompose_word_value(word: &str) -> Result<JsValue, JsError> {
     let js = morpheme_to_js(varnavinyas_shabda::decompose(word));
     serde_wasm_bindgen::to_value(&js)
         .map_err(|e| JsError::new(&format!("failed to serialize morpheme: {e}")))
+}
+
+/// Collect conservative affix analyses for a word.
+#[wasm_bindgen]
+pub fn analyze_affixes(word: &str) -> String {
+    let js: Vec<JsAffixAnalysis> = varnavinyas_shabda::analyze_affixes(word)
+        .into_iter()
+        .map(affix_analysis_to_js)
+        .collect();
+    serde_json::to_string(&js).unwrap_or_else(|_| "[]".to_string())
+}
+
+/// Collect affix analyses and return typed JsValue.
+#[wasm_bindgen]
+pub fn analyze_affixes_value(word: &str) -> Result<JsValue, JsError> {
+    let js: Vec<JsAffixAnalysis> = varnavinyas_shabda::analyze_affixes(word)
+        .into_iter()
+        .map(affix_analysis_to_js)
+        .collect();
+    serde_wasm_bindgen::to_value(&js)
+        .map_err(|e| JsError::new(&format!("failed to serialize affix analyses: {e}")))
+}
+
+/// Return the highest-ranked affix analysis as JSON or "null".
+#[wasm_bindgen]
+pub fn best_affix_analysis(word: &str) -> String {
+    match varnavinyas_shabda::best_analysis(word) {
+        Some(analysis) => serde_json::to_string(&affix_analysis_to_js(analysis))
+            .unwrap_or_else(|_| "null".to_string()),
+        None => "null".to_string(),
+    }
+}
+
+/// Return the highest-ranked affix analysis or null.
+#[wasm_bindgen]
+pub fn best_affix_analysis_value(word: &str) -> Result<JsValue, JsError> {
+    match varnavinyas_shabda::best_analysis(word) {
+        Some(analysis) => serde_wasm_bindgen::to_value(&affix_analysis_to_js(analysis))
+            .map_err(|e| JsError::new(&format!("failed to serialize affix analysis: {e}"))),
+        None => Ok(JsValue::NULL),
+    }
+}
+
+/// Return whether a word has any supported affix analysis.
+#[wasm_bindgen]
+pub fn has_supported_affix_analysis(word: &str) -> bool {
+    varnavinyas_shabda::has_supported_analysis(word)
 }
 
 /// A samasa (compound) candidate serialized for JavaScript consumers.
@@ -379,6 +446,43 @@ fn morpheme_to_js(m: varnavinyas_shabda::Morpheme) -> JsMorpheme {
     }
 }
 
+fn affix_kind_to_string(kind: varnavinyas_shabda::AffixKind) -> String {
+    match kind {
+        varnavinyas_shabda::AffixKind::Prefix => "prefix".into(),
+        varnavinyas_shabda::AffixKind::PluralMarker => "plural_marker".into(),
+        varnavinyas_shabda::AffixKind::CaseMarker => "case_marker".into(),
+        varnavinyas_shabda::AffixKind::Particle => "particle".into(),
+    }
+}
+
+fn affix_segment_to_js(segment: varnavinyas_shabda::AffixSegment) -> JsAffixSegment {
+    JsAffixSegment {
+        text: segment.text,
+        kind: affix_kind_to_string(segment.kind),
+    }
+}
+
+fn affix_analysis_to_js(analysis: varnavinyas_shabda::AffixAnalysis) -> JsAffixAnalysis {
+    JsAffixAnalysis {
+        surface: analysis.surface,
+        stem: analysis.stem,
+        root: analysis.root,
+        prefixes: analysis.prefixes,
+        prefix_segments: analysis
+            .prefix_segments
+            .into_iter()
+            .map(affix_segment_to_js)
+            .collect(),
+        suffixes: analysis.suffixes,
+        suffix_segments: analysis
+            .suffix_segments
+            .into_iter()
+            .map(affix_segment_to_js)
+            .collect(),
+        score: analysis.score,
+    }
+}
+
 fn parse_scheme(s: &str) -> Result<varnavinyas_lipi::Scheme, JsError> {
     match s {
         "Devanagari" | "devanagari" => Ok(varnavinyas_lipi::Scheme::Devanagari),
@@ -506,5 +610,28 @@ mod tests {
             .and_then(serde_json::Value::as_array)
             .expect("multi-hit word should include alternate_reasons");
         assert!(!alternates.is_empty());
+    }
+
+    #[test]
+    fn best_affix_analysis_returns_typed_segments() {
+        let json = best_affix_analysis("रामसम्मपनि");
+        let parsed: serde_json::Value =
+            serde_json::from_str(&json).expect("affix analysis must return valid JSON");
+        assert_eq!(parsed.get("stem").and_then(|v| v.as_str()), Some("राम"));
+        assert_eq!(
+            parsed
+                .get("suffixes")
+                .and_then(|v| v.as_array())
+                .map(|arr| arr.len()),
+            Some(2)
+        );
+        assert_eq!(
+            parsed["suffix_segments"][0]["kind"].as_str(),
+            Some("case_marker")
+        );
+        assert_eq!(
+            parsed["suffix_segments"][1]["kind"].as_str(),
+            Some("particle")
+        );
     }
 }

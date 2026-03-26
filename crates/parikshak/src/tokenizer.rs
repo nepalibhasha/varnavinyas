@@ -1,5 +1,12 @@
-use varnavinyas_kosha::{Kosha, kosha};
+use varnavinyas_kosha::Kosha;
+#[cfg(any(
+    feature = "oblique-forms",
+    feature = "vocative-tokenization",
+    feature = "nipat-tokenization"
+))]
+use varnavinyas_kosha::kosha;
 use varnavinyas_prakriya::is_in_correction_table;
+use varnavinyas_shabda::{best_analysis, has_supported_analysis};
 
 /// A token extracted from text.
 #[derive(Debug, Clone)]
@@ -25,24 +32,6 @@ pub struct AnalyzedToken {
     pub end: usize,
 }
 
-/// Known Nepali postpositions and plural markers, ordered longest-first for greedy matching.
-pub(crate) const SUFFIXES: &[&str] = &[
-    "भित्र",
-    "प्रति",
-    "देखि",
-    "हरू",
-    "हरु",
-    "लाई",
-    "बाट",
-    "सँग",
-    "तिर",
-    "का",
-    "की",
-    "ले",
-    "को",
-    "मा",
-];
-
 pub(crate) fn is_supported_stem(stem: &str, lex: &Kosha) -> bool {
     if stem.is_empty() {
         return false;
@@ -52,14 +41,7 @@ pub(crate) fn is_supported_stem(stem: &str, lex: &Kosha) -> bool {
         return true;
     }
 
-    // Some stems are absent as bare forms in `words.txt` but are still clearly
-    // supported by attested inflected siblings (e.g., proper names listed with
-    // oblique/case-marked forms). Treat those stems as valid for suffix-aware
-    // tokenization and downstream checking.
-    SUFFIXES.iter().any(|suffix| {
-        let candidate = format!("{stem}{suffix}");
-        lex.contains(&candidate)
-    })
+    has_supported_analysis(stem)
 }
 
 /// Vocative case markers. Only active behind `vocative-tokenization` feature.
@@ -100,38 +82,55 @@ pub fn tokenize(text: &str) -> Vec<Token> {
     tokens
 }
 
-/// Tokenize text into analyzed tokens with suffix detachment.
+/// Tokenize text into analyzed tokens with outer affix detachment.
 ///
-/// For each whitespace-delimited token, tries to detach a known suffix (longest-first).
-/// A suffix is only detached if the remaining stem exists in the kosha lexicon.
-/// If no valid split is found, the full word becomes the stem with `suffix: None`.
+/// For each whitespace-delimited token, uses the shared affix analyzer to detach
+/// a conservative outer suffix/particle stack. If no valid split is found, the
+/// full word becomes the stem with `suffix: None`.
 pub fn tokenize_analyzed(text: &str) -> Vec<AnalyzedToken> {
     let tokens = tokenize(text);
+    #[cfg(any(
+        feature = "oblique-forms",
+        feature = "vocative-tokenization",
+        feature = "nipat-tokenization"
+    ))]
     let lex = kosha();
 
     tokens
         .into_iter()
         .map(|tok| {
-            for sfx in SUFFIXES {
-                if let Some(stem) = tok.text.strip_suffix(sfx) {
-                    if is_supported_stem(stem, lex) {
+            if let Some(analysis) = best_analysis(&tok.text) {
+                if !analysis.suffixes.is_empty() {
+                    let detached = tok
+                        .text
+                        .strip_prefix(&analysis.stem)
+                        .unwrap_or_default()
+                        .to_string();
+                    if !detached.is_empty() {
                         return AnalyzedToken {
-                            stem: stem.to_string(),
-                            suffix: Some(sfx.to_string()),
+                            stem: analysis.stem,
+                            suffix: Some(detached),
                             start: tok.start,
                             end: tok.end,
                         };
                     }
-                    // Oblique form: stem ends in ा (oblique) but dictionary has ो form
-                    // e.g., "केटालाई" → stem "केटा", but kosha has "केटो"
-                    #[cfg(feature = "oblique-forms")]
+                }
+            }
+            // Oblique form: stem ends in ा (oblique) but dictionary has ो form
+            // e.g., "केटालाई" → stem "केटा", but kosha has "केटो"
+            #[cfg(feature = "oblique-forms")]
+            for sfx in varnavinyas_shabda::tables::CASE_MARKERS
+                .iter()
+                .chain(varnavinyas_shabda::tables::PLURAL_MARKERS.iter())
+            {
+                if let Some(stem) = tok.text.strip_suffix(sfx) {
                     if !stem.is_empty() {
                         if let Some(base) = stem.strip_suffix('ा') {
                             let candidate = format!("{base}ो");
                             if lex.contains(&candidate) {
                                 return AnalyzedToken {
                                     stem: stem.to_string(),
-                                    suffix: Some(sfx.to_string()),
+                                    suffix: Some((*sfx).to_string()),
                                     start: tok.start,
                                     end: tok.end,
                                 };
@@ -393,5 +392,21 @@ mod tests {
         assert_eq!(tokens.len(), 1);
         assert_eq!(tokens[0].stem, "मच्छिन्द्रनाथ");
         assert_eq!(tokens[0].suffix.as_deref(), Some("को"));
+    }
+
+    #[test]
+    fn detaches_stacked_suffixes_via_shared_analysis() {
+        let tokens = tokenize_analyzed("रामकोपनि");
+        assert_eq!(tokens.len(), 1);
+        assert_eq!(tokens[0].stem, "राम");
+        assert_eq!(tokens[0].suffix.as_deref(), Some("कोपनि"));
+    }
+
+    #[test]
+    fn preserves_prefix_in_stem_when_detaching_case_suffix() {
+        let tokens = tokenize_analyzed("निराशाबाट");
+        assert_eq!(tokens.len(), 1);
+        assert_eq!(tokens[0].stem, "निराशा");
+        assert_eq!(tokens[0].suffix.as_deref(), Some("बाट"));
     }
 }

@@ -2272,6 +2272,7 @@ dependencies = [
  "varnavinyas-lekhya",
  "varnavinyas-prakriya",
  "varnavinyas-samasa",
+ "varnavinyas-shabda",
  "varnavinyas-vyakaran",
 ]
 

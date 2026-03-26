@@ -1,5 +1,6 @@
 use varnavinyas_shabda::{
-    Origin, OriginSource, best_root, classify, classify_with_provenance, decompose, has_known_root,
+    AffixKind, Origin, OriginSource, analyze_affixes, best_analysis, best_root, classify,
+    classify_with_provenance, decompose, has_known_root, has_supported_analysis,
     lookup_root_candidates, tables,
 };
 
@@ -226,6 +227,74 @@ fn best_root_prefers_known_decomposition() {
 #[test]
 fn has_known_root_false_for_gibberish() {
     assert!(!has_known_root("क्षत्र्यझ्फ"));
+}
+
+#[test]
+fn supported_analysis_allows_prefix_plus_case_form() {
+    assert!(has_supported_analysis("निराशाबाट"));
+}
+
+#[test]
+fn supported_analysis_allows_particle_outside_case_marker() {
+    assert!(has_supported_analysis("रामकोपनि"));
+}
+
+#[test]
+fn supported_analysis_allows_stem_backed_by_attested_sibling() {
+    assert!(has_supported_analysis("मच्छिन्द्रनाथको"));
+}
+
+#[test]
+fn supported_analysis_rejects_gibberish_stack() {
+    assert!(!has_supported_analysis("क्षत्र्यझ्फकोपनि"));
+}
+
+#[test]
+fn best_analysis_keeps_prefix_in_surface_stem() {
+    let analysis = best_analysis("प्रशासनमा").expect("prefix+case form should analyze");
+    assert_eq!(analysis.stem, "प्रशासन");
+    assert_eq!(analysis.root, "शासन");
+    assert_eq!(analysis.prefixes, vec!["प्र"]);
+    assert_eq!(analysis.prefix_segments.len(), 1);
+    assert_eq!(analysis.prefix_segments[0].kind, AffixKind::Prefix);
+    assert_eq!(analysis.suffixes, vec!["मा"]);
+    assert_eq!(analysis.suffix_segments[0].kind, AffixKind::CaseMarker);
+}
+
+#[test]
+fn best_analysis_collects_suffix_stack_in_surface_order() {
+    let analysis = best_analysis("रामकोपनि").expect("stacked suffix form should analyze");
+    assert_eq!(analysis.stem, "राम");
+    assert_eq!(analysis.root, "राम");
+    assert!(analysis.prefixes.is_empty());
+    assert_eq!(analysis.suffixes, vec!["को", "पनि"]);
+    assert_eq!(analysis.suffix_segments[0].kind, AffixKind::CaseMarker);
+    assert_eq!(analysis.suffix_segments[1].kind, AffixKind::Particle);
+}
+
+#[test]
+fn analyze_affixes_returns_structured_candidates() {
+    let analyses = analyze_affixes("मच्छिन्द्रनाथको");
+    assert!(analyses.iter().any(|analysis| {
+        analysis.stem == "मच्छिन्द्रनाथ" && analysis.suffixes == vec!["को"]
+    }));
+}
+
+#[test]
+fn supported_analysis_allows_case_plus_particle_after_headword() {
+    let analysis = best_analysis("रामसम्मपनि").expect("case+particle stack should analyze");
+    assert_eq!(analysis.stem, "राम");
+    assert_eq!(analysis.root, "राम");
+    assert_eq!(analysis.suffixes, vec!["सम्म", "पनि"]);
+    assert_eq!(analysis.suffix_segments[0].kind, AffixKind::CaseMarker);
+    assert_eq!(analysis.suffix_segments[1].kind, AffixKind::Particle);
+}
+
+#[test]
+fn supported_analysis_allows_case_variants_not_listed_in_words_file() {
+    assert!(has_supported_analysis("रामसँगै"));
+    assert!(has_supported_analysis("रामनै"));
+    assert!(has_supported_analysis("प्रशासनसम्मपनि"));
 }
 
 #[cfg(feature = "iterative-decompose")]

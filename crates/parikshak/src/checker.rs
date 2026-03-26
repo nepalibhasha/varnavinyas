@@ -3,6 +3,7 @@ use std::collections::HashSet;
 use varnavinyas_kosha::kosha;
 use varnavinyas_prakriya::DiagnosticKind;
 use varnavinyas_prakriya::Rule;
+use varnavinyas_shabda::best_analysis;
 
 use crate::diagnostic::Diagnostic;
 use crate::tokenizer::tokenize_analyzed;
@@ -57,6 +58,25 @@ pub struct CheckOptions {
 /// forms (including common misspellings like राजनैतिक). Academy correction
 /// rules are authoritative and must override lexicon presence.
 pub fn check_word(word: &str) -> Option<Diagnostic> {
+    if let Some(analysis) = best_analysis(word) {
+        if !analysis.suffixes.is_empty() {
+            let lex = kosha();
+            if lex.contains(word) {
+                return None;
+            }
+
+            if let Some(mut diag) = check_word_impl(&analysis.stem) {
+                diag.span = (0, word.len());
+                diag.incorrect = word.to_string();
+                if let Some(detached) = word.strip_prefix(&analysis.stem) {
+                    diag.correction.push_str(detached);
+                }
+                return Some(diag);
+            }
+            return None;
+        }
+    }
+
     check_word_impl(word)
 }
 

@@ -40,6 +40,45 @@ fn attested_sibling_inflection_allows_unlisted_case_form() {
     );
 }
 
+#[test]
+fn check_word_accepts_unlisted_case_form_backed_by_sibling_entries() {
+    let diag = check_word("मच्छिन्द्रनाथको");
+    assert!(
+        diag.is_none(),
+        "Attested sibling inflections should support direct word checks, got: {diag:?}"
+    );
+}
+
+#[test]
+fn check_word_accepts_prefix_plus_case_form() {
+    let diag = check_word("निराशाबाट");
+    assert!(
+        diag.is_none(),
+        "Prefix plus case forms should be structurally supported, got: {diag:?}"
+    );
+}
+
+#[test]
+fn check_word_accepts_case_plus_particle_stack() {
+    let diag = check_word("रामकोपनि");
+    assert!(
+        diag.is_none(),
+        "Case-marker plus particle stacks should be structurally supported, got: {diag:?}"
+    );
+}
+
+#[test]
+fn check_word_accepts_additional_unlisted_outer_affix_forms() {
+    for word in ["रामसम्मपनि", "रामसँगै", "रामनै", "प्रशासनसम्मपनि"]
+    {
+        let diag = check_word(word);
+        assert!(
+            diag.is_none(),
+            "Word '{word}' should be structurally supported, got: {diag:?}"
+        );
+    }
+}
+
 /// C3: Diagnostics have span, correction, rule, explanation.
 #[test]
 fn c3_diagnostic_fields() {

@@ -1,7 +1,111 @@
 use crate::origin::{Origin, classify};
 use crate::tables;
 use std::collections::HashSet;
-use varnavinyas_kosha::kosha;
+use varnavinyas_kosha::{Kosha, kosha};
+
+const MAX_PREFIX_DEPTH: usize = 2;
+const MAX_SUFFIX_DEPTH: usize = 4;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AffixKind {
+    Prefix,
+    PluralMarker,
+    CaseMarker,
+    Particle,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AffixSegment {
+    pub text: String,
+    pub kind: AffixKind,
+}
+
+#[derive(Clone, Copy)]
+struct SupportGroup {
+    items: &'static [&'static str],
+    kind: AffixKind,
+    repeatable: bool,
+}
+
+const SUPPORT_SUFFIX_GROUPS: &[SupportGroup] = &[
+    SupportGroup {
+        items: tables::PARTICLES,
+        kind: AffixKind::Particle,
+        repeatable: false,
+    },
+    SupportGroup {
+        items: tables::CASE_MARKERS,
+        kind: AffixKind::CaseMarker,
+        repeatable: true,
+    },
+    SupportGroup {
+        items: tables::PLURAL_MARKERS,
+        kind: AffixKind::PluralMarker,
+        repeatable: false,
+    },
+];
+
+#[derive(Clone, Copy, Default)]
+struct LexicalSupport {
+    known_word: bool,
+    known_headword: bool,
+}
+
+impl LexicalSupport {
+    fn is_exact(self) -> bool {
+        self.known_word || self.known_headword
+    }
+}
+
+fn lexical_support(word: &str, lex: &Kosha) -> LexicalSupport {
+    LexicalSupport {
+        known_word: lex.contains(word),
+        known_headword: lex.lookup(word).is_some(),
+    }
+}
+
+#[derive(Clone, Copy, Default)]
+struct BaseSupport {
+    lexical: LexicalSupport,
+    suffixed_sibling: bool,
+    prefixed_sibling: bool,
+}
+
+impl BaseSupport {
+    fn is_supported(self) -> bool {
+        self.lexical.is_exact() || self.suffixed_sibling || self.prefixed_sibling
+    }
+}
+
+fn has_attested_suffixed_sibling(word: &str, lex: &Kosha) -> bool {
+    tables::PARTICLES
+        .iter()
+        .chain(tables::CASE_MARKERS.iter())
+        .chain(tables::PLURAL_MARKERS.iter())
+        .any(|suffix| {
+            let candidate = format!("{word}{suffix}");
+            lex.contains(&candidate) || lex.lookup(&candidate).is_some()
+        })
+}
+
+fn has_attested_prefixed_sibling(word: &str, lex: &Kosha) -> bool {
+    tables::PREFIX_FORMS.iter().any(|&(_, sandhi_form, _)| {
+        let candidate = format!("{sandhi_form}{word}");
+        lex.contains(&candidate) || lex.lookup(&candidate).is_some()
+    })
+}
+
+fn base_support(word: &str, lex: &Kosha) -> BaseSupport {
+    if word.is_empty() {
+        return BaseSupport::default();
+    }
+
+    BaseSupport {
+        lexical: lexical_support(word, lex),
+        suffixed_sibling: has_attested_suffixed_sibling(word, lex),
+        prefixed_sibling: has_attested_prefixed_sibling(word, lex),
+    }
+}
 
 fn normalize_suffix_label(sfx: &str) -> String {
     match sfx {
@@ -11,6 +115,269 @@ fn normalize_suffix_label(sfx: &str) -> String {
         "ू" => "ऊ".to_string(),
         _ => sfx.to_string(),
     }
+}
+
+fn affix_score(
+    surface: &str,
+    prefixes: &[String],
+    suffixes: &[AffixSegment],
+    support: BaseSupport,
+) -> u16 {
+    let mut score = 0;
+    if support.lexical.known_word {
+        score += 100;
+    }
+    if support.lexical.known_headword {
+        score += 150;
+    }
+    if support.suffixed_sibling {
+        score += 60;
+    }
+    if support.prefixed_sibling {
+        score += 60;
+    }
+    score += (prefixes.len() as u16) * 20;
+    score += (suffixes.len() as u16) * 15;
+    if !prefixes.is_empty() || !suffixes.is_empty() {
+        score += 10;
+    }
+    score += surface.chars().count() as u16;
+    score
+}
+
+/// Structured result for conservative prefix/suffix analysis.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AffixAnalysis {
+    /// Original surface form.
+    pub surface: String,
+    /// Surface stem after removing only outer suffixes/particles.
+    pub stem: String,
+    /// Base root after removing recognized prefixes from `stem`.
+    pub root: String,
+    /// Recognized prefixes in outer-to-inner order.
+    pub prefixes: Vec<String>,
+    /// Recognized prefix segments with explicit kind metadata.
+    pub prefix_segments: Vec<AffixSegment>,
+    /// Recognized suffixes/particles in inner-to-outer order.
+    pub suffixes: Vec<String>,
+    /// Recognized suffix segments with explicit kind metadata.
+    pub suffix_segments: Vec<AffixSegment>,
+    /// Stable ranking score. Higher is better.
+    pub score: u16,
+}
+
+fn push_affix_analysis(
+    analyses: &mut Vec<AffixAnalysis>,
+    seen: &mut HashSet<String>,
+    surface: &str,
+    stem: &str,
+    root: &str,
+    prefixes: &[String],
+    suffixes: &[AffixSegment],
+    support: BaseSupport,
+) {
+    if !support.is_supported() {
+        return;
+    }
+
+    let stored_suffixes: Vec<String> = suffixes.iter().rev().map(|s| s.text.clone()).collect();
+    let stored_suffix_segments: Vec<AffixSegment> = suffixes.iter().rev().cloned().collect();
+    let stored_prefix_segments: Vec<AffixSegment> = prefixes
+        .iter()
+        .cloned()
+        .map(|text| AffixSegment {
+            text,
+            kind: AffixKind::Prefix,
+        })
+        .collect();
+
+    let key = format!(
+        "{}|{}|{}|{}",
+        stem,
+        root,
+        prefixes.join("+"),
+        stored_suffixes.join("+")
+    );
+    if !seen.insert(key) {
+        return;
+    }
+
+    analyses.push(AffixAnalysis {
+        surface: surface.to_string(),
+        stem: stem.to_string(),
+        root: root.to_string(),
+        prefixes: prefixes.to_vec(),
+        prefix_segments: stored_prefix_segments,
+        suffixes: stored_suffixes,
+        suffix_segments: stored_suffix_segments,
+        score: affix_score(surface, prefixes, suffixes, support),
+    });
+}
+
+fn collect_prefixed_analyses(
+    surface: &str,
+    stem: &str,
+    current: &str,
+    prefixes: &mut Vec<String>,
+    suffixes: &[AffixSegment],
+    prefix_depth: usize,
+    analyses: &mut Vec<AffixAnalysis>,
+    seen: &mut HashSet<String>,
+    lex: &Kosha,
+) {
+    let support = base_support(current, lex);
+    push_affix_analysis(
+        analyses, seen, surface, stem, current, prefixes, suffixes, support,
+    );
+
+    if prefix_depth >= MAX_PREFIX_DEPTH {
+        return;
+    }
+
+    for &(prefix, sandhi_form, _) in tables::PREFIX_FORMS.iter() {
+        let Some(rest) = current.strip_prefix(sandhi_form) else {
+            continue;
+        };
+        let min_root_chars = if sandhi_form.chars().count() <= 1 {
+            4
+        } else {
+            2
+        };
+        if rest.chars().count() < min_root_chars {
+            continue;
+        }
+
+        prefixes.push(prefix.to_string());
+        collect_prefixed_analyses(
+            surface,
+            stem,
+            rest,
+            prefixes,
+            suffixes,
+            prefix_depth + 1,
+            analyses,
+            seen,
+            lex,
+        );
+        prefixes.pop();
+    }
+}
+
+fn collect_suffix_group_analyses(
+    surface: &str,
+    current: &str,
+    suffixes: &mut Vec<AffixSegment>,
+    group_index: usize,
+    analyses: &mut Vec<AffixAnalysis>,
+    seen: &mut HashSet<String>,
+    lex: &Kosha,
+) {
+    let mut prefixes = Vec::new();
+    collect_prefixed_analyses(
+        surface,
+        current,
+        current,
+        &mut prefixes,
+        suffixes,
+        0,
+        analyses,
+        seen,
+        lex,
+    );
+
+    if group_index >= SUPPORT_SUFFIX_GROUPS.len() || suffixes.len() >= MAX_SUFFIX_DEPTH {
+        return;
+    }
+
+    collect_suffix_group_analyses(
+        surface,
+        current,
+        suffixes,
+        group_index + 1,
+        analyses,
+        seen,
+        lex,
+    );
+
+    for &suffix in SUPPORT_SUFFIX_GROUPS[group_index].items {
+        let Some(rest) = current.strip_suffix(suffix) else {
+            continue;
+        };
+        if rest.is_empty() {
+            continue;
+        }
+
+        suffixes.push(AffixSegment {
+            text: suffix.to_string(),
+            kind: SUPPORT_SUFFIX_GROUPS[group_index].kind,
+        });
+        if SUPPORT_SUFFIX_GROUPS[group_index].repeatable {
+            collect_suffix_group_analyses(
+                surface,
+                rest,
+                suffixes,
+                group_index,
+                analyses,
+                seen,
+                lex,
+            );
+        }
+        collect_suffix_group_analyses(
+            surface,
+            rest,
+            suffixes,
+            group_index + 1,
+            analyses,
+            seen,
+            lex,
+        );
+        suffixes.pop();
+    }
+}
+
+fn sorted_affix_analyses(mut analyses: Vec<AffixAnalysis>) -> Vec<AffixAnalysis> {
+    analyses.sort_by(|a, b| {
+        b.score
+            .cmp(&a.score)
+            .then_with(|| b.suffixes.len().cmp(&a.suffixes.len()))
+            .then_with(|| b.prefixes.len().cmp(&a.prefixes.len()))
+            .then_with(|| b.stem.chars().count().cmp(&a.stem.chars().count()))
+            .then_with(|| a.stem.as_bytes().cmp(b.stem.as_bytes()))
+            .then_with(|| a.root.as_bytes().cmp(b.root.as_bytes()))
+    });
+    analyses
+}
+
+/// Collect conservative affix analyses for a surface form.
+pub fn analyze_affixes(word: &str) -> Vec<AffixAnalysis> {
+    if word.is_empty() {
+        return Vec::new();
+    }
+
+    let lex = kosha();
+    let mut analyses = Vec::new();
+    let mut seen = HashSet::new();
+    collect_suffix_group_analyses(
+        word,
+        word,
+        &mut Vec::new(),
+        0,
+        &mut analyses,
+        &mut seen,
+        lex,
+    );
+    sorted_affix_analyses(analyses)
+}
+
+/// Return the highest-ranked affix analysis for a surface form.
+pub fn best_analysis(word: &str) -> Option<AffixAnalysis> {
+    analyze_affixes(word).into_iter().next()
+}
+
+/// Return whether a surface form is supported by exact lexicon evidence or by a
+/// conservative prefix/suffix analysis over a supported stem.
+pub fn has_supported_analysis(word: &str) -> bool {
+    best_analysis(word).is_some()
 }
 
 fn candidate_score(
@@ -45,8 +412,9 @@ fn push_candidate(
     suffixes: &[String],
 ) {
     let lex = kosha();
-    let known_word = lex.contains(root);
-    let known_headword = lex.lookup(root).is_some();
+    let support = lexical_support(root, lex);
+    let known_word = support.known_word;
+    let known_headword = support.known_headword;
     if !known_word && !known_headword {
         return;
     }

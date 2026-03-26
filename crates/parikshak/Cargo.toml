@@ -15,6 +15,7 @@ grammar-pass = ["dep:varnavinyas-vyakaran", "dep:varnavinyas-samasa", "varnaviny
 [dependencies]
 varnavinyas-akshar = { workspace = true }
 varnavinyas-kosha = { workspace = true }
+varnavinyas-shabda = { workspace = true }
 varnavinyas-prakriya = { workspace = true }
 varnavinyas-lekhya = { workspace = true }
 varnavinyas-vyakaran = { workspace = true, optional = true }
