@@ -162,7 +162,7 @@ export function showInspector(word, start, end, options = {}) {
   // --- Rule notes ---
   if (analysis && analysis.rule_notes && analysis.rule_notes.length > 0) {
     html += '<div class="inspector-section">';
-    html += `<div class="inspector-section-title">\u0928\u093F\u092F\u092E \u091F\u093F\u092A\u094D\u092A\u0923\u0940 <span class="inspector-section-label">Rule Notes</span></div>`;
+    html += renderSectionHeading('\u0928\u093F\u092F\u092E \u091F\u093F\u092A\u094D\u092A\u0923\u0940', 'Rule Notes');
     html += '<div class="analysis-notes">';
     for (const note of analysis.rule_notes) {
       html += `
@@ -180,7 +180,7 @@ export function showInspector(word, start, end, options = {}) {
 
   if (analysis && analysis.alternate_rule_notes && analysis.alternate_rule_notes.length > 0) {
     html += '<div class="inspector-section">';
-    html += `<div class="inspector-section-title">अन्य लागू नियमहरू <span class="inspector-section-label">Other Applicable Rules</span></div>`;
+    html += renderSectionHeading('अन्य लागू नियमहरू', 'Other Applicable Rules');
     html += '<div class="analysis-notes">';
     for (const note of analysis.alternate_rule_notes) {
       html += `
@@ -245,6 +245,20 @@ export function isInspectorActive() {
 }
 
 // --- Internal rendering helpers ---
+
+function renderSectionHeading(title, label, context = '') {
+  const contextChip = context
+    ? `<span class="inspector-section-context">${escapeHtml(context)}</span>`
+    : '';
+  return `
+    <div class="inspector-section-head">
+      <div class="inspector-section-title">${escapeHtml(title)}</div>
+      <div class="inspector-section-meta">
+        <span class="inspector-section-label">${escapeHtml(label)}</span>
+        ${contextChip}
+      </div>
+    </div>`;
+}
 
 function safeBestAffixAnalysis(word) {
   try {
@@ -345,7 +359,7 @@ function renderAffixStructureSection(affix) {
 
   return `
     <div class="inspector-section">
-      <div class="inspector-section-title">\u092C\u093E\u0939\u093F\u0930\u0940 \u092C\u0928\u094B\u091F <span class="inspector-section-label">Outer Affix Structure</span></div>
+      ${renderSectionHeading('\u092C\u093E\u0939\u093F\u0930\u0940 \u092C\u0928\u094B\u091F', 'Outer Affix Structure')}
       <div class="morphology-display">${parts}</div>
     </div>`;
 }
@@ -379,7 +393,7 @@ function renderMorphologySection(morph) {
 
   return `
   <div class="inspector-section">
-    <div class="inspector-section-title">\u0936\u092C\u094D\u0926 \u0935\u093F\u0936\u094D\u0932\u0947\u0937\u0923 <span class="inspector-section-label">Morphology</span></div>
+    ${renderSectionHeading('\u0936\u092C\u094D\u0926 \u0935\u093F\u0936\u094D\u0932\u0947\u0937\u0923', 'Morphology')}
     <div class="morphology-display">${parts}</div>
   </div>`;
 }
@@ -395,13 +409,13 @@ function renderCompoundSection(baseWord, sourceWord = null) {
       return '';
     }
 
-    const sourceChip = sourceWord && sourceWord !== currentWord
-      ? `<span class="inspector-section-label">${escapeHtml(sourceWord)} \u092D\u093F\u0924\u094D\u0930</span>`
+    const sourceContext = sourceWord && sourceWord !== currentWord
+      ? `${sourceWord} \u092D\u093F\u0924\u094D\u0930`
       : '';
 
     return `
     <div class="inspector-section">
-      <div class="inspector-section-title">\u0906\u0928\u094D\u0924\u0930\u093F\u0915 \u092C\u0928\u094B\u091F <span class="inspector-section-label">Compound Depth</span>${sourceChip}</div>
+      ${renderSectionHeading('\u0906\u0928\u094D\u0924\u0930\u093F\u0915 \u092C\u0928\u094B\u091F', 'Compound Depth', sourceContext)}
       <div class="compound-structure-card">
         <div class="compound-structure-head">
           <span class="compound-surface">${escapeHtml(baseWord)}</span>
@@ -436,7 +450,7 @@ function renderSandhiSection(word) {
 
     return `
     <div class="inspector-section">
-      <div class="inspector-section-title">\u0938\u0928\u094D\u0927\u093F \u0935\u093F\u091A\u094D\u091B\u0947\u0926 <span class="inspector-section-label">Sandhi Split</span></div>
+      ${renderSectionHeading('\u0938\u0928\u094D\u0927\u093F \u0935\u093F\u091A\u094D\u091B\u0947\u0926', 'Sandhi Split')}
       ${rows}
     </div>`;
   } catch {
@@ -465,7 +479,7 @@ function renderDerivationSection(word) {
 
     return `
     <div class="inspector-section">
-      <div class="inspector-section-title">\u0928\u093F\u092F\u092E \u091A\u0930\u0923\u0939\u0930\u0942 <span class="inspector-section-label">Derivation Steps</span></div>
+      ${renderSectionHeading('\u0928\u093F\u092F\u092E \u091A\u0930\u0923\u0939\u0930\u0942', 'Derivation Steps')}
       <table class="steps-table">
         <thead>
           <tr>

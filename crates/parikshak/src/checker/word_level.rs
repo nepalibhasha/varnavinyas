@@ -10,6 +10,25 @@ use crate::tokenizer::AnalyzedToken;
 
 const AMBIGUOUS_HALANTA_DHATU_FORMS: &[&str] = &["भन", "गर", "पढ", "हेर", "लेख", "बुझ", "लुक"];
 
+fn is_numeric_token(word: &str) -> bool {
+    let mut saw_digit = false;
+
+    for ch in word.chars() {
+        if ch.is_numeric() {
+            saw_digit = true;
+            continue;
+        }
+
+        if matches!(ch, ',' | '.' | '/' | '-' | ':' | '%' | '–' | '—') {
+            continue;
+        }
+
+        return false;
+    }
+
+    saw_digit
+}
+
 /// Check a single word and return a diagnostic if it's incorrect.
 ///
 /// Pipeline:
@@ -24,6 +43,9 @@ const AMBIGUOUS_HALANTA_DHATU_FORMS: &[&str] = &["भन", "गर", "पढ", "
 /// rules are authoritative and must override lexicon presence.
 pub(crate) fn check_word_impl(word: &str) -> Option<Diagnostic> {
     if word.is_empty() {
+        return None;
+    }
+    if is_numeric_token(word) {
         return None;
     }
 

@@ -177,6 +177,26 @@ fn unknown_simple_word_remains_unflagged() {
 }
 
 #[test]
+fn numeric_tokens_do_not_trigger_spelling_suggestions() {
+    for word in ["२०८३", "२००४", "72", "७२%", "२०८३-०८-१४"] {
+        let diag = check_word(word);
+        assert!(
+            diag.is_none(),
+            "Numeric token '{word}' should not produce a diagnostic, got: {diag:?}"
+        );
+    }
+}
+
+#[test]
+fn text_with_devanagari_numbers_remains_unflagged() {
+    let diags = check_text("बैठक २०८३-०८-१४ मा ७२% उपस्थितिसहित सम्पन्न भयो।");
+    assert!(
+        diags.is_empty(),
+        "Devanagari numbers should not produce spelling diagnostics, got: {diags:?}"
+    );
+}
+
+#[test]
 fn common_mula_avyaya_are_not_overcorrected() {
     for word in ["पनि", "अनि"] {
         let diag = check_word(word);
