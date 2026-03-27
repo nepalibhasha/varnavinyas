@@ -10,7 +10,7 @@ use super::common::{
     is_devanagari_word, is_numeric_segment, is_word_boundary, overlaps_existing_span,
     whitespace_segments,
 };
-use super::padayog_rules::{PADAYOG_PADABIYOG_RULES, RuleAction};
+use super::padayog_rules::PADAYOG_PADABIYOG_RULES;
 
 const VIBHAKTI_TOKENS: &[&str] = &["ले", "लाई", "को", "बाट", "देखि", "मा", "का", "की"];
 const PRATYAYA_TOKENS: &[&str] = &["ज्यु"];
@@ -25,13 +25,6 @@ const NAMAYOGI_TOKENS: &[&str] = &[
     "अन्तर्गत",
     "बमोजिम",
 ];
-
-fn action_label(action: RuleAction) -> &'static str {
-    match action {
-        RuleAction::Join => "जोडाइ",
-        RuleAction::Split => "छुट्याइ",
-    }
-}
 
 pub(crate) fn add_padayog_padabiyog_diagnostics(
     text: &str,
@@ -57,11 +50,8 @@ pub(crate) fn add_padayog_padabiyog_diagnostics(
                     correction: rw.correct.to_string(),
                     rule: Rule::VarnaVinyasNiyam("3(घ)"),
                     explanation: format!(
-                        "पदयोग/पदवियोग [{} | {} | {}]: {}",
-                        rule.code,
-                        rule.label,
-                        action_label(rule.action),
-                        rw.explanation
+                        "पदयोग/पदवियोग [{} | {}]: {}",
+                        rule.code, rule.label, rw.explanation
                     ),
                     category: DiagnosticCategory::ShuddhaTable,
                     kind: DiagnosticKind::Error,
@@ -335,9 +325,38 @@ fn normalize_joined_word(word: &str) -> Option<String> {
         }
     }
 
+    if let Some(candidate) = normalize_namayogi_variant(word) {
+        return Some(candidate);
+    }
+
     let lex = kosha();
     if lex.contains(word) || lex.lookup(word).is_some() || has_supported_analysis(word) {
         return Some(word.to_string());
+    }
+
+    None
+}
+
+fn normalize_namayogi_variant(word: &str) -> Option<String> {
+    const VARIANTS: &[(&str, &str)] = &[("संग", "सँग"), ("सङ", "सँग")];
+
+    let lex = kosha();
+    for &(prefix, canonical) in VARIANTS {
+        let Some(rest) = word.strip_prefix(prefix) else {
+            continue;
+        };
+
+        let candidate = format!("{canonical}{rest}");
+        if candidate == word {
+            continue;
+        }
+
+        if lex.contains(&candidate)
+            || lex.lookup(&candidate).is_some()
+            || has_supported_analysis(&candidate)
+        {
+            return Some(candidate);
+        }
     }
 
     None
@@ -402,12 +421,12 @@ fn add_generalized_padayog_layered_join(
         let (subrule, explanation) = if starts_with_namayogi(right) {
             (
                 "3(घ)-पदयोग-४",
-                "पदयोग/पदवियोग [3(घ)-पदयोग-४ | नामयोगी जोडेर लेख्नुपर्छ | जोडाइ]: भित्री जोडाइ मिलाएर नामयोगी पद क्रमशः जोडेर लेख्नुपर्छ",
+                "पदयोग/पदवियोग [3(घ)-पदयोग-४ | नामयोगी जोडेर लेख्नुपर्छ]: भित्री जोडाइ मिलाएर नामयोगी पद क्रमशः जोडेर लेख्नुपर्छ",
             )
         } else {
             (
                 "3(घ)-पदयोग-३",
-                "पदयोग/पदवियोग [3(घ)-पदयोग-३ | विभक्ति जोडेर लेख्नुपर्छ | जोडाइ]: भित्री जोडाइ मिलाएर विभक्ति पद जोडेर लेख्नुपर्छ",
+                "पदयोग/पदवियोग [3(घ)-पदयोग-३ | विभक्ति जोडेर लेख्नुपर्छ]: भित्री जोडाइ मिलाएर विभक्ति पद जोडेर लेख्नुपर्छ",
             )
         };
 
@@ -468,7 +487,7 @@ fn add_generalized_padayog_layered_join(
             incorrect: text[span.0..span.1].to_string(),
             correction,
             rule: Rule::VarnaVinyasNiyam("3(घ)"),
-            explanation: "पदयोग/पदवियोग [3(घ)-पदयोग-४ | नामयोगी जोडेर लेख्नुपर्छ | जोडाइ]: भित्री जोडाइ मिलाएर नामयोगी पद क्रमशः जोडेर लेख्नुपर्छ".to_string(),
+            explanation: "पदयोग/पदवियोग [3(घ)-पदयोग-४ | नामयोगी जोडेर लेख्नुपर्छ]: भित्री जोडाइ मिलाएर नामयोगी पद क्रमशः जोडेर लेख्नुपर्छ".to_string(),
             category: DiagnosticCategory::ShuddhaTable,
             kind: DiagnosticKind::Error,
             confidence: 0.94,
@@ -522,7 +541,9 @@ fn add_generalized_padayog_vibhakti_join(
             incorrect: text[span.0..span.1].to_string(),
             correction: candidate,
             rule: Rule::VarnaVinyasNiyam("3(घ)"),
-            explanation: "पदयोग/पदवियोग [3(घ)-पदयोग-३ | विभक्ति जोडेर लेख्नुपर्छ | जोडाइ]: सामान्य विभक्ति पद जोडेर लेख्नुपर्छ".to_string(),
+            explanation:
+                "पदयोग/पदवियोग [3(घ)-पदयोग-३ | विभक्ति जोडेर लेख्नुपर्छ]: सामान्य विभक्ति पद जोडेर लेख्नुपर्छ"
+                    .to_string(),
             category: DiagnosticCategory::ShuddhaTable,
             kind: DiagnosticKind::Error,
             confidence: 0.92,
@@ -575,7 +596,7 @@ fn add_generalized_padayog_pratyaya_join(
             incorrect: text[span.0..span.1].to_string(),
             correction,
             rule: Rule::VarnaVinyasNiyam("3(घ)"),
-            explanation: "पदयोग/पदवियोग [3(घ)-पदयोग-२ | प्रत्यय जोडेर लेख्नुपर्छ | जोडाइ]: मान्य आधार शब्दसँग मानार्थक प्रत्यय जोडेर लेख्नुपर्छ".to_string(),
+            explanation: "पदयोग/पदवियोग [3(घ)-पदयोग-२ | प्रत्यय जोडेर लेख्नुपर्छ]: मान्य आधार शब्दसँग मानार्थक प्रत्यय जोडेर लेख्नुपर्छ".to_string(),
             category: DiagnosticCategory::ShuddhaTable,
             kind: DiagnosticKind::Error,
             confidence: 0.91,
@@ -628,7 +649,9 @@ fn add_generalized_padayog_namayogi_join(
             incorrect: text[span.0..span.1].to_string(),
             correction,
             rule: Rule::VarnaVinyasNiyam("3(घ)"),
-            explanation: "पदयोग/पदवियोग [3(घ)-पदयोग-४ | नामयोगी जोडेर लेख्नुपर्छ | जोडाइ]: सामान्य नामयोगी पद जोडेर लेख्नुपर्छ".to_string(),
+            explanation:
+                "पदयोग/पदवियोग [3(घ)-पदयोग-४ | नामयोगी जोडेर लेख्नुपर्छ]: सामान्य नामयोगी पद जोडेर लेख्नुपर्छ"
+                    .to_string(),
             category: DiagnosticCategory::ShuddhaTable,
             kind: DiagnosticKind::Error,
             confidence: 0.92,
@@ -690,7 +713,7 @@ fn add_generalized_padabiyog_vibhakti_split(
             incorrect: seg.to_string(),
             correction,
             rule: Rule::VarnaVinyasNiyam("3(घ)"),
-            explanation: "पदयोग/पदवियोग [3(घ)-पदवियोग-३ | लागि/निम्ति/दोहोरो विभक्ति छुट्याएर | छुट्याइ]: जोडिएर आएको पद छुट्याएर लेख्नुपर्छ".to_string(),
+            explanation: "पदयोग/पदवियोग [3(घ)-पदवियोग-३ | लागि/निम्ति/दोहोरो विभक्ति छुट्याएर]: जोडिएर आएको पद छुट्याएर लेख्नुपर्छ".to_string(),
             category: DiagnosticCategory::ShuddhaTable,
             kind: DiagnosticKind::Error,
             confidence: 0.90,
@@ -733,7 +756,7 @@ fn add_generalized_padayog_conjunction_join(
                 correction: joined.to_string(),
                 rule: Rule::VarnaVinyasNiyam("3(घ)"),
                 explanation:
-                    "पदयोग/पदवियोग [3(घ)-पदयोग-९ | संयोजक जोडेर लेख्नुपर्छ | जोडाइ]: संयोजक पद जोडेर लेख्नुपर्छ"
+                    "पदयोग/पदवियोग [3(घ)-पदयोग-९ | संयोजक जोडेर लेख्नुपर्छ]: संयोजक पद जोडेर लेख्नुपर्छ"
                         .to_string(),
                 category: DiagnosticCategory::ShuddhaTable,
                 kind: DiagnosticKind::Error,
@@ -836,7 +859,7 @@ fn add_generalized_padabiyog_verb_complex_split(
             incorrect: seg.to_string(),
             correction,
             rule: Rule::VarnaVinyasNiyam("3(घ)"),
-            explanation: format!("पदयोग/पदवियोग [{subrule} | छुट्याइ]: क्रियापद पद छुट्याएर लेख्नुपर्छ"),
+            explanation: format!("पदयोग/पदवियोग [{subrule}]: क्रियापद पद छुट्याएर लेख्नुपर्छ"),
             category: DiagnosticCategory::ShuddhaTable,
             kind: DiagnosticKind::Error,
             confidence: 0.90,

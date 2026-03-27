@@ -16,12 +16,6 @@ pub struct PhraseRewrite {
     pub explanation: &'static str,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum RuleAction {
-    Join,
-    Split,
-}
-
 /// One Academy `(घ)` subrule bucket.
 #[derive(Debug, Clone, Copy)]
 pub struct PadayogRule {
@@ -29,8 +23,6 @@ pub struct PadayogRule {
     pub code: &'static str,
     /// Human readable rule label.
     pub label: &'static str,
-    /// Whether this rule joins or splits tokens.
-    pub action: RuleAction,
     /// Concrete rewrite patterns for this subrule.
     pub rewrites: &'static [PhraseRewrite],
 }
@@ -438,133 +430,111 @@ pub const PADAYOG_PADABIYOG_RULES: &[PadayogRule] = &[
     PadayogRule {
         code: "3(घ)-पदयोग-१",
         label: "उपसर्ग जोडेर लेख्नुपर्छ",
-        action: RuleAction::Join,
         rewrites: P_1_UPASARGA_JOIN,
     },
     PadayogRule {
         code: "3(घ)-पदयोग-३",
         label: "विभक्ति जोडेर लेख्नुपर्छ",
-        action: RuleAction::Join,
         rewrites: P_3_VIBHAKTI_JOIN,
     },
     PadayogRule {
         code: "3(घ)-पदयोग-४",
         label: "नामयोगी जोडेर लेख्नुपर्छ",
-        action: RuleAction::Join,
         rewrites: P_4_NAMAYOGI_JOIN,
     },
     PadayogRule {
         code: "3(घ)-पदयोग-५",
         label: "समस्त शब्द जोडेर लेख्नुपर्छ",
-        action: RuleAction::Join,
         rewrites: P_5_SAMASTA_JOIN,
     },
     PadayogRule {
         code: "3(घ)-पदयोग-६",
         label: "निरर्थक द्वित्व जोडेर लेख्नुपर्छ",
-        action: RuleAction::Join,
         rewrites: P_6_NIRARTHAK_DWITVA_JOIN,
     },
     PadayogRule {
         code: "3(घ)-पदयोग-७",
         label: "अकरण 'न' जोडेर लेख्नुपर्छ",
-        action: RuleAction::Join,
         rewrites: P_7_AKARAN_N_JOIN,
     },
     PadayogRule {
         code: "3(घ)-पदयोग-८",
         label: "मिलित क्रियापद जोडेर लेख्नुपर्छ",
-        action: RuleAction::Join,
         rewrites: P_8_MILIT_KRIYAPAD_JOIN,
     },
     PadayogRule {
         code: "3(घ)-पदयोग-९",
         label: "संयोजक जोडेर लेख्नुपर्छ",
-        action: RuleAction::Join,
         rewrites: P_9_SAMYOJAK_JOIN,
     },
     PadayogRule {
         code: "3(घ)-पदयोग-१०",
         label: "ओटा/वर्ग/सम्बन्धी पद जोडेर लेख्नुपर्छ",
-        action: RuleAction::Join,
         rewrites: P_10_OTA_VARGA_SAMBANDHI_JOIN,
     },
     PadayogRule {
         code: "3(घ)-पदयोग-११",
         label: "जस्तै/सरह तुलना पद जोडेर लेख्नुपर्छ",
-        action: RuleAction::Join,
         rewrites: P_11_JASTAI_SARAH_JOIN,
     },
     PadayogRule {
         code: "3(घ)-पदवियोग-२",
         label: "विभक्तिपछि नामयोगी छुट्याएर लेख्नुपर्छ",
-        action: RuleAction::Split,
         rewrites: V_2_NAMAYOGI_SPLIT,
     },
     PadayogRule {
         code: "3(घ)-पदवियोग-३",
         label: "लागि/निम्ति/दोहोरो विभक्ति छुट्याएर",
-        action: RuleAction::Split,
         rewrites: V_3_LAGI_NIMTI_SPLIT,
     },
     PadayogRule {
         code: "3(घ)-पदवियोग-४",
         label: "निपात छुट्याएर लेख्नुपर्छ",
-        action: RuleAction::Split,
         rewrites: V_4_NIPAT_SPLIT,
     },
     PadayogRule {
         code: "3(घ)-पदवियोग-५",
         label: "'न' संयोजक छुट्याएर लेख्नुपर्छ",
-        action: RuleAction::Split,
         rewrites: V_5_N_SAMYOJAK_SPLIT,
     },
     PadayogRule {
         code: "3(घ)-पदवियोग-६",
         label: "अपूर्ण/पूर्ण पक्ष क्रियापद छुट्याएर",
-        action: RuleAction::Split,
         rewrites: V_6_APURNA_PURNA_KRIYAPAD_SPLIT,
     },
     PadayogRule {
         code: "3(घ)-पदवियोग-७",
         label: "'ने छ' क्रियापद छुट्याएर",
-        action: RuleAction::Split,
         rewrites: V_7_NE_CHA_SPLIT,
     },
     PadayogRule {
         code: "3(घ)-पदवियोग-८",
         label: "संयुक्त क्रियामा निपात छुट्याएर",
-        action: RuleAction::Split,
         rewrites: V_8_SAMYUKTA_KRIYA_NIPAT_SPLIT,
     },
     PadayogRule {
         code: "3(घ)-पदवियोग-९",
         label: "'नु'/'न' पछि क्रियापद छुट्याएर",
-        action: RuleAction::Split,
         rewrites: V_9_NU_N_PACHHI_KRIYA_SPLIT,
     },
     PadayogRule {
         code: "3(घ)-पदवियोग-१०",
         label: "सार्थक द्वित्व छुट्याएर",
-        action: RuleAction::Split,
         rewrites: V_10_SARTHAK_DWITVA_SPLIT,
     },
     PadayogRule {
         code: "3(घ)-पदवियोग-११",
         label: "जना/थरी जस्ता कोटिकर पद छुट्याएर",
-        action: RuleAction::Split,
         rewrites: V_11_JANA_THARI_SPLIT,
     },
     PadayogRule {
         code: "3(घ)-पदवियोग-१२",
         label: "शीर्ष नाम छुट्याएर लेख्नुपर्छ",
-        action: RuleAction::Split,
         rewrites: V_12_SHIRSHA_NAM_SPLIT,
     },
     PadayogRule {
         code: "3(घ)-पदवियोग-१३",
         label: "विशेषण र नाम छुट्याएर लेख्नुपर्छ",
-        action: RuleAction::Split,
         rewrites: V_13_VISHESHAN_NAM_SPLIT,
     },
 ];

@@ -594,6 +594,18 @@ fn generalized_padayog_namayogi_join_handles_following_vibhakti() {
 }
 
 #[test]
+fn generalized_padayog_namayogi_join_handles_panchham_variant_before_vibhakti() {
+    let text = "सरकार सङ को निर्णय आयो।";
+    let diags = check_text(text);
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "सरकार सङ को" && d.correction == "सरकारसँगको"),
+        "Expected generalized layered join for सङ को, got: {diags:?}"
+    );
+}
+
+#[test]
 fn generalized_padayog_namayogi_join_handles_prati() {
     let text = "अवसर प्रति आस्था देखियो।";
     let diags = check_text(text);
