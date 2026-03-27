@@ -3,10 +3,10 @@ use std::collections::HashSet;
 use varnavinyas_kosha::kosha;
 use varnavinyas_prakriya::DiagnosticKind;
 use varnavinyas_prakriya::Rule;
-use varnavinyas_shabda::best_analysis;
+use varnavinyas_shabda::{best_analysis, has_supported_analysis};
 
 use crate::diagnostic::Diagnostic;
-use crate::tokenizer::tokenize_analyzed;
+use crate::tokenizer::{best_detachment_candidate, best_supported_detachment, tokenize_analyzed};
 
 mod common;
 #[cfg(feature = "grammar-pass")]
@@ -58,9 +58,13 @@ pub struct CheckOptions {
 /// forms (including common misspellings like राजनैतिक). Academy correction
 /// rules are authoritative and must override lexicon presence.
 pub fn check_word(word: &str) -> Option<Diagnostic> {
+    let lex = kosha();
+    if lex.contains(word) || lex.lookup(word).is_some() {
+        return check_word_impl(word);
+    }
+
     if let Some(analysis) = best_analysis(word) {
         if !analysis.suffixes.is_empty() {
-            let lex = kosha();
             if lex.contains(word) {
                 return None;
             }
@@ -74,6 +78,30 @@ pub fn check_word(word: &str) -> Option<Diagnostic> {
                 return Some(diag);
             }
             return None;
+        }
+    }
+
+    if let Some((stem, detached)) = best_supported_detachment(word, lex) {
+        if let Some(mut diag) = check_word_impl(&stem) {
+            diag.span = (0, word.len());
+            diag.incorrect = word.to_string();
+            diag.correction.push_str(&detached);
+            return Some(diag);
+        }
+    }
+
+    if let Some((stem, detached)) = best_detachment_candidate(word, lex) {
+        if let Some(mut diag) = check_word_impl(&stem) {
+            let candidate = format!("{}{}", diag.correction, detached);
+            if lex.contains(&candidate)
+                || lex.lookup(&candidate).is_some()
+                || has_supported_analysis(&candidate)
+            {
+                diag.span = (0, word.len());
+                diag.incorrect = word.to_string();
+                diag.correction = candidate;
+                return Some(diag);
+            }
         }
     }
 
@@ -120,6 +148,7 @@ pub fn check_text_with_options(text: &str, options: CheckOptions) -> Vec<Diagnos
 
     add_padayog_padabiyog_diagnostics(text, &mut blocked_spans, &mut diagnostics);
     add_generalized_padayog_padabiyog_diagnostics(text, &mut blocked_spans, &mut diagnostics);
+    suppress_nested_diagnostics_within_padayog_spans(&mut diagnostics);
 
     if options.grammar {
         add_style_variant_diagnostics(text, &mut blocked_spans, &mut diagnostics);
@@ -152,6 +181,20 @@ pub fn check_text_with_options(text: &str, options: CheckOptions) -> Vec<Diagnos
 
     diagnostics.sort_by_key(|d| d.span.0);
     diagnostics
+}
+
+fn suppress_nested_diagnostics_within_padayog_spans(diagnostics: &mut Vec<Diagnostic>) {
+    let padayog_spans: Vec<(usize, usize)> = diagnostics
+        .iter()
+        .filter(|d| matches!(d.rule, Rule::VarnaVinyasNiyam("3(घ)")))
+        .map(|d| d.span)
+        .collect();
+
+    diagnostics.retain(|diag| {
+        !padayog_spans.iter().any(|&(start, end)| {
+            diag.span != (start, end) && start <= diag.span.0 && diag.span.1 <= end
+        })
+    });
 }
 
 fn is_noop_heuristic_diagnostic(d: &Diagnostic) -> bool {

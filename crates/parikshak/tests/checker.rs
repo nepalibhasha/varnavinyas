@@ -68,8 +68,22 @@ fn check_word_accepts_case_plus_particle_stack() {
 }
 
 #[test]
+fn check_word_propagates_correction_table_base_through_case_suffix() {
+    let diag = check_word("रुपमा").expect("रुपमा should be corrected via रूप + मा");
+    assert_eq!(diag.incorrect, "रुपमा");
+    assert_eq!(diag.correction, "रूपमा");
+}
+
+#[test]
+fn check_word_normalizes_chandrabindu_stem_before_reattaching_suffix() {
+    let diag = check_word("संगको").expect("संगको should normalize through सँग + को");
+    assert_eq!(diag.incorrect, "संगको");
+    assert_eq!(diag.correction, "सँगको");
+}
+
+#[test]
 fn check_word_accepts_additional_unlisted_outer_affix_forms() {
-    for word in ["रामसम्मपनि", "रामसँगै", "रामनै", "प्रशासनसम्मपनि"]
+    for word in ["रामसम्मपनि", "रामसँगै", "रामसँगको", "रामनै", "प्रशासनसम्मपनि"]
     {
         let diag = check_word(word);
         assert!(
@@ -558,6 +572,68 @@ fn generalized_padayog_vibhakti_join_applies_beyond_fixed_pairs() {
 }
 
 #[test]
+fn generalized_padayog_vibhakti_join_skips_numeric_date_segments() {
+    let text = "फागुन २१ मा कार्यक्रम छ।";
+    let diags = check_text(text);
+    assert!(
+        diags.iter().all(|d| d.incorrect != "२१ मा"),
+        "Numeric date segments should not be joined under 3(घ)-पदयोग-३, got: {diags:?}"
+    );
+}
+
+#[test]
+fn generalized_padayog_namayogi_join_handles_following_vibhakti() {
+    let text = "सरकार संग को निर्णय आयो।";
+    let diags = check_text(text);
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "सरकार संग को" && d.correction == "सरकारसँगको"),
+        "Expected generalized 3(घ)-पदयोग-४ join, got: {diags:?}"
+    );
+}
+
+#[test]
+fn generalized_padayog_namayogi_join_handles_prati() {
+    let text = "अवसर प्रति आस्था देखियो।";
+    let diags = check_text(text);
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "अवसर प्रति" && d.correction == "अवसरप्रति"),
+        "Expected generalized 3(घ)-पदयोग-४ join for प्रति, got: {diags:?}"
+    );
+}
+
+#[test]
+fn generalized_padayog_namayogi_plus_vibhakti_join_handles_partially_joined_prati() {
+    let text = "म प्रतिको धारणा प्रष्ट छ।";
+    let diags = check_text(text);
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "म प्रतिको" && d.correction == "मप्रतिको"),
+        "Expected generalized layered 3(घ) join for प्रतिको, got: {diags:?}"
+    );
+}
+
+#[test]
+fn generalized_padayog_pratyaya_join_handles_jyu_after_known_name() {
+    let text = "राम शाह ज्यु आए।";
+    let diags = check_text(text);
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "शाह ज्यु" && d.correction == "शाहज्यु"),
+        "Expected generalized 3(घ)-पदयोग-२ join for ज्यु, got: {diags:?}"
+    );
+    assert!(
+        diags.iter().all(|d| d.incorrect != "शाह"),
+        "Exact headword शाह should not trigger a sibilant correction, got: {diags:?}"
+    );
+}
+
+#[test]
 fn generalized_padabiyog_vibhakti_split_applies_beyond_fixed_pairs() {
     let text = "हाम्रालागि यो समाजकानिम्ति राम्रो हो।";
     let diags = check_text(text);
@@ -602,6 +678,30 @@ fn generalized_padabiyog_verb_complex_split_applies_beyond_fixed_pairs() {
             .iter()
             .any(|d| d.incorrect == "हिँड्नेछन्" && d.correction == "हिँड्ने छन्"),
         "Expected generalized 3(घ)-पदवियोग-७ split, got: {diags:?}"
+    );
+}
+
+#[test]
+fn generalized_padabiyog_ne_cha_split_handles_longer_future_form() {
+    let text = "उठाइरहनेछु";
+    let diags = check_text(text);
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "उठाइरहनेछु" && d.correction == "उठाइरहने छु"),
+        "Expected generalized 3(घ)-पदवियोग-७ split, got: {diags:?}"
+    );
+}
+
+#[test]
+fn generalized_padabiyog_ne_cha_split_handles_trailing_comma() {
+    let text = "लागिरहनेछु,";
+    let diags = check_text(text);
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "लागिरहनेछु" && d.correction == "लागिरहने छु"),
+        "Expected generalized 3(घ)-पदवियोग-७ split with trailing comma, got: {diags:?}"
     );
 }
 

@@ -1,9 +1,4 @@
 use varnavinyas_kosha::Kosha;
-#[cfg(any(
-    feature = "oblique-forms",
-    feature = "vocative-tokenization",
-    feature = "nipat-tokenization"
-))]
 use varnavinyas_kosha::kosha;
 use varnavinyas_prakriya::is_in_correction_table;
 use varnavinyas_shabda::{best_analysis, has_supported_analysis};
@@ -42,6 +37,103 @@ pub(crate) fn is_supported_stem(stem: &str, lex: &Kosha) -> bool {
     }
 
     has_supported_analysis(stem)
+}
+
+struct SupportSuffixGroup {
+    items: &'static [&'static str],
+    repeatable: bool,
+}
+
+const SUPPORT_SUFFIX_GROUPS: &[SupportSuffixGroup] = &[
+    SupportSuffixGroup {
+        items: varnavinyas_shabda::tables::PARTICLES,
+        repeatable: false,
+    },
+    SupportSuffixGroup {
+        items: varnavinyas_shabda::tables::CASE_MARKERS,
+        repeatable: true,
+    },
+    SupportSuffixGroup {
+        items: varnavinyas_shabda::tables::PLURAL_MARKERS,
+        repeatable: false,
+    },
+];
+
+fn collect_detachments(
+    current: &str,
+    detached: &mut Vec<&'static str>,
+    group_index: usize,
+    best: &mut Option<(String, String)>,
+    lex: &Kosha,
+    require_supported_stem: bool,
+) {
+    if !detached.is_empty() && (!require_supported_stem || is_supported_stem(current, lex)) {
+        let suffix = detached.iter().rev().copied().collect::<String>();
+        let candidate = (current.to_string(), suffix);
+        let replace = best
+            .as_ref()
+            .is_none_or(|(_, best_suffix)| candidate.1.len() > best_suffix.len());
+        if replace {
+            *best = Some(candidate);
+        }
+    }
+
+    if group_index >= SUPPORT_SUFFIX_GROUPS.len() {
+        return;
+    }
+
+    let group = &SUPPORT_SUFFIX_GROUPS[group_index];
+    for &sfx in group.items {
+        if let Some(rest) = current.strip_suffix(sfx) {
+            if rest.is_empty() {
+                continue;
+            }
+            detached.push(sfx);
+            let next_group = if group.repeatable {
+                group_index
+            } else {
+                group_index + 1
+            };
+            collect_detachments(
+                rest,
+                detached,
+                next_group,
+                best,
+                lex,
+                require_supported_stem,
+            );
+            collect_detachments(
+                rest,
+                detached,
+                group_index + 1,
+                best,
+                lex,
+                require_supported_stem,
+            );
+            detached.pop();
+        }
+    }
+
+    collect_detachments(
+        current,
+        detached,
+        group_index + 1,
+        best,
+        lex,
+        require_supported_stem,
+    );
+}
+
+pub(crate) fn best_supported_detachment(word: &str, lex: &Kosha) -> Option<(String, String)> {
+    let mut best = None;
+    collect_detachments(word, &mut Vec::new(), 0, &mut best, lex, true);
+    best
+}
+
+pub(crate) fn best_detachment_candidate(word: &str, lex: &Kosha) -> Option<(String, String)> {
+    let mut best = None;
+    collect_detachments(word, &mut Vec::new(), 0, &mut best, lex, false);
+    best
 }
 
 /// Vocative case markers. Only active behind `vocative-tokenization` feature.
@@ -99,11 +191,6 @@ pub fn tokenize(text: &str) -> Vec<Token> {
 /// full word becomes the stem with `suffix: None`.
 pub fn tokenize_analyzed(text: &str) -> Vec<AnalyzedToken> {
     let tokens = tokenize(text);
-    #[cfg(any(
-        feature = "oblique-forms",
-        feature = "vocative-tokenization",
-        feature = "nipat-tokenization"
-    ))]
     let lex = kosha();
 
     tokens
@@ -124,6 +211,19 @@ pub fn tokenize_analyzed(text: &str) -> Vec<AnalyzedToken> {
                             end: tok.end,
                         };
                     }
+                }
+            }
+            if !lex.contains(&tok.text)
+                && lex.lookup(&tok.text).is_none()
+                && !is_in_correction_table(&tok.text)
+            {
+                if let Some((stem, detached)) = best_supported_detachment(&tok.text, lex) {
+                    return AnalyzedToken {
+                        stem,
+                        suffix: Some(detached),
+                        start: tok.start,
+                        end: tok.end,
+                    };
                 }
             }
             // Oblique form: stem ends in ा (oblique) but dictionary has ो form

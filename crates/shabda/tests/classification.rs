@@ -293,6 +293,7 @@ fn supported_analysis_allows_case_plus_particle_after_headword() {
 #[test]
 fn supported_analysis_allows_case_variants_not_listed_in_words_file() {
     assert!(has_supported_analysis("रामसँगै"));
+    assert!(has_supported_analysis("रामसँगको"));
     assert!(has_supported_analysis("रामनै"));
     assert!(has_supported_analysis("रामकै"));
     assert!(has_supported_analysis("प्रशासनसम्मपनि"));
