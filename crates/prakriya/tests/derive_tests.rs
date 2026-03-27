@@ -112,6 +112,15 @@ fn redundant_ta_removal() {
 }
 
 #[test]
+fn broad_ta_heuristic_does_not_overcorrect_attested_forms() {
+    for word in ["सत्यता", "असत्यता"] {
+        let p = derive(word);
+        assert!(p.is_correct, "{word} should remain unchanged, got: {p:?}");
+        assert_eq!(p.output, word);
+    }
+}
+
+#[test]
 fn ri_to_ri() {
     let p = derive("रिषि");
     assert_eq!(p.output, "ऋषि");
@@ -144,6 +153,12 @@ fn chandrabindu_correction() {
 }
 
 #[test]
+fn avyaya_chandrabindu_form_beats_tatsam_panchham_fallback() {
+    assert_eq!(derive("संग").output, "सँग");
+    assert_eq!(derive("संगै").output, "सँगै");
+}
+
+#[test]
 fn sibilant_correction() {
     let p = derive("सासन");
     assert_eq!(p.output, "शासन");
@@ -153,6 +168,13 @@ fn sibilant_correction() {
 fn lexicon_backed_tatsam_sibilant_correction() {
     let p = derive("सपथ");
     assert_eq!(p.output, "शपथ");
+}
+
+#[test]
+fn exact_headword_sibilant_form_is_not_overcorrected() {
+    let p = derive("शाह");
+    assert_eq!(p.output, "शाह");
+    assert!(p.is_correct);
 }
 
 #[test]

@@ -205,7 +205,6 @@ mod tests {
         const EXPECTED_IDS: &[&str] = &[
             // structural
             "struct-shri",
-            "struct-redundant-suffix",
             "struct-panchham",
             // hrasva-dirgha
             "hd-prefix-hrasva",

@@ -4,6 +4,11 @@ use crate::model::step::Step;
 use varnavinyas_kosha::kosha;
 use varnavinyas_shabda::{Origin, classify};
 
+fn lexically_supported(word: &str) -> bool {
+    let lex = kosha();
+    lex.contains(word) || lex.lookup(word).is_some()
+}
+
 fn corrected_if_attested(
     input: &str,
     output: String,
@@ -13,8 +18,7 @@ fn corrected_if_attested(
     if output == input {
         return None;
     }
-    let lex = kosha();
-    if !lex.contains(&output) {
+    if !lexically_supported(&output) {
         return None;
     }
     Some(Prakriya::corrected(
@@ -30,6 +34,11 @@ fn corrected_if_attested(
 pub fn rule_sibilant(input: &str) -> Option<Prakriya> {
     let origin = classify(input);
     let lex = kosha();
+    let input_exact_headword = lex.lookup(input).is_some();
+    let input_supported = lex.contains(input) || lex.lookup(input).is_some();
+    if input_exact_headword {
+        return None;
+    }
     match origin {
         Origin::Aagantuk => {
             // (अ)-'स' प्रयोग, subrule 9: आगन्तुकमा स-प्राथमिकता.
@@ -60,7 +69,7 @@ pub fn rule_sibilant(input: &str) -> Option<Prakriya> {
             // (अ)-'स' प्रयोग, subrule 8: तत्सम→तद्भव मार्गमा श/ष -> स.
             if input.contains('ष') {
                 let output = input.replace('ष', "स");
-                if !lex.contains(input) && lex.contains(&output) {
+                if !input_supported && lexically_supported(&output) {
                     return Some(Prakriya::corrected(
                         input,
                         &output,
@@ -75,7 +84,7 @@ pub fn rule_sibilant(input: &str) -> Option<Prakriya> {
             }
             if input.contains('श') {
                 let output = input.replace('श', "स");
-                if !lex.contains(input) && lex.contains(&output) {
+                if !input_supported && lexically_supported(&output) {
                     return Some(Prakriya::corrected(
                         input,
                         &output,
@@ -230,7 +239,7 @@ pub fn rule_sibilant(input: &str) -> Option<Prakriya> {
     // when one sibilant substitution yields a known tatsam form and the input
     // itself is unattested, prefer the attested tatsam sibilant. Keep this
     // below the numbered contextual rules so explicit Academy environments win.
-    if !matches!(origin, Origin::Aagantuk) && !lex.contains(input) {
+    if !matches!(origin, Origin::Aagantuk) && !input_supported {
         let chars: Vec<char> = input.chars().collect();
         let mut candidates = Vec::new();
 
@@ -247,7 +256,7 @@ pub fn rule_sibilant(input: &str) -> Option<Prakriya> {
                 candidate[idx] = *replacement;
                 let output: String = candidate.into_iter().collect();
                 if output != input
-                    && lex.contains(&output)
+                    && lexically_supported(&output)
                     && matches!(classify(&output), Origin::Tatsam)
                 {
                     candidates.push(output);

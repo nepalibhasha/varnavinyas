@@ -17,6 +17,10 @@ pub const SPEC_PANCHHAM: RuleSpec = RuleSpec {
 /// Academy 3(ख)(अ): panchham varna rules for तत्सम words.
 /// In तत्सम words, anusvara (ं) before stop consonants -> panchham varna.
 pub fn rule_panchham_varna(input: &str) -> Option<Prakriya> {
+    if has_supported_non_tatsam_chandrabindu_variant(input) {
+        return None;
+    }
+
     let origin = classify(input);
 
     if !matches!(origin, Origin::Tatsam) {
@@ -85,6 +89,61 @@ pub fn rule_panchham_varna(input: &str) -> Option<Prakriya> {
     }
 
     None
+}
+
+fn has_supported_non_tatsam_chandrabindu_variant(input: &str) -> bool {
+    if !input.contains('ं') {
+        return false;
+    }
+
+    let lex = kosha();
+    let chars: Vec<char> = input.chars().collect();
+
+    for i in 0..chars.len() {
+        if chars[i] != 'ं' {
+            continue;
+        }
+
+        let mut candidate_chars = chars.clone();
+        candidate_chars[i] = 'ँ';
+        let candidate: String = candidate_chars.into_iter().collect();
+        if chandrabindu_override_is_productive(&candidate) {
+            continue;
+        }
+        let decision = classify_with_provenance(&candidate);
+
+        if matches!(decision.origin, Origin::Tatsam) {
+            continue;
+        }
+
+        let Some(entry) = lex.lookup(&candidate) else {
+            continue;
+        };
+        let pos = entry.pos;
+        if pos.contains("अव्य")
+            || pos.contains("क्रि.वि.")
+            || pos.contains("क्रियाविशेषण")
+            || pos.contains("नामयोगी")
+            || pos.contains("ना.यो.")
+        {
+            return true;
+        }
+    }
+
+    false
+}
+
+fn chandrabindu_override_is_productive(candidate: &str) -> bool {
+    candidate.contains("ँछ")
+        || candidate.contains("ँथ")
+        || candidate.contains("ँदा")
+        || candidate.contains("ँदै")
+        || candidate.ends_with('ँ')
+        || candidate.ends_with("ौँ")
+        || candidate.ends_with("ौं")
+        || candidate.ends_with("ुँ")
+        || candidate.ends_with("ूँ")
+        || candidate.contains("ँला")
 }
 
 fn panchham_subrule_citation(next: char) -> &'static str {

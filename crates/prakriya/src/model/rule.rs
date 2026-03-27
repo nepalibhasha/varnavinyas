@@ -61,7 +61,7 @@ impl Rule {
                     "ज्ञ/ग्य भेद नियम"
                 }
                 c if c.starts_with("3(ग)") => "उस्तै उच्चारण हुने वर्ण प्रयोग नियम",
-                c if c.starts_with("3(घ)") => "ऋ/कृ प्रयोग नियम",
+                c if c.starts_with("3(घ)") => "पदयोग/पदवियोग नियम",
                 c if c.starts_with("3(ङ)") => "हलन्त नियम",
                 c if c.starts_with("3(इ)") => "य/ए भेद नियम",
                 c if c.starts_with("3(उ)") => "क्ष/छ भेद नियम",
@@ -78,5 +78,33 @@ impl Rule {
 impl std::fmt::Display for Rule {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.description())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Rule;
+
+    #[test]
+    fn active_section_codes_map_to_expected_descriptions() {
+        let cases = [
+            ("3(क)(अ)-1", "ह्रस्व/दीर्घ स्वर नियम"),
+            ("3(ख)(आ)-1", "चन्द्रबिन्दु/शिरबिन्दु नियम"),
+            ("3(ग)(अ)-1", "श/ष/स प्रयोग नियम"),
+            ("3(ग)(आ)-1", "ब/व प्रयोग नियम"),
+            ("3(ग)(ई)-ऋ-1", "ऋ/कृ प्रयोग नियम"),
+            ("3(घ)", "पदयोग/पदवियोग नियम"),
+            ("3(ङ)-पदान्त", "हलन्त नियम"),
+            ("3(छ)", "य/ए भेद नियम"),
+            ("3(छ)-क्ष", "क्ष/छ भेद नियम"),
+            ("3(छ)-ज्ञ", "ज्ञ/ग्य भेद नियम"),
+            ("3(ई)", "शुद्ध-अशुद्ध शब्द सूची"),
+        ];
+
+        for (code, expected) in cases {
+            let rule = Rule::VarnaVinyasNiyam(code);
+            assert_eq!(rule.description(), expected, "wrong description for {code}");
+            assert_eq!(rule.to_string(), expected, "wrong display text for {code}");
+        }
     }
 }

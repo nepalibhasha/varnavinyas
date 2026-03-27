@@ -27,6 +27,19 @@ pub const SPEC_CHANDRABINDU: RuleSpec = RuleSpec {
 // - 3(ख)(आ)-4 ...छ/...थ forms after dvisvara stems
 // -----------------------------------------------------------------------------
 pub fn rule_chandrabindu(input: &str) -> Option<Prakriya> {
+    if let Some(output) = supported_non_tatsam_chandrabindu_form(input) {
+        return Some(Prakriya::corrected(
+            input,
+            &output,
+            vec![Step::new(
+                Rule::VarnaVinyasNiyam("3(ख)(आ)-lex"),
+                "तद्भव/अव्यय मानक रूपमा चन्द्रबिन्दु (ँ) प्रयोग हुन्छ",
+                input,
+                &output,
+            )],
+        ));
+    }
+
     let origin_decision = classify_with_provenance(input);
     let origin = origin_decision.origin;
     let source = origin_decision.source;
@@ -186,6 +199,48 @@ pub fn rule_chandrabindu(input: &str) -> Option<Prakriya> {
                     ));
                 }
             }
+        }
+    }
+
+    None
+}
+
+fn supported_non_tatsam_chandrabindu_form(input: &str) -> Option<String> {
+    if !input.contains('ं') {
+        return None;
+    }
+
+    let lex = kosha();
+    let chars: Vec<char> = input.chars().collect();
+
+    for i in 0..chars.len() {
+        if chars[i] != 'ं' {
+            continue;
+        }
+
+        let mut candidate_chars = chars.clone();
+        candidate_chars[i] = 'ँ';
+        let candidate: String = candidate_chars.into_iter().collect();
+        if chandrabindu_subrule_for(&candidate) != "3(ख)(आ)-1" {
+            continue;
+        }
+        let decision = classify_with_provenance(&candidate);
+
+        if matches!(decision.origin, Origin::Tatsam) {
+            continue;
+        }
+
+        let Some(entry) = lex.lookup(&candidate) else {
+            continue;
+        };
+        let pos = entry.pos;
+        if pos.contains("अव्य")
+            || pos.contains("क्रि.वि.")
+            || pos.contains("क्रियाविशेषण")
+            || pos.contains("नामयोगी")
+            || pos.contains("ना.यो.")
+        {
+            return Some(candidate);
         }
     }
 
