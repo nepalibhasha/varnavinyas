@@ -9,6 +9,7 @@ use crate::diagnostic::Diagnostic;
 use crate::tokenizer::{best_detachment_candidate, best_supported_detachment, tokenize_analyzed};
 
 mod common;
+mod context;
 #[cfg(feature = "grammar-pass")]
 mod grammar;
 mod padayog;
@@ -17,6 +18,7 @@ mod punctuation;
 mod style_variants;
 mod word_level;
 
+use context::add_context_diagnostics;
 #[cfg(feature = "grammar-pass")]
 use grammar::add_grammar_diagnostics;
 use padayog::{add_generalized_padayog_padabiyog_diagnostics, add_padayog_padabiyog_diagnostics};
@@ -149,6 +151,7 @@ pub fn check_text_with_options(text: &str, options: CheckOptions) -> Vec<Diagnos
     add_padayog_padabiyog_diagnostics(text, &mut blocked_spans, &mut diagnostics);
     add_generalized_padayog_padabiyog_diagnostics(text, &mut blocked_spans, &mut diagnostics);
     suppress_nested_diagnostics_within_padayog_spans(&mut diagnostics);
+    add_context_diagnostics(text, &tokens, &mut blocked_spans, &mut diagnostics);
 
     if options.grammar {
         add_style_variant_diagnostics(text, &mut blocked_spans, &mut diagnostics);

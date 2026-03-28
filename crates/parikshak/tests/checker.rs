@@ -855,3 +855,49 @@ fn nga_halanta_lemma_rule_still_applies_for_standalone_token() {
         "Standalone token should still allow भन -> भन् lemma suggestion, got: {diags:?}"
     );
 }
+
+#[test]
+fn sentence_context_phrase_backed_hos_correction_applies_in_blessing_sentence() {
+    let text = "नेपाल आमाको जय होस ।";
+    let diags = check_text(text);
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "होस" && d.correction == "होस्"),
+        "Expected sentence-level phrase-backed final-token होस -> होस् correction, got: {diags:?}"
+    );
+}
+
+#[test]
+fn sentence_context_phrase_backed_hos_correction_applies_at_end_of_input() {
+    let text = "नेपाल आमाको जय होस";
+    let diags = check_text(text);
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "होस" && d.correction == "होस्"),
+        "Expected sentence-final phrase-backed final-token होस -> होस् correction without punctuation, got: {diags:?}"
+    );
+}
+
+#[test]
+fn sentence_context_structural_hos_correction_applies_for_final_benedictive_predicate() {
+    let text = "सबैको भलो होस ।";
+    let diags = check_text(text);
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "होस" && d.correction == "होस्"),
+        "Expected sentence-level final predicate होस -> होस् correction, got: {diags:?}"
+    );
+}
+
+#[test]
+fn sentence_context_does_not_overcorrect_nominal_hos_usage() {
+    let text = "उसको होस हरायो ।";
+    let diags = check_text(text);
+    assert!(
+        diags.iter().all(|d| d.incorrect != "होस"),
+        "Nominal होस usage should remain untouched, got: {diags:?}"
+    );
+}
