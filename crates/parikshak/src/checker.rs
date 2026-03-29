@@ -16,6 +16,7 @@ mod padayog;
 mod padayog_rules;
 mod punctuation;
 mod style_variants;
+mod tiryak;
 mod word_level;
 
 use context::add_context_diagnostics;
@@ -24,6 +25,7 @@ use grammar::add_grammar_diagnostics;
 use padayog::{add_generalized_padayog_padabiyog_diagnostics, add_padayog_padabiyog_diagnostics};
 use punctuation::punctuation_diagnostics;
 use style_variants::add_style_variant_diagnostics;
+use tiryak::{add_tiryak_diagnostics, check_word_tiryak};
 use word_level::{adjust_context_sensitive_nga_halanta_rule, check_word_impl};
 
 /// Runtime options for `check_text_with_options`.
@@ -60,6 +62,10 @@ pub struct CheckOptions {
 /// forms (including common misspellings like राजनैतिक). Academy correction
 /// rules are authoritative and must override lexicon presence.
 pub fn check_word(word: &str) -> Option<Diagnostic> {
+    if let Some(diag) = check_word_tiryak(word) {
+        return Some(diag);
+    }
+
     let lex = kosha();
     if lex.contains(word) || lex.lookup(word).is_some() {
         return check_word_impl(word);
@@ -148,6 +154,7 @@ pub fn check_text_with_options(text: &str, options: CheckOptions) -> Vec<Diagnos
         }
     }
 
+    add_tiryak_diagnostics(text, &tokens, &mut blocked_spans, &mut diagnostics);
     add_padayog_padabiyog_diagnostics(text, &mut blocked_spans, &mut diagnostics);
     add_generalized_padayog_padabiyog_diagnostics(text, &mut blocked_spans, &mut diagnostics);
     suppress_nested_diagnostics_within_padayog_spans(&mut diagnostics);

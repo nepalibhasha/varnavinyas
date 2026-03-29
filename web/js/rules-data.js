@@ -282,6 +282,7 @@ export const RULES_SECTIONS = [
       'शुद्ध-अशुद्ध पदसूचीअनुसार मानक रूप चयन',
       'उपसर्ग, प्रत्यय, विभक्ति, नामयोगीमा पदयोग',
       'निपात, केही क्रियारूप र पूर्ण द्वित्वमा पदवियोग',
+      'शैक्षणिक व्याकरणअनुसार तिर्यक् रूपको प्रयोग',
       'कहिलेकाहीँ अर्थभेदका कारण शैलीगत सुझाव मात्र हुन सक्छ',
     ],
     referenceTargets: [
@@ -305,6 +306,27 @@ export const RULES_SECTIONS = [
         status: 'partial',
         summary: 'छुट्याएर लेखिने केही मुख्य phrase नियमहरू पाठ-स्तर जाँचमा लागू छन्।',
         examples: ['सबै पदवियोग नियमहरू अझै पूर्ण कार्यान्वयनमा पुगेका छैनन्'],
+      },
+      {
+        id: 'tiryak-ka',
+        label: 'तिर्यक् ७(क)',
+        status: 'implemented',
+        summary: "'एको' वा 'नु' अन्त्यका कृदन्त शब्दका पछाडि 'ले' वा 'मा' विभक्ति लाग्दा तिर्यक् रूप लेखिन्छ।",
+        examples: ['भएकोमा -> भएकामा', 'गर्नुले -> गर्नाले'],
+      },
+      {
+        id: 'tiryak-kha',
+        label: 'तिर्यक् ७(ख)',
+        status: 'implemented',
+        summary: 'विभक्तियुक्त सर्वनाम तिर्यक् रूपमा लेखिन्छ।',
+        examples: ['योले -> यसले', 'यो ले -> यसले'],
+      },
+      {
+        id: 'tiryak-ga',
+        label: 'तिर्यक् ७(ग)',
+        status: 'implemented',
+        summary: 'विभक्तियुक्त विशेष्यअघि आउने सर्वनाम वा निर्देशक पनि तिर्यक् रूपमा लेखिन्छ।',
+        examples: ['यो प्रसारणका -> यस प्रसारणका'],
       },
       {
         id: 'style',
@@ -363,7 +385,7 @@ const RULE_KEYWORDS = {
   GyaGyan: ['ज्ञ', 'ग्याँ', 'ग्या', 'ज्ञान', 'प्रज्ञा'],
   YaE: ['य/ए'],
   Sandhi: ['सन्धि', 'sandhi'],
-  ShuddhaTable: ['शुद्ध', 'अशुद्ध', 'तालिका', 'पदयोग', 'पदवियोग', 'section4-phrase-style'],
+  ShuddhaTable: ['शुद्ध', 'अशुद्ध', 'तालिका', 'पदयोग', 'पदवियोग', 'section4-phrase-style', 'तिर्यक्', 'शैक्षणिक व्याकरण'],
   Punctuation: ['विराम', 'चिह्न', 'punctuation', 'निर्देशक', 'सापेक्षविराम', 'सङ्क्षेप', 'ऐजन', ':-'],
 };
 
@@ -386,6 +408,9 @@ const TARGET_MATCHERS = {
     { test: /3\(ङ\)/, targetId: 'nga-halanta' },
   ],
   ShuddhaTable: [
+    { test: /शैक्षणिक व्याकरण ७\(क\).*तिर्यक्/, targetId: 'tiryak-ka' },
+    { test: /शैक्षणिक व्याकरण ७\(ख\).*तिर्यक्/, targetId: 'tiryak-kha' },
+    { test: /शैक्षणिक व्याकरण ७\(ग\).*तिर्यक्/, targetId: 'tiryak-ga' },
     { test: /पदयोग/, targetId: 'padayog' },
     { test: /पदवियोग/, targetId: 'padabiyog' },
     { test: /section4-phrase-style/, targetId: 'style' },

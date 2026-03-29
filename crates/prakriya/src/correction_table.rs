@@ -244,7 +244,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "भएकामा",
                 rule: Rule::ShuddhaAshuddha("Section 4"),
-                description: "नामयोगी रूप: भएका+मा = भएकामा",
+                description: "तिर्यक् रूप: भएको + मा = भएकामा",
             },
         ),
         (

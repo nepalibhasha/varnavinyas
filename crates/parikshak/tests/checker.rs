@@ -82,6 +82,34 @@ fn check_word_normalizes_chandrabindu_stem_before_reattaching_suffix() {
 }
 
 #[test]
+fn check_word_applies_tiryak_to_joined_eko_plus_case_form() {
+    let diag = check_word("भएकोमा").expect("भएकोमा should normalize through तिर्यक्");
+    assert_eq!(diag.incorrect, "भएकोमा");
+    assert_eq!(diag.correction, "भएकामा");
+}
+
+#[test]
+fn check_word_applies_tiryak_to_joined_nu_plus_case_form() {
+    let diag = check_word("गर्नुले").expect("गर्नुले should normalize through तिर्यक्");
+    assert_eq!(diag.incorrect, "गर्नुले");
+    assert_eq!(diag.correction, "गर्नाले");
+}
+
+#[test]
+fn check_word_applies_tiryak_to_direct_pronoun_case_form() {
+    let diag = check_word("योले").expect("योले should normalize through तिर्यक्");
+    assert_eq!(diag.incorrect, "योले");
+    assert_eq!(diag.correction, "यसले");
+}
+
+#[test]
+fn check_word_applies_tiryak_to_additional_pronoun_surface_forms() {
+    let diag = check_word("मले").expect("मले should normalize through तिर्यक्");
+    assert_eq!(diag.incorrect, "मले");
+    assert_eq!(diag.correction, "मैले");
+}
+
+#[test]
 fn check_word_accepts_additional_unlisted_outer_affix_forms() {
     for word in ["रामसम्मपनि", "रामसँगै", "रामसँगको", "रामनै", "प्रशासनसम्मपनि"]
     {
@@ -228,6 +256,68 @@ fn punctuation_boundaries_do_not_merge_words_into_false_suggestions() {
     assert!(
         diags.iter().all(|d| d.incorrect != "केन्द्र)को"),
         "Internal punctuation should split tokens before suggestion fallback, got: {diags:?}"
+    );
+}
+
+#[test]
+fn tiryak_joined_phrase_correction_applies_to_split_kri_danta_plus_case() {
+    let diags = check_text("भएको मा निर्णय गरियो।");
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "भएको मा" && d.correction == "भएकामा"),
+        "Expected तिर्यक् phrase correction for split भएको मा, got: {diags:?}"
+    );
+}
+
+#[test]
+fn tiryak_direct_pronoun_case_correction_applies_to_split_form() {
+    let diags = check_text("यो ले सही सन्देश दियो।");
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "यो ले" && d.correction == "यसले"),
+        "Expected तिर्यक् phrase correction for split यो ले, got: {diags:?}"
+    );
+}
+
+#[test]
+fn tiryak_determiner_correction_applies_before_inflected_head_noun() {
+    let diags = check_text("अब यो प्रसारणका प्रमुख समाचारहरू सुन्नुहोस्।");
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "यो" && d.correction == "यस"),
+        "Expected determiner तिर्यक् correction before inflected head noun, got: {diags:?}"
+    );
+}
+
+#[test]
+fn tiryak_does_not_overcorrect_non_trigger_suffixes() {
+    let diag = check_word("गर्नुको");
+    assert!(
+        diag.is_none(),
+        "Non-trigger suffixes should not force तिर्यक्, got: {diag:?}"
+    );
+}
+
+#[test]
+fn tiryak_subrule_ga_applies_to_possessive_determiners_with_inflected_heads() {
+    let diags = check_text("मेरो भाइहरू आए।");
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "मेरो" && d.correction == "मेरा"),
+        "Expected ७(ग) determiner correction before noun with plural suffix, got: {diags:?}"
+    );
+}
+
+#[test]
+fn tiryak_subrule_ga_skips_uninflected_head_nouns() {
+    let diags = check_text("मेरो भाइ आए।");
+    assert!(
+        diags.iter().all(|d| d.incorrect != "मेरो"),
+        "Bare head nouns should not trigger ७(ग) oblique determiner correction, got: {diags:?}"
     );
 }
 

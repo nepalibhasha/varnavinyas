@@ -68,7 +68,19 @@ impl Rule {
                 "3(ई)" => "शुद्ध-अशुद्ध शब्द सूची",
                 _ => "वर्णविन्यास नियम",
             },
-            Rule::Vyakaran(_) => "व्याकरण नियम",
+            Rule::Vyakaran(code) => match *code {
+                "section4-phrase-style" => "शैलीगत/प्रयोगगत सुझाव",
+                "PS-Saisanik-7(क)-तिर्यक्" => {
+                    "शैक्षणिक व्याकरण ७(क) — तिर्यक् रूपको प्रयोग"
+                }
+                "PS-Saisanik-7(ख)-तिर्यक्" => {
+                    "शैक्षणिक व्याकरण ७(ख) — तिर्यक् रूपको प्रयोग"
+                }
+                "PS-Saisanik-7(ग)-तिर्यक्" => {
+                    "शैक्षणिक व्याकरण ७(ग) — तिर्यक् रूपको प्रयोग"
+                }
+                _ => "व्याकरण नियम",
+            },
             Rule::ShuddhaAshuddha(_) => "शुद्ध-अशुद्ध शब्द सूची",
             Rule::ChihnaNiyam(_) => "विराम चिह्न नियम",
         }
@@ -103,6 +115,31 @@ mod tests {
 
         for (code, expected) in cases {
             let rule = Rule::VarnaVinyasNiyam(code);
+            assert_eq!(rule.description(), expected, "wrong description for {code}");
+            assert_eq!(rule.to_string(), expected, "wrong display text for {code}");
+        }
+    }
+
+    #[test]
+    fn vyakaran_codes_map_to_expected_descriptions() {
+        let cases = [
+            ("section4-phrase-style", "शैलीगत/प्रयोगगत सुझाव"),
+            (
+                "PS-Saisanik-7(क)-तिर्यक्",
+                "शैक्षणिक व्याकरण ७(क) — तिर्यक् रूपको प्रयोग",
+            ),
+            (
+                "PS-Saisanik-7(ख)-तिर्यक्",
+                "शैक्षणिक व्याकरण ७(ख) — तिर्यक् रूपको प्रयोग",
+            ),
+            (
+                "PS-Saisanik-7(ग)-तिर्यक्",
+                "शैक्षणिक व्याकरण ७(ग) — तिर्यक् रूपको प्रयोग",
+            ),
+        ];
+
+        for (code, expected) in cases {
+            let rule = Rule::Vyakaran(code);
             assert_eq!(rule.description(), expected, "wrong description for {code}");
             assert_eq!(rule.to_string(), expected, "wrong display text for {code}");
         }
