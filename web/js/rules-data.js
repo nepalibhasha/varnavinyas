@@ -364,6 +364,13 @@ export const RULES_SECTIONS = [
         examples: ['नेपालसरकार -> नेपाल सरकार', 'परराष्ट्रमन्त्रालय -> परराष्ट्र मन्त्रालय'],
       },
       {
+        id: 'saishanik-padabiyog-ga-dwitva',
+        label: 'शैक्षणिक पदवियोग (ग)',
+        status: 'implemented',
+        summary: 'सार्थक द्वित्व शब्द पदवियोग गरी लेखिन्छन्।',
+        examples: ['जहाँजहाँ -> जहाँ जहाँ', 'राम्रोराम्रो -> राम्रो राम्रो'],
+      },
+      {
         id: 'saishanik-padabiyog-gha-namik-kriya',
         label: 'शैक्षणिक पदवियोग (घ)',
         status: 'implemented',
@@ -493,6 +500,7 @@ const TARGET_MATCHERS = {
     { test: /शैक्षणिक व्याकरण पदयोग \(ट\).*एकार्थी/, targetId: 'saishanik-padayog-ta-ekarthi' },
     { test: /शैक्षणिक व्याकरण पदवियोग \(क\).*विभक्तिपछि आउने नामयोगी/, targetId: 'saishanik-padabiyog-ka-vibhakti-namayogi' },
     { test: /शैक्षणिक व्याकरण पदवियोग \(ख\).*संस्थागत\/विषयगत/, targetId: 'saishanik-padabiyog-kha-institution' },
+    { test: /शैक्षणिक व्याकरण पदवियोग \(ग\).*सार्थक द्वित्व/, targetId: 'saishanik-padabiyog-ga-dwitva' },
     { test: /शैक्षणिक व्याकरण पदवियोग \(घ\).*नामिक क्रिया/, targetId: 'saishanik-padabiyog-gha-namik-kriya' },
     { test: /शैक्षणिक व्याकरण पदवियोग \(ङ\).*रीति जनाउने इकारान्त क्रिया/, targetId: 'saishanik-padabiyog-nga-gari' },
     { test: /शैक्षणिक व्याकरण पदवियोग \(च\).*निपातहरू/, targetId: 'saishanik-padabiyog-ca-nipat' },

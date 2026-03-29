@@ -430,11 +430,55 @@ fn add_generalized_padabiyog_subrule_9_nu_n_pachhi_kriya_split(
 }
 
 fn add_generalized_padabiyog_subrule_10_sarthak_dwitva_split(
-    _text: &str,
-    _blocked_spans: &mut HashSet<(usize, usize)>,
-    _diagnostics: &mut Vec<Diagnostic>,
+    text: &str,
+    blocked_spans: &mut HashSet<(usize, usize)>,
+    diagnostics: &mut Vec<Diagnostic>,
 ) {
-    // TODO(3(घ)-पदवियोग-१०): generalized meaningful reduplication splitting needs lexical repetition guards.
+    let segments = whitespace_segments(text);
+
+    for (token, start, end) in segments {
+        if !is_devanagari_word(token) || is_numeric_segment(token) {
+            continue;
+        }
+
+        let Some((left, right)) = split_exact_reduplication(token) else {
+            continue;
+        };
+        if left != right {
+            continue;
+        }
+
+        let normalized_left = normalize_joined_word(left).unwrap_or_else(|| left.to_string());
+        if !candidate_supports_sarthak_dwitva_base(left, &normalized_left) {
+            continue;
+        }
+
+        let correction = format!("{left} {right}");
+        let span = (start, end);
+        if blocked_spans.contains(&span) || overlaps_existing_span(diagnostics, span) {
+            continue;
+        }
+        if !is_word_boundary(text, span.0, span.1) {
+            continue;
+        }
+        if correction == token || has_same_rewrite(diagnostics, span, &correction) {
+            continue;
+        }
+
+        diagnostics.push(Diagnostic {
+            span,
+            incorrect: token.to_string(),
+            correction,
+            rule: Rule::VarnaVinyasNiyam("3(घ)"),
+            explanation: "शैक्षणिक व्याकरण पदवियोग (ग): सार्थक द्वित्व शब्द पदवियोग गरी लेखिन्छन् ।"
+                .to_string(),
+            category: DiagnosticCategory::ShuddhaTable,
+            kind: DiagnosticKind::Error,
+            confidence: 0.88,
+            alternate_reasons: Vec::new(),
+        });
+        blocked_spans.insert(span);
+    }
 }
 
 fn add_generalized_padabiyog_subrule_11_jana_thari_split(
@@ -1010,6 +1054,25 @@ fn split_compound_suffix<'a>(token: &'a str, suffix: &'a str) -> Option<(&'a str
     Some((left, right))
 }
 
+fn split_exact_reduplication(token: &str) -> Option<(&str, &str)> {
+    let char_count = token.chars().count();
+    if char_count < 2 || char_count % 2 != 0 {
+        return None;
+    }
+
+    let mid_char = char_count / 2;
+    let mid_byte = token
+        .char_indices()
+        .nth(mid_char)
+        .map(|(idx, _)| idx)
+        .unwrap_or(token.len());
+    let (left, right) = token.split_at(mid_byte);
+    if left.is_empty() || right.is_empty() {
+        return None;
+    }
+    Some((left, right))
+}
+
 fn normalize_joined_word(word: &str) -> Option<String> {
     if let Some(diag) = super::check_word(word) {
         if !matches!(diag.kind, DiagnosticKind::Ambiguous) {
@@ -1101,6 +1164,39 @@ fn candidate_is_nominalish(candidate: &str) -> bool {
     };
 
     entry.pos.contains("नाम") || entry.pos.contains("ना.") || entry.pos.contains("सर्व")
+}
+
+fn candidate_supports_sarthak_dwitva_base(candidate: &str, normalized_candidate: &str) -> bool {
+    if candidate_is_supported(candidate) || candidate_is_supported(normalized_candidate) {
+        return true;
+    }
+
+    let lex = kosha();
+    if let Some(stem) = candidate.strip_suffix("यो") {
+        return has_known_infinitive_candidate(stem, lex);
+    }
+
+    false
+}
+
+fn has_known_infinitive_candidate(stem: &str, lex: &varnavinyas_kosha::Kosha) -> bool {
+    let mut candidates = Vec::new();
+
+    if stem.ends_with('्') {
+        candidates.push(format!("{stem}नु"));
+    } else {
+        candidates.push(format!("{stem}नु"));
+        candidates.push(format!("{stem}्नु"));
+    }
+
+    if stem.ends_with('ा') {
+        candidates.push(format!("{stem}उनु"));
+        candidates.push(format!("{stem}इनु"));
+    }
+
+    candidates
+        .into_iter()
+        .any(|candidate| lex.contains(&candidate) || lex.lookup(&candidate).is_some())
 }
 
 fn left_supports_pratyaya_join(left: &str) -> bool {

@@ -352,28 +352,7 @@ const V_9_NU_N_PACHHI_KRIYA_SPLIT: &[PhraseRewrite] = &[
     },
 ];
 
-const V_10_SARTHAK_DWITVA_SPLIT: &[PhraseRewrite] = &[
-    PhraseRewrite {
-        incorrect: "घरघर",
-        correct: "घर घर",
-        explanation: "सार्थक द्वित्व छुट्याएर",
-    },
-    PhraseRewrite {
-        incorrect: "मान्छेमान्छे",
-        correct: "मान्छे मान्छे",
-        explanation: "सार्थक द्वित्व छुट्याएर",
-    },
-    PhraseRewrite {
-        incorrect: "जुनजुन",
-        correct: "जुन जुन",
-        explanation: "सार्थक द्वित्व छुट्याएर",
-    },
-    PhraseRewrite {
-        incorrect: "केके",
-        correct: "के के",
-        explanation: "सार्थक द्वित्व छुट्याएर",
-    },
-];
+const V_10_SARTHAK_DWITVA_SPLIT: &[PhraseRewrite] = &[];
 
 const V_11_JANA_THARI_SPLIT: &[PhraseRewrite] = &[
     PhraseRewrite {

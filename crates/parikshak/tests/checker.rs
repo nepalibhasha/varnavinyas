@@ -980,6 +980,34 @@ fn saishanik_vibhakti_pachhi_namayogi_splits_apply() {
 }
 
 #[test]
+fn saishanik_sarthak_dwitva_splits_apply_generally() {
+    let diags =
+        check_text("जहाँजहाँ, जोजो, केके, वनवन, सडकसडक, राम्रोराम्रो, हुन्छहुन्छ, बस्योबस्यो, हिँड्योहिँड्यो।");
+    for (incorrect, correction) in [
+        ("जहाँजहाँ", "जहाँ जहाँ"),
+        ("जोजो", "जो जो"),
+        ("केके", "के के"),
+        ("वनवन", "वन वन"),
+        ("सडकसडक", "सडक सडक"),
+        ("राम्रोराम्रो", "राम्रो राम्रो"),
+        ("हुन्छहुन्छ", "हुन्छ हुन्छ"),
+        ("बस्योबस्यो", "बस्यो बस्यो"),
+        ("हिँड्योहिँड्यो", "हिँड्यो हिँड्यो"),
+    ] {
+        let diag = diags
+            .iter()
+            .find(|d| d.incorrect == incorrect && d.correction == correction)
+            .unwrap_or_else(|| {
+                panic!("Expected सार्थक द्वित्व split {incorrect} -> {correction}, got: {diags:?}")
+            });
+        assert!(
+            diag.explanation.contains("पदवियोग (ग)"),
+            "Expected शैक्षणिक पदवियोग (ग) explanation for {incorrect}, got: {diag:?}"
+        );
+    }
+}
+
+#[test]
 fn saishanik_jana_split_applies_beyond_fixed_examples() {
     let diags = check_text("आठजना विद्यार्थी, दशजना मान्छे, पाँचजना केटा आए।");
     for (incorrect, correction) in [
