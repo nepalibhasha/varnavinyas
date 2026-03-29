@@ -13,7 +13,7 @@ use super::common::{
 use super::padayog_rules::PADAYOG_PADABIYOG_RULES;
 
 const VIBHAKTI_TOKENS: &[&str] = &["ले", "लाई", "को", "बाट", "देखि", "मा", "का", "की"];
-const PRATYAYA_TOKENS: &[&str] = &["ज्यु"];
+const PRATYAYA_TOKENS: &[&str] = &["ज्यू"];
 const NAMAYOGI_TOKENS: &[&str] = &[
     "सँग",
     "तिर",
@@ -25,6 +25,7 @@ const NAMAYOGI_TOKENS: &[&str] = &[
     "अन्तर्गत",
     "बमोजिम",
 ];
+const COMPARISON_SPLIT_TOKENS: &[&str] = &["जस्तो", "जस्तै", "जत्रो", "जसरी"];
 
 pub(crate) fn add_padayog_padabiyog_diagnostics(
     text: &str,
@@ -79,7 +80,7 @@ pub(crate) fn add_generalized_padayog_padabiyog_diagnostics(
     add_generalized_padayog_subrule_8_milit_kriyapad_join(text, blocked_spans, diagnostics);
     add_generalized_padayog_subrule_9_samyogak_join(text, blocked_spans, diagnostics);
     add_generalized_padayog_subrule_10_ota_varga_sambandhi_join(text, blocked_spans, diagnostics);
-    add_generalized_padayog_subrule_11_jastai_sarah_join(text, blocked_spans, diagnostics);
+    add_generalized_padayog_subrule_11_sarah_join(text, blocked_spans, diagnostics);
 
     add_generalized_padabiyog_subrule_1_every_word_split(text, blocked_spans, diagnostics);
     add_generalized_padabiyog_subrule_2_vibhakti_pachhi_namayogi_split(
@@ -102,6 +103,7 @@ pub(crate) fn add_generalized_padayog_padabiyog_diagnostics(
     add_generalized_padabiyog_subrule_11_jana_thari_split(text, blocked_spans, diagnostics);
     add_generalized_padabiyog_subrule_12_shirsha_nam_split(text, blocked_spans, diagnostics);
     add_generalized_padabiyog_subrule_13_visheshan_nam_split(text, blocked_spans, diagnostics);
+    add_generalized_saishanik_comparison_split(text, blocked_spans, diagnostics);
 }
 
 fn add_generalized_padayog_subrule_1_upasarga_join(
@@ -185,12 +187,12 @@ fn add_generalized_padayog_subrule_10_ota_varga_sambandhi_join(
     // TODO(3(घ)-पदयोग-१०): generalized ota/varga/sambandhi joining needs curated semantic inventories.
 }
 
-fn add_generalized_padayog_subrule_11_jastai_sarah_join(
+fn add_generalized_padayog_subrule_11_sarah_join(
     _text: &str,
     _blocked_spans: &mut HashSet<(usize, usize)>,
     _diagnostics: &mut Vec<Diagnostic>,
 ) {
-    // TODO(3(घ)-पदयोग-११): generalized jastai/sarah joining needs safe comparison-particle inventories.
+    // TODO(3(घ)-पदयोग-११): generalized 'सरह' joining needs a safe comparison-particle inventory.
 }
 
 fn add_generalized_padabiyog_subrule_1_every_word_split(
@@ -316,6 +318,62 @@ fn add_generalized_padabiyog_subrule_13_visheshan_nam_split(
     _diagnostics: &mut Vec<Diagnostic>,
 ) {
     // TODO(3(घ)-पदवियोग-१३): generalized adjective-noun splitting needs stronger syntax than spacing heuristics.
+}
+
+fn add_generalized_saishanik_comparison_split(
+    text: &str,
+    blocked_spans: &mut HashSet<(usize, usize)>,
+    diagnostics: &mut Vec<Diagnostic>,
+) {
+    let segments = whitespace_segments(text);
+
+    for (token, start, end) in segments {
+        if !is_devanagari_word(token) || is_numeric_segment(token) {
+            continue;
+        }
+
+        for &suffix in COMPARISON_SPLIT_TOKENS {
+            let Some(left) = token.strip_suffix(suffix) else {
+                continue;
+            };
+            if left.is_empty() {
+                continue;
+            }
+
+            let Some(normalized_left) = normalize_joined_word(left) else {
+                continue;
+            };
+
+            let correction = format!("{normalized_left} {suffix}");
+            let span = (start, end);
+            if blocked_spans.contains(&span) || overlaps_existing_span(diagnostics, span) {
+                continue;
+            }
+            if !is_word_boundary(text, span.0, span.1) {
+                continue;
+            }
+            if correction == token {
+                continue;
+            }
+            if has_same_rewrite(diagnostics, span, &correction) {
+                continue;
+            }
+
+            diagnostics.push(Diagnostic {
+                span,
+                incorrect: token.to_string(),
+                correction,
+                rule: Rule::VarnaVinyasNiyam("3(घ)"),
+                explanation: "शैक्षणिक व्याकरण पदवियोग (झ): जस्तो/जस्तै/जत्रो/जसरी जस्ता तुलनाबोधक पदका अगाडि आउने नाम, सर्वनाम आदि अलग डिकामा लेखिन्छन्".to_string(),
+                category: DiagnosticCategory::ShuddhaTable,
+                kind: DiagnosticKind::Error,
+                confidence: 0.92,
+                alternate_reasons: Vec::new(),
+            });
+            blocked_spans.insert(span);
+            break;
+        }
+    }
 }
 
 fn normalize_joined_word(word: &str) -> Option<String> {

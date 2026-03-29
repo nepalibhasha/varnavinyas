@@ -244,18 +244,11 @@ const P_10_OTA_VARGA_SAMBANDHI_JOIN: &[PhraseRewrite] = &[
     },
 ];
 
-const P_11_JASTAI_SARAH_JOIN: &[PhraseRewrite] = &[
-    PhraseRewrite {
-        incorrect: "चन्द्र जस्तै",
-        correct: "चन्द्रजस्तै",
-        explanation: "तुलना पद जोडेर लेख्नुपर्छ",
-    },
-    PhraseRewrite {
-        incorrect: "बुद्धि सरह",
-        correct: "बुद्धिसरह",
-        explanation: "तुलना पद जोडेर लेख्नुपर्छ",
-    },
-];
+const P_11_SARAH_JOIN: &[PhraseRewrite] = &[PhraseRewrite {
+    incorrect: "बुद्धि सरह",
+    correct: "बुद्धिसरह",
+    explanation: "तुलना पद जोडेर लेख्नुपर्छ",
+}];
 
 const V_2_NAMAYOGI_SPLIT: &[PhraseRewrite] = &[
     PhraseRewrite {
@@ -474,8 +467,8 @@ pub const PADAYOG_PADABIYOG_RULES: &[PadayogRule] = &[
     },
     PadayogRule {
         code: "3(घ)-पदयोग-११",
-        label: "जस्तै/सरह तुलना पद जोडेर लेख्नुपर्छ",
-        rewrites: P_11_JASTAI_SARAH_JOIN,
+        label: "सरह तुलना पद जोडेर लेख्नुपर्छ",
+        rewrites: P_11_SARAH_JOIN,
     },
     PadayogRule {
         code: "3(घ)-पदवियोग-२",

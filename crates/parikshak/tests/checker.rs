@@ -720,18 +720,54 @@ fn generalized_padayog_namayogi_plus_vibhakti_join_handles_partially_joined_prat
 }
 
 #[test]
-fn generalized_padayog_pratyaya_join_handles_jyu_after_known_name() {
-    let text = "राम शाह ज्यु आए।";
+fn generalized_padayog_pratyaya_join_handles_juu_after_known_name() {
+    let text = "राम शाह ज्यू आए।";
     let diags = check_text(text);
     assert!(
         diags
             .iter()
-            .any(|d| d.incorrect == "शाह ज्यु" && d.correction == "शाहज्यु"),
-        "Expected generalized 3(घ)-पदयोग-२ join for ज्यु, got: {diags:?}"
+            .any(|d| d.incorrect == "शाह ज्यू" && d.correction == "शाहज्यू"),
+        "Expected generalized 3(घ)-पदयोग-२ join for ज्यू, got: {diags:?}"
     );
     assert!(
         diags.iter().all(|d| d.incorrect != "शाह"),
         "Exact headword शाह should not trigger a sibilant correction, got: {diags:?}"
+    );
+}
+
+#[test]
+fn saishanik_comparison_particles_are_split_not_joined() {
+    let text = "उनीजस्तै आए, डोल्माजस्तो देखियो, बताएजसरी गरियो।";
+    let diags = check_text(text);
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "उनीजस्तै" && d.correction == "उनी जस्तै"),
+        "Expected शैक्षणिक comparison split for उनीजस्तै, got: {diags:?}"
+    );
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "डोल्माजस्तो" && d.correction == "डोल्मा जस्तो"),
+        "Expected शैक्षणिक comparison split for डोल्माजस्तो, got: {diags:?}"
+    );
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "बताएजसरी" && d.correction == "बताए जसरी"),
+        "Expected शैक्षणिक comparison split for बताएजसरी, got: {diags:?}"
+    );
+}
+
+#[test]
+fn sarah_join_rule_still_applies() {
+    let text = "बुद्धि सरह सोच राख।";
+    let diags = check_text(text);
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "बुद्धि सरह" && d.correction == "बुद्धिसरह"),
+        "Expected सरह join to remain active, got: {diags:?}"
     );
 }
 
