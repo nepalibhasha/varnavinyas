@@ -199,11 +199,30 @@ fn suppress_nested_diagnostics_within_padayog_spans(diagnostics: &mut Vec<Diagno
         .filter(|d| matches!(d.rule, Rule::VarnaVinyasNiyam("3(घ)")))
         .map(|d| d.span)
         .collect();
+    let same_span_non_ambiguous_padayog: HashSet<(usize, usize)> = diagnostics
+        .iter()
+        .filter(|d| {
+            matches!(d.rule, Rule::VarnaVinyasNiyam("3(घ)"))
+                && !matches!(d.kind, DiagnosticKind::Ambiguous)
+        })
+        .map(|d| d.span)
+        .collect();
 
     diagnostics.retain(|diag| {
-        !padayog_spans.iter().any(|&(start, end)| {
+        let nested = padayog_spans.iter().any(|&(start, end)| {
             diag.span != (start, end) && start <= diag.span.0 && diag.span.1 <= end
-        })
+        });
+        if nested {
+            return false;
+        }
+
+        if matches!(diag.kind, DiagnosticKind::Ambiguous)
+            && same_span_non_ambiguous_padayog.contains(&diag.span)
+        {
+            return false;
+        }
+
+        true
     });
 }
 

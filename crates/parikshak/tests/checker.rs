@@ -955,6 +955,76 @@ fn saishanik_title_name_splits_apply() {
 }
 
 #[test]
+fn saishanik_vibhakti_pachhi_namayogi_splits_apply() {
+    let diags = check_text("दीपेशकानिम्ति, सोनमकालागि, बाटोदेखिमाथि, मामाकोसमेत, उसकोभन्दा।");
+    for (incorrect, correction) in [
+        ("दीपेशकानिम्ति", "दीपेशका निम्ति"),
+        ("सोनमकालागि", "सोनमका लागि"),
+        ("बाटोदेखिमाथि", "बाटोदेखि माथि"),
+        ("मामाकोसमेत", "मामाको समेत"),
+        ("उसकोभन्दा", "उसको भन्दा"),
+    ] {
+        let diag = diags
+            .iter()
+            .find(|d| d.incorrect == incorrect && d.correction == correction)
+            .unwrap_or_else(|| {
+                panic!(
+                    "Expected विभक्तिपछि नामयोगी split {incorrect} -> {correction}, got: {diags:?}"
+                )
+            });
+        assert!(
+            diag.explanation.contains("पदवियोग (क)"),
+            "Expected शैक्षणिक पदवियोग (क) explanation for {incorrect}, got: {diag:?}"
+        );
+    }
+}
+
+#[test]
+fn saishanik_jana_split_applies_beyond_fixed_examples() {
+    let diags = check_text("आठजना विद्यार्थी, दशजना मान्छे, पाँचजना केटा आए।");
+    for (incorrect, correction) in [
+        ("आठजना", "आठ जना"),
+        ("दशजना", "दश जना"),
+        ("पाँचजना", "पाँच जना"),
+    ] {
+        let diag = diags
+            .iter()
+            .find(|d| d.incorrect == incorrect && d.correction == correction)
+            .unwrap_or_else(|| {
+                panic!("Expected जना split {incorrect} -> {correction}, got: {diags:?}")
+            });
+        assert!(
+            diag.explanation.contains("पदवियोग (छ)"),
+            "Expected शैक्षणिक पदवियोग (छ) explanation for {incorrect}, got: {diag:?}"
+        );
+    }
+}
+
+#[test]
+fn saishanik_divisive_na_split_applies_to_nominal_chunks() {
+    let diags = check_text("नराम नश्याम आए। नरामले गीत गाई।");
+    for (incorrect, correction) in [("नराम", "न राम"), ("नश्याम", "न श्याम"), ("नरामले", "न रामले")]
+    {
+        let diag = diags
+            .iter()
+            .find(|d| d.incorrect == incorrect && d.correction == correction)
+            .unwrap_or_else(|| {
+                panic!("Expected विभाजक न split {incorrect} -> {correction}, got: {diags:?}")
+            });
+        assert!(
+            diag.explanation.contains("पदवियोग (ज)"),
+            "Expected शैक्षणिक पदवियोग (ज) explanation for {incorrect}, got: {diag:?}"
+        );
+    }
+    assert!(
+        diags
+            .iter()
+            .all(|d| !(d.incorrect == "नराम" && matches!(d.kind, DiagnosticKind::Ambiguous))),
+        "Specific विभाजक न rule should suppress ambiguous fallback on नराम, got: {diags:?}"
+    );
+}
+
+#[test]
 fn generalized_padabiyog_vibhakti_split_applies_beyond_fixed_pairs() {
     let text = "हाम्रालागि यो समाजकानिम्ति राम्रो हो।";
     let diags = check_text(text);

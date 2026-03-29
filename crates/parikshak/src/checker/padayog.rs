@@ -25,6 +25,8 @@ const NAMAYOGI_TOKENS: &[&str] = &[
     "अन्तर्गत",
     "बमोजिम",
 ];
+const PADABIYOG_VIBHAKTI_NAMAYOGI_SPLIT_TOKENS: &[&str] =
+    &["अगाडि", "पछाडि", "माथि", "समेत", "भन्दा", "लागि", "निम्ति"];
 const COMPARISON_SPLIT_TOKENS: &[&str] = &["जस्तो", "जस्तै", "जत्रो", "जसरी"];
 const NAMIK_KRIYA_SPLIT_TOKENS: &[&str] = &["पाउनु", "गर्नु", "पर्नु", "फाल्नु"];
 const INSTITUTIONAL_SPLIT_TOKENS: &[&str] = &[
@@ -123,6 +125,8 @@ pub(crate) fn add_generalized_padayog_padabiyog_diagnostics(
     add_generalized_saishanik_ekarthi_join(text, blocked_spans, diagnostics);
     add_generalized_saishanik_namik_kriya_split(text, blocked_spans, diagnostics);
     add_generalized_saishanik_gari_split(text, blocked_spans, diagnostics);
+    add_generalized_saishanik_jana_split(text, blocked_spans, diagnostics);
+    add_generalized_saishanik_divisive_na_split(text, blocked_spans, diagnostics);
     add_generalized_saishanik_institutional_split(text, blocked_spans, diagnostics);
     add_generalized_saishanik_title_name_split(text, blocked_spans, diagnostics);
 }
@@ -225,11 +229,63 @@ fn add_generalized_padabiyog_subrule_1_every_word_split(
 }
 
 fn add_generalized_padabiyog_subrule_2_vibhakti_pachhi_namayogi_split(
-    _text: &str,
-    _blocked_spans: &mut HashSet<(usize, usize)>,
-    _diagnostics: &mut Vec<Diagnostic>,
+    text: &str,
+    blocked_spans: &mut HashSet<(usize, usize)>,
+    diagnostics: &mut Vec<Diagnostic>,
 ) {
-    // TODO(3(घ)-पदवियोग-२): generalized split after vibhakti needs phrase-structure awareness.
+    let segments = whitespace_segments(text);
+
+    for (seg, start, end) in segments {
+        if !is_devanagari_word(seg) || is_numeric_segment(seg) {
+            continue;
+        }
+
+        let mut suggestion = None;
+        for &suffix in PADABIYOG_VIBHAKTI_NAMAYOGI_SPLIT_TOKENS {
+            let Some(left) = seg.strip_suffix(suffix) else {
+                continue;
+            };
+            if left.is_empty() {
+                continue;
+            }
+
+            let normalized_left = normalize_joined_word(left).unwrap_or_else(|| left.to_string());
+            if !plausible_vibhakti_attached_left(&normalized_left) {
+                continue;
+            }
+
+            suggestion = Some(format!("{normalized_left} {suffix}"));
+            break;
+        }
+
+        let Some(correction) = suggestion else {
+            continue;
+        };
+        let span = (start, end);
+        if blocked_spans.contains(&span) || overlaps_existing_span(diagnostics, span) {
+            continue;
+        }
+        if !is_word_boundary(text, span.0, span.1) {
+            continue;
+        }
+        if correction == seg || has_same_rewrite(diagnostics, span, &correction) {
+            continue;
+        }
+
+        diagnostics.push(Diagnostic {
+            span,
+            incorrect: seg.to_string(),
+            correction,
+            rule: Rule::VarnaVinyasNiyam("3(घ)"),
+            explanation: "शैक्षणिक व्याकरण पदवियोग (क): विभक्तिपछि आउने नामयोगी अलग डिकामा लेखिन्छन् ।"
+                .to_string(),
+            category: DiagnosticCategory::ShuddhaTable,
+            kind: DiagnosticKind::Error,
+            confidence: 0.91,
+            alternate_reasons: Vec::new(),
+        });
+        blocked_spans.insert(span);
+    }
 }
 
 fn add_generalized_padabiyog_subrule_3_lagi_nimti_split(
@@ -556,6 +612,109 @@ fn add_generalized_saishanik_gari_split(
     }
 }
 
+fn add_generalized_saishanik_jana_split(
+    text: &str,
+    blocked_spans: &mut HashSet<(usize, usize)>,
+    diagnostics: &mut Vec<Diagnostic>,
+) {
+    let segments = whitespace_segments(text);
+
+    for (token, start, end) in segments {
+        if !is_devanagari_word(token) || is_numeric_segment(token) {
+            continue;
+        }
+
+        let Some(left) = token.strip_suffix("जना") else {
+            continue;
+        };
+        if left.is_empty() {
+            continue;
+        }
+        let normalized_left = normalize_joined_word(left).unwrap_or_else(|| left.to_string());
+        if !candidate_is_supported(&normalized_left) {
+            continue;
+        }
+
+        let correction = format!("{normalized_left} जना");
+        let span = (start, end);
+        if blocked_spans.contains(&span) || overlaps_existing_span(diagnostics, span) {
+            continue;
+        }
+        if !is_word_boundary(text, span.0, span.1) {
+            continue;
+        }
+        if correction == token || has_same_rewrite(diagnostics, span, &correction) {
+            continue;
+        }
+
+        diagnostics.retain(|d| !(d.span == span && matches!(d.kind, DiagnosticKind::Ambiguous)));
+        diagnostics.push(Diagnostic {
+            span,
+            incorrect: token.to_string(),
+            correction,
+            rule: Rule::VarnaVinyasNiyam("3(घ)"),
+            explanation: "शैक्षणिक व्याकरण पदवियोग (छ): जना शब्द अलग डिकामा लेखिन्छ ।".to_string(),
+            category: DiagnosticCategory::ShuddhaTable,
+            kind: DiagnosticKind::Error,
+            confidence: 0.9,
+            alternate_reasons: Vec::new(),
+        });
+        blocked_spans.insert(span);
+    }
+}
+
+fn add_generalized_saishanik_divisive_na_split(
+    text: &str,
+    blocked_spans: &mut HashSet<(usize, usize)>,
+    diagnostics: &mut Vec<Diagnostic>,
+) {
+    let segments = whitespace_segments(text);
+
+    for (token, start, end) in segments {
+        if !is_devanagari_word(token) || is_numeric_segment(token) || candidate_is_supported(token)
+        {
+            continue;
+        }
+
+        let Some(rest) = token.strip_prefix("न") else {
+            continue;
+        };
+        if rest.chars().count() < 2 {
+            continue;
+        }
+
+        let normalized_rest = normalize_joined_word(rest).unwrap_or_else(|| rest.to_string());
+        if !candidate_is_nominalish(&normalized_rest) {
+            continue;
+        }
+
+        let correction = format!("न {normalized_rest}");
+        let span = (start, end);
+        if blocked_spans.contains(&span) || overlaps_existing_span(diagnostics, span) {
+            continue;
+        }
+        if !is_word_boundary(text, span.0, span.1) {
+            continue;
+        }
+        if correction == token || has_same_rewrite(diagnostics, span, &correction) {
+            continue;
+        }
+
+        diagnostics.push(Diagnostic {
+            span,
+            incorrect: token.to_string(),
+            correction,
+            rule: Rule::VarnaVinyasNiyam("3(घ)"),
+            explanation: "शैक्षणिक व्याकरण पदवियोग (ज): विभाजक 'न' पदवियोग गरेर लेखिन्छ ।".to_string(),
+            category: DiagnosticCategory::ShuddhaTable,
+            kind: DiagnosticKind::Error,
+            confidence: 0.89,
+            alternate_reasons: Vec::new(),
+        });
+        blocked_spans.insert(span);
+    }
+}
+
 fn add_generalized_saishanik_middle_name_join(
     text: &str,
     blocked_spans: &mut HashSet<(usize, usize)>,
@@ -843,6 +1002,41 @@ fn candidate_is_name_like(candidate: &str) -> bool {
     };
 
     entry.pos.contains("नाम") || entry.pos.contains("ना.")
+}
+
+fn plausible_vibhakti_attached_left(candidate: &str) -> bool {
+    if candidate_is_supported(candidate) {
+        return true;
+    }
+
+    for &suffix in VIBHAKTI_TOKENS {
+        let Some(base) = candidate.strip_suffix(suffix) else {
+            continue;
+        };
+        if base.chars().count() < 2 {
+            continue;
+        }
+        if base.chars().all(|ch| {
+            ('\u{0900}'..='\u{097F}').contains(&ch) || ('\u{A8E0}'..='\u{A8FF}').contains(&ch)
+        }) {
+            return true;
+        }
+    }
+
+    false
+}
+
+fn candidate_is_nominalish(candidate: &str) -> bool {
+    if candidate_is_name_like(candidate) || plausible_vibhakti_attached_left(candidate) {
+        return true;
+    }
+
+    let lex = kosha();
+    let Some(entry) = lex.lookup(candidate) else {
+        return false;
+    };
+
+    entry.pos.contains("नाम") || entry.pos.contains("ना.") || entry.pos.contains("सर्व")
 }
 
 fn left_supports_pratyaya_join(left: &str) -> bool {
