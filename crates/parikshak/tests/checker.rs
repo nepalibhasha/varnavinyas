@@ -1025,6 +1025,42 @@ fn saishanik_divisive_na_split_applies_to_nominal_chunks() {
 }
 
 #[test]
+fn saishanik_nipat_split_applies_to_school_grammar_examples() {
+    let diags = check_text(
+        "त्योत गयो। ऊनि जान्छ। रामनै चिकित्सक हो। बहिनीपो आई। हरिझैँ देखियो। दीपकचाहिँ मसँग रिसायो। केटोमात्र चौरमा दौड्यो। ऊ कहिले आउँछखै? यति पाठ पढल। तिमी घर जाऊत।",
+    );
+    for (incorrect, correction) in [
+        ("त्योत", "त्यो त"),
+        ("ऊनि", "ऊ नि"),
+        ("रामनै", "राम नै"),
+        ("बहिनीपो", "बहिनी पो"),
+        ("हरिझैँ", "हरि झैँ"),
+        ("दीपकचाहिँ", "दीपक चाहिँ"),
+        ("केटोमात्र", "केटो मात्र"),
+        ("आउँछखै", "आउँछ खै"),
+        ("पढल", "पढ ल"),
+        ("जाऊत", "जाऊ त"),
+    ] {
+        let diag = diags
+            .iter()
+            .find(|d| d.incorrect == incorrect && d.correction == correction)
+            .unwrap_or_else(|| {
+                panic!("Expected निपात split {incorrect} -> {correction}, got: {diags:?}")
+            });
+        assert!(
+            diag.explanation.contains("पदवियोग (च)"),
+            "Expected शैक्षणिक पदवियोग (च) explanation for {incorrect}, got: {diag:?}"
+        );
+    }
+    assert!(
+        diags
+            .iter()
+            .all(|d| !(d.incorrect == "ऊनि" && !d.explanation.contains("पदवियोग (च)"))),
+        "Specific निपात rule should suppress weaker same-span diagnostics on ऊनि, got: {diags:?}"
+    );
+}
+
+#[test]
 fn generalized_padabiyog_vibhakti_split_applies_beyond_fixed_pairs() {
     let text = "हाम्रालागि यो समाजकानिम्ति राम्रो हो।";
     let diags = check_text(text);

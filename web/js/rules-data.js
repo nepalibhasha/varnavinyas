@@ -378,6 +378,13 @@ export const RULES_SECTIONS = [
         examples: ['बुझिनेगरी -> बुझिने गरी', 'ढिलोगरी -> ढिलो गरी'],
       },
       {
+        id: 'saishanik-padabiyog-ca-nipat',
+        label: 'शैक्षणिक पदवियोग (च)',
+        status: 'implemented',
+        summary: 'निपातहरू पदवियोग गरी लेखिन्छन्।',
+        examples: ['रामनै -> राम नै', 'दीपकचाहिँ -> दीपक चाहिँ'],
+      },
+      {
         id: 'saishanik-padabiyog-cha-jana',
         label: 'शैक्षणिक पदवियोग (छ)',
         status: 'implemented',
@@ -488,6 +495,7 @@ const TARGET_MATCHERS = {
     { test: /शैक्षणिक व्याकरण पदवियोग \(ख\).*संस्थागत\/विषयगत/, targetId: 'saishanik-padabiyog-kha-institution' },
     { test: /शैक्षणिक व्याकरण पदवियोग \(घ\).*नामिक क्रिया/, targetId: 'saishanik-padabiyog-gha-namik-kriya' },
     { test: /शैक्षणिक व्याकरण पदवियोग \(ङ\).*रीति जनाउने इकारान्त क्रिया/, targetId: 'saishanik-padabiyog-nga-gari' },
+    { test: /शैक्षणिक व्याकरण पदवियोग \(च\).*निपातहरू/, targetId: 'saishanik-padabiyog-ca-nipat' },
     { test: /शैक्षणिक व्याकरण पदवियोग \(छ\).*जना शब्द अलग डिकामा/, targetId: 'saishanik-padabiyog-cha-jana' },
     { test: /शैक्षणिक व्याकरण पदवियोग \(ज\).*विभाजक 'न'/, targetId: 'saishanik-padabiyog-ja-divisive-na' },
     { test: /शैक्षणिक व्याकरण पदवियोग \(ञ\).*शीर्ष नाम/, targetId: 'saishanik-padabiyog-nya-title' },

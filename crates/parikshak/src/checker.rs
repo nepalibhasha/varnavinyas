@@ -216,6 +216,12 @@ fn suppress_nested_diagnostics_within_padayog_spans(diagnostics: &mut Vec<Diagno
             return false;
         }
 
+        if same_span_non_ambiguous_padayog.contains(&diag.span)
+            && !matches!(diag.rule, Rule::VarnaVinyasNiyam("3(घ)"))
+        {
+            return false;
+        }
+
         if matches!(diag.kind, DiagnosticKind::Ambiguous)
             && same_span_non_ambiguous_padayog.contains(&diag.span)
         {
