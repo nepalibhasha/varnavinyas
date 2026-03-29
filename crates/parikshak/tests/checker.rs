@@ -869,6 +869,92 @@ fn saishanik_gari_splits_apply() {
 }
 
 #[test]
+fn saishanik_middle_name_join_applies_when_joined_name_is_attested() {
+    let diags = check_text("लक्ष्मी प्रसाद देवकोटा नेपाली साहित्यका महत्त्वपूर्ण व्यक्तित्व हुन्।");
+    let diag = diags
+        .iter()
+        .find(|d| d.incorrect == "लक्ष्मी प्रसाद देवकोटा" && d.correction == "लक्ष्मीप्रसाद देवकोटा")
+        .expect("Expected middle-name join correction");
+    assert!(
+        diag.explanation.contains("पदयोग (ञ)"),
+        "Expected शैक्षणिक पदयोग (ञ) explanation, got: {diag:?}"
+    );
+}
+
+#[test]
+fn saishanik_middle_name_join_does_not_overfire_on_generic_lexical_triples() {
+    let diags = check_text("शुभ यात्रा\nशिक्षा");
+    assert!(
+        diags.iter().all(|d| d.correction != "शुभयात्रा शिक्षा"),
+        "Middle-name join should not cross line breaks or generic lexical triples, got: {diags:?}"
+    );
+}
+
+#[test]
+fn saishanik_ekarthi_joins_apply_conservatively() {
+    let diags = check_text("प्रधान मन्त्री, शिक्षा मन्त्री, शुभ कामना, शुभ यात्रा, कीर्ति पुर, ललित पुर।");
+    for (incorrect, correction) in [
+        ("प्रधान मन्त्री", "प्रधानमन्त्री"),
+        ("शिक्षा मन्त्री", "शिक्षामन्त्री"),
+        ("शुभ कामना", "शुभकामना"),
+        ("शुभ यात्रा", "शुभयात्रा"),
+        ("कीर्ति पुर", "कीर्तिपुर"),
+        ("ललित पुर", "ललितपुर"),
+    ] {
+        let diag = diags
+            .iter()
+            .find(|d| d.incorrect == incorrect && d.correction == correction)
+            .unwrap_or_else(|| {
+                panic!("Expected एकार्थी join {incorrect} -> {correction}, got: {diags:?}")
+            });
+        assert!(
+            diag.explanation.contains("पदयोग (ट)"),
+            "Expected शैक्षणिक पदयोग (ट) explanation for {incorrect}, got: {diag:?}"
+        );
+    }
+}
+
+#[test]
+fn saishanik_institutional_phrase_splits_apply() {
+    let diags = check_text("नेपालसरकार र परराष्ट्रमन्त्रालयले विज्ञप्ति जारी गरे।");
+    for (incorrect, correction_prefix) in [
+        ("नेपालसरकार", "नेपाल सरकार"),
+        ("परराष्ट्रमन्त्रालयले", "परराष्ट्र मन्त्रालय"),
+    ] {
+        let diag = diags
+            .iter()
+            .find(|d| d.incorrect == incorrect && d.correction.starts_with(correction_prefix))
+            .unwrap_or_else(|| {
+                panic!(
+                    "Expected institutional split {incorrect} -> {correction_prefix}..., got: {diags:?}"
+                )
+            });
+        assert!(
+            diag.explanation.contains("पदवियोग (ख)"),
+            "Expected शैक्षणिक पदवियोग (ख) explanation for {incorrect}, got: {diag:?}"
+        );
+    }
+}
+
+#[test]
+fn saishanik_title_name_splits_apply() {
+    let diags = check_text("मुगुजिल्ला र राराताल नेपालको परिचित नाम हुन्।");
+    for (incorrect, correction) in [("मुगुजिल्ला", "मुगु जिल्ला"), ("राराताल", "रारा ताल")]
+    {
+        let diag = diags
+            .iter()
+            .find(|d| d.incorrect == incorrect && d.correction == correction)
+            .unwrap_or_else(|| {
+                panic!("Expected title-name split {incorrect} -> {correction}, got: {diags:?}")
+            });
+        assert!(
+            diag.explanation.contains("पदवियोग (ञ)"),
+            "Expected शैक्षणिक पदवियोग (ञ) explanation for {incorrect}, got: {diag:?}"
+        );
+    }
+}
+
+#[test]
 fn generalized_padabiyog_vibhakti_split_applies_beyond_fixed_pairs() {
     let text = "हाम्रालागि यो समाजकानिम्ति राम्रो हो।";
     let diags = check_text(text);

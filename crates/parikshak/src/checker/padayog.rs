@@ -27,6 +27,19 @@ const NAMAYOGI_TOKENS: &[&str] = &[
 ];
 const COMPARISON_SPLIT_TOKENS: &[&str] = &["जस्तो", "जस्तै", "जत्रो", "जसरी"];
 const NAMIK_KRIYA_SPLIT_TOKENS: &[&str] = &["पाउनु", "गर्नु", "पर्नु", "फाल्नु"];
+const INSTITUTIONAL_SPLIT_TOKENS: &[&str] = &[
+    "मन्त्रालय",
+    "सरकार",
+    "विभाग",
+    "अधिकार",
+    "समारोह",
+    "व्यवस्था",
+    "सेवा",
+    "भवन",
+];
+const TITLE_NAME_SPLIT_TOKENS: &[&str] =
+    &["जिल्ला", "ताल", "नदी", "जाति", "समाज", "वर्ग", "धर्म", "महिना"];
+const EKARTHI_JOIN_RIGHT_TOKENS: &[&str] = &["मन्त्री", "कामना", "यात्रा", "पुर", "कोट", "विद्यालय"];
 
 pub(crate) fn add_padayog_padabiyog_diagnostics(
     text: &str,
@@ -106,8 +119,12 @@ pub(crate) fn add_generalized_padayog_padabiyog_diagnostics(
     add_generalized_padabiyog_subrule_13_visheshan_nam_split(text, blocked_spans, diagnostics);
     add_generalized_saishanik_comparison_split(text, blocked_spans, diagnostics);
     add_generalized_saishanik_swarup_join(text, blocked_spans, diagnostics);
+    add_generalized_saishanik_middle_name_join(text, blocked_spans, diagnostics);
+    add_generalized_saishanik_ekarthi_join(text, blocked_spans, diagnostics);
     add_generalized_saishanik_namik_kriya_split(text, blocked_spans, diagnostics);
     add_generalized_saishanik_gari_split(text, blocked_spans, diagnostics);
+    add_generalized_saishanik_institutional_split(text, blocked_spans, diagnostics);
+    add_generalized_saishanik_title_name_split(text, blocked_spans, diagnostics);
 }
 
 fn add_generalized_padayog_subrule_1_upasarga_join(
@@ -539,6 +556,237 @@ fn add_generalized_saishanik_gari_split(
     }
 }
 
+fn add_generalized_saishanik_middle_name_join(
+    text: &str,
+    blocked_spans: &mut HashSet<(usize, usize)>,
+    diagnostics: &mut Vec<Diagnostic>,
+) {
+    let segments = whitespace_segments(text);
+
+    for triple in segments.windows(3) {
+        let (left, lstart, _) = triple[0];
+        let (middle, _, _) = triple[1];
+        let (right, _, rend) = triple[2];
+        if !is_devanagari_word(left) || !is_devanagari_word(middle) || !is_devanagari_word(right) {
+            continue;
+        }
+        if is_numeric_segment(left) || is_numeric_segment(middle) || is_numeric_segment(right) {
+            continue;
+        }
+
+        let joined = format!("{left}{middle}");
+        if text[lstart..rend].contains('\n') {
+            continue;
+        }
+        if !candidate_is_name_like(left)
+            || !candidate_is_name_like(middle)
+            || !candidate_is_name_like(&joined)
+            || !candidate_is_name_like(right)
+        {
+            continue;
+        }
+
+        let correction = format!("{joined} {right}");
+        let span = (lstart, rend);
+        if blocked_spans.contains(&span) || overlaps_existing_span(diagnostics, span) {
+            continue;
+        }
+        if !is_word_boundary(text, span.0, span.1) {
+            continue;
+        }
+        if correction == text[span.0..span.1] {
+            continue;
+        }
+        if has_same_rewrite(diagnostics, span, &correction) {
+            continue;
+        }
+
+        diagnostics.push(Diagnostic {
+            span,
+            incorrect: text[span.0..span.1].to_string(),
+            correction,
+            rule: Rule::VarnaVinyasNiyam("3(घ)"),
+            explanation: "शैक्षणिक व्याकरण पदयोग (ञ): नाम र थरका बिचमा आउने मध्यवर्ती नामलाई एकै डिकामा जोडेर लेखिन्छ ।".to_string(),
+            category: DiagnosticCategory::ShuddhaTable,
+            kind: DiagnosticKind::Error,
+            confidence: 0.88,
+            alternate_reasons: Vec::new(),
+        });
+        blocked_spans.insert(span);
+    }
+}
+
+fn add_generalized_saishanik_ekarthi_join(
+    text: &str,
+    blocked_spans: &mut HashSet<(usize, usize)>,
+    diagnostics: &mut Vec<Diagnostic>,
+) {
+    let segments = whitespace_segments(text);
+
+    for pair in segments.windows(2) {
+        let (left, lstart, _) = pair[0];
+        let (right, _, rend) = pair[1];
+        if !is_devanagari_word(left) || !is_devanagari_word(right) || is_numeric_segment(left) {
+            continue;
+        }
+        if !EKARTHI_JOIN_RIGHT_TOKENS.contains(&right) {
+            continue;
+        }
+        if text[lstart..rend].contains('\n') {
+            continue;
+        }
+
+        let Some(normalized_left) = normalize_joined_word(left) else {
+            continue;
+        };
+        let correction = format!("{normalized_left}{right}");
+        if !candidate_is_supported(&correction) {
+            continue;
+        }
+
+        let span = (lstart, rend);
+        if blocked_spans.contains(&span) || overlaps_existing_span(diagnostics, span) {
+            continue;
+        }
+        if !is_word_boundary(text, span.0, span.1) {
+            continue;
+        }
+        if correction == text[span.0..span.1] || has_same_rewrite(diagnostics, span, &correction) {
+            continue;
+        }
+
+        diagnostics.push(Diagnostic {
+            span,
+            incorrect: text[span.0..span.1].to_string(),
+            correction,
+            rule: Rule::VarnaVinyasNiyam("3(घ)"),
+            explanation: "शैक्षणिक व्याकरण पदयोग (ट): एकार्थी स्थान नाम वा दुई शब्दबाट बनेका एकार्थी शब्द पदयोग गरेर लेखिन्छ ।".to_string(),
+            category: DiagnosticCategory::ShuddhaTable,
+            kind: DiagnosticKind::Error,
+            confidence: 0.9,
+            alternate_reasons: Vec::new(),
+        });
+        blocked_spans.insert(span);
+    }
+}
+
+fn add_generalized_saishanik_institutional_split(
+    text: &str,
+    blocked_spans: &mut HashSet<(usize, usize)>,
+    diagnostics: &mut Vec<Diagnostic>,
+) {
+    let segments = whitespace_segments(text);
+
+    for (token, start, end) in segments {
+        if !is_devanagari_word(token) || is_numeric_segment(token) {
+            continue;
+        }
+
+        for &suffix in INSTITUTIONAL_SPLIT_TOKENS {
+            let Some((left, right)) = split_compound_suffix(token, suffix) else {
+                continue;
+            };
+            let Some(normalized_left) = normalize_joined_word(left) else {
+                continue;
+            };
+            if !candidate_is_supported(&normalized_left) || !candidate_is_supported(right) {
+                continue;
+            }
+
+            let correction = format!("{normalized_left} {right}");
+            let span = (start, end);
+            if blocked_spans.contains(&span) || overlaps_existing_span(diagnostics, span) {
+                continue;
+            }
+            if !is_word_boundary(text, span.0, span.1) {
+                continue;
+            }
+            if correction == token || has_same_rewrite(diagnostics, span, &correction) {
+                continue;
+            }
+
+            diagnostics.push(Diagnostic {
+                span,
+                incorrect: token.to_string(),
+                correction,
+                rule: Rule::VarnaVinyasNiyam("3(घ)"),
+                explanation: "शैक्षणिक व्याकरण पदवियोग (ख): समास भए पनि यस्ता संस्थागत/विषयगत पदहरू अलग डिकामा लेखिन्छन् ।".to_string(),
+                category: DiagnosticCategory::ShuddhaTable,
+                kind: DiagnosticKind::Error,
+                confidence: 0.89,
+                alternate_reasons: Vec::new(),
+            });
+            blocked_spans.insert(span);
+            break;
+        }
+    }
+}
+
+fn add_generalized_saishanik_title_name_split(
+    text: &str,
+    blocked_spans: &mut HashSet<(usize, usize)>,
+    diagnostics: &mut Vec<Diagnostic>,
+) {
+    let segments = whitespace_segments(text);
+
+    for (token, start, end) in segments {
+        if !is_devanagari_word(token) || is_numeric_segment(token) {
+            continue;
+        }
+
+        for &suffix in TITLE_NAME_SPLIT_TOKENS {
+            let Some((left, right)) = split_compound_suffix(token, suffix) else {
+                continue;
+            };
+            let Some(normalized_left) = normalize_joined_word(left) else {
+                continue;
+            };
+            if !candidate_is_supported(&normalized_left) || !candidate_is_supported(right) {
+                continue;
+            }
+
+            let correction = format!("{normalized_left} {right}");
+            let span = (start, end);
+            if blocked_spans.contains(&span) || overlaps_existing_span(diagnostics, span) {
+                continue;
+            }
+            if !is_word_boundary(text, span.0, span.1) {
+                continue;
+            }
+            if correction == token || has_same_rewrite(diagnostics, span, &correction) {
+                continue;
+            }
+
+            diagnostics.push(Diagnostic {
+                span,
+                incorrect: token.to_string(),
+                correction,
+                rule: Rule::VarnaVinyasNiyam("3(घ)"),
+                explanation: "शैक्षणिक व्याकरण पदवियोग (ञ): व्यक्ति, जाति, स्थान आदिको शीर्ष नाम जनाउने पद अलग डिकामा लेखिन्छ ।".to_string(),
+                category: DiagnosticCategory::ShuddhaTable,
+                kind: DiagnosticKind::Error,
+                confidence: 0.88,
+                alternate_reasons: Vec::new(),
+            });
+            blocked_spans.insert(span);
+            break;
+        }
+    }
+}
+
+fn split_compound_suffix<'a>(token: &'a str, suffix: &'a str) -> Option<(&'a str, &'a str)> {
+    let idx = token.find(suffix)?;
+    if idx == 0 {
+        return None;
+    }
+    let right = &token[idx..];
+    let left = &token[..idx];
+    if left.is_empty() || right.is_empty() {
+        return None;
+    }
+    Some((left, right))
+}
+
 fn normalize_joined_word(word: &str) -> Option<String> {
     if let Some(diag) = super::check_word(word) {
         if !matches!(diag.kind, DiagnosticKind::Ambiguous) {
@@ -586,6 +834,15 @@ fn normalize_namayogi_variant(word: &str) -> Option<String> {
 fn candidate_is_supported(candidate: &str) -> bool {
     let lex = kosha();
     lex.contains(candidate) || lex.lookup(candidate).is_some() || has_supported_analysis(candidate)
+}
+
+fn candidate_is_name_like(candidate: &str) -> bool {
+    let lex = kosha();
+    let Some(entry) = lex.lookup(candidate) else {
+        return false;
+    };
+
+    entry.pos.contains("नाम") || entry.pos.contains("ना.")
 }
 
 fn left_supports_pratyaya_join(left: &str) -> bool {
