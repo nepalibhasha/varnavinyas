@@ -282,6 +282,28 @@ fn tiryak_direct_pronoun_case_correction_applies_to_split_form() {
 }
 
 #[test]
+fn tiryak_irregular_split_pronoun_forms_keep_kha_rule_attribution() {
+    let diags = check_text("म ले भनें। तँ ले सुनिस्।");
+    let m_le = diags
+        .iter()
+        .find(|d| d.incorrect == "म ले" && d.correction == "मैले")
+        .expect("Expected तिर्यक् correction for म ले");
+    assert!(
+        m_le.explanation.contains("७(ख)"),
+        "Expected ७(ख) explanation for म ले, got: {m_le:?}"
+    );
+
+    let tan_le = diags
+        .iter()
+        .find(|d| d.incorrect == "तँ ले" && d.correction == "तैँले")
+        .expect("Expected तिर्यक् correction for तँ ले");
+    assert!(
+        tan_le.explanation.contains("७(ख)"),
+        "Expected ७(ख) explanation for तँ ले, got: {tan_le:?}"
+    );
+}
+
+#[test]
 fn tiryak_determiner_correction_applies_before_inflected_head_noun() {
     let diags = check_text("अब यो प्रसारणका प्रमुख समाचारहरू सुन्नुहोस्।");
     assert!(
@@ -310,6 +332,29 @@ fn tiryak_subrule_ga_applies_to_possessive_determiners_with_inflected_heads() {
             .any(|d| d.incorrect == "मेरो" && d.correction == "मेरा"),
         "Expected ७(ग) determiner correction before noun with plural suffix, got: {diags:?}"
     );
+}
+
+#[test]
+fn tiryak_subrule_ga_matches_multiple_saishanik_examples() {
+    let diags =
+        check_text("हाम्रो घरमा बसौँ। तिम्रो साथीबाट खबर आयो। उसको किताबहरू हराए। उनको खेलौनाहरू फुटे।");
+    for (incorrect, correction) in [
+        ("हाम्रो", "हाम्रा"),
+        ("तिम्रो", "तिम्रा"),
+        ("उसको", "उसका"),
+        ("उनको", "उनका"),
+    ] {
+        let diag = diags
+            .iter()
+            .find(|d| d.incorrect == incorrect && d.correction == correction)
+            .unwrap_or_else(|| {
+                panic!("Expected ७(ग) example {incorrect} -> {correction}, got: {diags:?}")
+            });
+        assert!(
+            diag.explanation.contains("७(ग)"),
+            "Expected ७(ग) explanation for {incorrect}, got: {diag:?}"
+        );
+    }
 }
 
 #[test]
@@ -769,6 +814,58 @@ fn sarah_join_rule_still_applies() {
             .any(|d| d.incorrect == "बुद्धि सरह" && d.correction == "बुद्धिसरह"),
         "Expected सरह join to remain active, got: {diags:?}"
     );
+}
+
+#[test]
+fn saishanik_swarup_join_applies() {
+    let diags = check_text("फल स्वरूप यो नतिजा आयो।");
+    let diag = diags
+        .iter()
+        .find(|d| d.incorrect == "फल स्वरूप" && d.correction == "फलस्वरूप")
+        .expect("Expected स्वरूप join correction");
+    assert!(
+        diag.explanation.contains("पदयोग (ङ)"),
+        "Expected शैक्षणिक पदयोग (ङ) explanation, got: {diag:?}"
+    );
+}
+
+#[test]
+fn saishanik_namik_kriya_splits_apply() {
+    let diags = check_text("थाहापाउनु राम्रो हो। मनपर्नु सजिलो छैन। मायागर्नु आवश्यक छ।");
+    for (incorrect, correction) in [
+        ("थाहापाउनु", "थाहा पाउनु"),
+        ("मनपर्नु", "मन पर्नु"),
+        ("मायागर्नु", "माया गर्नु"),
+    ] {
+        let diag = diags
+            .iter()
+            .find(|d| d.incorrect == incorrect && d.correction == correction)
+            .unwrap_or_else(|| {
+                panic!("Expected नामिक क्रिया split {incorrect} -> {correction}, got: {diags:?}")
+            });
+        assert!(
+            diag.explanation.contains("पदवियोग (घ)"),
+            "Expected शैक्षणिक पदवियोग (घ) explanation for {incorrect}, got: {diag:?}"
+        );
+    }
+}
+
+#[test]
+fn saishanik_gari_splits_apply() {
+    let diags = check_text("बुझिनेगरी सम्झाऊ। ढिलोगरी नआऊ।");
+    for (incorrect, correction) in [("बुझिनेगरी", "बुझिने गरी"), ("ढिलोगरी", "ढिलो गरी")]
+    {
+        let diag = diags
+            .iter()
+            .find(|d| d.incorrect == incorrect && d.correction == correction)
+            .unwrap_or_else(|| {
+                panic!("Expected गरी split {incorrect} -> {correction}, got: {diags:?}")
+            });
+        assert!(
+            diag.explanation.contains("पदवियोग (ङ)"),
+            "Expected शैक्षणिक पदवियोग (ङ) explanation for {incorrect}, got: {diag:?}"
+        );
+    }
 }
 
 #[test]

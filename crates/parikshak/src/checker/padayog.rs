@@ -26,6 +26,7 @@ const NAMAYOGI_TOKENS: &[&str] = &[
     "बमोजिम",
 ];
 const COMPARISON_SPLIT_TOKENS: &[&str] = &["जस्तो", "जस्तै", "जत्रो", "जसरी"];
+const NAMIK_KRIYA_SPLIT_TOKENS: &[&str] = &["पाउनु", "गर्नु", "पर्नु", "फाल्नु"];
 
 pub(crate) fn add_padayog_padabiyog_diagnostics(
     text: &str,
@@ -104,6 +105,9 @@ pub(crate) fn add_generalized_padayog_padabiyog_diagnostics(
     add_generalized_padabiyog_subrule_12_shirsha_nam_split(text, blocked_spans, diagnostics);
     add_generalized_padabiyog_subrule_13_visheshan_nam_split(text, blocked_spans, diagnostics);
     add_generalized_saishanik_comparison_split(text, blocked_spans, diagnostics);
+    add_generalized_saishanik_swarup_join(text, blocked_spans, diagnostics);
+    add_generalized_saishanik_namik_kriya_split(text, blocked_spans, diagnostics);
+    add_generalized_saishanik_gari_split(text, blocked_spans, diagnostics);
 }
 
 fn add_generalized_padayog_subrule_1_upasarga_join(
@@ -376,6 +380,165 @@ fn add_generalized_saishanik_comparison_split(
     }
 }
 
+fn add_generalized_saishanik_swarup_join(
+    text: &str,
+    blocked_spans: &mut HashSet<(usize, usize)>,
+    diagnostics: &mut Vec<Diagnostic>,
+) {
+    let segments = whitespace_segments(text);
+
+    for pair in segments.windows(2) {
+        let (left, lstart, _) = pair[0];
+        let (right, _, rend) = pair[1];
+        if !is_devanagari_word(left) || !is_devanagari_word(right) || is_numeric_segment(left) {
+            continue;
+        }
+        if right != "स्वरूप" {
+            continue;
+        }
+
+        let Some(normalized_left) = normalize_joined_word(left) else {
+            continue;
+        };
+        let correction = format!("{normalized_left}स्वरूप");
+        let span = (lstart, rend);
+        if blocked_spans.contains(&span) || overlaps_existing_span(diagnostics, span) {
+            continue;
+        }
+        if !is_word_boundary(text, span.0, span.1) {
+            continue;
+        }
+        if correction == text[span.0..span.1] {
+            continue;
+        }
+        if !candidate_is_supported(&correction) {
+            continue;
+        }
+
+        diagnostics.push(Diagnostic {
+            span,
+            incorrect: text[span.0..span.1].to_string(),
+            correction,
+            rule: Rule::VarnaVinyasNiyam("3(घ)"),
+            explanation: "शैक्षणिक व्याकरण पदयोग (ङ): रूपमा/रूपले भन्ने अभिप्रायमा आउने स्वरूप शब्द अघिल्लो नामिक अंशसँग जोडेर लेखिन्छ ।".to_string(),
+            category: DiagnosticCategory::ShuddhaTable,
+            kind: DiagnosticKind::Error,
+            confidence: 0.93,
+            alternate_reasons: Vec::new(),
+        });
+        blocked_spans.insert(span);
+    }
+}
+
+fn add_generalized_saishanik_namik_kriya_split(
+    text: &str,
+    blocked_spans: &mut HashSet<(usize, usize)>,
+    diagnostics: &mut Vec<Diagnostic>,
+) {
+    let segments = whitespace_segments(text);
+
+    for (token, start, end) in segments {
+        if !is_devanagari_word(token) || is_numeric_segment(token) {
+            continue;
+        }
+
+        for &suffix in NAMIK_KRIYA_SPLIT_TOKENS {
+            let Some(left) = token.strip_suffix(suffix) else {
+                continue;
+            };
+            if left.is_empty() {
+                continue;
+            }
+
+            let Some(normalized_left) = normalize_joined_word(left) else {
+                continue;
+            };
+            let correction = format!("{normalized_left} {suffix}");
+            let span = (start, end);
+            if blocked_spans.contains(&span) || overlaps_existing_span(diagnostics, span) {
+                continue;
+            }
+            if !is_word_boundary(text, span.0, span.1) {
+                continue;
+            }
+            if correction == token || !candidate_is_supported(&normalized_left) {
+                continue;
+            }
+            if has_same_rewrite(diagnostics, span, &correction) {
+                continue;
+            }
+
+            diagnostics.push(Diagnostic {
+                span,
+                incorrect: token.to_string(),
+                correction,
+                rule: Rule::VarnaVinyasNiyam("3(घ)"),
+                explanation:
+                    "शैक्षणिक व्याकरण पदवियोग (घ): यस्तै नामिक क्रियासँग आउने नाम अलग डिकामा लेखिन्छन् ।"
+                        .to_string(),
+                category: DiagnosticCategory::ShuddhaTable,
+                kind: DiagnosticKind::Error,
+                confidence: 0.91,
+                alternate_reasons: Vec::new(),
+            });
+            blocked_spans.insert(span);
+            break;
+        }
+    }
+}
+
+fn add_generalized_saishanik_gari_split(
+    text: &str,
+    blocked_spans: &mut HashSet<(usize, usize)>,
+    diagnostics: &mut Vec<Diagnostic>,
+) {
+    let segments = whitespace_segments(text);
+
+    for (token, start, end) in segments {
+        if !is_devanagari_word(token) || is_numeric_segment(token) {
+            continue;
+        }
+
+        let Some(left) = token.strip_suffix("गरी") else {
+            continue;
+        };
+        if left.is_empty() {
+            continue;
+        }
+
+        let Some(normalized_left) = normalize_joined_word(left) else {
+            continue;
+        };
+        let correction = format!("{normalized_left} गरी");
+        let span = (start, end);
+        if blocked_spans.contains(&span) || overlaps_existing_span(diagnostics, span) {
+            continue;
+        }
+        if !is_word_boundary(text, span.0, span.1) {
+            continue;
+        }
+        if correction == token || !candidate_is_supported(&normalized_left) {
+            continue;
+        }
+        if has_same_rewrite(diagnostics, span, &correction) {
+            continue;
+        }
+
+        diagnostics.push(Diagnostic {
+            span,
+            incorrect: token.to_string(),
+            correction,
+            rule: Rule::VarnaVinyasNiyam("3(घ)"),
+            explanation: "शैक्षणिक व्याकरण पदवियोग (ङ): रीति जनाउने इकारान्त क्रियालाई अघिल्लो शब्दसँग पदवियोग गरी लेखिन्छ ।".to_string(),
+            category: DiagnosticCategory::ShuddhaTable,
+            kind: DiagnosticKind::Error,
+            confidence: 0.9,
+            alternate_reasons: Vec::new(),
+        });
+        blocked_spans.insert(span);
+    }
+}
+
 fn normalize_joined_word(word: &str) -> Option<String> {
     if let Some(diag) = super::check_word(word) {
         if !matches!(diag.kind, DiagnosticKind::Ambiguous) {
@@ -418,6 +581,11 @@ fn normalize_namayogi_variant(word: &str) -> Option<String> {
     }
 
     None
+}
+
+fn candidate_is_supported(candidate: &str) -> bool {
+    let lex = kosha();
+    lex.contains(candidate) || lex.lookup(candidate).is_some() || has_supported_analysis(candidate)
 }
 
 fn left_supports_pratyaya_join(left: &str) -> bool {

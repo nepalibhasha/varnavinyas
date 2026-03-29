@@ -26,6 +26,9 @@ const SUBRULE_KHA_PRONOUN_STEMS: &[(&str, &str)] = &[
 const SUBRULE_KHA_SURFACE_CORRECTIONS: &[(&str, &str)] =
     &[("मले", "मैले"), ("तँले", "तैँले"), ("तैले", "तैँले")];
 
+const SUBRULE_KHA_SPLIT_SURFACE_CORRECTIONS: &[(&str, &str, &str)] =
+    &[("म", "ले", "मैले"), ("तँ", "ले", "तैँले"), ("तै", "ले", "तैँले")];
+
 const SUBRULE_GA_DETERMINERS: &[(&str, &str)] = &[
     ("यो", "यस"),
     ("त्यो", "त्यस"),
@@ -217,6 +220,10 @@ fn classify_joined_surface(surface: &str) -> Option<(TiryakSubrule, String)> {
 }
 
 fn classify_split_pair(left_surface: &str, right_surface: &str) -> Option<(TiryakSubrule, String)> {
+    if let Some(correction) = subrule_kha_split_surface_correction(left_surface, right_surface) {
+        return Some((TiryakSubrule::Kha, correction));
+    }
+
     if let Some(correction) = subrule_ka_pair_correction(left_surface, right_surface) {
         return Some((TiryakSubrule::Ka, correction));
     }
@@ -226,6 +233,15 @@ fn classify_split_pair(left_surface: &str, right_surface: &str) -> Option<(Tirya
     }
 
     None
+}
+
+fn subrule_kha_split_surface_correction(left_surface: &str, right_surface: &str) -> Option<String> {
+    SUBRULE_KHA_SPLIT_SURFACE_CORRECTIONS.iter().find_map(
+        |(incorrect_left, incorrect_right, correct)| {
+            (*incorrect_left == left_surface && *incorrect_right == right_surface)
+                .then_some((*correct).to_string())
+        },
+    )
 }
 
 fn subrule_ka_pair_correction(left_surface: &str, right_surface: &str) -> Option<String> {
@@ -372,6 +388,15 @@ mod tests {
     fn expanded_pronoun_surface_correction_applies() {
         let token = tokenize_analyzed("मले").into_iter().next().unwrap();
         let analysis = analyze_joined_token("मले", &token).unwrap();
+        assert_eq!(analysis.subrule, TiryakSubrule::Kha);
+        assert_eq!(analysis.correction, "मैले");
+    }
+
+    #[test]
+    fn split_pronoun_surface_correction_applies() {
+        let text = "म ले";
+        let tokens = tokenize_analyzed(text);
+        let analysis = analyze_split_pair(text, &tokens[0], &tokens[1]).unwrap();
         assert_eq!(analysis.subrule, TiryakSubrule::Kha);
         assert_eq!(analysis.correction, "मैले");
     }
