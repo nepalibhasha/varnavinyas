@@ -955,6 +955,34 @@ fn saishanik_title_name_splits_apply() {
 }
 
 #[test]
+fn saishanik_multiword_samasa_splits_apply() {
+    let diags = check_text(
+        "नेपालपत्रकारमहासङ्घ, नेपालप्रज्ञाप्रतिष्ठान, मानवअधिकारआयोग, लोकसेवाआयोग, अख्तियारदुरुपयोगअनुसन्धानआयोग, नेपालविद्युत्प्राधिकरण।",
+    );
+    for (incorrect, correction) in [
+        ("नेपालपत्रकारमहासङ्घ", "नेपाल पत्रकार महासङ्घ"),
+        ("नेपालप्रज्ञाप्रतिष्ठान", "नेपाल प्रज्ञा-प्रतिष्ठान"),
+        ("मानवअधिकारआयोग", "मानव अधिकार आयोग"),
+        ("लोकसेवाआयोग", "लोक सेवा आयोग"),
+        ("अख्तियारदुरुपयोगअनुसन्धानआयोग", "अख्तियार दुरुपयोग अनुसन्धान आयोग"),
+        ("नेपालविद्युत्प्राधिकरण", "नेपाल विद्युत् प्राधिकरण"),
+    ] {
+        let diag = diags
+            .iter()
+            .find(|d| d.incorrect == incorrect && d.correction == correction)
+            .unwrap_or_else(|| {
+                panic!(
+                    "Expected multiword samasa split {incorrect} -> {correction}, got: {diags:?}"
+                )
+            });
+        assert!(
+            diag.explanation.contains("पदवियोग (ट)"),
+            "Expected शैक्षणिक पदवियोग (ट) explanation for {incorrect}, got: {diag:?}"
+        );
+    }
+}
+
+#[test]
 fn saishanik_vibhakti_pachhi_namayogi_splits_apply() {
     let diags = check_text("दीपेशकानिम्ति, सोनमकालागि, बाटोदेखिमाथि, मामाकोसमेत, उसकोभन्दा।");
     for (incorrect, correction) in [

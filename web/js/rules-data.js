@@ -413,6 +413,13 @@ export const RULES_SECTIONS = [
         examples: ['मुगुजिल्ला -> मुगु जिल्ला', 'राराताल -> रारा ताल'],
       },
       {
+        id: 'saishanik-padabiyog-ta-multiword-samasa',
+        label: 'शैक्षणिक पदवियोग (ट)',
+        status: 'implemented',
+        summary: 'दुईभन्दा बढी शब्दबाट बनेका समस्त शब्द पदवियोग गरी लेखिन्छन्।',
+        examples: ['लोकसेवाआयोग -> लोक सेवा आयोग', 'नेपालविद्युत्प्राधिकरण -> नेपाल विद्युत् प्राधिकरण'],
+      },
+      {
         id: 'style',
         label: 'शैलीगत/प्रयोगगत सुधार',
         status: 'partial',
@@ -507,6 +514,7 @@ const TARGET_MATCHERS = {
     { test: /शैक्षणिक व्याकरण पदवियोग \(छ\).*जना शब्द अलग डिकामा/, targetId: 'saishanik-padabiyog-cha-jana' },
     { test: /शैक्षणिक व्याकरण पदवियोग \(ज\).*विभाजक 'न'/, targetId: 'saishanik-padabiyog-ja-divisive-na' },
     { test: /शैक्षणिक व्याकरण पदवियोग \(ञ\).*शीर्ष नाम/, targetId: 'saishanik-padabiyog-nya-title' },
+    { test: /शैक्षणिक व्याकरण पदवियोग \(ट\).*दुईभन्दा बढी शब्दबाट बनेका समस्त शब्द/, targetId: 'saishanik-padabiyog-ta-multiword-samasa' },
     { test: /पदयोग/, targetId: 'padayog' },
     { test: /पदवियोग/, targetId: 'padabiyog' },
     { test: /section4-phrase-style/, targetId: 'style' },

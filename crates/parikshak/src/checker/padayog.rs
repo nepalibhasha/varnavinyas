@@ -43,6 +43,9 @@ const INSTITUTIONAL_SPLIT_TOKENS: &[&str] = &[
 const TITLE_NAME_SPLIT_TOKENS: &[&str] =
     &["जिल्ला", "ताल", "नदी", "जाति", "समाज", "वर्ग", "धर्म", "महिना"];
 const EKARTHI_JOIN_RIGHT_TOKENS: &[&str] = &["मन्त्री", "कामना", "यात्रा", "पुर", "कोट", "विद्यालय"];
+const MULTIWORD_SAMASA_FINAL_TOKENS: &[&str] = &["आयोग", "प्राधिकरण", "महासङ्घ", "प्रतिष्ठान"];
+const HYPHENATED_MULTIWORD_TAILS: &[(&str, &str, &str)] =
+    &[("प्रज्ञा", "प्रतिष्ठान", "प्रज्ञा-प्रतिष्ठान")];
 
 pub(crate) fn add_padayog_padabiyog_diagnostics(
     text: &str,
@@ -128,6 +131,7 @@ pub(crate) fn add_generalized_padayog_padabiyog_diagnostics(
     add_generalized_saishanik_gari_split(text, blocked_spans, diagnostics);
     add_generalized_saishanik_jana_split(text, blocked_spans, diagnostics);
     add_generalized_saishanik_divisive_na_split(text, blocked_spans, diagnostics);
+    add_generalized_saishanik_multiword_samasa_split(text, blocked_spans, diagnostics);
     add_generalized_saishanik_institutional_split(text, blocked_spans, diagnostics);
     add_generalized_saishanik_title_name_split(text, blocked_spans, diagnostics);
 }
@@ -1041,6 +1045,54 @@ fn add_generalized_saishanik_title_name_split(
     }
 }
 
+fn add_generalized_saishanik_multiword_samasa_split(
+    text: &str,
+    blocked_spans: &mut HashSet<(usize, usize)>,
+    diagnostics: &mut Vec<Diagnostic>,
+) {
+    let segments = whitespace_segments(text);
+
+    for (token, start, end) in segments {
+        if !is_devanagari_word(token) || is_numeric_segment(token) {
+            continue;
+        }
+
+        let Some(parts) = segment_multiword_samasa(token, 4) else {
+            continue;
+        };
+        if parts.len() < 3 {
+            continue;
+        }
+
+        let correction = render_multiword_samasa(&parts);
+        let span = (start, end);
+        if blocked_spans.contains(&span) || overlaps_existing_span(diagnostics, span) {
+            continue;
+        }
+        if !is_word_boundary(text, span.0, span.1) {
+            continue;
+        }
+        if correction == token || has_same_rewrite(diagnostics, span, &correction) {
+            continue;
+        }
+
+        diagnostics.push(Diagnostic {
+            span,
+            incorrect: token.to_string(),
+            correction,
+            rule: Rule::VarnaVinyasNiyam("3(घ)"),
+            explanation:
+                "शैक्षणिक व्याकरण पदवियोग (ट): दुईभन्दा बढी शब्दबाट बनेका समस्त शब्द पदवियोग गरी लेखिन्छन् ।"
+                    .to_string(),
+            category: DiagnosticCategory::ShuddhaTable,
+            kind: DiagnosticKind::Error,
+            confidence: 0.89,
+            alternate_reasons: Vec::new(),
+        });
+        blocked_spans.insert(span);
+    }
+}
+
 fn split_compound_suffix<'a>(token: &'a str, suffix: &'a str) -> Option<(&'a str, &'a str)> {
     let idx = token.find(suffix)?;
     if idx == 0 {
@@ -1071,6 +1123,79 @@ fn split_exact_reduplication(token: &str) -> Option<(&str, &str)> {
         return None;
     }
     Some((left, right))
+}
+
+fn segment_multiword_samasa(token: &str, max_parts: usize) -> Option<Vec<String>> {
+    fn recurse(token: &str, start: usize, max_parts: usize, out: &mut Vec<String>) -> bool {
+        if out.len() >= max_parts {
+            return false;
+        }
+        if start == token.len() {
+            return out.len() >= 3
+                && out
+                    .last()
+                    .is_some_and(|tail| MULTIWORD_SAMASA_FINAL_TOKENS.contains(&tail.as_str()));
+        }
+
+        let mut split_points: Vec<usize> = token
+            .char_indices()
+            .map(|(idx, _)| idx)
+            .filter(|&idx| idx > start)
+            .collect();
+        split_points.reverse();
+
+        for idx in split_points {
+            let part = &token[start..idx];
+            if part.chars().count() < 2 {
+                continue;
+            }
+            if !candidate_is_supported(part) && !candidate_is_name_like(part) {
+                continue;
+            }
+
+            out.push(part.to_string());
+            if recurse(token, idx, max_parts, out) {
+                return true;
+            }
+            out.pop();
+        }
+
+        let tail = &token[start..];
+        if tail.chars().count() >= 2
+            && (candidate_is_supported(tail) || candidate_is_name_like(tail))
+            && MULTIWORD_SAMASA_FINAL_TOKENS.contains(&tail)
+        {
+            out.push(tail.to_string());
+            if out.len() >= 3 {
+                return true;
+            }
+            out.pop();
+        }
+
+        false
+    }
+
+    let mut parts = Vec::new();
+    if recurse(token, 0, max_parts, &mut parts) {
+        Some(parts)
+    } else {
+        None
+    }
+}
+
+fn render_multiword_samasa(parts: &[String]) -> String {
+    if parts.len() >= 2 {
+        let last_idx = parts.len() - 1;
+        for &(left, right, rendered) in HYPHENATED_MULTIWORD_TAILS {
+            if parts[last_idx - 1] == left && parts[last_idx] == right {
+                let mut rendered_parts = parts[..last_idx - 1].to_vec();
+                rendered_parts.push(rendered.to_string());
+                return rendered_parts.join(" ");
+            }
+        }
+    }
+
+    parts.join(" ")
 }
 
 fn normalize_joined_word(word: &str) -> Option<String> {
