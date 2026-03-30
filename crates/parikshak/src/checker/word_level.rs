@@ -94,6 +94,12 @@ fn has_supported_productive_verb_form(word: &str, lex: &varnavinyas_kosha::Kosha
         }
     }
 
+    if let Some(stem) = word.strip_suffix("यो") {
+        if stem.chars().count() >= 2 && has_known_infinitive_candidate(stem, lex) {
+            return true;
+        }
+    }
+
     false
 }
 

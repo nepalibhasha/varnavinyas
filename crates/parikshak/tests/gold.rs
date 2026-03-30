@@ -1,5 +1,5 @@
 use serde::Deserialize;
-use varnavinyas_parikshak::check_word;
+use varnavinyas_parikshak::{check_text, check_word};
 
 #[derive(Debug, Deserialize)]
 struct GoldEntry {
@@ -31,6 +31,8 @@ struct GoldData {
     ya_e: Vec<GoldEntry>,
     #[serde(default)]
     ksha_chhya: Vec<GoldEntry>,
+    #[serde(default)]
+    paragraph_correction: Vec<GoldEntry>,
 }
 
 fn load_gold() -> GoldData {
@@ -48,6 +50,14 @@ fn word_entries(data: &GoldData) -> Vec<&GoldEntry> {
         .chain(&data.ya_e)
         .chain(&data.ksha_chhya)
         .collect()
+}
+
+fn paragraph_entries(data: &GoldData) -> Vec<&GoldEntry> {
+    data.paragraph_correction.iter().collect()
+}
+
+fn is_phrase_like_form(form: &str) -> bool {
+    form.contains(' ') || form.contains('-') || form.contains('–') || form.contains('—')
 }
 
 /// No false positives: correct forms should NOT produce diagnostics.
@@ -137,4 +147,61 @@ fn lexicon_present_misspellings_still_caught() {
             diag.correction
         );
     }
+}
+
+#[test]
+fn gold_paragraph_correct_forms_no_false_positives() {
+    let data = load_gold();
+    let entries = paragraph_entries(&data);
+
+    let mut false_positives = Vec::new();
+    for entry in &entries {
+        if is_phrase_like_form(&entry.correct) {
+            let diags = check_text(&entry.correct);
+            if !diags.is_empty() {
+                false_positives.push(format!("  {} (flagged as {:?})", entry.correct, diags));
+            }
+        } else if let Some(diag) = check_word(&entry.correct) {
+            false_positives.push(format!(
+                "  {} (flagged as → {})",
+                entry.correct, diag.correction
+            ));
+        }
+    }
+
+    assert!(
+        false_positives.is_empty(),
+        "False positives on correct paragraph forms:\n{}",
+        false_positives.join("\n")
+    );
+}
+
+#[test]
+fn gold_paragraph_incorrect_forms_detected() {
+    let data = load_gold();
+    let entries = paragraph_entries(&data);
+
+    let mut missed = Vec::new();
+    for entry in &entries {
+        let text_matched = check_text(&entry.incorrect)
+            .iter()
+            .any(|d| d.correction == entry.correct);
+        let word_matched = if !is_phrase_like_form(&entry.incorrect) {
+            check_word(&entry.incorrect)
+                .map(|d| d.correction == entry.correct)
+                .unwrap_or(false)
+        } else {
+            false
+        };
+        let matched = text_matched || word_matched;
+        if !matched {
+            missed.push(format!("  {} → {}", entry.incorrect, entry.correct));
+        }
+    }
+
+    assert!(
+        missed.is_empty(),
+        "Missed paragraph-level corrections:\n{}",
+        missed.join("\n")
+    );
 }

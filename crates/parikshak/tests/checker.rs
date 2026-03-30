@@ -1036,6 +1036,15 @@ fn saishanik_sarthak_dwitva_splits_apply_generally() {
 }
 
 #[test]
+fn productive_yo_verb_forms_do_not_trigger_nearby_fallback() {
+    let diags = check_text("हिँड्यो हिँड्यो।");
+    assert!(
+        diags.is_empty(),
+        "Expected productive यो-verb forms to be accepted without fallback noise, got: {diags:?}"
+    );
+}
+
+#[test]
 fn saishanik_jana_split_applies_beyond_fixed_examples() {
     let diags = check_text("आठजना विद्यार्थी, दशजना मान्छे, पाँचजना केटा आए।");
     for (incorrect, correction) in [

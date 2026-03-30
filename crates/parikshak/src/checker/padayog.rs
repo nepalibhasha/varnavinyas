@@ -856,6 +856,12 @@ fn add_generalized_saishanik_middle_name_join(
         {
             continue;
         }
+        if TITLE_NAME_SPLIT_TOKENS.contains(&right)
+            || INSTITUTIONAL_SPLIT_TOKENS.contains(&right)
+            || MULTIWORD_SAMASA_FINAL_TOKENS.contains(&right)
+        {
+            continue;
+        }
 
         let correction = format!("{joined} {right}");
         let span = (lstart, rend);
