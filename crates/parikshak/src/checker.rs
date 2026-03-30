@@ -14,6 +14,7 @@ mod context;
 mod grammar;
 mod padayog;
 mod padayog_rules;
+mod particles;
 mod punctuation;
 mod style_variants;
 mod tiryak;

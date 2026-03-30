@@ -1092,19 +1092,20 @@ fn saishanik_divisive_na_split_applies_to_nominal_chunks() {
 #[test]
 fn saishanik_nipat_split_applies_to_school_grammar_examples() {
     let diags = check_text(
-        "त्योत गयो। ऊनि जान्छ। रामनै चिकित्सक हो। बहिनीपो आई। हरिझैँ देखियो। दीपकचाहिँ मसँग रिसायो। केटोमात्र चौरमा दौड्यो। ऊ कहिले आउँछखै? यति पाठ पढल। तिमी घर जाऊत।",
+        "त्योत गयो। ऊनि जान्छ। रामनै चिकित्सक हो। बहिनीपो आई। हरिझैँ देखियो। दीपकचाहिँ मसँग रिसायो। केटोमात्र चौरमा दौड्यो। ऊ कहिले आउँछखै? यति पाठ पढल। तिमी घर जाऊत। आयोअरे। गयोक्या?",
     );
-    for (incorrect, correction) in [
-        ("त्योत", "त्यो त"),
-        ("ऊनि", "ऊ नि"),
-        ("रामनै", "राम नै"),
-        ("बहिनीपो", "बहिनी पो"),
-        ("हरिझैँ", "हरि झैँ"),
-        ("दीपकचाहिँ", "दीपक चाहिँ"),
-        ("केटोमात्र", "केटो मात्र"),
-        ("आउँछखै", "आउँछ खै"),
-        ("पढल", "पढ ल"),
-        ("जाऊत", "जाऊ त"),
+    for (incorrect, correction, explanation_fragment) in [
+        ("त्योत", "त्यो त", "शब्दाश्रित"),
+        ("ऊनि", "ऊ नि", "शब्दाश्रित"),
+        ("रामनै", "राम नै", "शब्दाश्रित"),
+        ("बहिनीपो", "बहिनी पो", "शब्दाश्रित"),
+        ("हरिझैँ", "हरि झैँ", "शब्दाश्रित"),
+        ("दीपकचाहिँ", "दीपक चाहिँ", "शब्दाश्रित"),
+        ("आउँछखै", "आउँछ खै", "वाक्याश्रित"),
+        ("पढल", "पढ ल", "शब्दाश्रित"),
+        ("जाऊत", "जाऊ त", "शब्दाश्रित"),
+        ("आयोअरे", "आयो अरे", "वाक्याश्रित"),
+        ("गयोक्या", "गयो क्या", "वाक्याश्रित"),
     ] {
         let diag = diags
             .iter()
@@ -1116,12 +1117,25 @@ fn saishanik_nipat_split_applies_to_school_grammar_examples() {
             diag.explanation.contains("पदवियोग (च)"),
             "Expected शैक्षणिक पदवियोग (च) explanation for {incorrect}, got: {diag:?}"
         );
+        assert!(
+            diag.explanation.contains(explanation_fragment),
+            "Expected {explanation_fragment} निपात explanation for {incorrect}, got: {diag:?}"
+        );
     }
     assert!(
         diags
             .iter()
             .all(|d| !(d.incorrect == "ऊनि" && !d.explanation.contains("पदवियोग (च)"))),
         "Specific निपात rule should suppress weaker same-span diagnostics on ऊनि, got: {diags:?}"
+    );
+}
+
+#[test]
+fn saishanik_nipat_split_does_not_split_lexicalized_kunai() {
+    let diags = check_text("कुनै व्यक्ति आएन।");
+    assert!(
+        diags.iter().all(|d| d.incorrect != "कुनै"),
+        "Expected lexicalized word कुनै to avoid nipat split false positive, got: {diags:?}"
     );
 }
 

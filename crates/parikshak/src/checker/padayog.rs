@@ -11,6 +11,7 @@ use super::common::{
     whitespace_segments,
 };
 use super::padayog_rules::PADAYOG_PADABIYOG_RULES;
+use super::particles::add_nipat_split_diagnostics;
 
 const VIBHAKTI_TOKENS: &[&str] = &["ले", "लाई", "को", "बाट", "देखि", "मा", "का", "की"];
 const PRATYAYA_TOKENS: &[&str] = &["ज्यू"];
@@ -29,7 +30,6 @@ const PADABIYOG_VIBHAKTI_NAMAYOGI_SPLIT_TOKENS: &[&str] =
     &["अगाडि", "पछाडि", "माथि", "समेत", "भन्दा", "लागि", "निम्ति"];
 const COMPARISON_SPLIT_TOKENS: &[&str] = &["जस्तो", "जस्तै", "जत्रो", "जसरी"];
 const NAMIK_KRIYA_SPLIT_TOKENS: &[&str] = &["पाउनु", "गर्नु", "पर्नु", "फाल्नु"];
-const NIPAT_SPLIT_TOKENS: &[&str] = &["चाहिँ", "मात्र", "झैँ", "खै", "नै", "पो", "नि", "त", "ल"];
 const INSTITUTIONAL_SPLIT_TOKENS: &[&str] = &[
     "मन्त्रालय",
     "सरकार",
@@ -306,70 +306,7 @@ fn add_generalized_padabiyog_subrule_4_nipat_split(
     blocked_spans: &mut HashSet<(usize, usize)>,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
-    let segments = whitespace_segments(text);
-
-    for (token, start, end) in segments {
-        if !is_devanagari_word(token) || is_numeric_segment(token) {
-            continue;
-        }
-
-        for &suffix in NIPAT_SPLIT_TOKENS {
-            let Some(left) = token.strip_suffix(suffix) else {
-                continue;
-            };
-            if left.is_empty() {
-                continue;
-            }
-
-            let normalized_left = normalize_joined_word(left).unwrap_or_else(|| left.to_string());
-            if !candidate_is_supported(left) && !candidate_is_supported(&normalized_left) {
-                continue;
-            }
-
-            // Very short particles are too risky to split unless the joined form
-            // is otherwise unsupported and the left side is substantial enough.
-            if matches!(suffix, "त" | "ल") && normalized_left.chars().count() < 2 {
-                continue;
-            }
-            if matches!(suffix, "त" | "ल" | "नि") && candidate_is_supported(token) {
-                continue;
-            }
-
-            let correction = format!("{left} {suffix}");
-            let span = (start, end);
-            let overlaps_other_span = diagnostics
-                .iter()
-                .filter(|d| !matches!(d.kind, DiagnosticKind::Ambiguous))
-                .any(|d| d.span != span && d.span.0 < span.1 && span.0 < d.span.1);
-            if overlaps_other_span {
-                continue;
-            }
-            if !is_word_boundary(text, span.0, span.1) {
-                continue;
-            }
-            if correction == token || has_same_rewrite(diagnostics, span, &correction) {
-                continue;
-            }
-
-            diagnostics.push(Diagnostic {
-                span,
-                incorrect: token.to_string(),
-                correction,
-                rule: Rule::VarnaVinyasNiyam("3(घ)"),
-                explanation: "शैक्षणिक व्याकरण पदवियोग (च): निपातहरू पदवियोग गरी लेखिन्छन् ।".to_string(),
-                category: DiagnosticCategory::ShuddhaTable,
-                kind: DiagnosticKind::Error,
-                confidence: if matches!(suffix, "त" | "ल" | "नि") {
-                    0.86
-                } else {
-                    0.9
-                },
-                alternate_reasons: Vec::new(),
-            });
-            blocked_spans.insert(span);
-            break;
-        }
-    }
+    add_nipat_split_diagnostics(text, blocked_spans, diagnostics);
 }
 
 fn add_generalized_padabiyog_subrule_5_n_samyogak_split(

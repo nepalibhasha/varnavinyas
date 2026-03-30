@@ -388,8 +388,8 @@ export const RULES_SECTIONS = [
         id: 'saishanik-padabiyog-ca-nipat',
         label: 'शैक्षणिक पदवियोग (च)',
         status: 'implemented',
-        summary: 'निपातहरू पदवियोग गरी लेखिन्छन्।',
-        examples: ['रामनै -> राम नै', 'दीपकचाहिँ -> दीपक चाहिँ'],
+        summary: 'शब्दाश्रित र वाक्याश्रित निपातहरू पदवियोग गरी लेखिन्छन्।',
+        examples: ['रामनै -> राम नै', 'आउँछखै -> आउँछ खै'],
       },
       {
         id: 'saishanik-padabiyog-cha-jana',
