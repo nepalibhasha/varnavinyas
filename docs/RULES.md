@@ -4,11 +4,19 @@ Varnavinyas encodes the rules of the **Nepali Orthography Standard (नेपा
 
 ## Sources
 
-One of the key sources we leverage is the Nepal Academy orthography standard published by the Ministry of Federal Affairs and General Administration (MoFAGA):
+The rule layer currently uses two authoritative Academy references:
+
+1. The Nepal Academy orthography standard published by the Ministry of Federal Affairs and General Administration (MoFAGA):
 
 **[https://mofaga.gov.np/notice-file/Notices-20211029142422901.pdf](https://mofaga.gov.np/notice-file/Notices-20211029142422901.pdf)**
 
-A local excerpt/reference is kept at `docs/Notices-pages-77-99.md` (pages 77–99 of the notice).
+Local excerpt/reference: `docs/Notices-pages-77-99.md` (pages 77–99 of the notice).
+
+2. The school-grammar reference used for additional and sometimes conflicting spacing/morphosyntactic guidance:
+
+`docs/PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md`
+
+When these two sources conflict, the repo currently follows the source policy in `docs/RULE_SOURCE_POLICY.md`, which prefers `PS-Saisanik...` for the known conflict set.
 
 ## Rule Categories
 
@@ -71,4 +79,4 @@ When a rule is violated, the system produces a `Diagnostic` containing:
 
 To ensure our diagnostics match the standard:
 *   We allow `kosha` (the lexicon) to override algorithmic rules for specific exceptions listed in Section 4.
-*   Algorithmic rules in `prakriya` are tested against the `gold.toml` dataset to ensure they produce the expected output for known cases.
+*   Algorithmic rules in `prakriya` and phrase/context rules in `parikshak` are tested against the `gold.toml` dataset to ensure they produce the expected output for known cases from both authoritative sources.

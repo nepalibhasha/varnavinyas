@@ -188,7 +188,8 @@ Key docs:
 - [docs/RULES.md](docs/RULES.md) — rule implementation notes
 - [docs/STATUS.md](docs/STATUS.md) — current feature matrix
 - [docs/EXTENSION_WASM_CONTRACT.md](docs/EXTENSION_WASM_CONTRACT.md) — downstream browser artifact release and WASM contract
-- [docs/Notices-pages-77-99.md](docs/Notices-pages-77-99.md) — Academy reference used for rule alignment
+- [docs/Notices-pages-77-99.md](docs/Notices-pages-77-99.md) — Academy notice excerpt used for rule alignment
+- [docs/PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md](docs/PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md) — Academy school-grammar reference also used for rule alignment
 
 Crate-specific architecture docs:
 - [crates/prakriya/ARCHITECTURE.md](crates/prakriya/ARCHITECTURE.md)

@@ -22,7 +22,7 @@ CI regression gate
 
 *   **`gold.toml`** (The Ground Truth)
     *   Contains verified Correct/Incorrect pairs.
-    *   **Source**: Directly cited from the Nepal Academy Orthography Standard.
+    *   **Source**: Directly cited from the authoritative Academy references used by this repo.
     *   **Usage**: CI tests fail if any entry here is not handled correctly.
 
 *   **`needs_review.toml`** (The Holding Area)
@@ -61,8 +61,11 @@ Usage in Varnavinyas:
 
 Every entry in our datasets must have a traceback to an authoritative source.
 
-1.  **Key Source**: *Nepal Academy Orthography Standard* — published by MoFAGA ([PDF](https://mofaga.gov.np/notice-file/Notices-20211029142422901.pdf)). Local excerpt/reference: `docs/Notices-pages-77-99.md`.
+1.  **Primary Sources**:
+    *   *Nepal Academy Orthography Standard* — published by MoFAGA ([PDF](https://mofaga.gov.np/notice-file/Notices-20211029142422901.pdf)). Local excerpt/reference: `docs/Notices-pages-77-99.md`.
+    *   *PS-Saisanik Vyakaran Varnavinyas* local reference: `docs/PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md`.
 2.  **Secondary Sources**: *LDTA Training Materials* (Government training docs).
+3.  **Conflict policy**: when the Academy notice excerpt and `PS-Saisanik...` conflict, this repo currently prefers `PS-Saisanik...` and records the resolution in `docs/RULE_SOURCE_POLICY.md`.
 
 ### Promotion Flow
 
