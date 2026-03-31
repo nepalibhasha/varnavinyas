@@ -1474,14 +1474,14 @@ fn add_generalized_padayog_pratyaya_join(
         if is_numeric_segment(left) {
             continue;
         }
-        if !PRATYAYA_TOKENS.contains(&right) {
+        let Some(normalized_right) = normalize_honorific_suffix_like(right) else {
             continue;
-        }
+        };
         if !left_supports_pratyaya_join(left) {
             continue;
         }
 
-        let correction = format!("{left}{right}");
+        let correction = format!("{left}{normalized_right}");
         let span = (lstart, rend);
         if blocked_spans.contains(&span) || overlaps_existing_span(diagnostics, span) {
             continue;
@@ -1501,7 +1501,11 @@ fn add_generalized_padayog_pratyaya_join(
             incorrect: text[span.0..span.1].to_string(),
             correction,
             rule: Rule::VarnaVinyasNiyam("3(घ)"),
-            explanation: "पदयोग/पदवियोग [3(घ)-पदयोग-२ | प्रत्यय जोडेर लेख्नुपर्छ]: मान्य आधार शब्दसँग मानार्थक प्रत्यय जोडेर लेख्नुपर्छ".to_string(),
+            explanation: if right == normalized_right {
+                "पदयोग/पदवियोग [3(घ)-पदयोग-२ | प्रत्यय जोडेर लेख्नुपर्छ]: मान्य आधार शब्दसँग मानार्थक प्रत्यय जोडेर लेख्नुपर्छ".to_string()
+            } else {
+                "शैक्षणिक व्याकरणअनुसार मानार्थक प्रत्ययका रूपमा 'ज्यू' रूप प्रयोग गरी जोडेर लेख्नुपर्छ".to_string()
+            },
             category: DiagnosticCategory::ShuddhaTable,
             kind: DiagnosticKind::Error,
             confidence: 0.91,
@@ -1509,6 +1513,28 @@ fn add_generalized_padayog_pratyaya_join(
         });
         blocked_spans.insert(span);
     }
+}
+
+fn normalize_honorific_suffix_like(token: &str) -> Option<String> {
+    if PRATYAYA_TOKENS.contains(&token) {
+        return Some(token.to_string());
+    }
+
+    let suffixes = ["हरू", "हरु", "को", "की", "का", "लाई", "ले", "मा", "बाट", "देखि"];
+
+    if let Some(rest) = token.strip_prefix("ज्यू") {
+        if rest.is_empty() || suffixes.contains(&rest) {
+            return Some(token.to_string());
+        }
+    }
+
+    if let Some(rest) = token.strip_prefix("ज्यु") {
+        if rest.is_empty() || suffixes.contains(&rest) {
+            return Some(format!("ज्यू{rest}"));
+        }
+    }
+
+    None
 }
 
 fn add_generalized_padayog_namayogi_join(

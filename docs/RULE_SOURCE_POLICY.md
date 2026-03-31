@@ -1,0 +1,103 @@
+# Rule Source Policy
+
+This project treats the source markdowns under `docs/` as normative implementation references.
+
+Normative sources
+
+- `docs/PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md`
+- `docs/Notices-pages-77-99.md`
+- `web/js/rules-data.js`
+
+Operational fixture source
+
+- `docs/tests/gold.toml`
+
+Policy
+
+1. Prefer rule implementation when a correction is justified by an explicit niyama in the Academy markdown.
+2. When `PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md` and `Notices-pages-77-99.md` conflict, prefer `PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md`.
+3. Use `crates/prakriya/src/correction_table.rs` only for:
+   - entries explicitly present in the Academy's Section 4 shuddha/ashuddha table
+   - temporary stopgaps that are clearly documented and tracked for later replacement
+4. Every new spelling fix must cite one of:
+   - exact Academy section/rule
+   - exact shuddha/ashuddha table entry
+   - explicit stopgap justification recorded in `docs/CORRECTION_TABLE_AUDIT.md`
+5. When rule support is weak or ambiguous, prefer no diagnosis over speculative correction.
+6. Do not remove a correction-table entry just because each component rule exists separately; if the final output needs multi-step composition that `derive()` cannot yet produce, keep the entry and document the gap in `docs/CORRECTION_TABLE_AUDIT.md`.
+7. Prefer generalized rule layers over one-off table entries for:
+   - `तिर्यक्` forms
+   - `पदयोग/पदवियोग`
+   - context-sensitive phrase or sentence behavior
+
+Current conflict resolutions
+
+- `जस्तो/जस्तै/जत्रो/जसरी`
+  - `Notices-pages-77-99.md` treats this family under `पदयोग` joining examples.
+  - `PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md` explicitly requires them to be written separately before a preceding name/pronoun phrase.
+  - current policy: prefer the `PS-Saisanik...` split behavior
+  - current implementation: `crates/parikshak/src/checker/padayog.rs`
+- `सरह`
+  - `सरह` appears in `Notices-pages-77-99.md` with the older join-style comparison family.
+  - `PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md` does not currently list `सरह` in the explicit split family (`जस्तो/जस्तै/जत्रो/जसरी` only).
+  - current policy: treat `सरह` as notice-only evidence for now, not as part of the school-grammar override set
+  - current implementation status: unresolved policy item; do not silently fold it into the `PS-Saisanik` comparison rule
+- honorific `ज्यू` vs `ज्यु`
+  - `PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md` explicitly uses `ज्यू`
+  - current policy: `ज्यू` is the preferred honorific suffix form for generalized `पदयोग-२` joining
+  - caveat: `ज्यु` is still an attested lexical noun in the lexicon, so normalization to `ज्यू` is only applied in honorific-suffix context after a plausible host word; it is not a blanket word-level rewrite
+  - current implementation: `crates/parikshak/src/checker/padayog.rs`
+- `तिर्यक्`
+  - `PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md` adds an explicit `तिर्यक् रूपको प्रयोग` rule family that is not a numbered Section 3 notice rule in `Notices-pages-77-99.md`
+  - current policy: treat `तिर्यक्` as a first-class checker rule family, not as correction-table growth
+  - current implementation: `crates/parikshak/src/checker/tiryak.rs`
+- `परराष्ट्र मन्त्रालय` / `नेपाल सरकार`-type institutional phrases
+  - `PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md` explicitly keeps many such institutional/topic phrases split even when joined compounds are attested in raw lexicon assets
+  - current policy: prefer the `PS-Saisanik...` split behavior for the implemented institutional/title inventories
+  - current implementation: `crates/parikshak/src/checker/padayog.rs`
+- `प्रधान मन्त्री` / `शुभ कामना` / `कीर्ति पुर`-type one-meaning compounds
+  - `PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md` explicitly joins one-meaning place names and two-word one-meaning compounds
+  - current policy: join conservatively only when the combined form is already attested and the right-hand member is in the curated school-grammar-backed inventory
+  - current implementation: `crates/parikshak/src/checker/padayog.rs`
+
+Review checklist for new fixes
+
+1. Which exact source and subrule justify this change?
+2. If the two normative markdowns differ, which one wins and why?
+3. Can this be implemented as a rule instead of a one-off correction-table entry?
+4. If it is a stopgap, is it recorded in the audit doc with a removal path?
+5. Does the change add a regression test for both the intended correction and the nearest false-positive risk?
+
+Current consolidation gate
+
+- The recent `PS-Saisanik...` work has expanded beyond isolated fixes into a broader phrase-rule layer.
+- Further implementation should now default to consolidation first:
+  - update local source-policy/checklist notes
+  - expand broader eval fixtures, not only targeted regressions
+  - review false-positive risk before adding new inventories or segmentation paths
+- Preferred stopping rule for the next phase:
+  - do not add another phrase family unless the source is explicit, the rule can be generalized conservatively, and there is a clear eval-fixture path for it
+- If a candidate change mainly requires growing curated token inventories without stronger structural validation, treat it as `defer until audited` rather than `implement immediately`.
+
+Current local consolidation priorities
+
+1. Broaden eval/gold coverage for the newly implemented `PS-Saisanik` phrase families.
+2. Re-review unresolved policy-sensitive families:
+   - `सरह`
+   - `थरी`
+   - broader `पदयोग-२` suffix inventory
+   - broader `पदवियोग-१` baseline splitting
+3. Keep `web/build-info.json` and local markdown notes out of commits unless intentionally packaging or publishing policy docs.
+
+Repository expectations
+
+- `docs/tests/gold.toml` is the curated fixture set used by tests, not the normative authority by itself.
+- `crates/prakriya/src/correction_table.rs` should stay aligned with `docs/tests/gold.toml` for Section 4-backed entries.
+- Any entry that is not directly backed by the Academy markdown must be called out explicitly in the audit doc rather than silently mixed into the table.
+- `PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md` may introduce rule families that are not explicit in the notice document, such as `तिर्यक्`; implement those as first-class rules rather than as growing correction-table exceptions.
+- When a family is only partially shared across the two sources, record that distinction explicitly:
+  - `जस्तो/जस्तै/जत्रो/जसरी` are currently school-grammar-backed split forms
+  - `सरह` is not yet school-grammar-backed in the local extract
+  - `जना` is school-grammar-backed
+  - `थरी` is currently notice-backed only
+- When a `PS-Saisanik...` override changes already-attested lexical spellings in `data/words.txt` or `data/headwords.tsv`, prefer the rule policy over raw lexicon acceptance and document the override here.

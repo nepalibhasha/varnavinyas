@@ -781,6 +781,24 @@ fn generalized_padayog_pratyaya_join_handles_juu_after_known_name() {
 }
 
 #[test]
+fn generalized_padayog_pratyaya_join_normalizes_jyu_to_juu_in_honorific_context() {
+    let text = "शाह ज्यु आए। मन्त्री ज्युहरु पनि आए।";
+    let diags = check_text(text);
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "शाह ज्यु" && d.correction == "शाहज्यू"),
+        "Expected honorific-context normalization शाह ज्यु -> शाहज्यू, got: {diags:?}"
+    );
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "मन्त्री ज्युहरु" && d.correction == "मन्त्रीज्यूहरु"),
+        "Expected honorific-context normalization मन्त्री ज्युहरु -> मन्त्रीज्यूहरु, got: {diags:?}"
+    );
+}
+
+#[test]
 fn saishanik_comparison_particles_are_split_not_joined() {
     let text = "उनीजस्तै आए, डोल्माजस्तो देखियो, बताएजसरी गरियो।";
     let diags = check_text(text);
