@@ -1,5 +1,12 @@
 uniffi::setup_scaffolding!();
 
+/// Error type for fallible UniFFI exports.
+#[derive(Debug, thiserror::Error, uniffi::Error)]
+pub enum VarnavinyasError {
+    #[error("{0}")]
+    Error(String),
+}
+
 /// Transliteration scheme.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
 pub enum Scheme {
@@ -74,7 +81,7 @@ pub fn check_word(word: String) -> String {
 
 /// Transliterate text between Devanagari and IAST.
 #[uniffi::export]
-pub fn transliterate(input: String, from: Scheme, to: Scheme) -> Result<String, String> {
+pub fn transliterate(input: String, from: Scheme, to: Scheme) -> Result<String, VarnavinyasError> {
     let from_scheme = match from {
         Scheme::Devanagari => varnavinyas_lipi::Scheme::Devanagari,
         Scheme::Iast => varnavinyas_lipi::Scheme::Iast,
@@ -83,7 +90,8 @@ pub fn transliterate(input: String, from: Scheme, to: Scheme) -> Result<String, 
         Scheme::Devanagari => varnavinyas_lipi::Scheme::Devanagari,
         Scheme::Iast => varnavinyas_lipi::Scheme::Iast,
     };
-    varnavinyas_lipi::transliterate(&input, from_scheme, to_scheme).map_err(|e| e.to_string())
+    varnavinyas_lipi::transliterate(&input, from_scheme, to_scheme)
+        .map_err(|e| VarnavinyasError::Error(e.to_string()))
 }
 
 /// Classify a word by its origin.
