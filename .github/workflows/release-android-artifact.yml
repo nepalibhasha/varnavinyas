@@ -1,0 +1,83 @@
+name: Release Android Artifact
+
+on:
+  push:
+    tags:
+      - "android-artifact-v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and Release Android Artifact
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.85.0"
+          targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Install cargo-ndk
+        run: cargo install cargo-ndk --version 3.5.4 --locked
+
+      - name: Derive artifact version
+        id: version
+        run: echo "artifact_version=${GITHUB_REF_NAME#android-artifact-}" >> "$GITHUB_OUTPUT"
+
+      - name: Build Android targets
+        run: |
+          cargo ndk \
+            --target aarch64-linux-android \
+            --target armv7-linux-androideabi \
+            --target x86_64-linux-android \
+            --platform 21 \
+            -- build --release --package varnavinyas-bindings-uniffi
+
+      - name: Generate Kotlin bindings
+        run: |
+          mkdir -p out
+          cargo run --bin uniffi-bindgen \
+            --package varnavinyas-bindings-uniffi \
+            -- generate \
+            --library target/aarch64-linux-android/release/libvarnavinyas_bindings_uniffi.so \
+            --language kotlin \
+            --out-dir ./out/
+
+      - name: Assemble zip
+        run: |
+          STAGING="varnavinyas-android-artifact-${{ steps.version.outputs.artifact_version }}"
+          mkdir -p "$STAGING/jniLibs/arm64-v8a"
+          mkdir -p "$STAGING/jniLibs/armeabi-v7a"
+          mkdir -p "$STAGING/jniLibs/x86_64"
+
+          cp target/aarch64-linux-android/release/libvarnavinyas_bindings_uniffi.so \
+            "$STAGING/jniLibs/arm64-v8a/"
+          cp target/armv7-linux-androideabi/release/libvarnavinyas_bindings_uniffi.so \
+            "$STAGING/jniLibs/armeabi-v7a/"
+          cp target/x86_64-linux-android/release/libvarnavinyas_bindings_uniffi.so \
+            "$STAGING/jniLibs/x86_64/"
+
+          # uniffi-bindgen may write into a namespace subdirectory; find the .kt file
+          KT_FILE="$(find out -name '*.kt' | head -1)"
+          cp "$KT_FILE" "$STAGING/varnavinyas_bindings_uniffi.kt"
+
+          zip -r "${STAGING}.zip" "$STAGING"
+
+      - name: Upload artifact to workflow
+        uses: actions/upload-artifact@v4
+        with:
+          name: varnavinyas-android-artifact-${{ steps.version.outputs.artifact_version }}
+          path: varnavinyas-android-artifact-${{ steps.version.outputs.artifact_version }}.zip
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Android Artifact ${{ steps.version.outputs.artifact_version }}
+          generate_release_notes: true
+          files: varnavinyas-android-artifact-${{ steps.version.outputs.artifact_version }}.zip

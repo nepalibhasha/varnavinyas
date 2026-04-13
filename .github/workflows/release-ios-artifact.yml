@@ -1,0 +1,82 @@
+name: Release iOS Artifact
+
+on:
+  push:
+    tags:
+      - "ios-artifact-v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and Release iOS Artifact
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.85.0"
+          targets: aarch64-apple-ios,aarch64-apple-ios-sim,x86_64-apple-ios
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Derive artifact version
+        id: version
+        run: echo "artifact_version=${GITHUB_REF_NAME#ios-artifact-}" >> "$GITHUB_OUTPUT"
+
+      - name: Build iOS device (aarch64-apple-ios)
+        run: cargo build --release --target aarch64-apple-ios --package varnavinyas-bindings-uniffi
+
+      - name: Build iOS Apple Silicon simulator (aarch64-apple-ios-sim)
+        run: cargo build --release --target aarch64-apple-ios-sim --package varnavinyas-bindings-uniffi
+
+      - name: Build iOS Intel simulator (x86_64-apple-ios)
+        run: cargo build --release --target x86_64-apple-ios --package varnavinyas-bindings-uniffi
+
+      - name: Merge simulator slices with lipo
+        run: |
+          lipo -create \
+            target/aarch64-apple-ios-sim/release/libvarnavinyas_bindings_uniffi.a \
+            target/x86_64-apple-ios/release/libvarnavinyas_bindings_uniffi.a \
+            -output libvarnavinyas_bindings_uniffi_sim.a
+
+      - name: Create XCFramework
+        run: |
+          xcodebuild -create-xcframework \
+            -library target/aarch64-apple-ios/release/libvarnavinyas_bindings_uniffi.a \
+            -library libvarnavinyas_bindings_uniffi_sim.a \
+            -output VarnavinyasBindingsUniFFI.xcframework
+
+      - name: Generate Swift bindings
+        run: |
+          mkdir -p out
+          cargo run --bin uniffi-bindgen \
+            --package varnavinyas-bindings-uniffi \
+            -- generate \
+            --library target/aarch64-apple-ios/release/libvarnavinyas_bindings_uniffi.a \
+            --language swift \
+            --out-dir ./out/
+
+      - name: Assemble zip
+        run: |
+          STAGING="varnavinyas-ios-artifact-${{ steps.version.outputs.artifact_version }}"
+          mkdir -p "$STAGING"
+          cp -r VarnavinyasBindingsUniFFI.xcframework "$STAGING/"
+          cp out/varnavinyas_bindings_uniffi.swift "$STAGING/"
+          zip -r "${STAGING}.zip" "$STAGING"
+
+      - name: Upload artifact to workflow
+        uses: actions/upload-artifact@v4
+        with:
+          name: varnavinyas-ios-artifact-${{ steps.version.outputs.artifact_version }}
+          path: varnavinyas-ios-artifact-${{ steps.version.outputs.artifact_version }}.zip
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: iOS Artifact ${{ steps.version.outputs.artifact_version }}
+          generate_release_notes: true
+          files: varnavinyas-ios-artifact-${{ steps.version.outputs.artifact_version }}.zip
