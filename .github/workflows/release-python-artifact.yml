@@ -1,0 +1,49 @@
+name: Release Python Artifact
+
+on:
+  push:
+    tags:
+      - "python-artifact-v*"
+
+permissions:
+  contents: write
+
+jobs:
+  linux:
+    name: Build and Release Python Wheel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.85.0"
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Derive artifact version
+        id: version
+        run: echo "artifact_version=${GITHUB_REF_NAME#python-artifact-}" >> "$GITHUB_OUTPUT"
+
+      - name: Build manylinux wheel
+        uses: PyO3/maturin-action@v1
+        with:
+          command: build
+          args: --release --out ../../dist
+          manylinux: auto
+          target: x86_64
+          working-directory: crates/bindings-python
+
+      - name: Upload wheel to workflow
+        uses: actions/upload-artifact@v4
+        with:
+          name: varnavinyas-python-${{ steps.version.outputs.artifact_version }}
+          path: dist/*.whl
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Python Artifact ${{ steps.version.outputs.artifact_version }}
+          generate_release_notes: true
+          files: dist/*.whl

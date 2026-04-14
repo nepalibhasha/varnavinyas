@@ -1,5 +1,5 @@
 use pyo3::prelude::*;
-use pyo3::wrap_pymodule;
+use pyo3::{wrap_pyfunction, wrap_pymodule};
 
 mod py_akshar;
 mod py_kosha;
@@ -13,6 +13,12 @@ mod py_shabda;
 #[pymodule]
 fn varnavinyas(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
+    // Top-level convenience exports: from varnavinyas import check_text
+    m.add_function(wrap_pyfunction!(py_parikshak::check_text, m)?)?;
+    m.add_function(wrap_pyfunction!(py_parikshak::check_text_with_options, m)?)?;
+    m.add_class::<py_parikshak::PyDiagnostic>()?;
+    m.add_class::<py_parikshak::PyDiagnosticReason>()?;
+    // Submodules
     m.add_wrapped(wrap_pymodule!(py_akshar::akshar))?;
     m.add_wrapped(wrap_pymodule!(py_lipi::lipi))?;
     m.add_wrapped(wrap_pymodule!(py_shabda::shabda))?;
