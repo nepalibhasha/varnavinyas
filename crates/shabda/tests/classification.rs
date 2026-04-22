@@ -299,6 +299,76 @@ fn supported_analysis_allows_case_variants_not_listed_in_words_file() {
     assert!(has_supported_analysis("प्रशासनसम्मपनि"));
 }
 
+#[test]
+fn supported_analysis_allows_contracted_nai_after_n_stem() {
+    let analysis = best_analysis("सुधार्नै").expect("contracted नै form should analyze");
+    assert_eq!(analysis.stem, "सुधार्न");
+    assert_eq!(analysis.root, "सुधार्न");
+    assert_eq!(analysis.suffixes, vec!["नै"]);
+    assert_eq!(analysis.suffix_segments[0].kind, AffixKind::Particle);
+}
+
+#[test]
+fn supported_analysis_allows_shared_onset_particle_forms() {
+    for (word, stem, suffix) in [("खलककै", "खलक", "कै")] {
+        let analysis = best_analysis(word)
+            .unwrap_or_else(|| panic!("shared-onset particle form {word} should analyze"));
+        assert_eq!(analysis.stem, stem, "unexpected stem for {word}");
+        assert_eq!(analysis.root, stem, "unexpected root for {word}");
+        assert_eq!(
+            analysis.suffixes,
+            vec![suffix],
+            "unexpected suffixes for {word}"
+        );
+        assert_eq!(
+            analysis.suffix_segments[0].kind,
+            AffixKind::Particle,
+            "unexpected suffix kind for {word}"
+        );
+    }
+}
+
+#[test]
+fn supported_analysis_allows_shared_onset_case_marker_forms() {
+    for (word, stem, suffix) in [
+        ("अङ्कको", "अङ्क", "को"),
+        ("अचम्ममा", "अचम्म", "मा"),
+        ("अध्यापककी", "अध्यापक", "की"),
+        ("अतीततिर", "अतीत", "तिर"),
+        ("उससँग", "उस", "सँग"),
+    ] {
+        let analysis = best_analysis(word)
+            .unwrap_or_else(|| panic!("shared-onset case form {word} should analyze"));
+        assert_eq!(analysis.stem, stem, "unexpected stem for {word}");
+        assert_eq!(
+            analysis.suffixes,
+            vec![suffix],
+            "unexpected suffixes for {word}"
+        );
+    }
+}
+
+#[cfg(feature = "iterative-decompose")]
+#[test]
+fn decompose_allows_shared_onset_case_marker_forms() {
+    for (word, root, suffix) in [
+        ("अङ्कको", "अङ्क", "को"),
+        ("अतीततिर", "अतीत", "तिर"),
+        ("उससँग", "उस", "सँग"),
+    ] {
+        let m = decompose(word);
+        assert_eq!(m.root, root, "unexpected root for {word}");
+        assert_eq!(m.suffixes, vec![suffix], "unexpected suffixes for {word}");
+    }
+}
+
+#[test]
+fn classify_with_provenance_uses_shared_onset_case_marker_stem_lookup() {
+    let d = classify_with_provenance("अध्यापककी");
+    assert_eq!(d.source, OriginSource::Kosha);
+    assert!(d.confidence >= 0.80);
+}
+
 #[cfg(feature = "iterative-decompose")]
 #[test]
 fn iterative_root_candidates_handle_case_suffixes() {

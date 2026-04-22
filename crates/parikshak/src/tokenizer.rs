@@ -59,6 +59,37 @@ const SUPPORT_SUFFIX_GROUPS: &[SupportSuffixGroup] = &[
     },
 ];
 
+fn suffix_rest_candidates<'a>(current: &'a str, suffix: &str) -> Vec<&'a str> {
+    let mut candidates = Vec::new();
+    let current_len = current.chars().count();
+    let suffix_len = suffix.chars().count();
+
+    if let Some(rest) = current.strip_suffix(suffix) {
+        if !rest.is_empty() {
+            candidates.push(rest);
+        }
+    }
+
+    let mut suffix_chars = suffix.chars();
+    let Some(onset) = suffix_chars.next() else {
+        return candidates;
+    };
+    let tail = suffix_chars.as_str();
+    if tail.is_empty() {
+        return candidates;
+    }
+
+    if current_len > suffix_len {
+        if let Some(rest) = current.strip_suffix(tail) {
+            if !rest.is_empty() && rest.ends_with(onset) && !candidates.contains(&rest) {
+                candidates.push(rest);
+            }
+        }
+    }
+
+    candidates
+}
+
 fn collect_detachments(
     current: &str,
     detached: &mut Vec<&'static str>,
@@ -84,10 +115,7 @@ fn collect_detachments(
 
     let group = &SUPPORT_SUFFIX_GROUPS[group_index];
     for &sfx in group.items {
-        if let Some(rest) = current.strip_suffix(sfx) {
-            if rest.is_empty() {
-                continue;
-            }
+        for rest in suffix_rest_candidates(current, sfx) {
             detached.push(sfx);
             let next_group = if group.repeatable {
                 group_index

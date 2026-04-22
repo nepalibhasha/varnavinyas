@@ -36,6 +36,37 @@ const SENTENCE_BOUND_NIPAT_REFERENCE_TOKENS: &[&str] = &[
 const SENTENCE_BOUND_NIPAT_SPLIT_TOKENS: &[&str] =
     &["अरे", "क्या", "क्यार", "खै", "नाइँ", "यारे", "सके", "हगि"];
 
+fn suffix_left_candidates<'a>(token: &'a str, suffix: &str) -> Vec<&'a str> {
+    let mut candidates = Vec::new();
+    let token_len = token.chars().count();
+    let suffix_len = suffix.chars().count();
+
+    if let Some(left) = token.strip_suffix(suffix) {
+        if !left.is_empty() {
+            candidates.push(left);
+        }
+    }
+
+    let mut suffix_chars = suffix.chars();
+    let Some(onset) = suffix_chars.next() else {
+        return candidates;
+    };
+    let tail = suffix_chars.as_str();
+    if tail.is_empty() {
+        return candidates;
+    }
+
+    if token_len > suffix_len {
+        if let Some(left) = token.strip_suffix(tail) {
+            if !left.is_empty() && left.ends_with(onset) && !candidates.contains(&left) {
+                candidates.push(left);
+            }
+        }
+    }
+
+    candidates
+}
+
 pub(super) fn add_nipat_split_diagnostics(
     text: &str,
     blocked_spans: &mut HashSet<(usize, usize)>,
@@ -71,47 +102,42 @@ fn add_word_bound_nipat_split(
     diagnostics: &mut Vec<Diagnostic>,
 ) -> bool {
     for &suffix in WORD_BOUND_NIPAT_SPLIT_TOKENS {
-        let Some(left) = token.strip_suffix(suffix) else {
-            continue;
-        };
-        if left.is_empty() {
-            continue;
-        }
+        for left in suffix_left_candidates(token, suffix) {
+            let normalized_left = normalize_joined_word(left).unwrap_or_else(|| left.to_string());
+            if !candidate_is_supported(left) && !candidate_is_supported(&normalized_left) {
+                continue;
+            }
 
-        let normalized_left = normalize_joined_word(left).unwrap_or_else(|| left.to_string());
-        if !candidate_is_supported(left) && !candidate_is_supported(&normalized_left) {
-            continue;
-        }
+            if matches!(suffix, "त" | "ल") && normalized_left.chars().count() < 2 {
+                continue;
+            }
+            if matches!(suffix, "नै") && candidate_is_lexically_attested(token) {
+                continue;
+            }
+            if matches!(suffix, "त" | "ल" | "नि") && candidate_is_supported(token) {
+                continue;
+            }
 
-        if matches!(suffix, "त" | "ल") && normalized_left.chars().count() < 2 {
-            continue;
+            let correction = format!("{left} {suffix}");
+            if !push_nipat_diagnostic(
+                token,
+                correction,
+                start,
+                end,
+                text,
+                blocked_spans,
+                diagnostics,
+                "शैक्षणिक व्याकरण पदवियोग (च): शब्दाश्रित निपातहरू पदवियोग गरी लेखिन्छन् ।",
+                if matches!(suffix, "त" | "ल" | "नि") {
+                    0.86
+                } else {
+                    0.9
+                },
+            ) {
+                continue;
+            }
+            return true;
         }
-        if matches!(suffix, "नै") && candidate_is_lexically_attested(token) {
-            continue;
-        }
-        if matches!(suffix, "त" | "ल" | "नि") && candidate_is_supported(token) {
-            continue;
-        }
-
-        let correction = format!("{left} {suffix}");
-        if !push_nipat_diagnostic(
-            token,
-            correction,
-            start,
-            end,
-            text,
-            blocked_spans,
-            diagnostics,
-            "शैक्षणिक व्याकरण पदवियोग (च): शब्दाश्रित निपातहरू पदवियोग गरी लेखिन्छन् ।",
-            if matches!(suffix, "त" | "ल" | "नि") {
-                0.86
-            } else {
-                0.9
-            },
-        ) {
-            continue;
-        }
-        return true;
     }
 
     false

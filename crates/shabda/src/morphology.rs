@@ -300,39 +300,67 @@ fn collect_suffix_group_analyses(
     );
 
     for &suffix in SUPPORT_SUFFIX_GROUPS[group_index].items {
-        let Some(rest) = current.strip_suffix(suffix) else {
-            continue;
-        };
-        if rest.is_empty() {
-            continue;
-        }
-
-        suffixes.push(AffixSegment {
-            text: suffix.to_string(),
-            kind: SUPPORT_SUFFIX_GROUPS[group_index].kind,
-        });
-        if SUPPORT_SUFFIX_GROUPS[group_index].repeatable {
+        for rest in suffix_rest_candidates(current, suffix) {
+            suffixes.push(AffixSegment {
+                text: suffix.to_string(),
+                kind: SUPPORT_SUFFIX_GROUPS[group_index].kind,
+            });
+            if SUPPORT_SUFFIX_GROUPS[group_index].repeatable {
+                collect_suffix_group_analyses(
+                    surface,
+                    rest,
+                    suffixes,
+                    group_index,
+                    analyses,
+                    seen,
+                    lex,
+                );
+            }
             collect_suffix_group_analyses(
                 surface,
                 rest,
                 suffixes,
-                group_index,
+                group_index + 1,
                 analyses,
                 seen,
                 lex,
             );
+            suffixes.pop();
         }
-        collect_suffix_group_analyses(
-            surface,
-            rest,
-            suffixes,
-            group_index + 1,
-            analyses,
-            seen,
-            lex,
-        );
-        suffixes.pop();
     }
+}
+
+fn suffix_rest_candidates<'a>(current: &'a str, suffix: &str) -> Vec<&'a str> {
+    let mut candidates = Vec::new();
+    let current_len = current.chars().count();
+    let suffix_len = suffix.chars().count();
+
+    if let Some(rest) = current.strip_suffix(suffix) {
+        if !rest.is_empty() {
+            candidates.push(rest);
+        }
+    }
+
+    let mut suffix_chars = suffix.chars();
+    let Some(onset) = suffix_chars.next() else {
+        return candidates;
+    };
+    let tail = suffix_chars.as_str();
+    if tail.is_empty() {
+        return candidates;
+    }
+
+    // Shared-onset form: the suffix starts with the same consonant the stem
+    // already ends with, so the surface may carry only the suffix tail.
+    if current_len > suffix_len {
+        if let Some(rest) = current.strip_suffix(tail) {
+            if !rest.is_empty() && rest.ends_with(onset) && !candidates.contains(&rest) {
+                candidates.push(rest);
+            }
+        }
+    }
+
+    candidates
 }
 
 fn sorted_affix_analyses(mut analyses: Vec<AffixAnalysis>) -> Vec<AffixAnalysis> {
@@ -462,40 +490,39 @@ fn recurse_suffix_groups(
 
     let min_root_chars = if prefixes.is_empty() { 1 } else { 4 };
     for &suffix in groups[group_index].items {
-        let Some(rest) = current.strip_suffix(suffix) else {
-            continue;
-        };
-        if rest.chars().count() < min_root_chars {
-            continue;
-        }
+        for rest in suffix_rest_candidates(current, suffix) {
+            if rest.chars().count() < min_root_chars {
+                continue;
+            }
 
-        suffixes.push(normalize_suffix_label(suffix));
-        push_candidate(candidates, seen, original, rest, prefixes, suffixes);
+            suffixes.push(normalize_suffix_label(suffix));
+            push_candidate(candidates, seen, original, rest, prefixes, suffixes);
 
-        if groups[group_index].repeatable {
+            if groups[group_index].repeatable {
+                recurse_suffix_groups(
+                    original,
+                    rest,
+                    prefixes,
+                    suffixes,
+                    group_index,
+                    groups,
+                    candidates,
+                    seen,
+                );
+            }
+
             recurse_suffix_groups(
                 original,
                 rest,
                 prefixes,
                 suffixes,
-                group_index,
+                group_index + 1,
                 groups,
                 candidates,
                 seen,
             );
+            suffixes.pop();
         }
-
-        recurse_suffix_groups(
-            original,
-            rest,
-            prefixes,
-            suffixes,
-            group_index + 1,
-            groups,
-            candidates,
-            seen,
-        );
-        suffixes.pop();
     }
 }
 
@@ -601,7 +628,7 @@ pub fn decompose(word: &str) -> Morpheme {
         loop {
             let mut found = false;
             for &sfx in tables::CASE_MARKERS.iter() {
-                if let Some(rest) = remaining.strip_suffix(sfx) {
+                for rest in suffix_rest_candidates(&remaining, sfx) {
                     if rest.chars().count() >= min_root_chars {
                         suffixes.push(normalize_suffix_label(sfx));
                         remaining = rest.to_string();
@@ -616,7 +643,7 @@ pub fn decompose(word: &str) -> Morpheme {
         }
         // Phase 2: Plural markers
         for &sfx in tables::PLURAL_MARKERS.iter() {
-            if let Some(rest) = remaining.strip_suffix(sfx) {
+            for rest in suffix_rest_candidates(&remaining, sfx) {
                 if rest.chars().count() >= min_root_chars {
                     suffixes.push(normalize_suffix_label(sfx));
                     remaining = rest.to_string();
@@ -631,7 +658,7 @@ pub fn decompose(word: &str) -> Morpheme {
         let skip_derivational = !suffixes.is_empty() && lex.contains(&remaining);
         if !skip_derivational {
             for &sfx in tables::SUFFIXES.iter() {
-                if let Some(rest) = remaining.strip_suffix(sfx) {
+                for rest in suffix_rest_candidates(&remaining, sfx) {
                     if rest.chars().count() >= min_root_chars && lex.contains(rest) {
                         suffixes.push(normalize_suffix_label(sfx));
                         remaining = rest.to_string();
@@ -647,7 +674,7 @@ pub fn decompose(word: &str) -> Morpheme {
     {
         let min_root_chars = if prefixes.is_empty() { 1 } else { 4 };
         for &suffix in tables::SUFFIXES.iter() {
-            if let Some(rest) = remaining.strip_suffix(suffix) {
+            for rest in suffix_rest_candidates(&remaining, suffix) {
                 if rest.chars().count() >= min_root_chars && lex.contains(rest) {
                     suffixes.push(normalize_suffix_label(suffix));
                     remaining = rest.to_string();

@@ -58,6 +58,37 @@ const STRIP_SUFFIXES: &[&str] = &[
     "मा",
 ];
 
+fn suffix_rest_candidates<'a>(word: &'a str, suffix: &str) -> Vec<&'a str> {
+    let mut candidates = Vec::new();
+    let word_len = word.chars().count();
+    let suffix_len = suffix.chars().count();
+
+    if let Some(stem) = word.strip_suffix(suffix) {
+        if !stem.is_empty() {
+            candidates.push(stem);
+        }
+    }
+
+    let mut suffix_chars = suffix.chars();
+    let Some(onset) = suffix_chars.next() else {
+        return candidates;
+    };
+    let tail = suffix_chars.as_str();
+    if tail.is_empty() {
+        return candidates;
+    }
+
+    if word_len > suffix_len {
+        if let Some(stem) = word.strip_suffix(tail) {
+            if !stem.is_empty() && stem.ends_with(onset) && !candidates.contains(&stem) {
+                candidates.push(stem);
+            }
+        }
+    }
+
+    candidates
+}
+
 /// provenance र confidence सहित वर्गीकरण।
 pub fn classify_with_provenance(word: &str) -> OriginDecision {
     if word.is_empty() {
@@ -99,7 +130,7 @@ pub fn classify_with_provenance(word: &str) -> OriginDecision {
     // 2b. Suffix-stripped kosha lookup — विभक्ति/बहुवचन रूपलाई stem मा घटाएर हेर्ने।
     // उदाहरण: "संस्कृतमा" → "संस्कृत" ([सं.] → Tatsam), confidence थोरै कम।
     for suffix in STRIP_SUFFIXES {
-        if let Some(stem) = word.strip_suffix(suffix) {
+        for stem in suffix_rest_candidates(word, suffix) {
             // कम्तिमा २ अक्षर नभए stem ग्राह्य छैन
             if stem.chars().count() > 1 {
                 if let Some(tag) = kosha.origin_of(stem) {

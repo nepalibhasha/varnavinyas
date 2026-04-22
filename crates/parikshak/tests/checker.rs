@@ -121,6 +121,38 @@ fn check_word_accepts_additional_unlisted_outer_affix_forms() {
     }
 }
 
+#[test]
+fn check_word_accepts_contracted_nai_after_n_stem() {
+    let diag = check_word("सुधार्नै");
+    assert!(
+        diag.is_none(),
+        "Contracted ...नै forms should be structurally supported, got: {diag:?}"
+    );
+}
+
+#[test]
+fn check_word_accepts_shared_onset_particle_forms() {
+    for word in ["खलककै"] {
+        let diag = check_word(word);
+        assert!(
+            diag.is_none(),
+            "Shared-onset particle form '{word}' should be structurally supported, got: {diag:?}"
+        );
+    }
+}
+
+#[test]
+fn check_word_accepts_shared_onset_case_marker_forms() {
+    for word in ["अङ्कको", "अचम्ममा", "अध्यापककी", "अतीततिर", "उससँग"]
+    {
+        let diag = check_word(word);
+        assert!(
+            diag.is_none(),
+            "Shared-onset case form '{word}' should be structurally supported, got: {diag:?}"
+        );
+    }
+}
+
 /// C3: Diagnostics have span, correction, rule, explanation.
 #[test]
 fn c3_diagnostic_fields() {
@@ -1145,6 +1177,19 @@ fn saishanik_nipat_split_applies_to_school_grammar_examples() {
             .iter()
             .all(|d| !(d.incorrect == "ऊनि" && !d.explanation.contains("पदवियोग (च)"))),
         "Specific निपात rule should suppress weaker same-span diagnostics on ऊनि, got: {diags:?}"
+    );
+}
+
+#[test]
+fn saishanik_nipat_split_handles_contracted_nai_after_n_stem() {
+    let diags = check_text("समस्या सुधार्नै पर्छ।");
+    let diag = diags
+        .iter()
+        .find(|d| d.incorrect == "सुधार्नै" && d.correction == "सुधार्न नै")
+        .unwrap_or_else(|| panic!("Expected contracted नै split, got: {diags:?}"));
+    assert!(
+        diag.explanation.contains("पदवियोग (च)"),
+        "Expected निपात split explanation, got: {diag:?}"
     );
 }
 
