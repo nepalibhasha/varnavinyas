@@ -130,7 +130,6 @@ pub(crate) fn add_generalized_padayog_padabiyog_diagnostics(
     add_generalized_saishanik_namik_kriya_split(text, blocked_spans, diagnostics);
     add_generalized_saishanik_gari_split(text, blocked_spans, diagnostics);
     add_generalized_saishanik_jana_split(text, blocked_spans, diagnostics);
-    add_generalized_saishanik_divisive_na_split(text, blocked_spans, diagnostics);
     add_generalized_saishanik_multiword_samasa_split(text, blocked_spans, diagnostics);
     add_generalized_saishanik_institutional_split(text, blocked_spans, diagnostics);
     add_generalized_saishanik_title_name_split(text, blocked_spans, diagnostics);
@@ -672,6 +671,9 @@ fn add_generalized_saishanik_jana_split(
         if !is_devanagari_word(token) || is_numeric_segment(token) {
             continue;
         }
+        if candidate_is_authoritative_headword(token) {
+            continue;
+        }
 
         let Some(left) = token.strip_suffix("जना") else {
             continue;
@@ -706,58 +708,6 @@ fn add_generalized_saishanik_jana_split(
             category: DiagnosticCategory::ShuddhaTable,
             kind: DiagnosticKind::Error,
             confidence: 0.9,
-            alternate_reasons: Vec::new(),
-        });
-        blocked_spans.insert(span);
-    }
-}
-
-fn add_generalized_saishanik_divisive_na_split(
-    text: &str,
-    blocked_spans: &mut HashSet<(usize, usize)>,
-    diagnostics: &mut Vec<Diagnostic>,
-) {
-    let segments = whitespace_segments(text);
-
-    for (token, start, end) in segments {
-        if !is_devanagari_word(token) || is_numeric_segment(token) || candidate_is_supported(token)
-        {
-            continue;
-        }
-
-        let Some(rest) = token.strip_prefix("न") else {
-            continue;
-        };
-        if rest.chars().count() < 2 {
-            continue;
-        }
-
-        let normalized_rest = normalize_joined_word(rest).unwrap_or_else(|| rest.to_string());
-        if !candidate_is_nominalish(&normalized_rest) {
-            continue;
-        }
-
-        let correction = format!("न {normalized_rest}");
-        let span = (start, end);
-        if blocked_spans.contains(&span) || overlaps_existing_span(diagnostics, span) {
-            continue;
-        }
-        if !is_word_boundary(text, span.0, span.1) {
-            continue;
-        }
-        if correction == token || has_same_rewrite(diagnostics, span, &correction) {
-            continue;
-        }
-
-        diagnostics.push(Diagnostic {
-            span,
-            incorrect: token.to_string(),
-            correction,
-            rule: Rule::VarnaVinyasNiyam("3(घ)"),
-            explanation: "शैक्षणिक व्याकरण पदवियोग (ज): विभाजक 'न' पदवियोग गरेर लेखिन्छ ।".to_string(),
-            category: DiagnosticCategory::ShuddhaTable,
-            kind: DiagnosticKind::Error,
-            confidence: 0.89,
             alternate_reasons: Vec::new(),
         });
         blocked_spans.insert(span);
@@ -1190,6 +1140,10 @@ fn candidate_is_supported(candidate: &str) -> bool {
     lex.contains(candidate) || lex.lookup(candidate).is_some() || has_supported_analysis(candidate)
 }
 
+fn candidate_is_authoritative_headword(candidate: &str) -> bool {
+    kosha().lookup(candidate).is_some()
+}
+
 fn candidate_is_name_like(candidate: &str) -> bool {
     let lex = kosha();
     let Some(entry) = lex.lookup(candidate) else {
@@ -1219,19 +1173,6 @@ fn plausible_vibhakti_attached_left(candidate: &str) -> bool {
     }
 
     false
-}
-
-fn candidate_is_nominalish(candidate: &str) -> bool {
-    if candidate_is_name_like(candidate) || plausible_vibhakti_attached_left(candidate) {
-        return true;
-    }
-
-    let lex = kosha();
-    let Some(entry) = lex.lookup(candidate) else {
-        return false;
-    };
-
-    entry.pos.contains("नाम") || entry.pos.contains("ना.") || entry.pos.contains("सर्व")
 }
 
 fn candidate_supports_sarthak_dwitva_base(candidate: &str, normalized_candidate: &str) -> bool {

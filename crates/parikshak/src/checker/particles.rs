@@ -5,6 +5,7 @@ use varnavinyas_prakriya::{DiagnosticKind, Rule};
 use varnavinyas_shabda::has_supported_analysis;
 
 use crate::diagnostic::{Diagnostic, DiagnosticCategory};
+use crate::tokenizer::should_prefer_whole_word_over_short_nipat_split;
 
 use super::common::{
     is_devanagari_word, is_numeric_segment, is_word_boundary, whitespace_segments,
@@ -115,6 +116,9 @@ fn add_word_bound_nipat_split(
                 continue;
             }
             if matches!(suffix, "त" | "ल" | "नि") && candidate_is_supported(token) {
+                continue;
+            }
+            if should_prefer_whole_word_over_short_nipat_split(left, suffix, kosha()) {
                 continue;
             }
 

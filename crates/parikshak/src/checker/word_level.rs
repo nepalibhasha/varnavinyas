@@ -113,6 +113,10 @@ fn should_offer_nearby_suggestion(word: &str, suggestion: &str) -> bool {
     word_chars.first() == suggestion_chars.first() && word_chars.last() == suggestion_chars.last()
 }
 
+fn is_bhayeko_colloquial_contraction(word: &str) -> bool {
+    matches!(word, "भाको" | "नभाको")
+}
+
 /// Check a single word and return a diagnostic if it's incorrect.
 ///
 /// Pipeline:
@@ -163,6 +167,9 @@ pub(crate) fn check_word_impl(word: &str) -> Option<Diagnostic> {
 
     let lex = kosha();
     if is_supported_stem(word, lex) {
+        return None;
+    }
+    if is_bhayeko_colloquial_contraction(word) {
         return None;
     }
     if has_known_compound_split(word, lex) || has_supported_productive_verb_form(word, lex) {

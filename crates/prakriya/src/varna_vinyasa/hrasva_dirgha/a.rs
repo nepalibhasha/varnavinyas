@@ -5,6 +5,16 @@ use crate::model::rule_spec::{DiagnosticKind, RuleCategory, RuleSpec};
 use crate::model::step::Step;
 use varnavinyas_shabda::{Origin, classify, decompose};
 
+fn exact_headword_supported(word: &str) -> bool {
+    let lex = varnavinyas_kosha::kosha();
+    lex.lookup(word).is_some()
+}
+
+fn lexically_supported(word: &str) -> bool {
+    let lex = varnavinyas_kosha::kosha();
+    lex.contains(word) || lex.lookup(word).is_some()
+}
+
 // -----------------------------------------------------------------------------
 // 3(क)(अ) शब्दका सुरुमा ह्रस्व इकार र उकारको प्रयोग
 // Rule-book map:
@@ -154,10 +164,7 @@ pub fn rule_prefix_hrasva(input: &str) -> Option<Prakriya> {
         ("सू", "सु"),
     ];
 
-    const CANONICAL_PREFIXES: &[&str] = &["नि", "दु", "वि", "उत", "उप", "कु", "सु"];
-
-    let lex = varnavinyas_kosha::kosha();
-    if lex.contains(input) {
+    if exact_headword_supported(input) {
         return None;
     }
     for &(wrong, correct) in PREFIX_PATTERNS {
@@ -165,14 +172,12 @@ pub fn rule_prefix_hrasva(input: &str) -> Option<Prakriya> {
             continue;
         }
         let output = input.replacen(wrong, correct, 1);
-        if output == input || !lex.contains(&output) {
+        if output == input || !lexically_supported(&output) {
             continue;
         }
-        let has_valid_prefix_stem = CANONICAL_PREFIXES.iter().any(|prefix| {
-            output
-                .strip_prefix(prefix)
-                .is_some_and(|rest| rest.chars().count() >= 2 && lex.contains(rest))
-        });
+        let has_valid_prefix_stem = output
+            .strip_prefix(correct)
+            .is_some_and(|rest| rest.chars().count() >= 3 && lexically_supported(rest));
         if !has_valid_prefix_stem {
             continue;
         }
@@ -218,13 +223,12 @@ pub fn rule_dvi_tri_hrasva(input: &str) -> Option<Prakriya> {
 }
 
 pub fn rule_initial_name_hrasva(input: &str) -> Option<Prakriya> {
-    let lex = varnavinyas_kosha::kosha();
-    if lex.contains(input) {
+    if exact_headword_supported(input) {
         return None;
     }
 
     let output = hrasva_helpers::initial_dirgha_to_hrasva(input)?;
-    if !lex.contains(&output) {
+    if !lexically_supported(&output) {
         return None;
     }
     if input == "तीन" || output == "तिन" {
@@ -259,13 +263,12 @@ pub fn rule_initial_name_hrasva(input: &str) -> Option<Prakriya> {
 }
 
 pub fn rule_initial_aagantuk_hrasva(input: &str) -> Option<Prakriya> {
-    let lex = varnavinyas_kosha::kosha();
-    if lex.contains(input) {
+    if exact_headword_supported(input) {
         return None;
     }
 
     let output = hrasva_helpers::initial_dirgha_to_hrasva(input)?;
-    if !lex.contains(&output) {
+    if !lexically_supported(&output) {
         return None;
     }
     if !matches!(classify(&output), Origin::Aagantuk) {
@@ -511,13 +514,12 @@ pub fn rule_pronoun_vowel_length(input: &str) -> Option<Prakriya> {
 }
 
 pub fn rule_initial_adjective_hrasva(input: &str) -> Option<Prakriya> {
-    let lex = varnavinyas_kosha::kosha();
-    if lex.contains(input) {
+    if exact_headword_supported(input) {
         return None;
     }
 
     let output = hrasva_helpers::initial_dirgha_to_hrasva(input)?;
-    if !lex.contains(&output) || !hrasva_helpers::is_initial_hrasva_adjective(&output) {
+    if !lexically_supported(&output) || !hrasva_helpers::is_initial_hrasva_adjective(&output) {
         return None;
     }
 
@@ -534,13 +536,12 @@ pub fn rule_initial_adjective_hrasva(input: &str) -> Option<Prakriya> {
 }
 
 pub fn rule_initial_number_hrasva(input: &str) -> Option<Prakriya> {
-    let lex = varnavinyas_kosha::kosha();
-    if lex.contains(input) {
+    if exact_headword_supported(input) {
         return None;
     }
 
     let output = hrasva_helpers::initial_dirgha_to_hrasva(input)?;
-    if !lex.contains(&output) || !hrasva_helpers::is_initial_hrasva_number(&output) {
+    if !lexically_supported(&output) || !hrasva_helpers::is_initial_hrasva_number(&output) {
         return None;
     }
 
@@ -557,13 +558,12 @@ pub fn rule_initial_number_hrasva(input: &str) -> Option<Prakriya> {
 }
 
 pub fn rule_initial_avyaya_hrasva(input: &str) -> Option<Prakriya> {
-    let lex = varnavinyas_kosha::kosha();
-    if lex.contains(input) {
+    if exact_headword_supported(input) {
         return None;
     }
 
     let output = hrasva_helpers::initial_dirgha_to_hrasva(input)?;
-    if !lex.contains(&output) || !hrasva_helpers::is_initial_hrasva_avyaya(&output) {
+    if !lexically_supported(&output) || !hrasva_helpers::is_initial_hrasva_avyaya(&output) {
         return None;
     }
     if hrasva_helpers::is_initial_hrasva_onomatopoeic(&output) {
@@ -583,13 +583,12 @@ pub fn rule_initial_avyaya_hrasva(input: &str) -> Option<Prakriya> {
 }
 
 pub fn rule_initial_onomatopoeic_hrasva(input: &str) -> Option<Prakriya> {
-    let lex = varnavinyas_kosha::kosha();
-    if lex.contains(input) {
+    if exact_headword_supported(input) {
         return None;
     }
 
     let output = hrasva_helpers::initial_dirgha_to_hrasva(input)?;
-    if !lex.contains(&output) || !hrasva_helpers::is_initial_hrasva_onomatopoeic(&output) {
+    if !lexically_supported(&output) || !hrasva_helpers::is_initial_hrasva_onomatopoeic(&output) {
         return None;
     }
 

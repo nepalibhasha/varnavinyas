@@ -2,7 +2,7 @@ use varnavinyas_prakriya::orthographic::{
     rule_ba_va, rule_chandrabindu, rule_gya_gyan, rule_ksha_chhya, rule_panchham_varna,
     rule_ri_kri, rule_sibilant, rule_ya_e,
 };
-use varnavinyas_prakriya::{Rule, derive};
+use varnavinyas_prakriya::{Rule, collect_rule_hits, derive};
 
 // P1: Corrects अत्याधिक → अत्यधिक
 #[test]
@@ -187,6 +187,20 @@ fn panchham_correction() {
 fn aagantuk_sa_not_sha() {
     let p = derive("रजिष्टर");
     assert_eq!(p.output, "रजिस्टर");
+}
+
+#[test]
+fn sufi_does_not_take_prefix_hrasva_path() {
+    let hits = collect_rule_hits("सूफी");
+    assert!(
+        hits.iter().all(|hit| {
+            hit.prakriya
+                .steps
+                .first()
+                .is_none_or(|step| step.rule != Rule::VarnaVinyasNiyam("3(क)(अ)-1"))
+        }),
+        "Loanword सूफी should not trigger the सु-उपसर्ग rule, got: {hits:?}"
+    );
 }
 
 #[test]

@@ -39,6 +39,17 @@ pub(crate) fn is_supported_stem(stem: &str, lex: &Kosha) -> bool {
     has_supported_analysis(stem)
 }
 
+pub(crate) fn should_prefer_whole_word_over_short_nipat_split(
+    stem: &str,
+    detached: &str,
+    lex: &Kosha,
+) -> bool {
+    detached == "ल"
+        && lex
+            .lookup(stem)
+            .is_some_and(|entry| entry.pos.contains("नाम") || entry.pos.contains("ना."))
+}
+
 struct SupportSuffixGroup {
     items: &'static [&'static str],
     repeatable: bool,
@@ -246,6 +257,14 @@ pub fn tokenize_analyzed(text: &str) -> Vec<AnalyzedToken> {
                 && !is_in_correction_table(&tok.text)
             {
                 if let Some((stem, detached)) = best_supported_detachment(&tok.text, lex) {
+                    if should_prefer_whole_word_over_short_nipat_split(&stem, &detached, lex) {
+                        return AnalyzedToken {
+                            stem: tok.text,
+                            suffix: None,
+                            start: tok.start,
+                            end: tok.end,
+                        };
+                    }
                     return AnalyzedToken {
                         stem,
                         suffix: Some(detached),
@@ -312,6 +331,7 @@ pub fn tokenize_analyzed(text: &str) -> Vec<AnalyzedToken> {
                         varnavinyas_akshar::is_svar(c) || varnavinyas_akshar::is_matra(c)
                     });
                     if !stem.is_empty()
+                        && !should_prefer_whole_word_over_short_nipat_split(stem, nip, lex)
                         && lex.contains(stem)
                         && !lex.contains(&tok.text)
                         && (!is_risky || vowel_ending)

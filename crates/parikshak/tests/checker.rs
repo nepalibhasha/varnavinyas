@@ -1116,26 +1116,28 @@ fn saishanik_jana_split_applies_beyond_fixed_examples() {
 }
 
 #[test]
-fn saishanik_divisive_na_split_applies_to_nominal_chunks() {
-    let diags = check_text("नराम नश्याम आए। नरामले गीत गाई।");
-    for (incorrect, correction) in [("नराम", "न राम"), ("नश्याम", "न श्याम"), ("नरामले", "न रामले")]
-    {
-        let diag = diags
-            .iter()
-            .find(|d| d.incorrect == incorrect && d.correction == correction)
-            .unwrap_or_else(|| {
-                panic!("Expected विभाजक न split {incorrect} -> {correction}, got: {diags:?}")
-            });
-        assert!(
-            diag.explanation.contains("पदवियोग (ज)"),
-            "Expected शैक्षणिक पदवियोग (ज) explanation for {incorrect}, got: {diag:?}"
-        );
-    }
+fn saishanik_jana_split_does_not_split_lexicalized_yojana() {
+    let diags = check_text("अब योजना, सामग्री");
     assert!(
-        diags
-            .iter()
-            .all(|d| !(d.incorrect == "नराम" && matches!(d.kind, DiagnosticKind::Ambiguous))),
-        "Specific विभाजक न rule should suppress ambiguous fallback on नराम, got: {diags:?}"
+        diags.iter().all(|d| d.incorrect != "योजना"),
+        "Expected lexicalized योजना to avoid जना split false positive, got: {diags:?}"
+    );
+}
+
+#[test]
+fn saishanik_divisive_na_is_not_generalized_without_coordination_context() {
+    let diags = check_text("नराम नश्याम आए। नरामले गीत गाई। केहीँ नभाको जात्रा हाडी गाउँमा !");
+    assert!(
+        diags.iter().all(|d| {
+            !matches!(
+                (d.incorrect.as_str(), d.correction.as_str()),
+                ("नराम", "न राम")
+                    | ("नश्याम", "न श्याम")
+                    | ("नरामले", "न रामले")
+                    | ("नभाको", "न भाको")
+            )
+        }),
+        "Expected no generalized विभाजक-न rewrite without coordination cues, got: {diags:?}"
     );
 }
 
@@ -1199,6 +1201,17 @@ fn saishanik_nipat_split_does_not_split_lexicalized_kunai() {
     assert!(
         diags.iter().all(|d| d.incorrect != "कुनै"),
         "Expected lexicalized word कुनै to avoid nipat split false positive, got: {diags:?}"
+    );
+}
+
+#[test]
+fn saishanik_nipat_split_prefers_nearby_whole_word_for_short_suffixes() {
+    let diags = check_text("मोडल");
+    assert!(
+        diags
+            .iter()
+            .all(|d| !(d.incorrect == "मोडल" && d.correction == "मोड ल")),
+        "Expected nearby whole-word analysis to beat short-nipat split on मोडल, got: {diags:?}"
     );
 }
 

@@ -6,7 +6,10 @@ use varnavinyas_prakriya::Rule;
 use varnavinyas_shabda::{best_analysis, has_supported_analysis};
 
 use crate::diagnostic::Diagnostic;
-use crate::tokenizer::{best_detachment_candidate, best_supported_detachment, tokenize_analyzed};
+use crate::tokenizer::{
+    best_detachment_candidate, best_supported_detachment,
+    should_prefer_whole_word_over_short_nipat_split, tokenize_analyzed,
+};
 
 mod common;
 mod context;
@@ -63,6 +66,10 @@ pub struct CheckOptions {
 /// forms (including common misspellings like राजनैतिक). Academy correction
 /// rules are authoritative and must override lexicon presence.
 pub fn check_word(word: &str) -> Option<Diagnostic> {
+    if matches!(word, "भाको" | "नभाको") {
+        return None;
+    }
+
     if let Some(diag) = check_word_tiryak(word) {
         return Some(diag);
     }
@@ -74,6 +81,10 @@ pub fn check_word(word: &str) -> Option<Diagnostic> {
 
     if let Some(analysis) = best_analysis(word) {
         if !analysis.suffixes.is_empty() {
+            let detached = word.strip_prefix(&analysis.stem).unwrap_or_default();
+            if should_prefer_whole_word_over_short_nipat_split(&analysis.stem, detached, lex) {
+                return check_word_impl(word);
+            }
             if lex.contains(word) {
                 return None;
             }
@@ -91,6 +102,9 @@ pub fn check_word(word: &str) -> Option<Diagnostic> {
     }
 
     if let Some((stem, detached)) = best_supported_detachment(word, lex) {
+        if should_prefer_whole_word_over_short_nipat_split(&stem, &detached, lex) {
+            return check_word_impl(word);
+        }
         if let Some(mut diag) = check_word_impl(&stem) {
             diag.span = (0, word.len());
             diag.incorrect = word.to_string();
@@ -100,6 +114,9 @@ pub fn check_word(word: &str) -> Option<Diagnostic> {
     }
 
     if let Some((stem, detached)) = best_detachment_candidate(word, lex) {
+        if should_prefer_whole_word_over_short_nipat_split(&stem, &detached, lex) {
+            return check_word_impl(word);
+        }
         if let Some(mut diag) = check_word_impl(&stem) {
             let candidate = format!("{}{}", diag.correction, detached);
             if lex.contains(&candidate)
