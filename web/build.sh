@@ -90,8 +90,16 @@ else
   echo "  Install binaryen to enable: brew install binaryen  OR  apt install binaryen"
 fi
 
-BUILD_TIME_UTC="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 GIT_SHA="$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")"
+GIT_COMMIT_EPOCH="$(git show -s --format=%ct HEAD 2>/dev/null || true)"
+if [ -n "${GIT_COMMIT_EPOCH}" ]; then
+  BUILD_TIME_UTC="$(
+    date -u -r "${GIT_COMMIT_EPOCH}" +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null \
+      || date -u -d "@${GIT_COMMIT_EPOCH}" +"%Y-%m-%dT%H:%M:%SZ"
+  )"
+else
+  BUILD_TIME_UTC="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+fi
 ROOT_PKG_VERSION="$(
   awk '
     $0 == "[workspace.package]" { in_workspace = 1; next }
@@ -115,9 +123,7 @@ cat > web/build-info.json <<EOF
   "wasm_opt": {
     "applied": ${WASM_OPT_APPLIED},
     "version": ${WASM_OPT_VERSION},
-    "flags": "-Oz",
-    "size_before": ${WASM_SIZE_BEFORE},
-    "size_after": ${WASM_SIZE_AFTER}
+    "flags": "-Oz"
   }
 }
 EOF
