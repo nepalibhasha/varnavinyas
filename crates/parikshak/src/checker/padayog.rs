@@ -380,6 +380,9 @@ fn add_generalized_padabiyog_subrule_10_sarthak_dwitva_split(
         if !is_devanagari_word(token) || is_numeric_segment(token) {
             continue;
         }
+        if candidate_is_authoritative_headword(token) {
+            continue;
+        }
 
         let Some((left, right)) = split_exact_reduplication(token) else {
             continue;
@@ -850,14 +853,11 @@ fn add_generalized_saishanik_institutional_split(
             let Some((left, right)) = split_compound_suffix(token, suffix) else {
                 continue;
             };
-            let Some(normalized_left) = normalize_joined_word(left) else {
-                continue;
-            };
-            if !candidate_is_supported(&normalized_left) || !candidate_is_supported(right) {
+            if !candidate_is_authoritative_headword(left) || !candidate_is_supported(right) {
                 continue;
             }
 
-            let correction = format!("{normalized_left} {right}");
+            let correction = format!("{left} {right}");
             let span = (start, end);
             if blocked_spans.contains(&span) || overlaps_existing_span(diagnostics, span) {
                 continue;
@@ -902,14 +902,11 @@ fn add_generalized_saishanik_title_name_split(
             let Some((left, right)) = split_compound_suffix(token, suffix) else {
                 continue;
             };
-            let Some(normalized_left) = normalize_joined_word(left) else {
-                continue;
-            };
-            if !candidate_is_supported(&normalized_left) || !candidate_is_supported(right) {
+            if !candidate_is_authoritative_headword(left) || !candidate_is_supported(right) {
                 continue;
             }
 
-            let correction = format!("{normalized_left} {right}");
+            let correction = format!("{left} {right}");
             let span = (start, end);
             if blocked_spans.contains(&span) || overlaps_existing_span(diagnostics, span) {
                 continue;
@@ -987,16 +984,23 @@ fn add_generalized_saishanik_multiword_samasa_split(
 }
 
 fn split_compound_suffix<'a>(token: &'a str, suffix: &'a str) -> Option<(&'a str, &'a str)> {
-    let idx = token.find(suffix)?;
-    if idx == 0 {
-        return None;
+    for trailing in std::iter::once("").chain(VIBHAKTI_TOKENS.iter().copied()) {
+        let Some(core) = token.strip_suffix(trailing) else {
+            continue;
+        };
+        let Some(left) = core.strip_suffix(suffix) else {
+            continue;
+        };
+        if left.chars().count() < 2 {
+            continue;
+        }
+        let right = &token[left.len()..];
+        if right.is_empty() {
+            continue;
+        }
+        return Some((left, right));
     }
-    let right = &token[idx..];
-    let left = &token[..idx];
-    if left.is_empty() || right.is_empty() {
-        return None;
-    }
-    Some((left, right))
+    None
 }
 
 fn split_exact_reduplication(token: &str) -> Option<(&str, &str)> {
@@ -1154,20 +1158,15 @@ fn candidate_is_name_like(candidate: &str) -> bool {
 }
 
 fn plausible_vibhakti_attached_left(candidate: &str) -> bool {
-    if candidate_is_supported(candidate) {
-        return true;
-    }
-
     for &suffix in VIBHAKTI_TOKENS {
         let Some(base) = candidate.strip_suffix(suffix) else {
             continue;
         };
-        if base.chars().count() < 2 {
+        if base.chars().count() < 1 {
             continue;
         }
-        if base.chars().all(|ch| {
-            ('\u{0900}'..='\u{097F}').contains(&ch) || ('\u{A8E0}'..='\u{A8FF}').contains(&ch)
-        }) {
+        let normalized_base = normalize_joined_word(base).unwrap_or_else(|| base.to_string());
+        if candidate_is_supported(&normalized_base) {
             return true;
         }
     }
@@ -1245,6 +1244,9 @@ fn add_generalized_padayog_layered_join(
             };
             correction
         } else if starts_with_namayogi(right) {
+            if !candidate_is_authoritative_headword(left) {
+                continue;
+            }
             let Some(correction) = normalize_joined_word(&format!("{left}{right}")) else {
                 continue;
             };
@@ -1305,6 +1307,9 @@ fn add_generalized_padayog_layered_join(
             continue;
         }
         if !VIBHAKTI_TOKENS.contains(&right) {
+            continue;
+        }
+        if !candidate_is_authoritative_headword(left) {
             continue;
         }
 
@@ -1495,6 +1500,9 @@ fn add_generalized_padayog_namayogi_join(
             continue;
         }
         if !NAMAYOGI_TOKENS.contains(&right) {
+            continue;
+        }
+        if !candidate_is_authoritative_headword(left) {
             continue;
         }
 

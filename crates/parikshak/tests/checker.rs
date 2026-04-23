@@ -634,6 +634,18 @@ fn padayog_phrase_multiple_detected() {
 }
 
 #[test]
+fn generalized_vibhakti_pachhi_namayogi_split_requires_actual_vibhakti_on_left() {
+    let diags = check_text("वास्तविकताभन्दा आफूभन्दा तिमीभन्दा।");
+    for incorrect in ["वास्तविकताभन्दा", "आफूभन्दा", "तिमीभन्दा"]
+    {
+        assert!(
+            diags.iter().all(|d| d.incorrect != incorrect),
+            "Joined nameyogi form {incorrect} should not be split without a real vibhakti host, got: {diags:?}"
+        );
+    }
+}
+
+#[test]
 fn padayog_ota_varga_sambandhi_detected() {
     let text = "तीन ओटा शिक्षक वर्ग र ज्ञान सम्बन्धी छलफल भयो।";
     let diags = check_text(text);
@@ -781,6 +793,15 @@ fn generalized_padayog_namayogi_join_handles_prati() {
             .iter()
             .any(|d| d.incorrect == "अवसर प्रति" && d.correction == "अवसरप्रति"),
         "Expected generalized 3(घ)-पदयोग-४ join for प्रति, got: {diags:?}"
+    );
+}
+
+#[test]
+fn generalized_padayog_namayogi_join_skips_non_headword_adverb_hosts() {
+    let diags = check_text("छिटै भित्र पस्ने किसिमले।");
+    assert!(
+        diags.iter().all(|d| d.incorrect != "छिटै भित्र"),
+        "Non-headword adverb hosts should not be force-joined with नामयोगी, got: {diags:?}"
     );
 }
 
@@ -1005,6 +1026,15 @@ fn saishanik_title_name_splits_apply() {
 }
 
 #[test]
+fn saishanik_title_name_split_requires_terminal_suffix_boundary() {
+    let diags = check_text("स्वर्गका राजा; देवताका राजा।");
+    assert!(
+        diags.iter().all(|d| d.incorrect != "स्वर्गका"),
+        "Internal substring matches like स्वर्गका -> ष् वर्गका should not trigger title-name splitting, got: {diags:?}"
+    );
+}
+
+#[test]
 fn saishanik_multiword_samasa_splits_apply() {
     let diags = check_text(
         "नेपालपत्रकारमहासङ्घ, नेपालप्रज्ञाप्रतिष्ठान, मानवअधिकारआयोग, लोकसेवाआयोग, अख्तियारदुरुपयोगअनुसन्धानआयोग, नेपालविद्युत्प्राधिकरण।",
@@ -1035,12 +1065,20 @@ fn saishanik_multiword_samasa_splits_apply() {
 #[test]
 fn saishanik_vibhakti_pachhi_namayogi_splits_apply() {
     let diags = check_text("दीपेशकानिम्ति, सोनमकालागि, बाटोदेखिमाथि, मामाकोसमेत, उसकोभन्दा।");
-    for (incorrect, correction) in [
-        ("दीपेशकानिम्ति", "दीपेशका निम्ति"),
-        ("सोनमकालागि", "सोनमका लागि"),
-        ("बाटोदेखिमाथि", "बाटोदेखि माथि"),
-        ("मामाकोसमेत", "मामाको समेत"),
-        ("उसकोभन्दा", "उसको भन्दा"),
+    for (incorrect, correction, explanation_fragments) in [
+        (
+            "दीपेशकानिम्ति",
+            "दीपेशका निम्ति",
+            &["पदवियोग-३", "पदवियोग (क)"][..],
+        ),
+        (
+            "सोनमकालागि",
+            "सोनमका लागि",
+            &["पदवियोग-३", "पदवियोग (क)"][..],
+        ),
+        ("बाटोदेखिमाथि", "बाटोदेखि माथि", &["पदवियोग (क)"][..]),
+        ("मामाकोसमेत", "मामाको समेत", &["पदवियोग (क)"][..]),
+        ("उसकोभन्दा", "उसको भन्दा", &["पदवियोग (क)"][..]),
     ] {
         let diag = diags
             .iter()
@@ -1051,8 +1089,10 @@ fn saishanik_vibhakti_pachhi_namayogi_splits_apply() {
                 )
             });
         assert!(
-            diag.explanation.contains("पदवियोग (क)"),
-            "Expected शैक्षणिक पदवियोग (क) explanation for {incorrect}, got: {diag:?}"
+            explanation_fragments
+                .iter()
+                .any(|fragment| diag.explanation.contains(fragment)),
+            "Expected one of {explanation_fragments:?} for {incorrect}, got: {diag:?}"
         );
     }
 }
@@ -1083,6 +1123,42 @@ fn saishanik_sarthak_dwitva_splits_apply_generally() {
             "Expected शैक्षणिक पदवियोग (ग) explanation for {incorrect}, got: {diag:?}"
         );
     }
+}
+
+#[test]
+fn lexicalized_reduplication_headword_is_not_forced_apart() {
+    let diags = check_text("वातविकार आदिका कारणले घाँटीबाट हिक्कहिक्क निस्कने आवाज।");
+    assert!(
+        diags.iter().all(|d| d.incorrect != "हिक्कहिक्क"),
+        "Exact headword हिक्कहिक्क should not trigger सार्थक द्वित्व splitting, got: {diags:?}"
+    );
+}
+
+#[test]
+fn exact_headword_chandrabindu_variant_is_not_flagged_in_dictionary_prose() {
+    let diags = check_text("बस्दा दुई खुट्टा र चाकले मात्र भुईं छुने गरी।");
+    assert!(
+        diags.iter().all(|d| d.incorrect != "भुईं"),
+        "Exact headword भुईं should not be overcorrected in dictionary prose, got: {diags:?}"
+    );
+}
+
+#[test]
+fn exact_headword_final_hrasva_variant_is_not_flagged_in_dictionary_prose() {
+    let diags = check_text("औषधीको प्रयोगले रोग निको हुन सक्छ।");
+    assert!(
+        diags.iter().all(|d| d.incorrect != "औषधी"),
+        "Exact headword औषधी should not be overcorrected in dictionary prose, got: {diags:?}"
+    );
+}
+
+#[test]
+fn documented_hrasva_tail_compound_is_not_flagged_in_dictionary_prose() {
+    let diags = check_text("सामान पाथीघरमुनि राखिएको थियो।");
+    assert!(
+        diags.iter().all(|d| d.incorrect != "पाथीघरमुनि"),
+        "Joined compounds with documented hrasva tails like मुनि should stay clean, got: {diags:?}"
+    );
 }
 
 #[test]

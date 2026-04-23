@@ -1,6 +1,21 @@
 use super::{kosha_backed_dirgha_correction, rule_dirgha_endings};
 use varnavinyas_shabda::{Origin, classify, decompose};
 
+pub(crate) fn exact_headword_supported(word: &str) -> bool {
+    let lex = varnavinyas_kosha::kosha();
+    lex.lookup(word).is_some()
+}
+
+pub(crate) fn has_exact_headword_left_compound_tail(input: &str, tails: &[&str]) -> bool {
+    let lex = varnavinyas_kosha::kosha();
+    tails.iter().any(|tail| {
+        let Some(left) = input.strip_suffix(tail) else {
+            return false;
+        };
+        !left.is_empty() && lex.lookup(left).is_some()
+    })
+}
+
 pub(super) mod final_classes {
     use super::*;
     pub(crate) fn final_dirgha_class_for(

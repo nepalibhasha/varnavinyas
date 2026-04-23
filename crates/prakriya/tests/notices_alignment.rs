@@ -7,7 +7,7 @@ use varnavinyas_prakriya::derive;
 /// This list is an explicit debt register. The test fails if:
 /// - a new contradicted example appears (regression), or
 /// - an existing contradiction disappears (behavior changed) without updating this file.
-const KNOWN_NOTICE_EXAMPLE_CONTRADICTIONS: &[&str] = &["प्रसाईं"];
+const KNOWN_NOTICE_EXAMPLE_CONTRADICTIONS: &[&str] = &[];
 
 fn is_devanagari_token(s: &str) -> bool {
     let mut has_devanagari = false;

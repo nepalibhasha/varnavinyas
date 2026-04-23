@@ -39,6 +39,9 @@ pub fn rule_chandrabindu(input: &str) -> Option<Prakriya> {
             )],
         ));
     }
+    if exact_headword_supported(input) {
+        return None;
+    }
 
     let origin_decision = classify_with_provenance(input);
     let origin = origin_decision.origin;
@@ -203,6 +206,10 @@ pub fn rule_chandrabindu(input: &str) -> Option<Prakriya> {
     }
 
     None
+}
+
+fn exact_headword_supported(word: &str) -> bool {
+    kosha().lookup(word).is_some()
 }
 
 fn supported_non_tatsam_chandrabindu_form(input: &str) -> Option<String> {

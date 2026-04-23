@@ -1,4 +1,4 @@
-use super::helpers::{final_classes, hrasva_helpers};
+use super::helpers::{exact_headword_supported, final_classes, hrasva_helpers};
 use crate::model::prakriya::Prakriya;
 use crate::model::rule::Rule;
 use crate::model::rule_spec::{DiagnosticKind, RuleCategory, RuleSpec};
@@ -128,6 +128,9 @@ pub fn rule_final_hrasva_endings(input: &str) -> Option<Prakriya> {
     }
 
     let (rule_ref, description) = final_classes::final_hrasva_class_for(&output)?;
+    if rule_ref == "3(क)(इ)-9" && exact_headword_supported(input) {
+        return None;
+    }
     Some(Prakriya::corrected(
         input,
         &output,

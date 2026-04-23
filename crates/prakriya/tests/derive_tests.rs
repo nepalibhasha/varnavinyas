@@ -178,6 +178,27 @@ fn exact_headword_sibilant_form_is_not_overcorrected() {
 }
 
 #[test]
+fn exact_headword_chandrabindu_form_is_not_overcorrected() {
+    let p = derive("भुईं");
+    assert_eq!(p.output, "भुईं");
+    assert!(p.is_correct);
+}
+
+#[test]
+fn exact_headword_final_hrasva_variant_is_not_overcorrected() {
+    let p = derive("औषधी");
+    assert_eq!(p.output, "औषधी");
+    assert!(p.is_correct);
+}
+
+#[test]
+fn documented_hrasva_tail_compound_is_not_overcorrected() {
+    let p = derive("पाथीघरमुनि");
+    assert_eq!(p.output, "पाथीघरमुनि");
+    assert!(p.is_correct);
+}
+
+#[test]
 fn panchham_correction() {
     let p = derive("संघीय");
     assert_eq!(p.output, "सङ्घीय");

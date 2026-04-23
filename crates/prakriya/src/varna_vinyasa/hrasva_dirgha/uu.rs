@@ -1,4 +1,4 @@
-use super::helpers::final_classes;
+use super::helpers::{final_classes, has_exact_headword_left_compound_tail};
 use super::u::rule_initial_tatsam_dirgha;
 use crate::model::prakriya::Prakriya;
 use crate::model::rule::Rule;
@@ -214,6 +214,7 @@ pub fn rule_dirgha_endings(input: &str) -> Option<Prakriya> {
     let last = *chars.last().unwrap();
 
     static DIRGHA_II_ENDINGS: &[&str] = &["नी", "डी", "सानी"];
+    static HRASVA_NI_COMPOUND_TAILS: &[&str] = &["अनि", "पनि", "मुनि", "बर्सेनि"];
     static HRASVA_FINAL_I_EXCEPTIONS: &[&str] = &[
         "अगाडि",
         "पछाडि",
@@ -344,6 +345,11 @@ pub fn rule_dirgha_endings(input: &str) -> Option<Prakriya> {
         for ending in DIRGHA_II_ENDINGS {
             let hrasva_ending = ending.replace('ी', "ि");
             if input.ends_with(&hrasva_ending) {
+                if hrasva_ending == "नि"
+                    && has_exact_headword_left_compound_tail(input, HRASVA_NI_COMPOUND_TAILS)
+                {
+                    return None;
+                }
                 let output = format!("{}{}", &input[..input.len() - hrasva_ending.len()], ending);
                 return Some(Prakriya::corrected(
                     input,
