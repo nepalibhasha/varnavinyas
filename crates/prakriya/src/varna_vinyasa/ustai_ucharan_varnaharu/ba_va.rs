@@ -158,11 +158,9 @@ pub fn rule_ba_va(input: &str) -> Option<Prakriya> {
             } else if from == 'ब' && i == 0 && input.starts_with("बि") {
                 // 'व' को प्रयोग, subrule 1 (वि-उपसर्ग)
                 "3(ग)(आ)-व-1"
-            } else if from == 'ब' && (output.contains("वै") || output.contains('ृ')) {
-                // 'व' को प्रयोग, subrule 2
-                "3(ग)(आ)-व-2"
             } else if from == 'ब'
-                && (output.contains("र्ष")
+                && ((output.contains("वै") || output.contains('ृ'))
+                    || output.contains("र्ष")
                     || output.contains("र्ग")
                     || output.contains("र्ण")
                     || output.contains("वृक्ष")

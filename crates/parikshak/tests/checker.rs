@@ -132,13 +132,12 @@ fn check_word_accepts_contracted_nai_after_n_stem() {
 
 #[test]
 fn check_word_accepts_shared_onset_particle_forms() {
-    for word in ["खलककै"] {
-        let diag = check_word(word);
-        assert!(
-            diag.is_none(),
-            "Shared-onset particle form '{word}' should be structurally supported, got: {diag:?}"
-        );
-    }
+    let word = "खलककै";
+    let diag = check_word(word);
+    assert!(
+        diag.is_none(),
+        "Shared-onset particle form '{word}' should be structurally supported, got: {diag:?}"
+    );
 }
 
 #[test]
@@ -1253,7 +1252,7 @@ fn saishanik_nipat_split_applies_to_school_grammar_examples() {
     assert!(
         diags
             .iter()
-            .all(|d| !(d.incorrect == "ऊनि" && !d.explanation.contains("पदवियोग (च)"))),
+            .all(|d| d.incorrect != "ऊनि" || d.explanation.contains("पदवियोग (च)")),
         "Specific निपात rule should suppress weaker same-span diagnostics on ऊनि, got: {diags:?}"
     );
 }

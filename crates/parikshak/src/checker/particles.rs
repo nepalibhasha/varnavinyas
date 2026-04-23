@@ -188,6 +188,7 @@ fn add_sentence_bound_nipat_split(
     false
 }
 
+#[allow(clippy::too_many_arguments)]
 fn push_nipat_diagnostic(
     token: &str,
     correction: String,

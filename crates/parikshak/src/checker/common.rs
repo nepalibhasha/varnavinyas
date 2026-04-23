@@ -71,11 +71,7 @@ pub(super) fn is_word_boundary(text: &str, start: usize, end: usize) -> bool {
     prev_ok && next_ok
 }
 
-fn trim_outer_punctuation<'a>(
-    text: &'a str,
-    start: usize,
-    end: usize,
-) -> Option<(&'a str, usize, usize)> {
+fn trim_outer_punctuation(text: &str, start: usize, end: usize) -> Option<(&str, usize, usize)> {
     let slice = &text[start..end];
 
     let mut left = 0;

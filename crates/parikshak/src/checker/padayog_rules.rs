@@ -7,7 +7,7 @@
 /// - Each Academy subrule is represented explicitly (`PadayogRule`).
 /// - Each subrule has one or more concrete rewrite patterns.
 /// - Checker applies all patterns with boundary/span guards.
-
+///
 /// Concrete rewrite pair with a terse explanation.
 #[derive(Debug, Clone, Copy)]
 pub struct PhraseRewrite {

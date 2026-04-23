@@ -37,9 +37,7 @@ fn corrected(
 // - 3(ङ)-अजन्त-1 .. 8
 // -----------------------------------------------------------------------------
 pub(super) fn rule_ajanta_required(input: &str) -> Option<Prakriya> {
-    let Some(stem) = input.strip_suffix('्') else {
-        return None;
-    };
+    let stem = input.strip_suffix('्')?;
 
     if input.ends_with("छस्") || input.ends_with("छन्") || input.ends_with("इस्") || input == "अर्थात्"
     {

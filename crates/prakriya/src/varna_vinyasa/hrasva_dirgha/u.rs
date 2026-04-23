@@ -92,9 +92,7 @@ pub fn rule_su_prefix_preserves_dirgha(input: &str) -> Option<Prakriya> {
     }
 
     let output = input.replacen("सु", "सू", 1);
-    let Some(base_tail) = output.strip_prefix("सू") else {
-        return None;
-    };
+    let base_tail = output.strip_prefix("सू")?;
     let base = format!("उ{base_tail}");
 
     if !lex.contains(&output) || !lex.contains(&base) {

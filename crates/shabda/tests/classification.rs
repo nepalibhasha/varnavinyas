@@ -310,22 +310,21 @@ fn supported_analysis_allows_contracted_nai_after_n_stem() {
 
 #[test]
 fn supported_analysis_allows_shared_onset_particle_forms() {
-    for (word, stem, suffix) in [("खलककै", "खलक", "कै")] {
-        let analysis = best_analysis(word)
-            .unwrap_or_else(|| panic!("shared-onset particle form {word} should analyze"));
-        assert_eq!(analysis.stem, stem, "unexpected stem for {word}");
-        assert_eq!(analysis.root, stem, "unexpected root for {word}");
-        assert_eq!(
-            analysis.suffixes,
-            vec![suffix],
-            "unexpected suffixes for {word}"
-        );
-        assert_eq!(
-            analysis.suffix_segments[0].kind,
-            AffixKind::Particle,
-            "unexpected suffix kind for {word}"
-        );
-    }
+    let (word, stem, suffix) = ("खलककै", "खलक", "कै");
+    let analysis = best_analysis(word)
+        .unwrap_or_else(|| panic!("shared-onset particle form {word} should analyze"));
+    assert_eq!(analysis.stem, stem, "unexpected stem for {word}");
+    assert_eq!(analysis.root, stem, "unexpected root for {word}");
+    assert_eq!(
+        analysis.suffixes,
+        vec![suffix],
+        "unexpected suffixes for {word}"
+    );
+    assert_eq!(
+        analysis.suffix_segments[0].kind,
+        AffixKind::Particle,
+        "unexpected suffix kind for {word}"
+    );
 }
 
 #[test]

@@ -166,6 +166,7 @@ pub struct AffixAnalysis {
     pub score: u16,
 }
 
+#[allow(clippy::too_many_arguments)]
 fn push_affix_analysis(
     analyses: &mut Vec<AffixAnalysis>,
     seen: &mut HashSet<String>,
@@ -214,6 +215,7 @@ fn push_affix_analysis(
     });
 }
 
+#[allow(clippy::too_many_arguments)]
 fn collect_prefixed_analyses(
     surface: &str,
     stem: &str,
@@ -463,6 +465,7 @@ fn push_candidate(
     });
 }
 
+#[allow(clippy::too_many_arguments)]
 fn recurse_suffix_groups(
     original: &str,
     current: &str,

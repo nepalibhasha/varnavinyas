@@ -1,3 +1,5 @@
+#![allow(clippy::ptr_arg)]
+
 use std::collections::HashSet;
 
 use varnavinyas_kosha::kosha;

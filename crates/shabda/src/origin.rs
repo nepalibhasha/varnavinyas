@@ -25,6 +25,7 @@ pub struct OriginDecision {
 /// चार-स्तरीय lookup:
 /// 1. Override तालिका (dictionary/heuristic ले छुटाउन सक्ने किनाराका केस)
 /// 2. Kosha lookup (~130K headwords, Brihat + Pragya Shabdakosha metadata सहित)
+///
 /// 2b. Suffix-stripped kosha lookup (विभक्ति/बहुवचन रूपका लागि)
 /// 3. Heuristic वर्गीकरण (ध्वन्यात्मक ढाँचा)
 pub fn classify(word: &str) -> Origin {
@@ -246,6 +247,31 @@ pub fn source_language(word: &str) -> Option<&'static str> {
     varnavinyas_kosha::kosha().source_language_of(word)
 }
 
+fn has_tadbhav_markers(word: &str, chars: &[char]) -> bool {
+    // तद्भवमा देखिने प्रचलित अन्त्य: -ो, -ा
+    let last = chars.last().copied().unwrap_or('\0');
+    let second_last = if chars.len() >= 2 {
+        chars[chars.len() - 2]
+    } else {
+        '\0'
+    };
+
+    // तद्भव क्रियामा देखिने प्रचलित अन्त्य
+    if word.ends_with("नु") || word.ends_with("ने") || word.ends_with("को") {
+        return true;
+    }
+
+    // तद्भवको बोलिचालि/लघुरूप अन्त्य
+    if last == 'ो' || (second_last != '\0' && matches!(last, 'ो' | 'ा')) {
+        // -ठो/-ठा अन्त्य धेरैजसो तद्भव रूप हुन्छ
+        if matches!(second_last, 'ठ' | 'ड' | 'ढ') {
+            return true;
+        }
+    }
+
+    false
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -283,29 +309,4 @@ mod tests {
         assert_eq!(d.origin, Origin::Tatsam, "अध्ययन should be Tatsam");
         assert_eq!(d.source, OriginSource::Kosha, "should come from kosha");
     }
-}
-
-fn has_tadbhav_markers(word: &str, chars: &[char]) -> bool {
-    // तद्भवमा देखिने प्रचलित अन्त्य: -ो, -ा
-    let last = chars.last().copied().unwrap_or('\0');
-    let second_last = if chars.len() >= 2 {
-        chars[chars.len() - 2]
-    } else {
-        '\0'
-    };
-
-    // तद्भव क्रियामा देखिने प्रचलित अन्त्य
-    if word.ends_with("नु") || word.ends_with("ने") || word.ends_with("को") {
-        return true;
-    }
-
-    // तद्भवको बोलिचालि/लघुरूप अन्त्य
-    if last == 'ो' || (second_last != '\0' && matches!(last, 'ो' | 'ा')) {
-        // -ठो/-ठा अन्त्य धेरैजसो तद्भव रूप हुन्छ
-        if matches!(second_last, 'ठ' | 'ड' | 'ढ') {
-            return true;
-        }
-    }
-
-    false
 }

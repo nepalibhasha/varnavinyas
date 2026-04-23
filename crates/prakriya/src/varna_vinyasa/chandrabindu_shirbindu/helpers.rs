@@ -5,7 +5,7 @@ use varnavinyas_shabda::OriginSource;
 pub(super) fn nasalize_diphthong_suffix(input: &str) -> Option<(String, &'static str)> {
     let lex = kosha();
 
-    const PATTERNS: &[(&str, &str, &'static str)] = &[
+    const PATTERNS: &[(&str, &str, &str)] = &[
         ("ाउदा", "ाउँदा", "3(ख)(आ)-3"),
         ("ाउदै", "ाउँदै", "3(ख)(आ)-3"),
         ("िउदा", "िउँदा", "3(ख)(आ)-3"),
