@@ -1,7 +1,7 @@
 {
-  "built_at_utc": "2026-04-23T06:07:21Z",
-  "git_sha": "5864409",
-  "version": "git-5864409",
+  "built_at_utc": "2026-04-23T23:25:44Z",
+  "git_sha": "037c978",
+  "version": "git-037c978",
   "wasm_bindgen_cli": "0.2.108",
   "wasm_opt": {
     "applied": false,
