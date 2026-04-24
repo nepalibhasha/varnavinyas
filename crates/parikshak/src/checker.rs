@@ -66,6 +66,10 @@ pub struct CheckOptions {
 /// forms (including common misspellings like राजनैतिक). Academy correction
 /// rules are authoritative and must override lexicon presence.
 pub fn check_word(word: &str) -> Option<Diagnostic> {
+    if matches!(word, "नं") {
+        return None;
+    }
+
     if matches!(word, "भाको" | "नभाको") {
         return None;
     }

@@ -167,7 +167,9 @@ fn check_period_as_sentence_end(text: &str, diagnostics: &mut Vec<LekhyaDiagnost
             let has_devanagari_before = has_devanagari_before_pos(text, period_start);
 
             if has_devanagari_before {
-                if is_numbered_list_marker_period(text, period_start) {
+                if is_numbered_list_marker_period(text, period_start)
+                    || is_contact_metadata_line_period(text, period_start)
+                {
                     i = period_end;
                     continue;
                 }
@@ -248,6 +250,10 @@ fn is_likely_abbreviation(text: &str, pos: usize) -> bool {
         return true;
     }
 
+    if is_compact_dotted_devanagari_abbreviation(text, pos) {
+        return true;
+    }
+
     // Chained abbreviations such as:
     // - "अ. दु. अ. आ."
     // - "त्रि.वि."
@@ -285,6 +291,37 @@ fn is_numbered_list_marker_period(text: &str, period_pos: usize) -> bool {
 
 fn is_number_char(c: char) -> bool {
     c.is_ascii_digit() || ('\u{0966}'..='\u{096F}').contains(&c)
+}
+
+fn is_compact_dotted_devanagari_abbreviation(text: &str, period_pos: usize) -> bool {
+    let prefix = &text[..period_pos];
+    let word_start = prefix
+        .rfind(|c: char| c.is_whitespace())
+        .map_or(0, |i| i + 1);
+    let dotted = &prefix[word_start..];
+
+    dotted.contains('.')
+        && dotted
+            .split('.')
+            .all(|part| !part.is_empty() && is_short_devanagari_token(part))
+}
+
+fn is_contact_metadata_line_period(text: &str, period_pos: usize) -> bool {
+    let line_start = text[..period_pos].rfind('\n').map_or(0, |idx| idx + 1);
+    let line_end = text[period_pos..]
+        .find('\n')
+        .map_or(text.len(), |idx| period_pos + idx);
+    let line = &text[line_start..line_end];
+
+    line.contains('|')
+        && (line.contains('@')
+            || line.contains("www.")
+            || line.contains('+')
+            || line.chars().any(is_devanagari_digit))
+}
+
+fn is_devanagari_digit(c: char) -> bool {
+    ('\u{0966}'..='\u{096F}').contains(&c)
 }
 
 fn is_short_devanagari_token(token: &str) -> bool {

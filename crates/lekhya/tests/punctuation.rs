@@ -106,6 +106,16 @@ fn regression_numbered_list_markers_allowed() {
     );
 }
 
+#[test]
+fn regression_contact_metadata_dots_allowed() {
+    let text = "vc@ku.edu.np | info@ku.edu.np | www.ku.edu.np | पो.ब.नं. ६२५०, काठमाडौँ.";
+    let diags = check_punctuation(text);
+    assert!(
+        diags.is_empty(),
+        "Contact metadata dots should be allowed, got: {diags:?}"
+    );
+}
+
 /// Section 5: निर्देशक supports :, -, and :-; bare ':' must not be forced to ':-'.
 #[test]
 fn regression_nirdeshak_colon_allowed() {

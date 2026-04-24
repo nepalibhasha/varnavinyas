@@ -261,6 +261,15 @@ fn numeric_tokens_do_not_trigger_spelling_suggestions() {
 }
 
 #[test]
+fn abbreviation_number_marker_does_not_trigger_spelling_suggestion() {
+    let diag = check_word("नं");
+    assert!(
+        diag.is_none(),
+        "Abbreviation marker नं should not produce a diagnostic, got: {diag:?}"
+    );
+}
+
+#[test]
 fn text_with_devanagari_numbers_remains_unflagged() {
     let diags = check_text("बैठक २०८३-०८-१४ मा ७२% उपस्थितिसहित सम्पन्न भयो।");
     assert!(
@@ -586,6 +595,16 @@ fn punctuation_allows_dictionary_numbered_list_markers() {
     assert!(
         punct_diags.is_empty(),
         "Numbered definition markers should not emit punctuation diagnostics, got: {punct_diags:?}"
+    );
+}
+
+#[test]
+fn punctuation_allows_contact_metadata_dots() {
+    let text = "धुलिखेल, काभ्रे, नेपाल | +९७७ ११ ४९५००१, ४९५१००, ४९५२०० | फ्याक्स +९७७ ११ ४९०४९७, ०१ ५१८६४१४\nvc@ku.edu.np | info@ku.edu.np | www.ku.edu.np | पो.ब.नं. ६२५०, काठमाडौँ.";
+    let diags = check_text(text);
+    assert!(
+        diags.is_empty(),
+        "Contact metadata should not emit diagnostics, got: {diags:?}"
     );
 }
 
