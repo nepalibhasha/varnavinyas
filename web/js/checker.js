@@ -120,6 +120,14 @@ function isPunctuationStyleDiagnostic(diag) {
   return diag.category_code === "Punctuation" && !isPunctuationStrictEnabled();
 }
 
+function isInformationalDiagnostic(diag) {
+  return diag.rule_code === "samasa-heuristic";
+}
+
+function isApplyableDiagnostic(diag) {
+  return diag.incorrect !== diag.correction && !isInformationalDiagnostic(diag);
+}
+
 function isHeuristicDiagnostic(diag) {
   if (isPunctuationStyleDiagnostic(diag)) {
     return true;
@@ -152,6 +160,9 @@ function heuristicLabel(diag) {
 }
 
 function primaryCategoryLabel(diag) {
+  if (diag.rule_code === "samasa-heuristic") {
+    return "समास";
+  }
   switch (diag.category_code) {
     case "HrasvaDirgha":
       return "ह्रस्व/दीर्घ";
@@ -176,12 +187,14 @@ function primaryCategoryLabel(diag) {
 }
 
 function diagnosticStateLabel(diag) {
+  if (isInformationalDiagnostic(diag)) return "जानकारी";
   if (isHeuristicDiagnostic(diag)) return "सुझाव";
   if (diag.kind === "Variant") return "वैकल्पिक";
   return null;
 }
 
 function diagnosticKindClass(diag) {
+  if (isInformationalDiagnostic(diag)) return "info";
   if (isHeuristicDiagnostic(diag)) return "suggestion";
   if (diag.kind === "Variant") return "variant";
   return "error";
@@ -192,6 +205,9 @@ function normalizeCopy(text) {
 }
 
 function diagnosticGuidance(diag) {
+  if (isInformationalDiagnostic(diag)) {
+    return "यो समास/विग्रह सूचना हो; पाठमा लागू गर्ने सुधार होइन।";
+  }
   if (isHeuristicDiagnostic(diag)) {
     return "यो सन्दर्भअनुसार छान्ने सुझाव हो।";
   }
@@ -275,6 +291,7 @@ function runCheck() {
 function renderReviewToolbar() {
   const visible = getVisibleDiagnosticsWithIndex();
   const hardVisible = visible.filter(({ d }) => isHardDiagnostic(d));
+  const applyableVisible = visible.filter(({ d }) => isApplyableDiagnostic(d));
   const activePos = getActiveVisiblePosition();
 
   if (reviewProgress) {
@@ -285,8 +302,8 @@ function renderReviewToolbar() {
   if (reviewPrevBtn) reviewPrevBtn.disabled = visible.length <= 1;
   if (reviewNextBtn) reviewNextBtn.disabled = visible.length <= 1;
   if (applyHardBtn) applyHardBtn.disabled = hardVisible.length === 0;
-  if (copyCorrectedBtn) copyCorrectedBtn.disabled = visible.length === 0;
-  if (togglePreviewBtn) togglePreviewBtn.disabled = visible.length === 0;
+  if (copyCorrectedBtn) copyCorrectedBtn.disabled = applyableVisible.length === 0;
+  if (togglePreviewBtn) togglePreviewBtn.disabled = applyableVisible.length === 0;
 }
 
 function togglePreviewPanel() {
@@ -309,7 +326,7 @@ function renderPreviewPanel() {
     return;
   }
 
-  const changedCount = visible.filter((d) => d.incorrect !== d.correction).length;
+  const changedCount = visible.filter(isApplyableDiagnostic).length;
   previewPanel.hidden = false;
   previewPanel.innerHTML = `
     <div class="preview-head">
@@ -368,6 +385,7 @@ function goToNextDiagnostic() {
 function buildCorrectedText({ hardOnly = false } = {}) {
   const applicable = getVisibleDiagnosticsWithIndex()
     .map(({ d }) => d)
+    .filter(isApplyableDiagnostic)
     .filter((d) => !hardOnly || isHardDiagnostic(d))
     .sort((a, b) => b.charStart - a.charStart);
 
@@ -528,12 +546,14 @@ function renderDiagnostics() {
   const visibleErrorCount = visibleDiagnostics.filter(
     (d) => !isHeuristicDiagnostic(d)
   ).length;
-  const visibleSuggestionCount = visibleDiagnostics.length - visibleErrorCount;
+  const visibleInfoCount = visibleDiagnostics.filter(isInformationalDiagnostic).length;
+  const visibleSuggestionCount = visibleDiagnostics.length - visibleErrorCount - visibleInfoCount;
 
-  errorCount.textContent = visibleSuggestionCount > 0
-    ? `${visibleErrorCount} त्रुटि, ${visibleSuggestionCount} शैली सुझाव`
-    : `${visibleErrorCount} \u0924\u094D\u0930\u0941\u091F\u093F`;
-  fixAllBtn.disabled = visibleDiagnostics.length === 0;
+  const countParts = [`${visibleErrorCount} त्रुटि`];
+  if (visibleSuggestionCount > 0) countParts.push(`${visibleSuggestionCount} शैली सुझाव`);
+  if (visibleInfoCount > 0) countParts.push(`${visibleInfoCount} जानकारी`);
+  errorCount.textContent = countParts.join(', ');
+  fixAllBtn.disabled = !visibleDiagnostics.some(isApplyableDiagnostic);
 
   if (diagnostics.length === 0) {
     diagnosticsList.innerHTML =
@@ -555,8 +575,15 @@ function renderDiagnostics() {
       const guidanceBlock = guidance
         ? `<div class="diag-guidance">${escapeHtml(guidance)}</div>`
         : "";
-      const hasChange = d.incorrect !== d.correction;
-      const correctionRow = hasChange
+      const isInfo = isInformationalDiagnostic(d);
+      const hasChange = isApplyableDiagnostic(d);
+      const correctionRow = isInfo
+        ? `<div class="diag-correction diag-analysis-row">
+          <span class="diag-source">${escapeHtml(d.incorrect)}</span>
+          <span class="diag-arrow">\u2192</span>
+          <span class="diag-analysis">${escapeHtml(d.correction)}</span>
+        </div>`
+        : hasChange
         ? `<div class="diag-correction">
           <span class="diag-incorrect">${escapeHtml(d.incorrect)}</span>
           <span class="diag-arrow">\u2192</span>
@@ -707,7 +734,8 @@ function showMobileDiagOverlay(d, idx) {
   hideInspector();
   const visible = getVisibleDiagnosticsWithIndex();
   const visiblePos = visible.findIndex(({ index }) => index === idx);
-  const hasChange = d.incorrect !== d.correction;
+  const isInfo = isInformationalDiagnostic(d);
+  const hasChange = isApplyableDiagnostic(d);
   const label = primaryCategoryLabel(d);
   const code = escapeHtml(d.category_code);
   const kindLabel = diagnosticStateLabel(d);
@@ -723,7 +751,13 @@ function showMobileDiagOverlay(d, idx) {
       <span class="mobile-diag-progress">${visiblePos >= 0 ? `${visiblePos + 1} / ${visible.length}` : ''}</span>
       <button class="mobile-diag-dismiss" aria-label="Close">&times;</button>
     </div>
-    ${hasChange
+    ${isInfo
+      ? `<div class="diag-correction diag-analysis-row">
+          <span class="diag-source">${escapeHtml(d.incorrect)}</span>
+          <span class="diag-arrow">\u2192</span>
+          <span class="diag-analysis">${escapeHtml(d.correction)}</span>
+        </div>`
+      : hasChange
       ? `<div class="diag-correction">
           <span class="diag-incorrect">${escapeHtml(d.incorrect)}</span>
           <span class="diag-arrow">\u2192</span>
@@ -945,6 +979,7 @@ function handleInspectorBack() {
  */
 function fixOne(index) {
   const d = diagnostics[index];
+  if (!isApplyableDiagnostic(d)) return;
   const text = editorInput.value;
   editorInput.value =
     text.slice(0, d.charStart) + d.correction + text.slice(d.charEnd);

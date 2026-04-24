@@ -688,6 +688,12 @@ body {
   border-color: #93c5fd;
 }
 
+.diag-kind-info {
+  color: #065f46;
+  background: #d1fae5;
+  border-color: #6ee7b7;
+}
+
 .diag-confidence {
   margin-left: auto;
   font-family: var(--font-latin);
@@ -727,6 +733,23 @@ body {
 .diag-arrow { color: var(--color-text-secondary); margin: 0 0.3rem; }
 
 .diag-correct {
+  color: var(--color-success);
+  font-weight: 600;
+}
+
+.diag-analysis-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem;
+}
+
+.diag-source {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.diag-analysis {
   color: var(--color-success);
   font-weight: 600;
 }
