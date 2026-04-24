@@ -575,6 +575,20 @@ fn punctuation_normalized_editorial_emits_variant() {
     );
 }
 
+#[test]
+fn punctuation_allows_dictionary_numbered_list_markers() {
+    let text = "शब्द\nनाम [संस्कृत]\n१. अनुभूत विषयवस्तुलाई व्यक्त गरिने वर्णात्मक वा ध्वन्यात्मक ध्वनि; आवाज।\n२. वर्ण वा वर्णसमूहबाट बनेको कुनै अर्थ बुझाउने ध्वनि; सार्थक पद; लबज।\n१. नाम अनुभूत विषयलाई व्यक्त गरिने वर्णात्मक वा ध्वन्यात्मक आबाज।\n२. नाम वर्ण वा वर्णसमूहबाट बनेको कुनै अर्थ बुझाउने ध्वनि; सार्थक पद; लबज।";
+    let diags = check_text(text);
+    let punct_diags: Vec<_> = diags
+        .iter()
+        .filter(|d| d.category == varnavinyas_parikshak::DiagnosticCategory::Punctuation)
+        .collect();
+    assert!(
+        punct_diags.is_empty(),
+        "Numbered definition markers should not emit punctuation diagnostics, got: {punct_diags:?}"
+    );
+}
+
 /// Regression test: ensure suffix is preserved in correction string.
 /// "बिज्ञानमा" -> stem "बिज्ञान" (wrong) + suffix "मा".
 /// Correction should be "विज्ञान" + "मा" = "विज्ञानमा".

@@ -167,6 +167,11 @@ fn check_period_as_sentence_end(text: &str, diagnostics: &mut Vec<LekhyaDiagnost
             let has_devanagari_before = has_devanagari_before_pos(text, period_start);
 
             if has_devanagari_before {
+                if is_numbered_list_marker_period(text, period_start) {
+                    i = period_end;
+                    continue;
+                }
+
                 // Check what follows
                 let is_eof = period_end >= bytes.len();
                 let next_char = if !is_eof {
@@ -262,6 +267,24 @@ fn is_likely_abbreviation(text: &str, pos: usize) -> bool {
     // this function is called only after confirming Devanagari context before '.',
     // so default to "not abbreviation".
     false
+}
+
+fn is_numbered_list_marker_period(text: &str, period_pos: usize) -> bool {
+    let prefix = &text[..period_pos];
+    let line_start = prefix.rfind('\n').map_or(0, |idx| idx + 1);
+    let line_prefix = &text[line_start..period_pos];
+    let marker = line_prefix.trim_start();
+
+    !marker.is_empty()
+        && marker.chars().all(is_number_char)
+        && text[period_pos + 1..]
+            .chars()
+            .next()
+            .is_some_and(char::is_whitespace)
+}
+
+fn is_number_char(c: char) -> bool {
+    c.is_ascii_digit() || ('\u{0966}'..='\u{096F}').contains(&c)
 }
 
 fn is_short_devanagari_token(token: &str) -> bool {

@@ -94,6 +94,18 @@ fn regression_number_sentence_end() {
     assert_eq!(diags[0].expected, "।");
 }
 
+/// Regression: dictionary/list numbering like "१." and "२." is not a
+/// sentence-ending period.
+#[test]
+fn regression_numbered_list_markers_allowed() {
+    let text = "शब्द\nनाम [संस्कृत]\n१. अनुभूत विषयवस्तुलाई व्यक्त गरिने ध्वनि।\n२. सार्थक पद; लबज।";
+    let diags = check_punctuation(text);
+    assert!(
+        diags.is_empty(),
+        "Numbered list markers should be allowed, got: {diags:?}"
+    );
+}
+
 /// Section 5: निर्देशक supports :, -, and :-; bare ':' must not be forced to ':-'.
 #[test]
 fn regression_nirdeshak_colon_allowed() {
