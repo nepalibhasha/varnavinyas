@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: Security vulnerability reporting
-    url: https://github.com/varnavinyas/varnavinyas/security/advisories/new
+    url: https://github.com/nepalibhasha/varnavinyas/security/advisories/new
     about: Please report security vulnerabilities privately.
   - name: Contribution guide
-    url: https://github.com/varnavinyas/varnavinyas/blob/main/.github/CONTRIBUTING.md
+    url: https://github.com/nepalibhasha/varnavinyas/blob/main/.github/CONTRIBUTING.md
     about: Read contribution paths for both technical and non-technical contributors.

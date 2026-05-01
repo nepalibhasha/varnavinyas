@@ -1,6 +1,6 @@
 # Varnavinyas
 
-[![CI](https://github.com/varnavinyas/varnavinyas/actions/workflows/ci.yml/badge.svg)](https://github.com/varnavinyas/varnavinyas/actions/workflows/ci.yml)
+[![CI](https://github.com/nepalibhasha/varnavinyas/actions/workflows/ci.yml/badge.svg)](https://github.com/nepalibhasha/varnavinyas/actions/workflows/ci.yml)
 
 Nepali orthography tooling based on Nepal Academy standards.
 
@@ -29,7 +29,7 @@ This quickstart will show you how to:
 Install Rust 1.85.0 or newer, then build the workspace:
 
 ```bash
-git clone https://github.com/varnavinyas/varnavinyas.git
+git clone https://github.com/nepalibhasha/varnavinyas.git
 cd varnavinyas
 cargo build --workspace
 ```
