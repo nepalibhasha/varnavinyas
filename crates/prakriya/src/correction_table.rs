@@ -8,7 +8,7 @@ pub struct CorrectionEntry {
     pub description: &'static str,
 }
 
-/// Static correction table covering all 91 gold.toml entries.
+/// Static correction table for curated corrections that are not yet rule-derived.
 /// Key: incorrect form, Value: correction entry.
 pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = LazyLock::new(|| {
     let mut table = vec![

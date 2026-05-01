@@ -1,82 +1,80 @@
 # Linguistic Rules
 
-Varnavinyas encodes the rules of the **Nepali Orthography Standard (नेपाली वर्णविन्यास)** directly into Rust code. This document outlines the rule categories and how they map to the codebase.
+Varnavinyas encodes Nepali orthography rules as auditable Rust code. This document maps the local Academy references to the implementation layers.
 
 ## Sources
 
-The rule layer currently uses two authoritative Academy references:
+The rule layer currently uses two local Academy references:
 
-1. The Nepal Academy orthography standard published by the Ministry of Federal Affairs and General Administration (MoFAGA):
+1. Nepal Academy orthography notice excerpt:
+   - source PDF: <https://mofaga.gov.np/notice-file/Notices-20211029142422901.pdf>
+   - local excerpt: `docs/Notices-pages-77-99.md`
+2. School-grammar reference for additional and sometimes conflicting spacing/morphosyntactic guidance:
+   - local excerpt: `docs/PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md`
 
-**[https://mofaga.gov.np/notice-file/Notices-20211029142422901.pdf](https://mofaga.gov.np/notice-file/Notices-20211029142422901.pdf)**
+When these two sources conflict, follow `docs/RULE_SOURCE_POLICY.md`. The current policy prefers `PS-Saisanik...` for the known conflict set.
 
-Local excerpt/reference: `docs/Notices-pages-77-99.md` (pages 77–99 of the notice).
+## Implementation Model
 
-2. The school-grammar reference used for additional and sometimes conflicting spacing/morphosyntactic guidance:
+```text
+Single-token orthography       -> prakriya
+Multi-token spacing/context    -> parikshak
+Punctuation                    -> lekhya
+Lexical plausibility/metadata  -> kosha + shabda
+Surface-specific presentation  -> CLI / LSP / Web / Bindings
+```
 
-`docs/PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md`
-
-When these two sources conflict, the repo currently follows the source policy in `docs/RULE_SOURCE_POLICY.md`, which prefers `PS-Saisanik...` for the known conflict set.
+Rules are plain Rust functions, not external JSON/YAML logic. Shared metadata and browser rule labels live outside the rule engine, but production decisions come from code.
 
 ## Rule Categories
 
-The standard is divided into specific sections. We map these sections to our `Rule` enum in `crates/prakriya`.
+| Source Area | Description | Current Implementation | Status |
+|---|---|---|---|
+| Section 3 `(क)` | ह्रस्व/दीर्घ vowel length | `crates/prakriya/src/varna_vinyasa/hrasva_dirgha.rs` and `hrasva_dirgha/{a,aa,i,u,uu}.rs` | Partial / expanded |
+| Section 3 `(ख)` | चन्द्रविन्दु, शिरविन्दु, पञ्चम वर्ण | `crates/prakriya/src/varna_vinyasa/chandrabindu_shirbindu.rs`, `chandrabindu_shirbindu/*`, `panchham.rs` | Partial / expanded |
+| Section 3 `(ग)` | श/ष/स, ऋ/रि, ब/व, य/ए, क्ष/छ्य, ज्ञ/gya families | `crates/prakriya/src/varna_vinyasa/ustai_ucharan_varnaharu.rs` and submodules | Partial |
+| Section 3 `(घ)` | पदयोग/पदवियोग | `crates/parikshak/src/checker/padayog.rs`, `padayog_rules.rs`, and phrase-specific checker passes | Partial / active |
+| Section 3 `(ङ)` | हलन्त/अजन्त | `crates/prakriya/src/varna_vinyasa/halanta_ra_ajanta.rs` and submodules | Partial / expanded |
+| Section 3 `(च)` | लिपिगत विशिष्टता and related notes | Scattered/partial handling; no full dedicated module yet | Missing / partial |
+| Section 4 | शुद्ध-अशुद्ध table | `crates/prakriya/src/correction_table.rs` plus rule-backed exceptions | Active, not a pure table mirror |
+| Section 5 | punctuation and formatting | `crates/lekhya/src/punctuation.rs`, integrated through `parikshak` | Stable |
+| `PS-Saisanik` section 7 | तिर्यक् रूपको प्रयोग | `crates/parikshak/src/checker/tiryak.rs` | Partial / active |
 
-```mermaid
-flowchart LR
-    A[Academy notice]
-    B[RuleSpec / PatternRule]
-    C[Prakriya / Diagnostic]
-    D[Web / CLI / LSP / Bindings]
+## Current Coverage Notes
 
-    A --> B --> C --> D
-```
+- Section 3 `(क)` has broad coverage for many initial, medial, and final hrasva-dirgha classes. Remaining gaps are mostly verb-sensitive classes and semantic classes that need stronger morphology/lexicon signals.
+- Section 3 `(घ)` and `PS-Saisanik` spacing rules live in `parikshak` because they need neighboring tokens, spacing, punctuation, or phrase context.
+- Section 4 is not simply a lexicon lookup. `correction_table.rs` currently contains 81 entries: 38 Section 4-style entries, 42 rule-backed holdouts, and 1 documented stopgap. See `crates/prakriya/README.md`.
+- `तिर्यक्`, comparison spacing, institutional/title splits, and similar school-grammar phrase behavior should be first-class checker rules, not correction-table growth.
 
-| Standard Section | Description | Implementation Crate |
-|------------------|-------------|----------------------|
-| **Section 3(क)** | Hrasva/Dirgha (Vowel Length) | `prakriya` |
-| **Section 3(ख)** | Chandrabindu / Shirbindu | `prakriya` |
-| **Section 3(ग)** | Sibilants (श/ष/स) | `prakriya` |
-| **Section 3(ङ)** | Halanta (Virama) usage | `prakriya` / `sandhi` |
-| **Section 4** | Shuddha/Ashuddha Table | `kosha` (Lookup) |
-| **Section 5** | Punctuation & Formatting | `lekhya` |
-
-## High-Level Ownership
-
-```text
-Single-token normalization      -> prakriya
-Multi-token spacing/context     -> parikshak
-Punctuation                     -> lekhya
-Lexical plausibility / metadata -> kosha + shabda
-```
-
-## Code-Driven Implementation
-
-We do not use external JSON/YAML files for logic. Rules are functions.
-
-### Example: Suffix '-nu'
-*Rule: Verbs with the '-nu' suffix take Hrasva (short) vowels.*
+## Example Rule Shape
 
 ```rust
-// crates/prakriya/src/hrasva_dirgha.rs
+// crates/prakriya/src/varna_vinyasa/hrasva_dirgha/a.rs
 
-/// Rule: Verbal suffixes like '-nu' trigger hrasva.
-/// Ex: स्वीकार + नु = स्विकार्नु
 pub fn rule_suffix_nu_hrasva(input: &str) -> Option<Prakriya> {
-    // ... logic checking if word ends with nu and resolving root ...
+    // Verbal suffix families such as -नु are handled with lexical and
+    // derivational guards before returning a correction path.
 }
 ```
 
 ## Diagnostics
 
-When a rule is violated, the system produces a `Diagnostic` containing:
-1.  **Incorrect Word**: The raw input.
-2.  **Suggested Correction**: The structurally fixed form.
-3.  **Rule Citation**: The specific section (e.g., "3(क)-12") so the user can look it up.
-4.  **Explanation**: A human-readable string (localized in Nepali) explaining *why*.
+When a rule is violated, user-facing surfaces receive a diagnostic with:
 
-### Alignment Strategy
+1. incorrect text and byte span
+2. suggested correction
+3. rule citation and stable `rule_code`
+4. human-readable explanation
+5. stable `category_code`
+6. confidence and optional alternate reasons
 
-To ensure our diagnostics match the standard:
-*   We allow `kosha` (the lexicon) to override algorithmic rules for specific exceptions listed in Section 4.
-*   Algorithmic rules in `prakriya` and phrase/context rules in `parikshak` are tested against the `gold.toml` dataset to ensure they produce the expected output for known cases from both authoritative sources.
+Stable diagnostic categories are defined in `crates/parikshak/src/diagnostic.rs` and are consumed by the web UI, CLI JSON, LSP, and bindings.
+
+## Alignment Strategy
+
+- Use the two source markdowns for authority and citations.
+- Use `docs/RULE_SOURCE_POLICY.md` when sources conflict.
+- Keep `docs/tests/gold.toml` as the regression ground truth, not as independent linguistic authority.
+- Prefer first-class rules over one-off table entries.
+- Keep broad fallbacks below specific numbered rules and suppress duplicate alternate hits when a specific rule already explains the same correction.

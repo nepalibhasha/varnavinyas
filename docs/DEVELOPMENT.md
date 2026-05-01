@@ -8,6 +8,8 @@
 
 ## Main Commands
 
+The root workspace defines `default-members` for day-to-day Rust work. Use explicit `--workspace` commands when you want every crate, including binding crates.
+
 | Command | Description |
 |---------|-------------|
 | `cargo build --workspace` | Build all crates |

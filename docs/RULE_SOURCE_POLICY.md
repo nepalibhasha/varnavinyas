@@ -1,30 +1,43 @@
 # Rule Source Policy
 
-This project treats the source markdowns under `docs/` as normative implementation references.
+> **Last reviewed**: 2026-05-01
 
-Normative sources
+This project treats the two source markdowns under `docs/` as normative linguistic references.
+
+Normative linguistic sources
 
 - `docs/PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md`
 - `docs/Notices-pages-77-99.md`
+
+UI/reference alignment source
+
 - `web/js/rules-data.js`
+  - source of truth for the browser rules-reference tab and tooltip/category mapping
+  - not an independent linguistic authority
 
 Operational fixture source
 
 - `docs/tests/gold.toml`
 
+Supporting coverage and audit docs
+
+- `crates/prakriya/README.md` for token-level rule coverage and correction-table audit notes
+- `crates/parikshak/README.md` for text-level `(घ)` and `तिर्यक्` coverage notes
+
 Policy
 
 1. Prefer rule implementation when a correction is justified by an explicit niyama in the Academy markdown.
 2. When `PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md` and `Notices-pages-77-99.md` conflict, prefer `PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md`.
-3. Use `crates/prakriya/src/correction_table.rs` only for:
+3. Target state: use `crates/prakriya/src/correction_table.rs` only for:
    - entries explicitly present in the Academy's Section 4 shuddha/ashuddha table
    - temporary stopgaps that are clearly documented and tracked for later replacement
+   Existing rule-backed holdouts are tracked in `crates/prakriya/README.md` until they can move safely into first-class rules.
 4. Every new spelling fix must cite one of:
    - exact Academy section/rule
    - exact shuddha/ashuddha table entry
-   - explicit stopgap justification recorded in `docs/CORRECTION_TABLE_AUDIT.md`
+   - explicit stopgap justification recorded in `crates/prakriya/README.md`
 5. When rule support is weak or ambiguous, prefer no diagnosis over speculative correction.
-6. Do not remove a correction-table entry just because each component rule exists separately; if the final output needs multi-step composition that `derive()` cannot yet produce, keep the entry and document the gap in `docs/CORRECTION_TABLE_AUDIT.md`.
+6. Do not remove a correction-table entry just because each component rule exists separately; if the final output needs multi-step composition that `derive()` cannot yet produce, keep the entry and document the gap in `crates/prakriya/README.md`.
 7. Prefer generalized rule layers over one-off table entries for:
    - `तिर्यक्` forms
    - `पदयोग/पदवियोग`
@@ -65,14 +78,14 @@ Review checklist for new fixes
 1. Which exact source and subrule justify this change?
 2. If the two normative markdowns differ, which one wins and why?
 3. Can this be implemented as a rule instead of a one-off correction-table entry?
-4. If it is a stopgap, is it recorded in the audit doc with a removal path?
+4. If it is a stopgap, is it recorded in `crates/prakriya/README.md` with a removal path?
 5. Does the change add a regression test for both the intended correction and the nearest false-positive risk?
 
 Current consolidation gate
 
 - The recent `PS-Saisanik...` work has expanded beyond isolated fixes into a broader phrase-rule layer.
 - Further implementation should now default to consolidation first:
-  - update local source-policy/checklist notes
+  - update local source-policy and crate coverage notes
   - expand broader eval fixtures, not only targeted regressions
   - review false-positive risk before adding new inventories or segmentation paths
 - Preferred stopping rule for the next phase:
@@ -87,13 +100,13 @@ Current local consolidation priorities
    - `थरी`
    - broader `पदयोग-२` suffix inventory
    - broader `पदवियोग-१` baseline splitting
-3. Keep `web/build-info.json` and local markdown notes out of commits unless intentionally packaging or publishing policy docs.
+3. Keep `web/build-info.json` out of commits unless intentionally packaging; commit markdown policy notes only when intentionally updating project docs.
 
 Repository expectations
 
 - `docs/tests/gold.toml` is the curated fixture set used by tests, not the normative authority by itself.
 - `crates/prakriya/src/correction_table.rs` should stay aligned with `docs/tests/gold.toml` for Section 4-backed entries.
-- Any entry that is not directly backed by the Academy markdown must be called out explicitly in the audit doc rather than silently mixed into the table.
+- Any entry that is not directly backed by the Academy markdown must be called out explicitly in the `crates/prakriya/README.md` audit section rather than silently mixed into the table.
 - `PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md` may introduce rule families that are not explicit in the notice document, such as `तिर्यक्`; implement those as first-class rules rather than as growing correction-table exceptions.
 - When a family is only partially shared across the two sources, record that distinction explicitly:
   - `जस्तो/जस्तै/जत्रो/जसरी` are currently school-grammar-backed split forms

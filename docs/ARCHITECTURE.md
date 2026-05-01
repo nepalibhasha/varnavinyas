@@ -217,6 +217,8 @@ parikshak/
   checker/word_level.rs     token-level integration
   checker/padayog.rs        text join/split passes
   checker/padayog_rules.rs  backing rewrite tables
+  checker/tiryak.rs         PS-Saisanik oblique-form diagnostics
+  checker/particles.rs      nipat/particle spacing diagnostics
   checker/punctuation.rs    punctuation diagnostics
   checker/style_variants.rs style-only suggestions
   checker/grammar.rs        optional grammar heuristics
@@ -230,6 +232,12 @@ parikshak/
 
 - `checker/padayog_rules.rs`
   - backing data for padayog/padabiyog rewrites
+
+- `checker/tiryak.rs`
+  - `PS-Saisanik` तिर्यक् diagnostics
+
+- `checker/particles.rs`
+  - nipat/particle spacing diagnostics
 
 - `checker/punctuation.rs`
   - punctuation diagnostics

@@ -12,16 +12,36 @@ This crate exposes core Varnavinyas functionality to JavaScript through `wasm-bi
 
 ## Main APIs
 
-The crate exposes browser-friendly entry points such as:
+The crate exposes browser-friendly entry points. Prefer typed or non-string exports when possible:
 
-- `check_text` / `check_text_value`
-- `check_word` / `check_word_value`
-- `derive`
-- `transliterate`
-- `analyze_word`
-- `decompose_word`
-- `sandhi_apply`, `sandhi_split`
-- `analyze_compound`
+- `check_text_value(text, grammar)`
+- `check_word_value(word)`
+- `derive_value(word)`
+- `analyze_word_value(word)`
+- `decompose_word_value(word)`
+- `analyze_affixes_value(word)`
+- `best_affix_analysis_value(word)`
+- `has_supported_affix_analysis(word)`
+- `analyze_compound_value(word)`
+- `sandhi_apply_value(first, second)`
+- `sandhi_split_value(word)`
+- `sandhi_split_best_for_compound_value(word)`
+- `transliterate(input, from, to)`
+
+Legacy JSON-string helpers are also exposed:
+
+- `check_text(text)`
+- `check_text_with_options(text, grammar)`
+- `check_word(word)`
+- `derive(word)`
+- `analyze_word(word)`
+- `decompose_word(word)`
+- `analyze_affixes(word)`
+- `best_affix_analysis(word)`
+- `analyze_compound(word)`
+- `sandhi_apply(first, second)`
+- `sandhi_split(word)`
+- `sandhi_split_best_for_compound(word)`
 
 ## Example
 
@@ -34,11 +54,35 @@ const diag = check_word_value("राजनैतिक");
 const splits = sandhi_split_value("अत्यधिक");
 ```
 
+## Result Shapes
+
+The exact shapes are defined by Rust serializers in `src/lib.rs`, `varnavinyas-prakriya`, and `varnavinyas-parikshak`.
+
+Important stable fields:
+
+- `check_text_value` returns an array of diagnostics with `span_start`, `span_end`, `incorrect`, `correction`, `rule`, `rule_code`, `explanation`, `category`, `category_code`, `kind`, `confidence`, and optional `alternate_reasons`.
+- `check_word_value` returns one diagnostic object or `null`.
+- `derive_value` returns `input`, `output`, `is_correct`, and `steps`.
+- `analyze_word_value` returns word origin, correctness, correction, rule notes, and alternate rule notes.
+- `decompose_word_value` returns `root`, `prefixes`, `suffixes`, and `origin`.
+- `analyze_affixes_value` returns ranked affix analyses with `surface`, `stem`, `root`, prefix/suffix segments, and `score`.
+- `analyze_compound_value` returns samasa candidates with `left`, `right`, `samasa_type`, `score`, and `vigraha`.
+- `sandhi_apply_value` returns `output`, `sandhi_type`, `family`, `rule_id`, and `rule_citation`.
+- `sandhi_split_value` returns candidates with `left`, `right`, `output`, `sandhi_type`, `family`, `rule_id`, `rule_citation`, `authority`, and `confidence`.
+
+The following are downstream contract:
+
+- export names
+- object-vs-null return shape
+- top-level field names returned by typed APIs
+- local/offline execution
+
 ## Design Notes
 
 - This crate is an adapter. Core behavior should be implemented in the domain crates, not here.
 - It should preserve structured information for frontends whenever possible.
 - Generated JS/WASM artifacts must stay in sync with the Rust source; stale generated files can break consumers.
+- Browser clients should validate required exports during their build.
 
 ## Used By
 
@@ -54,6 +98,12 @@ const splits = sandhi_split_value("अत्यधिक");
 
 ```bash
 bash web/build.sh
+```
+
+Browser artifacts for downstream clients are packaged by:
+
+```bash
+bash web/package-artifact.sh
 ```
 
 ## Status

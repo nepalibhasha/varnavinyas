@@ -53,7 +53,7 @@ Typical single-word outcomes:
 
 ```text
 राजनैतिक -> राजनीतिक   (hard orthography correction)
-अध्यन    -> अध्ययन     (soft near-match fallback if no direct rule wins)
+अध्यन    -> अध्ययन     (documented correction-table stopgap)
 ```
 
 ### Check full text
@@ -94,6 +94,63 @@ Presentation        -> CLI / web / LSP / bindings
 - It should preserve distinctions between hard errors, variants, and heuristic suggestions.
 - `DiagnosticReason` shares the same outward-facing `Explanation` shape used by `prakriya::WordAnalysis`.
 - `category_code` is a stable contract used across CLI, web, LSP, and bindings.
+
+## Text-Level Rule Coverage
+
+`parikshak` owns rules that need neighboring tokens, spacing, punctuation, or sentence context.
+
+### Section 3 `(घ)` Padayog / Padabiyog
+
+Owned by:
+
+- `src/checker/padayog.rs`
+- `src/checker/padayog_rules.rs`
+- related checker passes such as `particles.rs` and `style_variants.rs`
+
+Implemented highlights:
+
+- explicit rewrite-table coverage for many `3(घ)` subrules in `padayog_rules.rs`
+- generalized vibhakti joins
+- honorific `ज्यू` joins
+- conjunction joins
+- `लागि/निम्ति` and double-vibhakti splits
+- selected verb-complex splits
+- `PS-Saisanik` comparison splits for `जस्तो/जस्तै/जत्रो/जसरी`
+- `... स्वरूप` joins
+- middle-name joins
+- conservative one-meaning compound joins
+- institutional/topic/title phrase splits
+- meaningful reduplication splits
+- nominal-verb splits
+- `... गरी` splits
+- nipat splits
+- `जना` splits
+- divisive-`न` splits
+- multi-word samasa splits
+
+Known gaps:
+
+- `3(घ)-पदयोग-१,५,६,७,८,१०,११` need stronger morphology, compound ranking, sentence context, or curated semantic inventories before broad generalization.
+- `3(घ)-पदवियोग-१,५,८,११,१२,१३` remain broad/context-sensitive and are not safe as standalone rewrites.
+- `सरह` remains notice-only evidence in the local sources and is not part of the current `PS-Saisanik` comparison override.
+- `थरी` remains notice-backed only in the current local source set.
+- Punctuation-attached token handling and broader `PS-Saisanik` inventories need wider regression coverage.
+
+### `PS-Saisanik` Tiryak
+
+Owned by `src/checker/tiryak.rs`.
+
+Implemented highlights:
+
+- `७(क)`: `-एको/-नु + ले/मा` oblique forms.
+- `७(ख)`: oblique pronoun + case forms.
+- `७(ग)`: pronoun/determiner oblique forms before an inflected nounish head.
+
+Known gaps:
+
+- broader pronoun inventory
+- stronger noun-feature detection for `७(ग)`
+- fuller UI/source-reference integration across all surfaces
 
 ## Current Limits
 

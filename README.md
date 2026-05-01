@@ -4,7 +4,9 @@
 
 Nepali orthography tooling based on Nepal Academy standards.
 
-Varnavinyas checks Nepali text for spelling, punctuation, and writing-convention issues. This repository contains the core Rust engine, a browser UI, a CLI, editor support, and bindings for other platforms.
+Varnavinyas checks Nepali text for spelling, punctuation, and writing-convention issues. It turns the Academy's written rules into portable software for editors, websites, scripts, and language tooling.
+
+This repository contains the core Rust engine, a browser UI, a CLI, editor support, and bindings for other platforms. This README will show you how to build the project, run the checker, and find the deeper implementation notes.
 
 ## Contents
 
@@ -124,21 +126,9 @@ For the full design, read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). The two 
 
 ## Documentation
 
-Start with [docs/README.md](docs/README.md), which links to the main project documents.
+The [docs](docs/README.md) folder covers architecture, development, rule policy, datasets, and current backlog. Rule implementation details live near the code: start with [crates/prakriya](crates/prakriya/README.md) for token-level corrections, [crates/parikshak](crates/parikshak/README.md) for text-level diagnostics, and [crates/bindings-wasm](crates/bindings-wasm/README.md) for browser/JavaScript exports.
 
-Useful entry points:
-
-- [docs/VISION.md](docs/VISION.md): project goals and scope
-- [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md): build, test, and development workflow
-- [docs/RULES.md](docs/RULES.md): rule implementation notes
-- [docs/DATASETS.md](docs/DATASETS.md): datasets and provenance
-- [docs/STATUS.md](docs/STATUS.md): current feature status
-- [docs/RUST_GUIDE.md](docs/RUST_GUIDE.md): Rust onboarding notes
-
-Academy reference material used for rule alignment lives in:
-
-- [docs/Notices-pages-77-99.md](docs/Notices-pages-77-99.md)
-- [docs/PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md](docs/PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md)
+The Academy references used for rule alignment are kept in [docs/Notices-pages-77-99.md](docs/Notices-pages-77-99.md) and [docs/PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md](docs/PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md).
 
 ## Contributing
 
