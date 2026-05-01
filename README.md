@@ -1,217 +1,154 @@
-# Varnavinyas (वर्णविन्यास)
+# Varnavinyas
 
-Open-source Nepali orthography tooling based on Nepal Academy standards.
+[![CI](https://github.com/varnavinyas/varnavinyas/actions/workflows/ci.yml/badge.svg)](https://github.com/varnavinyas/varnavinyas/actions/workflows/ci.yml)
 
-*शुद्ध नेपाली, सबैका लागि।*  
-*(Correct Nepali, for everyone.)*
+Nepali orthography tooling based on Nepal Academy standards.
 
-## What This Project Is
+Varnavinyas checks Nepali text for spelling, punctuation, and writing-convention issues. This repository contains the core Rust engine, a browser UI, a CLI, editor support, and bindings for other platforms.
 
-Varnavinyas is a Rust workspace for checking and normalizing Nepali text.
+## Contents
 
-It is built for three kinds of users:
-- writers, editors, teachers, students, and institutions that need standard Nepali spelling and punctuation
-- developers who want a reusable Nepali orthography engine
-- contributors who want Academy-aligned rules implemented transparently and auditable in code
+- Quickstart
+- Web app
+- Architecture
+- Documentation
+- Contributing
 
-The project focuses on:
-- word-level orthography correction
-- punctuation diagnostics
-- rule tracing with Academy citations
-- web, CLI, editor, and binding surfaces on top of the same core engine
+## Quickstart
 
-Diagnostics use stable `category_code` values across the web app, CLI, LSP, and bindings so filtering and highlighting stay consistent.
+This quickstart will show you how to:
 
-## Use Varnavinyas
+- build the Rust workspace
+- run the command-line checker
+- run the test suite
 
-### Browser
+### Building Varnavinyas
 
-Use the hosted web app linked from the repository homepage.
-
-The web app includes:
-- text checker
-- word inspector
-- rules reference
-
-### CLI
-
-Build the workspace:
+Install Rust 1.85.0 or newer, then build the workspace:
 
 ```bash
+git clone https://github.com/varnavinyas/varnavinyas.git
+cd varnavinyas
 cargo build --workspace
 ```
 
-Run the checker:
+The first build may take a little while because the workspace includes the checker engine, CLI, LSP server, and several binding crates.
+
+### Running the checker
+
+You can check a file:
 
 ```bash
-cargo run -p varnavinyas -- check
+cargo run -p varnavinyas -- check path/to/document.txt
 ```
 
-Run with JSON output:
+Or pipe text directly into the checker:
 
 ```bash
-cargo run -p varnavinyas -- check --format json
+printf "राजनैतिक गल्ति छ.\n" | cargo run -q -p varnavinyas -- check - --explain
 ```
 
-### Editor / LSP
-
-The workspace includes an LSP server in `crates/lsp` for editor integrations and diagnostic surfacing.
-
-### Bindings
-
-Public bindings exist for:
-- WebAssembly: `crates/bindings-wasm`
-- Python: `crates/bindings-python`
-- C: `crates/bindings-c`
-- UniFFI: `crates/bindings-uniffi`
-
-## Architecture At A Glance
-
-```mermaid
-flowchart LR
-    A[kosha<br/>lexicon + metadata]
-    B[prakriya<br/>token-level correction]
-    C[parikshak<br/>text-level checking]
-    D[CLI / LSP / Web / Bindings]
-
-    A --> B
-    B --> C
-    C --> D
-```
-
-The core flow is:
-
-1. `kosha` provides lexicon lookup and metadata
-2. `prakriya` decides token-level standard form and rule trace
-3. `parikshak` runs text-level checking, span handling, padayog/padabiyog passes, punctuation, and heuristics
-4. CLI, web, LSP, and bindings present those diagnostics to users
-
-The main crates are:
-- `crates/prakriya`: token-level orthography engine
-- `crates/parikshak`: end-to-end text checker
-- `crates/kosha`: lexicon and headword metadata
-- `crates/lekhya`: punctuation diagnostics
-- `web/`: browser UI backed by WASM
-
-Inside `crates/prakriya`:
-- `src/varna_vinyasa/` owns Academy orthography families
-- `src/usage_fixes/` owns later cleanup-style rules
-- `src/runtime.rs` assembles and caches runtime rule dispatch
-- `src/model/` owns core derivation types
-
-Inside `crates/parikshak`:
-- `src/checker/word_level.rs` owns token-level integration
-- `src/checker/padayog.rs` owns join/split text passes
-- `src/checker/punctuation.rs` owns punctuation diagnostics
-- `src/checker/style_variants.rs` and `src/checker/grammar.rs` own higher-level heuristics
-
-## Workspace Layout
-
-```text
-crates/
-  core:       akshar lipi shabda sandhi types
-  checking:   kosha prakriya lekhya parikshak
-  analysis:   vyakaran samasa eval
-  surfaces:   cli lsp bindings-*
-web/
-docs/
-```
-
-For new contributors, the crate split is easiest to read as four groups:
-
-- Foundation crates
-  - `crates/akshar`: Devanagari normalization, classification, and akshara utilities
-  - `crates/lipi`: transliteration and legacy-font conversion helpers
-  - `crates/types`: shared domain enums and data types
-
-- Language knowledge crates
-  - `crates/kosha`: lexicon lookup and headword metadata
-  - `crates/shabda`: origin classification and lightweight decomposition
-  - `crates/sandhi`: sandhi rules and helpers
-
-- Checking engine crates
-  - `crates/prakriya`: token-level orthography derivation and rule tracing
-  - `crates/lekhya`: punctuation diagnostics
-  - `crates/parikshak`: full-text checker pipeline that composes the lower layers
-
-- Analysis and surface crates
-  - `crates/vyakaran`, `crates/samasa`: grammar and compound-analysis support
-  - `crates/eval`: evaluation harnesses over curated fixtures
-  - `crates/cli`, `crates/lsp`, `crates/bindings-*`: user-facing delivery surfaces
-  - `web/`: browser UI backed by the WASM bindings
-
-## Build And Test
-
-### Prerequisites
-
-- Rust 1.85.0+
-- Cargo
-- optional for web builds: `wasm-pack` and `wasm-bindgen-cli`
-
-### Main Commands
+Use JSON output when integrating with scripts or other tools:
 
 ```bash
-cargo build --workspace
-cargo fmt --all --check
-cargo clippy --workspace --all-targets -- -D warnings
+cargo run -p varnavinyas -- check path/to/document.txt --format json
+```
+
+The CLI also includes small utility commands:
+
+```bash
+cargo run -p varnavinyas -- akshar "शब्द"
+cargo run -p varnavinyas -- lipi "नेपाल" --to IAST
+```
+
+### Running tests
+
+Run the main test suite:
+
+```bash
 cargo test --workspace -q
 ```
 
-Build the web app:
+Before opening a pull request, also run formatting and clippy:
+
+```bash
+cargo fmt --all --check
+cargo clippy --workspace --all-targets -- -D warnings
+```
+
+## Web app
+
+The browser app includes a text checker, word inspector, and rules reference. If you just want to try Varnavinyas, use the hosted app linked from the repository homepage.
+
+To build and serve the web app locally:
 
 ```bash
 bash web/build.sh
+python3 -m http.server 8080 --directory web/
 ```
 
-Smoke-test the web app:
+Then open `http://localhost:8080`.
+
+The web build uses `wasm-pack` and `wasm-bindgen-cli`. If the installed `wasm-bindgen-cli` version does not match the generated package, `web/build.sh` prints the exact version to install.
+
+For a static consistency check of the web app and WASM bundle, run:
 
 ```bash
 bash web/smoke-test.sh
 ```
 
-Serve the built web app locally:
+See [web/README.md](web/README.md) for more detail.
 
-```bash
-python3 -m http.server 8080 --directory web/
+## Architecture
+
+The core flow is intentionally small:
+
+```text
+kosha      lexicon lookup and word metadata
+prakriya   token-level correction and rule tracing
+parikshak  full-text diagnostics with spans and categories
+surfaces   CLI, LSP, web UI, and platform bindings
 ```
+
+The most important crates are:
+
+- `crates/kosha`: FST-backed lexicon and headword metadata
+- `crates/prakriya`: token-level orthography engine
+- `crates/parikshak`: end-to-end text checker
+- `crates/lekhya`: punctuation diagnostics
+- `crates/cli`: command-line interface
+- `crates/lsp`: language server
+- `crates/bindings-*`: Python, WebAssembly, C, and UniFFI bindings
+
+For the full design, read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). The two most useful crate-level guides are [crates/prakriya/ARCHITECTURE.md](crates/prakriya/ARCHITECTURE.md) and [crates/parikshak/ARCHITECTURE.md](crates/parikshak/ARCHITECTURE.md).
 
 ## Documentation
 
-Start here:
-- [docs/README.md](docs/README.md)
+Start with [docs/README.md](docs/README.md), which links to the main project documents.
 
-Key docs:
-- [docs/VISION.md](docs/VISION.md) — why the project exists
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — system design and crate boundaries
-- [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) — build and test workflow
-- [docs/DATASETS.md](docs/DATASETS.md) — datasets and provenance
-- [docs/RULES.md](docs/RULES.md) — rule implementation notes
-- [docs/STATUS.md](docs/STATUS.md) — current feature matrix
-- [docs/EXTENSION_WASM_CONTRACT.md](docs/EXTENSION_WASM_CONTRACT.md) — downstream browser artifact release and WASM contract
-- [docs/Notices-pages-77-99.md](docs/Notices-pages-77-99.md) — Academy notice excerpt used for rule alignment
-- [docs/PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md](docs/PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md) — Academy school-grammar reference also used for rule alignment
+Useful entry points:
 
-Crate-specific architecture docs:
-- [crates/prakriya/ARCHITECTURE.md](crates/prakriya/ARCHITECTURE.md)
-- [crates/parikshak/ARCHITECTURE.md](crates/parikshak/ARCHITECTURE.md)
+- [docs/VISION.md](docs/VISION.md): project goals and scope
+- [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md): build, test, and development workflow
+- [docs/RULES.md](docs/RULES.md): rule implementation notes
+- [docs/DATASETS.md](docs/DATASETS.md): datasets and provenance
+- [docs/STATUS.md](docs/STATUS.md): current feature status
+- [docs/RUST_GUIDE.md](docs/RUST_GUIDE.md): Rust onboarding notes
+
+Academy reference material used for rule alignment lives in:
+
+- [docs/Notices-pages-77-99.md](docs/Notices-pages-77-99.md)
+- [docs/PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md](docs/PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md)
 
 ## Contributing
 
-Technical and non-technical contributions are welcome.
+Both linguistic reports and code contributions are welcome. Good issue reports with examples, expected corrections, and source citations are especially useful.
 
-Start with:
-- [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md)
-- [docs/RUST_GUIDE.md](docs/RUST_GUIDE.md)
-- [docs/BACKLOG.md](docs/BACKLOG.md)
-
-Community and process files:
-- [.github/CODE_OF_CONDUCT.md](.github/CODE_OF_CONDUCT.md)
-- [.github/SECURITY.md](.github/SECURITY.md)
-- [.github/SUPPORT.md](.github/SUPPORT.md)
+For the contribution process, see [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md). For support, security, and community expectations, see [.github/SUPPORT.md](.github/SUPPORT.md), [.github/SECURITY.md](.github/SECURITY.md), and [.github/CODE_OF_CONDUCT.md](.github/CODE_OF_CONDUCT.md).
 
 ## License
 
-Dual-licensed under MIT or Apache-2.0.
+Varnavinyas is dual-licensed under MIT or Apache-2.0.
 
 - [LICENSE-MIT](LICENSE-MIT)
 - [LICENSE-APACHE](LICENSE-APACHE)
