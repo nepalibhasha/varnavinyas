@@ -59,6 +59,35 @@ fn check_json_returns_valid_json() {
 }
 
 #[test]
+fn check_json_contract_required_fields_have_stable_types() {
+    let output = cmd()
+        .args(["check", "--format", "json"])
+        .write_stdin("अत्याधिक\n")
+        .assert()
+        .code(1)
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: serde_json::Value =
+        serde_json::from_slice(&output).expect("stdout should be valid JSON");
+    let diag = json
+        .as_array()
+        .and_then(|arr| arr.first())
+        .expect("input should produce one diagnostic");
+
+    assert!(diag["line"].is_u64());
+    assert!(diag["column"].is_u64());
+    assert!(diag["incorrect"].is_string());
+    assert!(diag["correction"].is_string());
+    assert!(diag["rule"].is_string());
+    assert!(diag["category"].is_string());
+    assert!(diag["explanation"].is_string());
+    assert!(diag["kind"].is_string());
+    assert!(diag["confidence"].is_number());
+}
+
+#[test]
 fn check_explain_includes_rule() {
     cmd()
         .args(["check", "--explain"])
