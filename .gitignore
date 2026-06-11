@@ -35,6 +35,7 @@ AGENTS.md
 
 # WASM build output
 web/pkg/
+web/build-info.json
 
 # C bindings generated header
 crates/bindings-c/include/

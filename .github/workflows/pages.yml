@@ -39,13 +39,8 @@ jobs:
         env:
           RUSTUP_TOOLCHAIN: stable
 
-      - name: Build WASM
-        run: |
-          wasm-pack build crates/bindings-wasm \
-            --target web \
-            --out-dir ../../web/pkg \
-            --release \
-            --mode no-install
+      - name: Build web artifacts
+        run: bash web/build.sh
         env:
           RUSTUP_TOOLCHAIN: stable
 

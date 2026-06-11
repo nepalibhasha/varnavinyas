@@ -97,5 +97,9 @@ jobs:
         run: |
           bash web/build.sh
           REFRESH_WEB_WASM=0 bash web/package-artifact.sh
-      - name: Verify committed generated artifacts are up to date
-        run: git diff --exit-code -- web/pkg web/build-info.json
+      - name: Verify generated web artifacts
+        run: |
+          test -s web/build-info.json
+          test -s web/pkg/varnavinyas_bindings_wasm.js
+          test -s web/pkg/varnavinyas_bindings_wasm_bg.wasm
+          git diff --exit-code -- .
