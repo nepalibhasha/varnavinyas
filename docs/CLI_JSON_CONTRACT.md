@@ -33,7 +33,10 @@ Each array item has these required fields:
 | `incorrect` | string | Source text covered by the diagnostic. |
 | `correction` | string | Suggested replacement text. |
 | `rule` | string | Stable-ish rule identifier or rule display string. |
+| `rule_code` | string | Stable machine-readable rule code. |
 | `category` | string | Stable diagnostic category code, such as `HrasvaDirgha`. |
+| `category_code` | string | Stable diagnostic category code, same value as `category`. |
+| `category_label` | string | Human-readable category label. |
 | `explanation` | string | Human-readable explanation. |
 | `kind` | string | Lowercase diagnostic kind, such as `error`, `variant`, or `ambiguous`. |
 | `confidence` | number | Confidence score in the range `0.0` to `1.0`. |
@@ -49,7 +52,10 @@ Each `alternate_reasons` item has these required fields:
 | Field | Type | Meaning |
 | --- | --- | --- |
 | `rule` | string | Alternate rule identifier or rule display string. |
+| `rule_code` | string | Stable machine-readable alternate rule code. |
 | `category` | string | Alternate diagnostic category code. |
+| `category_code` | string | Alternate diagnostic category code, same value as `category`. |
+| `category_label` | string | Human-readable alternate category label. |
 | `explanation` | string | Human-readable alternate explanation. |
 | `correction` | string | Suggested replacement for the alternate reason. |
 
@@ -63,7 +69,10 @@ Each `alternate_reasons` item has these required fields:
     "incorrect": "अत्याधिक",
     "correction": "अत्यधिक",
     "rule": "...",
-    "category": "HrasvaDirgha",
+    "rule_code": "...",
+    "category": "ShuddhaTable",
+    "category_code": "ShuddhaTable",
+    "category_label": "शुद्ध-अशुद्ध",
     "explanation": "...",
     "kind": "error",
     "confidence": 1.0

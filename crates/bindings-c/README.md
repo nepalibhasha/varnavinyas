@@ -15,9 +15,17 @@ This crate exposes a narrow, C-compatible API over selected workspace functional
 The current exported surface is intentionally small:
 
 - `varnavinyas_check_text` -> returns JSON diagnostics for full-text checking
+- `varnavinyas_check_text_with_options` -> returns JSON diagnostics with grammar, punctuation-mode, and debug heuristic options
+- `varnavinyas_check_word` -> returns one JSON diagnostic object or `null`
 - `varnavinyas_transliterate` -> transliterates between supported schemes
 - `varnavinyas_classify` -> origin classification
 - `varnavinyas_free_string` -> frees returned strings
+- `varnavinyas_version` -> returns the library version string
+
+Constants exported for callers:
+
+- `SCHEME_DEVANAGARI`, `SCHEME_IAST`
+- `PUNCTUATION_STRICT`, `PUNCTUATION_NORMALIZED_EDITORIAL`
 
 ## Example
 
@@ -26,6 +34,17 @@ char *json = varnavinyas_check_text("यो बाक्यमा गल्त�
 if (json != NULL) {
     puts(json);
     varnavinyas_free_string(json);
+}
+
+char *strict_json = varnavinyas_check_text_with_options(
+    "यो बाक्यमा गल्ति छ",
+    false,
+    PUNCTUATION_STRICT,
+    false
+);
+if (strict_json != NULL) {
+    puts(strict_json);
+    varnavinyas_free_string(strict_json);
 }
 ```
 

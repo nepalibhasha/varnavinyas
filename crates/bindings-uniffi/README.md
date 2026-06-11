@@ -15,8 +15,12 @@ This crate provides a higher-level foreign-function interface for platforms that
 The exported API currently focuses on a compact core:
 
 - `check_text`
+- `check_text_with_options`
+- `check_word`
 - `transliterate`
 - `classify`
+
+It also exports the `Scheme`, `Origin`, and `PunctuationMode` enums used by those functions.
 
 ## Example
 
@@ -24,11 +28,13 @@ Conceptually, native consumers use generated bindings for the exported functions
 
 ```text
 check_text("यो बाक्यमा गल्ति छ")
+check_text_with_options("यो बाक्यमा गल्ति छ", false, PunctuationMode.Strict, false)
+check_word("अध्यन")
 transliterate("नेपाल", Devanagari, Iast)
 classify("नेपाल")
 ```
 
-The exact call shape depends on the generated Swift/Kotlin package, but the exported Rust API is those three functions.
+The exact call shape depends on the generated Swift/Kotlin package, but the exported Rust API is the function set above.
 
 ## Design Notes
 

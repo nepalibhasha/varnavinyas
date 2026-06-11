@@ -124,13 +124,17 @@ fn diagnostics_in_range(
 ) -> Vec<parikshak::Diagnostic> {
     let range_start = line_index.position_to_byte_offset(range.start);
     let range_end = line_index.position_to_byte_offset(range.end);
+    let is_point_range = range_start == range_end;
 
     diagnostics
         .iter()
         .filter(|d| {
-            d.span.0 < range_end
-                && d.span.1 > range_start
-                && config.categories.is_enabled(d.category)
+            config.categories.is_enabled(d.category)
+                && if is_point_range {
+                    d.span.0 <= range_start && range_start < d.span.1
+                } else {
+                    d.span.0 < range_end && d.span.1 > range_start
+                }
         })
         .cloned()
         .collect()
@@ -318,10 +322,9 @@ mod tests {
     use crate::config::Config;
     use varnavinyas_parikshak::DiagnosticCategory;
 
-    #[test]
-    fn diagnostics_at_byte_filters_by_config() {
-        let diag = parikshak::Diagnostic {
-            span: (0, 30),
+    fn sample_diagnostic(span: (usize, usize)) -> parikshak::Diagnostic {
+        parikshak::Diagnostic {
+            span,
             incorrect: "अत्याधिक".to_string(),
             correction: "अत्यधिक".to_string(),
             rule: varnavinyas_prakriya::Rule::ShuddhaAshuddha("Section 4"),
@@ -330,8 +333,12 @@ mod tests {
             kind: varnavinyas_prakriya::DiagnosticKind::Error,
             confidence: 1.0,
             alternate_reasons: Vec::new(),
-        };
+        }
+    }
 
+    #[test]
+    fn diagnostics_at_byte_filters_by_config() {
+        let diag = sample_diagnostic((0, 30));
         // Enabled — should find it
         let config = Config::default();
         let diags = [diag.clone()];
@@ -344,6 +351,26 @@ mod tests {
         let diags2 = [diag];
         let hits2 = diagnostics_at_byte(&diags2, 5, &config2);
         assert!(hits2.is_empty());
+    }
+
+    #[test]
+    fn diagnostics_in_range_matches_zero_width_cursor_range() {
+        let text = "अत्याधिक";
+        let line_index = LineIndex::new(text);
+        let diag = sample_diagnostic((0, text.len()));
+        let range = Range {
+            start: Position {
+                line: 0,
+                character: 0,
+            },
+            end: Position {
+                line: 0,
+                character: 0,
+            },
+        };
+
+        let hits = diagnostics_in_range(&[diag], &range, &line_index, &Config::default());
+        assert_eq!(hits.len(), 1);
     }
 
     #[test]

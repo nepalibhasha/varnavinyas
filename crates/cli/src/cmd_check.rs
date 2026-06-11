@@ -17,7 +17,10 @@ struct JsonDiagnostic {
     incorrect: String,
     correction: String,
     rule: String,
+    rule_code: String,
     category: String,
+    category_code: String,
+    category_label: String,
     explanation: String,
     kind: String,
     confidence: f32,
@@ -28,7 +31,10 @@ struct JsonDiagnostic {
 #[derive(Serialize)]
 struct JsonAlternateReason {
     rule: String,
+    rule_code: String,
     category: String,
+    category_code: String,
+    category_label: String,
     explanation: String,
     correction: String,
 }
@@ -182,7 +188,10 @@ fn print_json(diagnostics: &[Diagnostic], text: &str, line_offsets: &[usize]) {
                 incorrect: api.incorrect,
                 correction: api.correction,
                 rule: api.rule,
-                category: api.category,
+                rule_code: api.rule_code,
+                category: api.category_code.clone(),
+                category_code: api.category_code,
+                category_label: api.category,
                 explanation: api.explanation,
                 kind: api.kind,
                 confidence: api.confidence,
@@ -191,7 +200,10 @@ fn print_json(diagnostics: &[Diagnostic], text: &str, line_offsets: &[usize]) {
                     .into_iter()
                     .map(|alt| JsonAlternateReason {
                         rule: alt.rule,
-                        category: alt.category,
+                        rule_code: alt.rule_code,
+                        category: alt.category_code.clone(),
+                        category_code: alt.category_code,
+                        category_label: alt.category,
                         explanation: alt.explanation,
                         correction: alt.correction,
                     })

@@ -48,6 +48,20 @@
           "default": false,
           "description": "Also check plaintext files. When false, only .np (Nepali) files are checked."
         },
+        "varnavinyas.punctuationMode": {
+          "type": "string",
+          "enum": [
+            "strict",
+            "normalized-editorial"
+          ],
+          "default": "strict",
+          "description": "Section 5 punctuation classification mode. Strict reports punctuation as errors; normalized-editorial reports normalized/editorial variants as suggestions."
+        },
+        "varnavinyas.debugIncludeNoopHeuristics": {
+          "type": "boolean",
+          "default": false,
+          "description": "Debug: include heuristic diagnostics whose correction is identical to the input."
+        },
         "varnavinyas.categories.hrasvaDirgha": {
           "type": "boolean",
           "default": true,
@@ -58,10 +72,15 @@
           "default": true,
           "description": "Enable चन्द्रबिन्दु checks"
         },
-        "varnavinyas.categories.shaShaSa": {
+        "varnavinyas.categories.shaShaS": {
           "type": "boolean",
           "default": true,
           "description": "Enable श/ष/स checks"
+        },
+        "varnavinyas.categories.baVa": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable ब/व checks"
         },
         "varnavinyas.categories.riKri": {
           "type": "boolean",
@@ -73,6 +92,11 @@
           "default": true,
           "description": "Enable हलन्त checks"
         },
+        "varnavinyas.categories.aadhiVriddhi": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable आदिवृद्धि checks"
+        },
         "varnavinyas.categories.yaE": {
           "type": "boolean",
           "default": true,
@@ -82,6 +106,11 @@
           "type": "boolean",
           "default": true,
           "description": "Enable क्ष/छ्य checks"
+        },
+        "varnavinyas.categories.gyaGyan": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable ज्ञ/ग्य checks"
         },
         "varnavinyas.categories.sandhi": {
           "type": "boolean",

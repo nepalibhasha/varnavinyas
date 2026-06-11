@@ -12,7 +12,7 @@ crate-type = ["cdylib", "staticlib"]
 [dependencies]
 serde = { workspace = true }
 serde_json = { workspace = true }
-varnavinyas-parikshak = { workspace = true }
+varnavinyas-parikshak = { workspace = true, features = ["grammar-pass"] }
 varnavinyas-lipi = { workspace = true }
 varnavinyas-shabda = { workspace = true }
 

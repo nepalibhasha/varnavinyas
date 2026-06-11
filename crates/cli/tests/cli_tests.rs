@@ -81,10 +81,63 @@ fn check_json_contract_required_fields_have_stable_types() {
     assert!(diag["incorrect"].is_string());
     assert!(diag["correction"].is_string());
     assert!(diag["rule"].is_string());
+    assert!(diag["rule_code"].is_string());
     assert!(diag["category"].is_string());
+    assert!(diag["category_code"].is_string());
+    assert!(diag["category_label"].is_string());
     assert!(diag["explanation"].is_string());
     assert!(diag["kind"].is_string());
     assert!(diag["confidence"].is_number());
+}
+
+#[test]
+fn check_json_category_fields_use_stable_codes() {
+    let output = cmd()
+        .args(["check", "--format", "json"])
+        .write_stdin("अत्याधिक\n")
+        .assert()
+        .code(1)
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: serde_json::Value =
+        serde_json::from_slice(&output).expect("stdout should be valid JSON");
+    let diag = json
+        .as_array()
+        .and_then(|arr| arr.first())
+        .expect("input should produce one diagnostic");
+
+    assert_eq!(diag["category"], diag["category_code"]);
+    assert_ne!(diag["category"], diag["category_label"]);
+    assert!(
+        diag["rule_code"]
+            .as_str()
+            .is_some_and(|code| !code.is_empty())
+    );
+}
+
+#[test]
+fn check_grammar_flag_emits_grammar_pass_diagnostic() {
+    let output = cmd()
+        .args(["check", "--grammar", "--format", "json"])
+        .write_stdin("सूर्योदय भयो।\n")
+        .assert()
+        .code(0)
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: serde_json::Value =
+        serde_json::from_slice(&output).expect("stdout should be valid JSON");
+    let arr = json.as_array().expect("stdout should be an array");
+    assert!(
+        arr.iter().any(
+            |diag| diag.get("rule_code").and_then(serde_json::Value::as_str)
+                == Some("samasa-heuristic")
+        ),
+        "--grammar should surface grammar-pass diagnostics, got: {arr:?}"
+    );
 }
 
 #[test]
@@ -164,6 +217,10 @@ fn check_json_includes_alternate_reasons_for_multi_hit_word() {
         .and_then(serde_json::Value::as_array)
         .expect("multi-hit word should expose alternate_reasons");
     assert!(!alternate_reasons.is_empty());
+    assert_eq!(
+        alternate_reasons[0]["category"],
+        alternate_reasons[0]["category_code"]
+    );
 }
 
 // ── akshar subcommand ───────────────────────────────────────────

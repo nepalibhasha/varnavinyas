@@ -262,6 +262,30 @@ mod tests {
     }
 
     #[test]
+    fn check_text_with_options_grammar_emits_grammar_pass_diagnostic() {
+        let input = CString::new("सूर्योदय भयो।").unwrap();
+        unsafe {
+            let result = varnavinyas_check_text_with_options(
+                input.as_ptr(),
+                true,
+                PUNCTUATION_STRICT,
+                false,
+            );
+            assert!(!result.is_null());
+            let s = CStr::from_ptr(result).to_str().unwrap();
+            let parsed: Vec<serde_json::Value> = serde_json::from_str(s).unwrap();
+            assert!(
+                parsed.iter().any(|diag| {
+                    diag.get("rule_code").and_then(serde_json::Value::as_str)
+                        == Some("samasa-heuristic")
+                }),
+                "expected grammar-pass diagnostic, got: {parsed:?}"
+            );
+            varnavinyas_free_string(result);
+        }
+    }
+
+    #[test]
     fn transliterate_works() {
         let input = CString::new("नमस्ते").unwrap();
         unsafe {

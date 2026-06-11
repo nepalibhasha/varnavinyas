@@ -144,6 +144,24 @@ mod tests {
     }
 
     #[test]
+    fn check_text_with_options_grammar_emits_grammar_pass_diagnostic() {
+        let result = check_text_with_options(
+            "सूर्योदय भयो।".to_string(),
+            true,
+            PunctuationMode::Strict,
+            false,
+        );
+        let parsed: Vec<serde_json::Value> = serde_json::from_str(&result).unwrap();
+        assert!(
+            parsed.iter().any(|diag| {
+                diag.get("rule_code").and_then(serde_json::Value::as_str)
+                    == Some("samasa-heuristic")
+            }),
+            "expected grammar-pass diagnostic, got: {parsed:?}"
+        );
+    }
+
+    #[test]
     fn transliterate_devanagari_to_iast() {
         let result = transliterate("नमस्ते".to_string(), Scheme::Devanagari, Scheme::Iast);
         assert!(result.is_ok());

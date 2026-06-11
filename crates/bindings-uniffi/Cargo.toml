@@ -18,6 +18,6 @@ uniffi = { workspace = true, features = ["cli"] }
 thiserror = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-varnavinyas-parikshak = { workspace = true }
+varnavinyas-parikshak = { workspace = true, features = ["grammar-pass"] }
 varnavinyas-lipi = { workspace = true }
 varnavinyas-shabda = { workspace = true }
