@@ -920,6 +920,7 @@ function onEditorClick() {
     renderDiagnostics();
     const card = diagnosticsList.querySelector(`[data-index="${idx}"]`);
     if (card) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    return;
   } else if (isMobileView()) {
     hideMobileDiagOverlay();
   }

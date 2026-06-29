@@ -265,12 +265,3 @@ function onSearchInput(e) {
   currentSearch = (e.target.value || '').trim();
   renderReferenceView();
 }
-
-document.addEventListener('click', (e) => {
-  const btn = e.target.closest('.ref-jump-btn');
-  if (!btn) return;
-  const categoryCode = btn.dataset.category;
-  if (categoryCode) {
-    highlightCard(categoryCode);
-  }
-});

@@ -345,7 +345,7 @@ function renderAffixStructureSection(affix) {
   }
   parts += `
     <span class="morpheme morpheme-base">
-      ${escapeHtml(affix.root || affix.stem || word)}
+      ${escapeHtml(affix.root || affix.stem || currentWord)}
       <span class="morpheme-label">\u0906\u0927\u093E\u0930</span>
     </span>`;
   for (const segment of (affix.suffix_segments || [])) {
