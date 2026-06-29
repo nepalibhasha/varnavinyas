@@ -72,16 +72,39 @@ fn flags_nepali_congress_phrase() {
 }
 
 #[test]
+fn flags_common_pancham_varna_spellings_in_strict_mode() {
+    let diags = check_text("संघ संचार संकेत");
+    let expected = [("संघ", "सङ्घ"), ("संचार", "सञ्चार"), ("संकेत", "सङ्केत")];
+
+    assert_eq!(
+        diags.len(),
+        expected.len(),
+        "Expected only pancham-varna spelling diagnostics, got: {diags:?}"
+    );
+    for (incorrect, correction) in expected {
+        assert!(
+            diags.iter().any(|d| {
+                d.incorrect == incorrect
+                    && d.correction == correction
+                    && d.category == DiagnosticCategory::Chandrabindu
+            }),
+            "Expected {incorrect} -> {correction}, got: {diags:?}"
+        );
+    }
+}
+
+#[test]
 fn common_editorial_mode_downgrades_reviewed_orthographic_variants() {
     let diags = check_text_with_options(
-        "संघीय संसद नेपाल . नेपाली कांग्रेस",
+        "संघीय संघ संचार संकेत संसद नेपाल . नेपाली कांग्रेस",
         CheckOptions {
             orthography_mode: OrthographyMode::CommonEditorial,
             ..Default::default()
         },
     );
 
-    for incorrect in ["संघीय", "संसद", "कांग्रेस"] {
+    for incorrect in ["संघीय", "संघ", "संचार", "संकेत", "संसद", "कांग्रेस"]
+    {
         let diag = diags
             .iter()
             .find(|d| d.incorrect == incorrect)

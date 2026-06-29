@@ -20,6 +20,27 @@ pub(crate) const ACCEPTED_ORTHOGRAPHIC_VARIANTS: &[AcceptedOrthographicVariant] 
         source_note: "Notices shuddha/ashuddha table lists संघीय -> सङ्घीय; modern official/editorial use widely writes संघीय.",
     },
     AcceptedOrthographicVariant {
+        common: "संघ",
+        strict: "सङ्घ",
+        category: DiagnosticCategory::Chandrabindu,
+        reason: "प्रचलित आधुनिक लेखन; कडा तत्सम पञ्चमवर्ण रूप सङ्घ हो",
+        source_note: "Academy sources list सङ्घ as the strict pancham-varna form and explicitly reject संघ for tatsama use; lexicon data also attests संघ as a common headword.",
+    },
+    AcceptedOrthographicVariant {
+        common: "संचार",
+        strict: "सञ्चार",
+        category: DiagnosticCategory::Chandrabindu,
+        reason: "प्रचलित आधुनिक लेखन; कडा तत्सम पञ्चमवर्ण रूप सञ्चार हो",
+        source_note: "Academy sources list सञ्चार as the strict pancham-varna form and explicitly reject संचार for tatsama use.",
+    },
+    AcceptedOrthographicVariant {
+        common: "संकेत",
+        strict: "सङ्केत",
+        category: DiagnosticCategory::Chandrabindu,
+        reason: "प्रचलित आधुनिक लेखन; कडा तत्सम पञ्चमवर्ण रूप सङ्केत हो",
+        source_note: "Academy sources list सङ्केत as the strict pancham-varna form and explicitly reject संकेत for tatsama use.",
+    },
+    AcceptedOrthographicVariant {
         common: "कांग्रेस",
         strict: "काङ्ग्रेस",
         category: DiagnosticCategory::Chandrabindu,

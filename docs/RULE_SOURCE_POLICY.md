@@ -50,9 +50,9 @@ Current conflict resolutions
 
 - reviewed common-vs-strict orthographic variants
   - `Notices-pages-77-99.md` explicitly prefers strict forms such as
-    `सङ्घीय` and `संसद्`.
+    `सङ्घ`, `सङ्घीय`, `सञ्चार`, `सङ्केत`, and `संसद्`.
   - modern public and literary writing commonly uses forms such as `संघीय`,
-    `संसद`, and the political name `कांग्रेस`.
+    `संघ`, `संचार`, `संकेत`, `संसद`, and the political name `कांग्रेस`.
   - current policy: keep `academy-strict` as the compatibility default; in
     `common-editorial` mode, downgrade only curated reviewed cases to
     `Variant` with the strict form retained as `correction`.

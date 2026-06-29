@@ -30,6 +30,9 @@ Current reviewed common-editorial variants:
 | Common form | Strict form | Category |
 | --- | --- | --- |
 | `संघीय` | `सङ्घीय` | `Chandrabindu` |
+| `संघ` | `सङ्घ` | `Chandrabindu` |
+| `संचार` | `सञ्चार` | `Chandrabindu` |
+| `संकेत` | `सङ्केत` | `Chandrabindu` |
 | `संसद` | `संसद्` | `Halanta` |
 | `कांग्रेस` | `काङ्ग्रेस` | `Chandrabindu` |
 
