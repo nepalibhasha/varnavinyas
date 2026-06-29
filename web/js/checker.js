@@ -27,6 +27,8 @@ const panelCol = document.getElementById('panel-col');
 const grammarToggle = document.getElementById('grammar-toggle');
 const punctuationStrictToggle = document.getElementById('punctuation-strict-toggle');
 const punctuationModeNote = document.getElementById('punctuation-mode-note');
+const orthographyStrictToggle = document.getElementById('orthography-strict-toggle');
+const orthographyModeNote = document.getElementById('orthography-mode-note');
 const grammarCoverage = document.getElementById('grammar-coverage');
 const reviewPrevBtn = document.getElementById('review-prev-btn');
 const reviewNextBtn = document.getElementById('review-next-btn');
@@ -55,7 +57,12 @@ export function initChecker() {
     renderPunctuationModeNote();
     runCheck();
   });
+  orthographyStrictToggle?.addEventListener('change', () => {
+    renderOrthographyModeNote();
+    runCheck();
+  });
   renderPunctuationModeNote();
+  renderOrthographyModeNote();
 
   // Initialize the inspector on the panel column
   const panelContent = document.getElementById('panel-content');
@@ -116,6 +123,14 @@ function isPunctuationStrictEnabled() {
   return punctuationStrictToggle?.checked !== false;
 }
 
+function isOrthographyStrictEnabled() {
+  return orthographyStrictToggle?.checked !== false;
+}
+
+function getOrthographyMode() {
+  return isOrthographyStrictEnabled() ? "academy-strict" : "common-editorial";
+}
+
 function isPunctuationStyleDiagnostic(diag) {
   return diag.category_code === "Punctuation" && !isPunctuationStrictEnabled();
 }
@@ -140,6 +155,13 @@ function renderPunctuationModeNote() {
   punctuationModeNote.textContent = isPunctuationStrictEnabled()
     ? "कडा मोड: विरामचिह्न त्रुटि रूपमा देखाइन्छ।"
     : "शैली मोड: विरामचिह्न सुझाव हुन्, अनिवार्य गल्ती होइनन्।";
+}
+
+function renderOrthographyModeNote() {
+  if (!orthographyModeNote) return;
+  orthographyModeNote.textContent = isOrthographyStrictEnabled()
+    ? "कडा मोड: प्रज्ञा-मानक रूप त्रुटि रूपमा देखाइन्छ।"
+    : "शैली मोड: समीक्षा गरिएका प्रचलित रूप सुझाव मात्र हुन्।";
 }
 
 function getHeuristicRuleLabel(ruleCode) {
@@ -271,7 +293,10 @@ function runCheck() {
   }
 
   try {
-    diagnostics = checkText(text, { grammar: isGrammarEnabled() });
+    diagnostics = checkText(text, {
+      grammar: isGrammarEnabled(),
+      orthographyMode: getOrthographyMode(),
+    });
   } catch (err) {
     console.error('checkText failed', err);
     runtimeErrorMessage = 'जाँच प्रक्रिया असफल भयो। कृपया पृष्ठ रिफ्रेस गरेर फेरि प्रयास गर्नुहोस्।';

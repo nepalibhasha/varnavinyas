@@ -78,6 +78,9 @@ This emits:
 
 - Keep diagnostics keyed by `category_code` (machine-stable), not display labels.
 - `checkText(..., { grammar: true })` enables heuristic/style variants in UI.
+- `checkText(..., { orthographyMode: "common-editorial" })` downgrades only
+  reviewed common-vs-strict orthographic forms to non-blocking variants. See
+  `../docs/INTEGRATION_NOTES.md`.
 - Rule citations are rendered through `wrapRuleTooltip(...)` in `js/rules-data.js`.
 
 ## Common Issues

@@ -5,7 +5,9 @@
 import init, {
   check_text,
   check_text_with_options,
+  check_text_with_all_options,
   check_text_value,
+  check_text_value_with_options,
   check_word,
   check_word_value,
   transliterate as wasmTransliterate,
@@ -63,15 +65,19 @@ export function byteOffsetToCharIndex(text, byteOffset) {
  * Returns an array of diagnostics with char-index spans.
  */
 export function checkText(text, options = {}) {
-  const { grammar = false } = options;
+  const { grammar = false, orthographyMode = 'academy-strict' } = options;
 
   let raw;
   try {
-    raw = check_text_value(text, grammar);
+    raw = check_text_value_with_options(text, grammar, orthographyMode);
   } catch (_err) {
-    raw = grammar
-      ? JSON.parse(check_text_with_options(text, grammar))
-      : JSON.parse(check_text(text));
+    try {
+      raw = JSON.parse(check_text_with_all_options(text, grammar, orthographyMode));
+    } catch (_fallbackErr) {
+      raw = grammar
+        ? JSON.parse(check_text_with_options(text, grammar))
+        : JSON.parse(check_text(text));
+    }
   }
 
   return raw.map((d) => ({

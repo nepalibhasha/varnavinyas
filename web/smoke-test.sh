@@ -41,8 +41,8 @@ fi
 
 # --- 2. WASM JS exports the expected functions ---
 echo "[2] WASM JS exports"
-CORE_EXPORTS="check_text check_word transliterate derive"
-TYPED_EXPORTS="check_text_value check_word_value derive_value analyze_word_value best_affix_analysis_value decompose_word_value analyze_compound_value sandhi_apply_value sandhi_split_value"
+CORE_EXPORTS="check_text check_text_with_all_options check_word transliterate derive"
+TYPED_EXPORTS="check_text_value check_text_value_with_options check_word_value derive_value analyze_word_value best_affix_analysis_value decompose_word_value analyze_compound_value sandhi_apply_value sandhi_split_value"
 
 missing_exports() {
   local exports="$1"
