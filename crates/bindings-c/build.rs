@@ -44,6 +44,12 @@ char *varnavinyas_check_text_with_options(const char *text,
                                           int punctuation_mode,
                                           bool include_noop_heuristics);
 
+char *varnavinyas_check_text_with_all_options(const char *text,
+                                              bool grammar,
+                                              int punctuation_mode,
+                                              int orthography_mode,
+                                              bool include_noop_heuristics);
+
 char *varnavinyas_check_word(const char *word);
 
 char *varnavinyas_transliterate(const char *input, int from, int to);

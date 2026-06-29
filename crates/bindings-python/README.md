@@ -34,6 +34,7 @@ diagnostics = varnavinyas.parikshak.check_text_with_options(
     "नेपाल एक सुन्दर देश हो।",
     grammar=True,
     punctuation_mode="strict",  # or "normalized_editorial"
+    orthography_mode="academy_strict",  # or "common_editorial"
     include_noop_heuristics=False,
 )
 

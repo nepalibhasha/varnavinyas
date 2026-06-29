@@ -22,6 +22,10 @@ pub const SCHEME_IAST: c_int = 1;
 pub const PUNCTUATION_STRICT: c_int = 0;
 pub const PUNCTUATION_NORMALIZED_EDITORIAL: c_int = 1;
 
+/// Orthography mode constants for use with `varnavinyas_check_text_with_all_options`.
+pub const ORTHOGRAPHY_ACADEMY_STRICT: c_int = 0;
+pub const ORTHOGRAPHY_COMMON_EDITORIAL: c_int = 1;
+
 /// Helper: convert a C string pointer to a Rust &str.
 /// Returns None on null pointer or invalid UTF-8.
 unsafe fn cstr_to_str<'a>(ptr: *const c_char) -> Option<&'a str> {
@@ -55,6 +59,17 @@ fn parse_punctuation_mode(value: c_int) -> Option<varnavinyas_parikshak::Punctua
         PUNCTUATION_STRICT => Some(varnavinyas_parikshak::PunctuationMode::Strict),
         PUNCTUATION_NORMALIZED_EDITORIAL => {
             Some(varnavinyas_parikshak::PunctuationMode::NormalizedEditorial)
+        }
+        _ => None,
+    }
+}
+
+/// Convert a `c_int` orthography mode to internal `OrthographyMode`.
+fn parse_orthography_mode(value: c_int) -> Option<varnavinyas_parikshak::OrthographyMode> {
+    match value {
+        ORTHOGRAPHY_ACADEMY_STRICT => Some(varnavinyas_parikshak::OrthographyMode::AcademyStrict),
+        ORTHOGRAPHY_COMMON_EDITORIAL => {
+            Some(varnavinyas_parikshak::OrthographyMode::CommonEditorial)
         }
         _ => None,
     }
@@ -100,16 +115,53 @@ pub unsafe extern "C" fn varnavinyas_check_text_with_options(
     punctuation_mode: c_int,
     include_noop_heuristics: bool,
 ) -> *mut c_char {
+    unsafe {
+        varnavinyas_check_text_with_all_options(
+            text,
+            grammar,
+            punctuation_mode,
+            ORTHOGRAPHY_ACADEMY_STRICT,
+            include_noop_heuristics,
+        )
+    }
+}
+
+/// Check text with all runtime options.
+///
+/// `punctuation_mode` must be one of `PUNCTUATION_STRICT` or
+/// `PUNCTUATION_NORMALIZED_EDITORIAL`.
+/// `orthography_mode` must be one of `ORTHOGRAPHY_ACADEMY_STRICT` or
+/// `ORTHOGRAPHY_COMMON_EDITORIAL`.
+///
+/// Returns a JSON array of diagnostics as a C string.
+/// The caller must free the returned pointer with `varnavinyas_free_string`.
+/// Returns NULL on null/invalid UTF-8 text or invalid mode.
+///
+/// # Safety
+///
+/// `text` must be a valid null-terminated C string or null.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn varnavinyas_check_text_with_all_options(
+    text: *const c_char,
+    grammar: bool,
+    punctuation_mode: c_int,
+    orthography_mode: c_int,
+    include_noop_heuristics: bool,
+) -> *mut c_char {
     let Some(text) = (unsafe { cstr_to_str(text) }) else {
         return std::ptr::null_mut();
     };
     let Some(punctuation_mode) = parse_punctuation_mode(punctuation_mode) else {
         return std::ptr::null_mut();
     };
+    let Some(orthography_mode) = parse_orthography_mode(orthography_mode) else {
+        return std::ptr::null_mut();
+    };
     let diags = varnavinyas_parikshak::check_text_with_options(
         text,
         varnavinyas_parikshak::CheckOptions {
             grammar,
+            orthography_mode,
             punctuation_mode,
             include_noop_heuristics,
         },

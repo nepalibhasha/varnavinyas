@@ -1,5 +1,6 @@
 use varnavinyas_parikshak::{
-    CheckOptions, DiagnosticKind, PunctuationMode, check_text, check_text_with_options, check_word,
+    CheckOptions, DiagnosticCategory, DiagnosticKind, OrthographyMode, PunctuationMode, check_text,
+    check_text_with_options, check_word,
 };
 
 /// C1: Paragraph with known incorrect words produces diagnostics.
@@ -28,6 +29,76 @@ fn c2_correct_paragraph() {
     assert!(
         diags.is_empty(),
         "Correct text should have no diagnostics, got: {diags:?}"
+    );
+}
+
+#[test]
+fn flags_federal_parliament_phrase() {
+    let diags = check_text("संघीय संसद नेपाल .");
+    let expected = [
+        ("संघीय", "सङ्घीय", DiagnosticCategory::Chandrabindu),
+        ("संसद", "संसद्", DiagnosticCategory::Halanta),
+        (".", "।", DiagnosticCategory::Punctuation),
+    ];
+
+    assert_eq!(
+        diags.len(),
+        expected.len(),
+        "Expected only the phrase-level diagnostics, got: {diags:?}"
+    );
+    for (incorrect, correction, category) in expected {
+        assert!(
+            diags.iter().any(|d| {
+                d.incorrect == incorrect && d.correction == correction && d.category == category
+            }),
+            "Expected {incorrect} -> {correction} ({category:?}), got: {diags:?}"
+        );
+    }
+}
+
+#[test]
+fn flags_nepali_congress_phrase() {
+    let diags = check_text("नेपाली कांग्रेस");
+
+    assert_eq!(
+        diags.len(),
+        1,
+        "Expected only कांग्रेस diagnostic, got: {diags:?}"
+    );
+    let diag = &diags[0];
+    assert_eq!(diag.incorrect, "कांग्रेस");
+    assert_eq!(diag.correction, "काङ्ग्रेस");
+    assert_eq!(diag.category, DiagnosticCategory::Chandrabindu);
+}
+
+#[test]
+fn common_editorial_mode_downgrades_reviewed_orthographic_variants() {
+    let diags = check_text_with_options(
+        "संघीय संसद नेपाल . नेपाली कांग्रेस",
+        CheckOptions {
+            orthography_mode: OrthographyMode::CommonEditorial,
+            ..Default::default()
+        },
+    );
+
+    for incorrect in ["संघीय", "संसद", "कांग्रेस"] {
+        let diag = diags
+            .iter()
+            .find(|d| d.incorrect == incorrect)
+            .unwrap_or_else(|| panic!("Expected diagnostic for {incorrect}, got: {diags:?}"));
+        assert!(
+            matches!(diag.kind, DiagnosticKind::Variant),
+            "Expected {incorrect} to be a reviewed variant, got: {diag:?}"
+        );
+    }
+
+    let punctuation = diags
+        .iter()
+        .find(|d| d.incorrect == ".")
+        .unwrap_or_else(|| panic!("Expected punctuation diagnostic, got: {diags:?}"));
+    assert!(
+        matches!(punctuation.kind, DiagnosticKind::Error),
+        "Orthography mode should not relax punctuation, got: {punctuation:?}"
     );
 }
 

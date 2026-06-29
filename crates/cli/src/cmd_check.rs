@@ -3,11 +3,11 @@ use std::process::ExitCode;
 
 use serde::Serialize;
 use varnavinyas_parikshak::{
-    ApiDiagnostic, CheckOptions, Diagnostic, DiagnosticKind, PunctuationMode,
+    ApiDiagnostic, CheckOptions, Diagnostic, DiagnosticKind, OrthographyMode, PunctuationMode,
     check_text_with_options, diagnostic_reason_category,
 };
 
-use crate::{OutputFormat, PunctuationModeArg};
+use crate::{OrthographyModeArg, OutputFormat, PunctuationModeArg};
 
 /// JSON-serializable diagnostic output.
 #[derive(Serialize)]
@@ -39,16 +39,19 @@ struct JsonAlternateReason {
     correction: String,
 }
 
-pub fn run(
-    input: Option<String>,
-    explain: bool,
-    grammar: bool,
-    punctuation_mode: PunctuationModeArg,
-    debug_include_noop_heuristics: bool,
-    fail_on_suggestions: bool,
-    format: OutputFormat,
-) -> ExitCode {
-    let (source_name, text) = match read_input(input) {
+pub struct RunOptions {
+    pub input: Option<String>,
+    pub explain: bool,
+    pub grammar: bool,
+    pub punctuation_mode: PunctuationModeArg,
+    pub orthography_mode: OrthographyModeArg,
+    pub debug_include_noop_heuristics: bool,
+    pub fail_on_suggestions: bool,
+    pub format: OutputFormat,
+}
+
+pub fn run(options: RunOptions) -> ExitCode {
+    let (source_name, text) = match read_input(options.input) {
         Ok(v) => v,
         Err(e) => {
             eprintln!("error: {e}");
@@ -59,24 +62,31 @@ pub fn run(
     let diagnostics = check_text_with_options(
         &text,
         CheckOptions {
-            grammar,
-            punctuation_mode: to_core_punctuation_mode(punctuation_mode),
-            include_noop_heuristics: debug_include_noop_heuristics,
+            grammar: options.grammar,
+            orthography_mode: to_core_orthography_mode(options.orthography_mode),
+            punctuation_mode: to_core_punctuation_mode(options.punctuation_mode),
+            include_noop_heuristics: options.debug_include_noop_heuristics,
         },
     );
 
     let line_offsets = build_line_offsets(&text);
 
-    match format {
+    match options.format {
         OutputFormat::Text => {
-            print_text(&diagnostics, &source_name, &text, &line_offsets, explain);
+            print_text(
+                &diagnostics,
+                &source_name,
+                &text,
+                &line_offsets,
+                options.explain,
+            );
         }
         OutputFormat::Json => {
             print_json(&diagnostics, &text, &line_offsets);
         }
     }
 
-    if has_blocking_diagnostics(&diagnostics, fail_on_suggestions) {
+    if has_blocking_diagnostics(&diagnostics, options.fail_on_suggestions) {
         ExitCode::from(1)
     } else {
         ExitCode::SUCCESS
@@ -97,6 +107,13 @@ fn to_core_punctuation_mode(mode: PunctuationModeArg) -> PunctuationMode {
     match mode {
         PunctuationModeArg::Strict => PunctuationMode::Strict,
         PunctuationModeArg::NormalizedEditorial => PunctuationMode::NormalizedEditorial,
+    }
+}
+
+fn to_core_orthography_mode(mode: OrthographyModeArg) -> OrthographyMode {
+    match mode {
+        OrthographyModeArg::AcademyStrict => OrthographyMode::AcademyStrict,
+        OrthographyModeArg::CommonEditorial => OrthographyMode::CommonEditorial,
     }
 }
 

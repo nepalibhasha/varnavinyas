@@ -60,7 +60,7 @@ pub fn check_word(word: &str) -> Option<PyDiagnostic> {
 /// Returns a list of Diagnostic objects.
 #[pyfunction]
 pub fn check_text(text: &str) -> PyResult<Vec<PyDiagnostic>> {
-    check_text_with_options(text, false, "strict", false)
+    check_text_with_options(text, false, "strict", "academy_strict", false)
 }
 
 fn parse_punctuation_mode(mode: &str) -> PyResult<varnavinyas_parikshak::PunctuationMode> {
@@ -73,20 +73,37 @@ fn parse_punctuation_mode(mode: &str) -> PyResult<varnavinyas_parikshak::Punctua
     }
 }
 
+fn parse_orthography_mode(mode: &str) -> PyResult<varnavinyas_parikshak::OrthographyMode> {
+    match mode {
+        "academy_strict" | "academy-strict" => {
+            Ok(varnavinyas_parikshak::OrthographyMode::AcademyStrict)
+        }
+        "common_editorial" | "common-editorial" => {
+            Ok(varnavinyas_parikshak::OrthographyMode::CommonEditorial)
+        }
+        other => Err(pyo3::exceptions::PyValueError::new_err(format!(
+            "Unknown orthography_mode '{other}'. Use 'academy_strict' or 'common_editorial'."
+        ))),
+    }
+}
+
 /// Check full text with runtime options.
 #[pyfunction]
-#[pyo3(signature = (text, grammar=false, punctuation_mode="strict", include_noop_heuristics=false))]
+#[pyo3(signature = (text, grammar=false, punctuation_mode="strict", orthography_mode="academy_strict", include_noop_heuristics=false))]
 pub fn check_text_with_options(
     text: &str,
     grammar: bool,
     punctuation_mode: &str,
+    orthography_mode: &str,
     include_noop_heuristics: bool,
 ) -> PyResult<Vec<PyDiagnostic>> {
     let punctuation_mode = parse_punctuation_mode(punctuation_mode)?;
+    let orthography_mode = parse_orthography_mode(orthography_mode)?;
     let diagnostics = parikshak_core::check_text_with_options(
         text,
         parikshak_core::CheckOptions {
             grammar,
+            orthography_mode,
             punctuation_mode,
             include_noop_heuristics,
         },

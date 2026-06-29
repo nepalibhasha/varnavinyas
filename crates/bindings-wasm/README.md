@@ -15,6 +15,7 @@ This crate exposes core Varnavinyas functionality to JavaScript through `wasm-bi
 The crate exposes browser-friendly entry points. Prefer typed or non-string exports when possible:
 
 - `check_text_value(text, grammar)`
+- `check_text_value_with_options(text, grammar, orthography_mode)`
 - `check_word_value(word)`
 - `derive_value(word)`
 - `analyze_word_value(word)`
@@ -32,6 +33,7 @@ Legacy JSON-string helpers are also exposed:
 
 - `check_text(text)`
 - `check_text_with_options(text, grammar)`
+- `check_text_with_all_options(text, grammar, orthography_mode)`
 - `check_word(word)`
 - `derive(word)`
 - `analyze_word(word)`
@@ -51,6 +53,7 @@ import init, { check_word_value, sandhi_split_value } from "./pkg/varnavinyas_bi
 await init();
 
 const diag = check_word_value("राजनैतिक");
+const diags = check_text_value_with_options("नेपाली कांग्रेस", false, "common-editorial");
 const splits = sandhi_split_value("अत्यधिक");
 ```
 
@@ -60,7 +63,7 @@ The exact shapes are defined by Rust serializers in `src/lib.rs`, `varnavinyas-p
 
 Important stable fields:
 
-- `check_text_value` returns an array of diagnostics with `span_start`, `span_end`, `incorrect`, `correction`, `rule`, `rule_code`, `explanation`, `category`, `category_code`, `kind`, `confidence`, and optional `alternate_reasons`.
+- `check_text_value` and `check_text_value_with_options` return an array of diagnostics with `span_start`, `span_end`, `incorrect`, `correction`, `rule`, `rule_code`, `explanation`, `category`, `category_code`, `kind`, `confidence`, and optional `alternate_reasons`.
 - `check_word_value` returns one diagnostic object or `null`.
 - `derive_value` returns `input`, `output`, `is_correct`, and `steps`.
 - `analyze_word_value` returns word origin, correctness, correction, rule notes, and alternate rule notes.
@@ -76,6 +79,10 @@ The following are downstream contract:
 - object-vs-null return shape
 - top-level field names returned by typed APIs
 - local/offline execution
+
+`orthography_mode` accepts `"academy-strict"` or `"common-editorial"`.
+Academy-strict is the compatibility default. Common-editorial downgrades only
+reviewed common-vs-strict orthographic forms to `kind: "Variant"`.
 
 ## Design Notes
 

@@ -30,6 +30,13 @@ pub enum PunctuationMode {
     NormalizedEditorial,
 }
 
+/// Runtime orthography policy for reviewed common-vs-strict variants.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
+pub enum OrthographyMode {
+    AcademyStrict,
+    CommonEditorial,
+}
+
 /// Check text for spelling and punctuation issues.
 ///
 /// Returns a JSON array of diagnostics.
@@ -48,16 +55,41 @@ pub fn check_text_with_options(
     punctuation_mode: PunctuationMode,
     include_noop_heuristics: bool,
 ) -> String {
+    check_text_with_all_options(
+        text,
+        grammar,
+        punctuation_mode,
+        OrthographyMode::AcademyStrict,
+        include_noop_heuristics,
+    )
+}
+
+/// Check text with all runtime options.
+///
+/// Returns a JSON array of diagnostics.
+#[uniffi::export]
+pub fn check_text_with_all_options(
+    text: String,
+    grammar: bool,
+    punctuation_mode: PunctuationMode,
+    orthography_mode: OrthographyMode,
+    include_noop_heuristics: bool,
+) -> String {
     let punctuation_mode = match punctuation_mode {
         PunctuationMode::Strict => varnavinyas_parikshak::PunctuationMode::Strict,
         PunctuationMode::NormalizedEditorial => {
             varnavinyas_parikshak::PunctuationMode::NormalizedEditorial
         }
     };
+    let orthography_mode = match orthography_mode {
+        OrthographyMode::AcademyStrict => varnavinyas_parikshak::OrthographyMode::AcademyStrict,
+        OrthographyMode::CommonEditorial => varnavinyas_parikshak::OrthographyMode::CommonEditorial,
+    };
     let diags = varnavinyas_parikshak::check_text_with_options(
         &text,
         varnavinyas_parikshak::CheckOptions {
             grammar,
+            orthography_mode,
             punctuation_mode,
             include_noop_heuristics,
         },
@@ -141,6 +173,24 @@ mod tests {
             check_text_with_options("नेपाल".to_string(), true, PunctuationMode::Strict, false);
         let parsed: serde_json::Value = serde_json::from_str(&result).unwrap();
         assert!(parsed.is_array());
+    }
+
+    #[test]
+    fn check_text_with_all_options_common_editorial_emits_variant() {
+        let result = check_text_with_all_options(
+            "नेपाली कांग्रेस".to_string(),
+            false,
+            PunctuationMode::Strict,
+            OrthographyMode::CommonEditorial,
+            false,
+        );
+        let parsed: Vec<serde_json::Value> = serde_json::from_str(&result).unwrap();
+        assert!(
+            parsed
+                .iter()
+                .any(|diag| diag["incorrect"] == "कांग्रेस" && diag["kind"] == "Variant"),
+            "expected common editorial variant, got: {parsed:?}"
+        );
     }
 
     #[test]

@@ -19,8 +19,15 @@ intended for editor packages such as `nepali.el`.
 - `1`: at least one blocking diagnostic was found.
 - `2`: input, argument, or runtime usage error.
 
-By default, only diagnostics with `kind: "error"` are blocking. With
+By default, only diagnostics with `kind: "Error"` are blocking. With
 `--fail-on-suggestions`, any diagnostic is blocking.
+
+`--orthography-mode academy-strict` is the default and reports Academy-
+prescriptive spellings as `kind: "Error"`. `--orthography-mode
+common-editorial` keeps the same diagnostic object shape but reports reviewed
+common-vs-strict orthographic forms as `kind: "Variant"` with the strict form in
+`correction`. This mode is intentionally curated; unreviewed spelling mistakes
+remain errors.
 
 ## Diagnostic Object
 
@@ -38,7 +45,7 @@ Each array item has these required fields:
 | `category_code` | string | Stable diagnostic category code, same value as `category`. |
 | `category_label` | string | Human-readable category label. |
 | `explanation` | string | Human-readable explanation. |
-| `kind` | string | Lowercase diagnostic kind, such as `error`, `variant`, or `ambiguous`. |
+| `kind` | string | Diagnostic kind, such as `Error`, `Variant`, or `Ambiguous`. |
 | `confidence` | number | Confidence score in the range `0.0` to `1.0`. |
 
 When a word has additional independent reasons, the diagnostic also includes:
@@ -74,7 +81,7 @@ Each `alternate_reasons` item has these required fields:
     "category_code": "ShuddhaTable",
     "category_label": "शुद्ध-अशुद्ध",
     "explanation": "...",
-    "kind": "error",
+    "kind": "Error",
     "confidence": 1.0
   }
 ]

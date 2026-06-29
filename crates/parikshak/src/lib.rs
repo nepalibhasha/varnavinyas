@@ -3,7 +3,10 @@ mod diagnostic;
 pub mod presentation;
 mod tokenizer;
 
-pub use checker::{CheckOptions, PunctuationMode, check_text, check_text_with_options, check_word};
+pub use checker::{
+    CheckOptions, OrthographyMode, PunctuationMode, check_text, check_text_with_options,
+    check_word, check_word_with_options,
+};
 pub use diagnostic::{
     Diagnostic, DiagnosticCategory, DiagnosticReason, diagnostic_reason_category,
 };

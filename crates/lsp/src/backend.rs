@@ -42,6 +42,7 @@ impl Backend {
             text,
             parikshak::CheckOptions {
                 grammar: false,
+                orthography_mode: config.orthography_mode.to_core(),
                 punctuation_mode: config.punctuation_mode.to_core(),
                 include_noop_heuristics: config.debug_include_noop_heuristics,
             },

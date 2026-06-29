@@ -56,6 +56,14 @@ Use JSON output when integrating with scripts or other tools:
 cargo run -p varnavinyas -- check path/to/document.txt --format json
 ```
 
+By default the checker uses Academy-strict orthography. To treat reviewed
+common forms such as `संघीय`, `संसद`, and `कांग्रेस` as editorial variants
+rather than hard errors, pass:
+
+```bash
+cargo run -p varnavinyas -- check path/to/document.txt --orthography-mode common-editorial
+```
+
 The CLI also includes small utility commands:
 
 ```bash

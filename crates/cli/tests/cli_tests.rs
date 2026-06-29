@@ -118,6 +118,42 @@ fn check_json_category_fields_use_stable_codes() {
 }
 
 #[test]
+fn check_common_editorial_orthography_emits_variants() {
+    let output = cmd()
+        .args([
+            "check",
+            "--orthography-mode",
+            "common-editorial",
+            "--format",
+            "json",
+        ])
+        .write_stdin("संघीय संसद नेपाल . नेपाली कांग्रेस\n")
+        .assert()
+        .code(1)
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: serde_json::Value =
+        serde_json::from_slice(&output).expect("stdout should be valid JSON");
+    let arr = json.as_array().expect("diagnostics should be an array");
+
+    for incorrect in ["संघीय", "संसद", "कांग्रेस"] {
+        let diag = arr
+            .iter()
+            .find(|diag| diag["incorrect"] == incorrect)
+            .unwrap_or_else(|| panic!("Expected diagnostic for {incorrect}, got: {arr:?}"));
+        assert_eq!(diag["kind"], "Variant");
+    }
+
+    assert!(
+        arr.iter()
+            .any(|diag| diag["incorrect"] == "." && diag["kind"] == "Error"),
+        "Punctuation should remain an error in strict punctuation mode, got: {arr:?}"
+    );
+}
+
+#[test]
 fn check_grammar_flag_emits_grammar_pass_diagnostic() {
     let output = cmd()
         .args(["check", "--grammar", "--format", "json"])

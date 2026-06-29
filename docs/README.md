@@ -18,6 +18,7 @@ Start here:
 - **[DATASETS.md](DATASETS.md)**: Explanation of test data, gold standards, and provenance.
 - **[RULES.md](RULES.md)**: Linguistic rules implementation and Academy standard mapping.
 - **[RULE_SOURCE_POLICY.md](RULE_SOURCE_POLICY.md)**: Source precedence, conflict handling, and stopgap policy.
+- **[INTEGRATION_NOTES.md](INTEGRATION_NOTES.md)**: Downstream option and diagnostic-behavior notes.
 - **[BACKLOG.md](BACKLOG.md)**: Current state, near-term priorities, and deferred work.
 - **[Notices-pages-77-99.md](Notices-pages-77-99.md)**: Academy notice excerpt reference (source: [MoFAGA notice](https://mofaga.gov.np/notice-file/Notices-20211029142422901.pdf)).
 - **[PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md](PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md)**: Academy school-grammar reference used alongside the notice excerpt for rule implementation.

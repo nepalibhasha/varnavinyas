@@ -31,6 +31,10 @@ enum Commands {
         #[arg(long, value_enum, default_value = "strict")]
         punctuation_mode: PunctuationModeArg,
 
+        /// Orthography policy for reviewed common-vs-strict variants
+        #[arg(long, value_enum, default_value = "academy-strict")]
+        orthography_mode: OrthographyModeArg,
+
         /// Debug: include no-op heuristic suggestions (A -> A)
         #[arg(long)]
         debug_include_noop_heuristics: bool,
@@ -77,6 +81,12 @@ enum PunctuationModeArg {
     NormalizedEditorial,
 }
 
+#[derive(ValueEnum, Clone, Copy)]
+enum OrthographyModeArg {
+    AcademyStrict,
+    CommonEditorial,
+}
+
 fn main() -> ExitCode {
     let cli = Cli::parse();
 
@@ -86,18 +96,20 @@ fn main() -> ExitCode {
             explain,
             grammar,
             punctuation_mode,
+            orthography_mode,
             debug_include_noop_heuristics,
             fail_on_suggestions,
             format,
-        } => cmd_check::run(
+        } => cmd_check::run(cmd_check::RunOptions {
             input,
             explain,
             grammar,
             punctuation_mode,
+            orthography_mode,
             debug_include_noop_heuristics,
             fail_on_suggestions,
             format,
-        ),
+        }),
         Commands::Akshar { text } => {
             cmd_akshar::run(&text);
             ExitCode::SUCCESS

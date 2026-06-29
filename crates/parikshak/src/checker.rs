@@ -15,6 +15,7 @@ mod common;
 mod context;
 #[cfg(feature = "grammar-pass")]
 mod grammar;
+mod orthography_variants;
 mod padayog;
 mod padayog_rules;
 mod particles;
@@ -26,6 +27,7 @@ mod word_level;
 use context::add_context_diagnostics;
 #[cfg(feature = "grammar-pass")]
 use grammar::add_grammar_diagnostics;
+use orthography_variants::ACCEPTED_ORTHOGRAPHIC_VARIANTS;
 use padayog::{add_generalized_padayog_padabiyog_diagnostics, add_padayog_padabiyog_diagnostics};
 use punctuation::punctuation_diagnostics;
 use style_variants::add_style_variant_diagnostics;
@@ -40,6 +42,16 @@ pub enum PunctuationMode {
     NormalizedEditorial,
 }
 
+/// How prescriptive orthographic variants should be classified.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum OrthographyMode {
+    /// Academy-prescriptive forms are hard errors.
+    #[default]
+    AcademyStrict,
+    /// Reviewed common forms are accepted as editorial variants.
+    CommonEditorial,
+}
+
 /// Runtime options for `check_text_with_options`.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct CheckOptions {
@@ -47,6 +59,8 @@ pub struct CheckOptions {
     ///
     /// This only has effect when compiled with the `grammar-pass` feature.
     pub grammar: bool,
+    /// How reviewed common-vs-strict orthographic variants should be classified.
+    pub orthography_mode: OrthographyMode,
     /// How Section 5 punctuation diagnostics should be classified.
     pub punctuation_mode: PunctuationMode,
     /// Debug-only: include heuristic diagnostics that do not change text.
@@ -66,6 +80,11 @@ pub struct CheckOptions {
 /// forms (including common misspellings like राजनैतिक). Academy correction
 /// rules are authoritative and must override lexicon presence.
 pub fn check_word(word: &str) -> Option<Diagnostic> {
+    check_word_with_options(word, CheckOptions::default())
+}
+
+/// Check a single word with runtime options.
+pub fn check_word_with_options(word: &str, options: CheckOptions) -> Option<Diagnostic> {
     if matches!(word, "नं") {
         return None;
     }
@@ -75,19 +94,21 @@ pub fn check_word(word: &str) -> Option<Diagnostic> {
     }
 
     if let Some(diag) = check_word_tiryak(word) {
-        return Some(diag);
+        return Some(apply_orthography_mode(diag, options.orthography_mode));
     }
 
     let lex = kosha();
     if lex.contains(word) || lex.lookup(word).is_some() {
-        return check_word_impl(word);
+        return check_word_impl(word)
+            .map(|diag| apply_orthography_mode(diag, options.orthography_mode));
     }
 
     if let Some(analysis) = best_analysis(word) {
         if !analysis.suffixes.is_empty() {
             let detached = word.strip_prefix(&analysis.stem).unwrap_or_default();
             if should_prefer_whole_word_over_short_nipat_split(&analysis.stem, detached, lex) {
-                return check_word_impl(word);
+                return check_word_impl(word)
+                    .map(|diag| apply_orthography_mode(diag, options.orthography_mode));
             }
             if lex.contains(word) {
                 return None;
@@ -99,7 +120,7 @@ pub fn check_word(word: &str) -> Option<Diagnostic> {
                 if let Some(detached) = word.strip_prefix(&analysis.stem) {
                     diag.correction.push_str(detached);
                 }
-                return Some(diag);
+                return Some(apply_orthography_mode(diag, options.orthography_mode));
             }
             return None;
         }
@@ -107,19 +128,21 @@ pub fn check_word(word: &str) -> Option<Diagnostic> {
 
     if let Some((stem, detached)) = best_supported_detachment(word, lex) {
         if should_prefer_whole_word_over_short_nipat_split(&stem, &detached, lex) {
-            return check_word_impl(word);
+            return check_word_impl(word)
+                .map(|diag| apply_orthography_mode(diag, options.orthography_mode));
         }
         if let Some(mut diag) = check_word_impl(&stem) {
             diag.span = (0, word.len());
             diag.incorrect = word.to_string();
             diag.correction.push_str(&detached);
-            return Some(diag);
+            return Some(apply_orthography_mode(diag, options.orthography_mode));
         }
     }
 
     if let Some((stem, detached)) = best_detachment_candidate(word, lex) {
         if should_prefer_whole_word_over_short_nipat_split(&stem, &detached, lex) {
-            return check_word_impl(word);
+            return check_word_impl(word)
+                .map(|diag| apply_orthography_mode(diag, options.orthography_mode));
         }
         if let Some(mut diag) = check_word_impl(&stem) {
             let candidate = format!("{}{}", diag.correction, detached);
@@ -130,12 +153,29 @@ pub fn check_word(word: &str) -> Option<Diagnostic> {
                 diag.span = (0, word.len());
                 diag.incorrect = word.to_string();
                 diag.correction = candidate;
-                return Some(diag);
+                return Some(apply_orthography_mode(diag, options.orthography_mode));
             }
         }
     }
 
-    check_word_impl(word)
+    check_word_impl(word).map(|diag| apply_orthography_mode(diag, options.orthography_mode))
+}
+
+fn apply_orthography_mode(mut diag: Diagnostic, mode: OrthographyMode) -> Diagnostic {
+    if mode != OrthographyMode::CommonEditorial {
+        return diag;
+    }
+    if let Some(variant) = ACCEPTED_ORTHOGRAPHIC_VARIANTS.iter().find(|variant| {
+        diag.incorrect == variant.common
+            && diag.correction == variant.strict
+            && diag.category == variant.category
+    }) {
+        debug_assert!(!variant.source_note.is_empty());
+        diag.kind = DiagnosticKind::Variant;
+        diag.confidence = diag.confidence.min(0.72);
+        diag.explanation = format!("{}। {}", variant.reason, diag.explanation);
+    }
+    diag
 }
 
 /// Check full text with runtime options.
@@ -157,7 +197,7 @@ pub fn check_text_with_options(text: &str, options: CheckOptions) -> Vec<Diagnos
             }
         }
 
-        if let Some(mut diag) = check_word(&token.stem) {
+        if let Some(mut diag) = check_word_with_options(&token.stem, options) {
             adjust_context_sensitive_nga_halanta_rule(idx, &tokens, token, &mut diag);
             diag.span = (token.start, token.end);
 

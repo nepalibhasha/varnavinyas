@@ -32,10 +32,19 @@ pub fn check_text(text: &str) -> String {
 // Check full text with optional grammar-pass diagnostics.
 #[wasm_bindgen]
 pub fn check_text_with_options(text: &str, grammar: bool) -> String {
+    check_text_with_all_options(text, grammar, "academy-strict")
+}
+
+/// Check full text with grammar and orthography policy options.
+#[wasm_bindgen]
+pub fn check_text_with_all_options(text: &str, grammar: bool, orthography_mode: &str) -> String {
+    let orthography_mode = parse_orthography_mode(orthography_mode)
+        .unwrap_or(varnavinyas_parikshak::OrthographyMode::AcademyStrict);
     let diags = varnavinyas_parikshak::check_text_with_options(
         text,
         varnavinyas_parikshak::CheckOptions {
             grammar,
+            orthography_mode,
             ..Default::default()
         },
     );
@@ -47,10 +56,22 @@ pub fn check_text_with_options(text: &str, grammar: bool) -> String {
 /// Check full text with optional grammar-pass diagnostics and return typed JsValue.
 #[wasm_bindgen]
 pub fn check_text_value(text: &str, grammar: bool) -> Result<JsValue, JsError> {
+    check_text_value_with_options(text, grammar, "academy-strict")
+}
+
+/// Check full text with grammar and orthography policy options and return typed JsValue.
+#[wasm_bindgen]
+pub fn check_text_value_with_options(
+    text: &str,
+    grammar: bool,
+    orthography_mode: &str,
+) -> Result<JsValue, JsError> {
+    let orthography_mode = parse_orthography_mode(orthography_mode)?;
     let diags = varnavinyas_parikshak::check_text_with_options(
         text,
         varnavinyas_parikshak::CheckOptions {
             grammar,
+            orthography_mode,
             ..Default::default()
         },
     );
@@ -58,6 +79,18 @@ pub fn check_text_value(text: &str, grammar: bool) -> Result<JsValue, JsError> {
         diags.into_iter().map(Into::into).collect();
     serde_wasm_bindgen::to_value(&api_diags)
         .map_err(|e| JsError::new(&format!("failed to serialize diagnostics: {e}")))
+}
+
+fn parse_orthography_mode(mode: &str) -> Result<varnavinyas_parikshak::OrthographyMode, JsError> {
+    match mode {
+        "academy-strict" | "academy_strict" => {
+            Ok(varnavinyas_parikshak::OrthographyMode::AcademyStrict)
+        }
+        "common-editorial" | "common_editorial" => {
+            Ok(varnavinyas_parikshak::OrthographyMode::CommonEditorial)
+        }
+        other => Err(JsError::new(&format!("unknown orthography mode: {other}"))),
+    }
 }
 
 /// Check a single word. Returns a JSON diagnostic or "null".

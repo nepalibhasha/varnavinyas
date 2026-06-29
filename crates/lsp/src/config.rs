@@ -1,15 +1,35 @@
 use serde::Deserialize;
-use varnavinyas_parikshak::{DiagnosticCategory, PunctuationMode};
+use varnavinyas_parikshak::{DiagnosticCategory, OrthographyMode, PunctuationMode};
 
 /// LSP server configuration, synced from client settings.
 #[derive(Debug, Clone, Default, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
 pub struct Config {
     pub categories: EnabledCategories,
+    #[serde(alias = "orthography_mode")]
+    pub orthography_mode: OrthographyModeSetting,
     #[serde(alias = "punctuation_mode")]
     pub punctuation_mode: PunctuationModeSetting,
     #[serde(alias = "debug_include_noop_heuristics")]
     pub debug_include_noop_heuristics: bool,
+}
+
+/// How reviewed common-vs-strict orthographic variants should be classified.
+#[derive(Debug, Clone, Copy, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "kebab-case")]
+pub enum OrthographyModeSetting {
+    #[default]
+    AcademyStrict,
+    CommonEditorial,
+}
+
+impl OrthographyModeSetting {
+    pub fn to_core(self) -> OrthographyMode {
+        match self {
+            Self::AcademyStrict => OrthographyMode::AcademyStrict,
+            Self::CommonEditorial => OrthographyMode::CommonEditorial,
+        }
+    }
 }
 
 /// How Section 5 punctuation diagnostics should be classified.
@@ -194,13 +214,27 @@ mod tests {
     }
 
     #[test]
+    fn default_orthography_mode_is_academy_strict() {
+        let config = Config::default();
+        assert_eq!(
+            config.orthography_mode,
+            OrthographyModeSetting::AcademyStrict
+        );
+    }
+
+    #[test]
     fn parses_vscode_top_level_runtime_settings() {
         let config: Config = serde_json::from_value(serde_json::json!({
+            "orthographyMode": "common-editorial",
             "punctuationMode": "normalized-editorial",
             "debugIncludeNoopHeuristics": true
         }))
         .expect("config should parse");
 
+        assert_eq!(
+            config.orthography_mode,
+            OrthographyModeSetting::CommonEditorial
+        );
         assert_eq!(
             config.punctuation_mode,
             PunctuationModeSetting::NormalizedEditorial
@@ -211,11 +245,16 @@ mod tests {
     #[test]
     fn accepts_legacy_snake_case_runtime_settings() {
         let config: Config = serde_json::from_value(serde_json::json!({
+            "orthography_mode": "common-editorial",
             "punctuation_mode": "normalized-editorial",
             "debug_include_noop_heuristics": true
         }))
         .expect("config should parse");
 
+        assert_eq!(
+            config.orthography_mode,
+            OrthographyModeSetting::CommonEditorial
+        );
         assert_eq!(
             config.punctuation_mode,
             PunctuationModeSetting::NormalizedEditorial

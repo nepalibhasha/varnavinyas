@@ -16,11 +16,13 @@ The exported API currently focuses on a compact core:
 
 - `check_text`
 - `check_text_with_options`
+- `check_text_with_all_options`
 - `check_word`
 - `transliterate`
 - `classify`
 
-It also exports the `Scheme`, `Origin`, and `PunctuationMode` enums used by those functions.
+It also exports the `Scheme`, `Origin`, `PunctuationMode`, and
+`OrthographyMode` enums used by those functions.
 
 ## Example
 
@@ -29,6 +31,7 @@ Conceptually, native consumers use generated bindings for the exported functions
 ```text
 check_text("यो बाक्यमा गल्ति छ")
 check_text_with_options("यो बाक्यमा गल्ति छ", false, PunctuationMode.Strict, false)
+check_text_with_all_options("नेपाली कांग्रेस", false, PunctuationMode.Strict, OrthographyMode.CommonEditorial, false)
 check_word("अध्यन")
 transliterate("नेपाल", Devanagari, Iast)
 classify("नेपाल")
