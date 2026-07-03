@@ -95,7 +95,7 @@ fn resolve_padayog_overlaps(diagnostics: &mut Vec<Diagnostic>) {
 
             let left = Candidate::new(&diagnostics[i]);
             let right = Candidate::new(&diagnostics[j]);
-            let Some(winner) = same_span_padayog_winner(left, right) else {
+            let Some(winner) = padayog_overlap_winner(left, right) else {
                 continue;
             };
 
@@ -109,21 +109,6 @@ fn resolve_padayog_overlaps(diagnostics: &mut Vec<Diagnostic>) {
     }
 
     retain_by_remove_mask(diagnostics, &remove);
-
-    let padayog_spans: Vec<(usize, usize)> = diagnostics
-        .iter()
-        .filter(|diagnostic| {
-            let candidate = Candidate::new(diagnostic);
-            candidate.is_padayog() && !is_ambiguous(candidate)
-        })
-        .map(|diagnostic| diagnostic.span)
-        .collect();
-
-    diagnostics.retain(|diagnostic| {
-        !padayog_spans
-            .iter()
-            .any(|&span| diagnostic.span != span && contains_span(span, diagnostic.span))
-    });
 }
 
 fn retain_by_remove_mask(diagnostics: &mut Vec<Diagnostic>, remove: &[bool]) {
@@ -135,12 +120,25 @@ fn retain_by_remove_mask(diagnostics: &mut Vec<Diagnostic>, remove: &[bool]) {
     });
 }
 
-fn same_span_padayog_winner(left: Candidate<'_>, right: Candidate<'_>) -> Option<usize> {
+fn padayog_overlap_winner(left: Candidate<'_>, right: Candidate<'_>) -> Option<usize> {
     if !(left.is_padayog() || right.is_padayog()) {
         return None;
     }
 
     if left.diagnostic.span == right.diagnostic.span {
+        return higher_precedence_index(left, right);
+    }
+
+    if left.is_padayog() && contains_span(left.diagnostic.span, right.diagnostic.span) {
+        if padayog_replacement_subsumes_nested(left, right) {
+            return Some(0);
+        }
+        return higher_precedence_index(left, right);
+    }
+    if right.is_padayog() && contains_span(right.diagnostic.span, left.diagnostic.span) {
+        if padayog_replacement_subsumes_nested(right, left) {
+            return Some(1);
+        }
         return higher_precedence_index(left, right);
     }
 
@@ -155,8 +153,16 @@ fn higher_precedence_index(left: Candidate<'_>, right: Candidate<'_>) -> Option<
     }
 }
 
-fn is_ambiguous(candidate: Candidate<'_>) -> bool {
-    candidate.precedence_tuple().0 <= kind_rank(DiagnosticKind::Ambiguous)
+fn padayog_replacement_subsumes_nested(padayog: Candidate<'_>, nested: Candidate<'_>) -> bool {
+    kind_rank(padayog.diagnostic.kind) > kind_rank(DiagnosticKind::Ambiguous)
+        && padayog
+            .diagnostic
+            .incorrect
+            .contains(nested.diagnostic.incorrect.as_str())
+        && padayog
+            .diagnostic
+            .correction
+            .contains(nested.diagnostic.correction.as_str())
 }
 
 fn contains_span(outer: (usize, usize), inner: (usize, usize)) -> bool {
@@ -375,6 +381,61 @@ mod tests {
     }
 
     #[test]
+    fn nested_word_error_beats_weaker_padayog_span() {
+        let mut diagnostics = vec![
+            diagnostic_with(
+                (0, 12),
+                Rule::VarnaVinyasNiyam("3(घ)"),
+                DiagnosticKind::Error,
+                "padayog",
+                "padayog-correct",
+                "generalized padayog explanation",
+                Vec::new(),
+            ),
+            diagnostic(
+                (3, 9),
+                Rule::ShuddhaAshuddha("Section 4"),
+                DiagnosticKind::Error,
+                "nested",
+            ),
+        ];
+
+        resolve_diagnostic_overlaps(&mut diagnostics);
+
+        assert_eq!(diagnostics.len(), 1);
+        assert_eq!(diagnostics[0].incorrect, "nested");
+    }
+
+    #[test]
+    fn padayog_composite_rewrite_suppresses_nested_word_error_it_subsumes() {
+        let mut diagnostics = vec![
+            diagnostic_with(
+                (0, 11),
+                Rule::VarnaVinyasNiyam("3(घ)"),
+                DiagnosticKind::Error,
+                "abc def ghi",
+                "abc dufghi",
+                "generalized padayog explanation",
+                Vec::new(),
+            ),
+            diagnostic_with(
+                (4, 7),
+                Rule::ShuddhaAshuddha("Section 4"),
+                DiagnosticKind::Error,
+                "def",
+                "duf",
+                "word explanation",
+                Vec::new(),
+            ),
+        ];
+
+        resolve_diagnostic_overlaps(&mut diagnostics);
+
+        assert_eq!(diagnostics.len(), 1);
+        assert_eq!(diagnostics[0].incorrect, "abc def ghi");
+    }
+
+    #[test]
     fn same_span_word_error_beats_generalized_padayog_candidate() {
         let mut diagnostics = vec![
             diagnostic(
@@ -473,7 +534,7 @@ mod tests {
     }
 
     #[test]
-    fn ambiguous_padayog_candidate_does_not_suppress_nested_error() {
+    fn ambiguous_padayog_candidate_loses_to_nested_error() {
         let mut diagnostics = vec![
             diagnostic_with(
                 (0, 12),
@@ -497,13 +558,8 @@ mod tests {
 
         resolve_diagnostic_overlaps(&mut diagnostics);
 
-        assert_eq!(diagnostics.len(), 2);
-        assert!(
-            diagnostics
-                .iter()
-                .any(|diagnostic| diagnostic.incorrect == "nested"),
-            "nested error should survive ambiguous padayog candidate: {diagnostics:?}"
-        );
+        assert_eq!(diagnostics.len(), 1);
+        assert_eq!(diagnostics[0].incorrect, "nested");
     }
 
     #[test]
@@ -678,6 +734,26 @@ mod tests {
             Vec::new(),
         );
         assert_eq!(Candidate::new(&padayog).specificity, Specificity::Exact);
+    }
+
+    #[test]
+    fn live_padayog_emitters_keep_expected_specificity_shim() {
+        let diagnostics = crate::check_text("रामनै चिकित्सक हो। नेपालसरकार गलत हो।");
+
+        let nipat = diagnostics
+            .iter()
+            .find(|diagnostic| diagnostic.incorrect == "रामनै")
+            .expect("expected live nipat padayog diagnostic");
+        assert_eq!(Candidate::new(nipat).specificity, Specificity::Exact);
+
+        let institutional = diagnostics
+            .iter()
+            .find(|diagnostic| diagnostic.incorrect == "नेपालसरकार")
+            .expect("expected live institutional padayog diagnostic");
+        assert_eq!(
+            Candidate::new(institutional).specificity,
+            Specificity::CuratedInventory
+        );
     }
 
     #[test]
