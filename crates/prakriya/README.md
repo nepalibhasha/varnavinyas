@@ -222,6 +222,24 @@ Tracked stopgaps and holdouts:
 - `बिद्वान -> विद्वान्`: still needs the correction table because current rule evaluation does not compose `3(ग)(आ)` ब/व with `3(ङ)` halanta into one winning output.
 - `भएकोमा -> भएकामा`: currently table-backed because lower-level `prakriya` gold coverage expects a direct derivation path, while generalized `तिर्यक्` handling lives in `parikshak`.
 
+## Multi-Step Derivation Policy
+
+`derive()` deliberately does not run a fixpoint loop over rule outputs yet.
+Composition cases stay table-backed until chained behavior can be arbitrated
+without surprising callers.
+
+Do not remove a correction-table entry just because each component rule exists.
+Remove it only when:
+
+- the composed output is produced by an explicit, tested derivation path
+- winner stability tests show `derive()` still returns the intended top result
+- duplicate-hit suppression keeps alternate reasons readable
+- corpus snapshot diffs show no unexpected false-positive expansion
+
+The current known composition holdout is `बिद्वान -> विद्वान्` (`ब/व` plus
+halanta). It should remain finite and table-backed until multi-step composition
+has a resolver underneath it.
+
 ## Used By
 
 - `varnavinyas-parikshak`
