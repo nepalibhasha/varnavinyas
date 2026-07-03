@@ -1,23 +1,39 @@
 use crate::model::prakriya::Prakriya;
 use crate::model::rule::Rule;
 use crate::model::step::Step;
+use std::sync::LazyLock;
 use varnavinyas_akshar::is_matra;
 use varnavinyas_kosha::{Kosha, kosha};
 
 const PS_SANSKRIT_VA_TO_BA_RULE_CODE: &str = "3(ग)(आ)-PS-Saisanik-4(घ)-ब";
-const PS_SANSKRIT_VA_TO_BA_EXACT_OVERRIDES: &[(&str, &str)] = &[
-    ("विन्दु", "बिन्दु"),
-    ("विम्ब", "बिम्ब"),
-    ("वेला", "बेला"),
-    ("कुवेला", "कुबेला"),
-    ("सुवेला", "सुबेला"),
-    ("वार", "बार"),
-    ("आइतवार", "आइतबार"),
-    ("बुधवार", "बुधबार"),
-    ("विना", "बिना"),
-];
-const PS_SANSKRIT_VA_TO_BA_SUPPORTED_REPLACEMENTS: &[(&str, &str)] =
-    &[("विन्दु", "बिन्दु"), ("विम्ब", "बिम्ब"), ("विना", "बिना")];
+const PS_SANSKRIT_VA_TO_BA_INVENTORY_DATA: &str =
+    include_str!("../../../../../data/rule_inventories/ba_va_ps_sanskrit.tsv");
+
+static PS_SANSKRIT_VA_TO_BA_INVENTORY: LazyLock<Vec<PsSanskritVaToBaEntry>> =
+    LazyLock::new(|| parse_ps_sanskrit_va_to_ba_inventory(PS_SANSKRIT_VA_TO_BA_INVENTORY_DATA));
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum PsSanskritVaToBaMatch {
+    Exact,
+    SupportedReplacement,
+}
+
+impl PsSanskritVaToBaMatch {
+    fn from_code(code: &str) -> Option<Self> {
+        match code {
+            "exact" => Some(Self::Exact),
+            "supported_replacement" => Some(Self::SupportedReplacement),
+            _ => None,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+struct PsSanskritVaToBaEntry {
+    input: &'static str,
+    output: &'static str,
+    match_kind: PsSanskritVaToBaMatch,
+}
 
 // Academy 3(ग)(आ): single-position ब/व swap with kosha validation.
 // -----------------------------------------------------------------------------
@@ -274,17 +290,23 @@ pub fn rule_ba_va(input: &str) -> Option<Prakriya> {
 }
 
 fn normalize_ps_sanskrit_va_to_ba(input: &str, kosha: &Kosha) -> Option<String> {
-    for &(wrong, right) in PS_SANSKRIT_VA_TO_BA_EXACT_OVERRIDES {
-        if input == wrong {
-            return Some(right.to_string());
+    for entry in PS_SANSKRIT_VA_TO_BA_INVENTORY
+        .iter()
+        .filter(|entry| entry.match_kind == PsSanskritVaToBaMatch::Exact)
+    {
+        if input == entry.input {
+            return Some(entry.output.to_string());
         }
     }
 
-    for &(wrong, right) in PS_SANSKRIT_VA_TO_BA_SUPPORTED_REPLACEMENTS {
-        if !input.contains(wrong) {
+    for entry in PS_SANSKRIT_VA_TO_BA_INVENTORY
+        .iter()
+        .filter(|entry| entry.match_kind == PsSanskritVaToBaMatch::SupportedReplacement)
+    {
+        if !input.contains(entry.input) {
             continue;
         }
-        let output = input.replacen(wrong, right, 1);
+        let output = input.replacen(entry.input, entry.output, 1);
         if supported_form(&output, kosha) {
             return Some(output);
         }
@@ -298,6 +320,67 @@ fn normalize_ps_sanskrit_va_to_ba(input: &str, kosha: &Kosha) -> Option<String> 
     }
 
     None
+}
+
+fn parse_ps_sanskrit_va_to_ba_inventory(data: &'static str) -> Vec<PsSanskritVaToBaEntry> {
+    let mut lines = data.lines();
+    let header = lines
+        .next()
+        .expect("PS Sanskrit va-to-ba inventory must have a header");
+    assert_eq!(
+        header, "input\toutput\tmatch_kind\tsource\treview_status",
+        "unexpected PS Sanskrit va-to-ba inventory header"
+    );
+
+    let mut entries = Vec::new();
+    for (line_idx, line) in lines.enumerate() {
+        if line.trim().is_empty() {
+            continue;
+        }
+        let fields: Vec<&'static str> = line.split('\t').collect();
+        assert_eq!(
+            fields.len(),
+            5,
+            "PS Sanskrit va-to-ba inventory line {} must have 5 TSV fields",
+            line_idx + 2
+        );
+        let [input, output, match_kind_code, source, review_status] =
+            <[&'static str; 5]>::try_from(fields).expect("checked field count");
+        assert!(
+            !input.is_empty() && !output.is_empty(),
+            "PS Sanskrit va-to-ba inventory line {} has empty input/output",
+            line_idx + 2
+        );
+        assert!(
+            !source.is_empty() && !review_status.is_empty(),
+            "PS Sanskrit va-to-ba inventory line {} must include provenance fields",
+            line_idx + 2
+        );
+        let match_kind = PsSanskritVaToBaMatch::from_code(match_kind_code).unwrap_or_else(|| {
+            panic!(
+                "PS Sanskrit va-to-ba inventory line {} has unknown match kind `{}`",
+                line_idx + 2,
+                match_kind_code
+            )
+        });
+        entries.push(PsSanskritVaToBaEntry {
+            input,
+            output,
+            match_kind,
+        });
+    }
+
+    for (idx, entry) in entries.iter().enumerate() {
+        assert!(
+            entries[..idx]
+                .iter()
+                .all(|other| other.input != entry.input || other.match_kind != entry.match_kind),
+            "duplicate PS Sanskrit va-to-ba inventory row for {} {:?}",
+            entry.input,
+            entry.match_kind
+        );
+    }
+    entries
 }
 
 fn supported_form(output: &str, kosha: &Kosha) -> bool {
@@ -315,4 +398,33 @@ fn is_supported_u_initial_e_verb_form(input: &str, kosha: &Kosha) -> bool {
     [format!("{stem}्नु"), format!("{stem}नु")]
         .iter()
         .any(|candidate| supported_form(candidate, kosha))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn ps_sanskrit_va_to_ba_inventory_schema_is_valid() {
+        let entries = &*PS_SANSKRIT_VA_TO_BA_INVENTORY;
+        assert_eq!(
+            entries
+                .iter()
+                .filter(|entry| entry.match_kind == PsSanskritVaToBaMatch::Exact)
+                .count(),
+            9
+        );
+        assert_eq!(
+            entries
+                .iter()
+                .filter(|entry| entry.match_kind == PsSanskritVaToBaMatch::SupportedReplacement)
+                .count(),
+            3
+        );
+        assert!(entries.iter().any(|entry| {
+            entry.input == "विम्ब"
+                && entry.output == "बिम्ब"
+                && entry.match_kind == PsSanskritVaToBaMatch::Exact
+        }));
+    }
 }

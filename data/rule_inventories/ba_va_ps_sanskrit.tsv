@@ -1,0 +1,13 @@
+input	output	match_kind	source	review_status
+विन्दु	बिन्दु	exact	PS-Saisanik-4(घ)	reviewed
+विम्ब	बिम्ब	exact	PS-Saisanik-4(घ)	reviewed
+वेला	बेला	exact	PS-Saisanik-4(घ)	reviewed
+कुवेला	कुबेला	exact	PS-Saisanik-4(घ)	reviewed
+सुवेला	सुबेला	exact	PS-Saisanik-4(घ)	reviewed
+वार	बार	exact	PS-Saisanik-4(घ)	reviewed
+आइतवार	आइतबार	exact	PS-Saisanik-4(घ)	reviewed
+बुधवार	बुधबार	exact	PS-Saisanik-4(घ)	reviewed
+विना	बिना	exact	PS-Saisanik-4(घ)	reviewed
+विन्दु	बिन्दु	supported_replacement	PS-Saisanik-4(घ)	reviewed
+विम्ब	बिम्ब	supported_replacement	PS-Saisanik-4(घ)	reviewed
+विना	बिना	supported_replacement	PS-Saisanik-4(घ)	reviewed
