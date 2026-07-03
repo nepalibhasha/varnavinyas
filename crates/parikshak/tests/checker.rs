@@ -623,6 +623,15 @@ fn ba_va_word_gets_ba_va_category() {
 }
 
 #[test]
+fn ba_va_o_class_does_not_rewrite_supported_u_initial_verb_form() {
+    let diag = check_word("उठे");
+    assert!(
+        diag.is_none(),
+        "उठे should remain a valid verb form, got: {diag:?}"
+    );
+}
+
+#[test]
 fn tatsam_padanta_halanta_beats_edit_distance() {
     let diag = check_word("जगत").expect("Expected diagnostic for जगत");
     assert_eq!(diag.correction, "जगत्");

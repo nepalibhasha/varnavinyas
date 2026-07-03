@@ -724,6 +724,20 @@ fn o8_ga_aa_o_1_class_citation() {
 }
 
 #[test]
+fn o8_ga_aa_o_1_does_not_rewrite_supported_u_initial_verb_form() {
+    assert!(
+        rule_ba_va("उठे").is_none(),
+        "उठे is a supported verb form and should not be rewritten to ओठे"
+    );
+    let p = derive("उठे");
+    assert!(
+        p.is_correct,
+        "Expected उठे to remain correct, got {}",
+        p.output
+    );
+}
+
+#[test]
 fn o8_ga_aa_o_2_verb_citation() {
     let p = rule_ba_va("देऊस्").expect("expected o-verb correction");
     assert_eq!(p.output, "देओस्");

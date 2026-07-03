@@ -69,7 +69,7 @@ pub fn rule_ba_va(input: &str) -> Option<Prakriya> {
     }
     if input.starts_with('उ') {
         let output = input.replacen('उ', "ओ", 1);
-        if kosha.contains(&output) {
+        if kosha.contains(&output) && !is_supported_u_initial_e_verb_form(input, kosha) {
             let citation = if output.starts_with("ओज") || output.starts_with("ओम्") {
                 "3(ग)(आ)-ओ-3"
             } else {
@@ -301,4 +301,17 @@ fn normalize_ps_sanskrit_va_to_ba(input: &str, kosha: &Kosha) -> Option<String> 
 
 fn supported_form(output: &str, kosha: &Kosha) -> bool {
     kosha.contains(output) || kosha.lookup(output).is_some()
+}
+
+fn is_supported_u_initial_e_verb_form(input: &str, kosha: &Kosha) -> bool {
+    let Some(stem) = input.strip_suffix("े") else {
+        return false;
+    };
+    if !stem.starts_with('उ') || stem.chars().count() < 2 {
+        return false;
+    }
+
+    [format!("{stem}्नु"), format!("{stem}नु")]
+        .iter()
+        .any(|candidate| supported_form(candidate, kosha))
 }
