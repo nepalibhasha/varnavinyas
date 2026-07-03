@@ -35,7 +35,7 @@ pub(crate) fn add_grammar_diagnostics(
             continue;
         }
 
-        let full = token_full_form(token);
+        let full = token.surface().into_owned();
 
         if let Ok(analyses) = analyzer.analyze(&full) {
             if analyses.len() > 1 {
@@ -53,7 +53,7 @@ pub(crate) fn add_grammar_diagnostics(
             }
         }
 
-        if has_plural_suffix(&full) && idx > 0 && is_quantifier(&token_full_form(&tokens[idx - 1]))
+        if has_plural_suffix(&full) && idx > 0 && is_quantifier(tokens[idx - 1].surface().as_ref())
         {
             let confidence = 0.62;
             if confidence >= MIN_SUFFIX_HEURISTIC_CONFIDENCE {
@@ -178,7 +178,7 @@ fn sentence_has_intransitive_predicate(tokens: &[AnalyzedToken], subject_idx: us
     tokens
         .iter()
         .skip(subject_idx + 1)
-        .any(|tok| is_intransitive_verb_form(&token_full_form(tok)))
+        .any(|tok| is_intransitive_verb_form(tok.surface().as_ref()))
 }
 
 fn is_intransitive_verb_form(word: &str) -> bool {
@@ -195,17 +195,10 @@ fn suggested_genitive_suffix(
     }
 
     let next = next_token?;
-    if has_plural_suffix(&token_full_form(next)) {
+    if has_plural_suffix(next.surface().as_ref()) {
         Some("का".to_string())
     } else {
         None
-    }
-}
-
-fn token_full_form(token: &AnalyzedToken) -> String {
-    match &token.suffix {
-        Some(sfx) => format!("{}{}", token.stem, sfx),
-        None => token.stem.clone(),
     }
 }
 

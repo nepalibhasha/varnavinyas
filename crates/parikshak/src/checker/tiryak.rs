@@ -151,8 +151,8 @@ pub(crate) fn add_tiryak_diagnostics(
 }
 
 fn analyze_joined_token(text: &str, token: &AnalyzedToken) -> Option<TiryakCandidate> {
-    let surface = token_surface(token);
-    let (subrule, correction) = classify_joined_surface(&surface)?;
+    let surface = token.surface();
+    let (subrule, correction) = classify_joined_surface(surface.as_ref())?;
     Some(TiryakCandidate {
         span: (token.start, token.end),
         incorrect: text[token.start..token.end].to_string(),
@@ -166,9 +166,9 @@ fn analyze_split_pair(
     left: &AnalyzedToken,
     right: &AnalyzedToken,
 ) -> Option<TiryakCandidate> {
-    let left_surface = token_surface(left);
-    let right_surface = token_surface(right);
-    let (subrule, correction) = classify_split_pair(&left_surface, &right_surface)?;
+    let left_surface = left.surface();
+    let right_surface = right.surface();
+    let (subrule, correction) = classify_split_pair(left_surface.as_ref(), right_surface.as_ref())?;
     Some(TiryakCandidate {
         span: (left.start, right.end),
         incorrect: text[left.start..right.end].to_string(),
@@ -186,12 +186,12 @@ fn analyze_determiner_context(
         return None;
     }
 
-    let left_surface = token_surface(left);
+    let left_surface = left.surface();
     let correction = SUBRULE_GA_DETERMINERS
         .iter()
-        .find_map(|(bare, oblique)| (*bare == left_surface).then_some(*oblique))?;
+        .find_map(|(bare, oblique)| (*bare == left_surface.as_ref()).then_some(*oblique))?;
 
-    if correction == left_surface {
+    if correction == left_surface.as_ref() {
         return None;
     }
 
@@ -316,13 +316,6 @@ fn subrule_kha_surface_correction(surface: &str) -> Option<String> {
         .find_map(|(incorrect, correct)| (*incorrect == surface).then_some((*correct).to_string()))
 }
 
-fn token_surface(token: &AnalyzedToken) -> String {
-    match &token.suffix {
-        Some(suffix) => format!("{}{}", token.stem, suffix),
-        None => token.stem.clone(),
-    }
-}
-
 fn candidate_is_supported(candidate: &str) -> bool {
     let lex = kosha();
     lex.contains(candidate) || lex.lookup(candidate).is_some() || has_supported_analysis(candidate)
@@ -333,11 +326,11 @@ fn is_inflected_nounish_token(token: &AnalyzedToken) -> bool {
         return false;
     }
 
-    let surface = token_surface(token);
+    let surface = token.surface();
     let lex = kosha();
 
     let stem_entry = lex.lookup(&token.stem);
-    let full_entry = lex.lookup(&surface);
+    let full_entry = lex.lookup(surface.as_ref());
     let stem_pos = stem_entry.map(|entry| entry.pos);
     let full_pos = full_entry.map(|entry| entry.pos);
 

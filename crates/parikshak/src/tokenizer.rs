@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use varnavinyas_kosha::Kosha;
 use varnavinyas_kosha::kosha;
 use varnavinyas_prakriya::is_in_correction_table;
@@ -14,6 +16,28 @@ pub struct Token {
     pub end: usize,
 }
 
+impl Token {
+    /// Byte span of this token in the original source text.
+    pub fn span(&self) -> (usize, usize) {
+        (self.start, self.end)
+    }
+
+    /// Source substring covered by this token.
+    pub fn source_text<'a>(&self, text: &'a str) -> &'a str {
+        &text[self.start..self.end]
+    }
+
+    /// Whether the token surface is a plain Devanagari token.
+    pub fn is_devanagari_word(&self) -> bool {
+        is_devanagari_word_text(&self.text)
+    }
+
+    /// Whether the token surface is made only of numeric characters.
+    pub fn is_numeric(&self) -> bool {
+        is_numeric_text(&self.text)
+    }
+}
+
 /// A token with suffix analysis — the stem and optional detached suffix.
 #[derive(Debug, Clone)]
 pub struct AnalyzedToken {
@@ -25,6 +49,41 @@ pub struct AnalyzedToken {
     pub start: usize,
     /// Byte offset of the end of the full token (stem+suffix) in the original text.
     pub end: usize,
+}
+
+impl AnalyzedToken {
+    /// Byte span of the full token in the original source text.
+    pub fn span(&self) -> (usize, usize) {
+        (self.start, self.end)
+    }
+
+    /// Source substring covered by the full token.
+    pub fn source_text<'a>(&self, text: &'a str) -> &'a str {
+        &text[self.start..self.end]
+    }
+
+    /// Full token surface after suffix analysis.
+    pub fn surface(&self) -> Cow<'_, str> {
+        match &self.suffix {
+            Some(sfx) => Cow::Owned(format!("{}{}", self.stem, sfx)),
+            None => Cow::Borrowed(&self.stem),
+        }
+    }
+
+    /// Whether suffix analysis detached an outer suffix or particle stack.
+    pub fn has_suffix(&self) -> bool {
+        self.suffix.is_some()
+    }
+
+    /// Whether the full token surface is a plain Devanagari token.
+    pub fn is_devanagari_word(&self) -> bool {
+        is_devanagari_word_text(self.surface().as_ref())
+    }
+
+    /// Whether the full token surface is made only of numeric characters.
+    pub fn is_numeric(&self) -> bool {
+        is_numeric_text(self.surface().as_ref())
+    }
 }
 
 pub(crate) fn is_supported_stem(stem: &str, lex: &Kosha) -> bool {
@@ -390,6 +449,24 @@ fn has_devanagari(s: &str) -> bool {
     s.chars().any(|c| ('\u{0900}'..='\u{097F}').contains(&c))
 }
 
+fn is_devanagari_word_text(s: &str) -> bool {
+    !s.is_empty()
+        && s.chars()
+            .all(|c| ('\u{0900}'..='\u{097F}').contains(&c) && !is_punctuation(c))
+}
+
+fn is_numeric_text(s: &str) -> bool {
+    let mut saw_digit = false;
+    for ch in s.chars() {
+        if ch.is_numeric() {
+            saw_digit = true;
+            continue;
+        }
+        return false;
+    }
+    saw_digit
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -450,6 +527,20 @@ mod tests {
         assert_eq!(tokens.len(), 2);
         assert_eq!(&text[tokens[0].start..tokens[0].end], "नेपाल");
         assert_eq!(&text[tokens[1].start..tokens[1].end], "राम्रो");
+        assert_eq!(tokens[0].span(), (0, "नेपाल".len()));
+        assert_eq!(tokens[0].source_text(text), "नेपाल");
+        assert!(tokens[0].is_devanagari_word());
+        assert!(!tokens[0].is_numeric());
+    }
+
+    #[test]
+    fn token_predicates_mark_devanagari_digits_numeric() {
+        let tokens = tokenize("२०७९ नेपाल");
+        assert_eq!(tokens.len(), 2);
+        assert!(tokens[0].is_devanagari_word());
+        assert!(tokens[0].is_numeric());
+        assert!(tokens[1].is_devanagari_word());
+        assert!(!tokens[1].is_numeric());
     }
 
     // --- O8 acceptance tests: suffix-aware tokenizer ---
@@ -523,6 +614,12 @@ mod tests {
         assert_eq!(tokens.len(), 2);
         assert_eq!(&text[tokens[0].start..tokens[0].end], "रामलाई");
         assert_eq!(&text[tokens[1].start..tokens[1].end], "नेपालमा");
+        assert_eq!(tokens[0].span(), (0, "रामलाई".len()));
+        assert_eq!(tokens[0].source_text(text), "रामलाई");
+        assert_eq!(tokens[0].surface().as_ref(), "रामलाई");
+        assert!(tokens[0].has_suffix());
+        assert!(tokens[0].is_devanagari_word());
+        assert!(!tokens[0].is_numeric());
     }
 
     #[test]

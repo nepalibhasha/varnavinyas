@@ -5,6 +5,16 @@ use varnavinyas_parikshak::{
     CheckOptions, Diagnostic, DiagnosticReason, check_text_with_options, diagnostic_reason_category,
 };
 
+#[cfg(not(feature = "grammar-pass"))]
+const EXPECTED_SNAPSHOT: &str = include_str!("snapshots/corpus_diagnostics.snap");
+#[cfg(feature = "grammar-pass")]
+const EXPECTED_SNAPSHOT: &str = include_str!("snapshots/corpus_diagnostics_grammar_pass.snap");
+
+#[cfg(not(feature = "grammar-pass"))]
+const SNAPSHOT_FILE_NAME: &str = "corpus_diagnostics.snap";
+#[cfg(feature = "grammar-pass")]
+const SNAPSHOT_FILE_NAME: &str = "corpus_diagnostics_grammar_pass.snap";
+
 #[derive(Debug, Deserialize)]
 struct GoldEntry {
     incorrect: String,
@@ -60,9 +70,8 @@ fn checker_corpus_diagnostics_snapshot() {
         return;
     }
 
-    let expected = include_str!("snapshots/corpus_diagnostics.snap");
     assert_eq!(
-        expected, actual,
+        EXPECTED_SNAPSHOT, actual,
         "checker corpus snapshot changed; review the diff and rerun with \
          VARNAVINYAS_UPDATE_CORPUS_SNAPSHOT=1 to accept intentional behavior changes"
     );
@@ -220,7 +229,7 @@ fn snapshot_path() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("tests")
         .join("snapshots")
-        .join("corpus_diagnostics.snap")
+        .join(SNAPSHOT_FILE_NAME)
 }
 
 const GOVERNMENT_NOTICE_EXCERPT: &str = "\

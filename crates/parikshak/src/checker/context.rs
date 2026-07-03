@@ -149,13 +149,13 @@ fn phrase_backed_final_hos_candidate(
     sentence: SentenceSpan,
 ) -> Option<ContextCandidate> {
     let last_idx = sentence.end_token.checked_sub(1)?;
-    let last_surface = token_surface(&tokens[last_idx]);
-    if last_surface != "होस" || sentence.end_token - sentence.start_token < 2 {
+    let last_surface = tokens[last_idx].surface();
+    if last_surface.as_ref() != "होस" || sentence.end_token - sentence.start_token < 2 {
         return None;
     }
 
     let prev_idx = last_idx.checked_sub(1)?;
-    let prev_surface = token_surface(&tokens[prev_idx]);
+    let prev_surface = tokens[prev_idx].surface();
     let phrase_candidate = format!("{prev_surface} होस्");
     let lex = kosha();
     if !lex.contains(&phrase_candidate) && lex.lookup(&phrase_candidate).is_none() {
@@ -182,14 +182,14 @@ fn structural_final_hos_candidate(
     sentence: SentenceSpan,
 ) -> Option<ContextCandidate> {
     let last_idx = sentence.end_token.checked_sub(1)?;
-    let last_surface = token_surface(&tokens[last_idx]);
-    if last_surface != "होस" || sentence.end_token - sentence.start_token < 2 {
+    let last_surface = tokens[last_idx].surface();
+    if last_surface.as_ref() != "होस" || sentence.end_token - sentence.start_token < 2 {
         return None;
     }
 
     let prev_idx = last_idx.checked_sub(1)?;
-    let prev_surface = token_surface(&tokens[prev_idx]);
-    if !looks_like_final_predicate_context(&prev_surface) {
+    let prev_surface = tokens[prev_idx].surface();
+    if !looks_like_final_predicate_context(prev_surface.as_ref()) {
         return None;
     }
 
@@ -247,13 +247,6 @@ fn looks_like_finite_verb(surface: &str) -> bool {
         || surface.ends_with("भयो")
         || surface.ends_with("गर्यो")
         || surface.ends_with("गर्छ")
-}
-
-fn token_surface(token: &AnalyzedToken) -> String {
-    match &token.suffix {
-        Some(sfx) => format!("{}{}", token.stem, sfx),
-        None => token.stem.clone(),
-    }
 }
 
 #[cfg(test)]

@@ -57,6 +57,30 @@ flowchart TD
 This keeps the highest-confidence token corrections early and lets later passes
 respect already-blocked spans.
 
+## Token Contract
+
+`check_text_with_options` tokenizes once into `AnalyzedToken`s. New text-level
+passes should consume that shared token slice instead of re-splitting the source
+string. Existing `whitespace_segments` users are migration targets for the
+tokenize-once refactor.
+
+The token contract is:
+
+- `start`/`end` are byte offsets into the original input and cover the token
+  surface, excluding boundary punctuation.
+- `source_text(text)` returns the exact original substring for the token span.
+- `stem` and `suffix` expose conservative suffix/particle detachment; if a
+  suffix is detached, `surface()` reconstructs the full token form.
+- `span()` is the stable unit for blocking and conflict checks.
+- `is_devanagari_word()` and `is_numeric()` centralize the filters that
+  padayog, particle, and style passes previously computed locally.
+- Neighbor-sensitive passes should use `tokens.windows(2)` or
+  `tokens.windows(3)` so phrase spans are formed from the first and last token
+  offsets.
+- Attached punctuation remains outside token spans. Exact literal phrase
+  rewrites may still use source-string matching and boundary checks when they
+  intentionally need punctuation-sensitive behavior.
+
 ### Example
 
 ```text
