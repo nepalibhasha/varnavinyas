@@ -11,6 +11,7 @@ use crate::tokenizer::{
     should_prefer_whole_word_over_short_nipat_split, tokenize_analyzed,
 };
 
+mod arbitration;
 mod common;
 mod context;
 #[cfg(feature = "grammar-pass")]
@@ -24,6 +25,7 @@ mod style_variants;
 mod tiryak;
 mod word_level;
 
+use arbitration::resolve_diagnostic_overlaps;
 use context::add_context_diagnostics;
 #[cfg(feature = "grammar-pass")]
 use grammar::add_grammar_diagnostics;
@@ -224,7 +226,7 @@ pub fn check_text_with_options(text: &str, options: CheckOptions) -> Vec<Diagnos
         &mut blocked_spans,
         &mut diagnostics,
     );
-    suppress_nested_diagnostics_within_padayog_spans(&mut diagnostics);
+    resolve_diagnostic_overlaps(&mut diagnostics);
     add_context_diagnostics(text, &tokens, &mut blocked_spans, &mut diagnostics);
 
     if options.grammar {
@@ -258,45 +260,6 @@ pub fn check_text_with_options(text: &str, options: CheckOptions) -> Vec<Diagnos
 
     diagnostics.sort_by_key(|d| d.span.0);
     diagnostics
-}
-
-fn suppress_nested_diagnostics_within_padayog_spans(diagnostics: &mut Vec<Diagnostic>) {
-    let padayog_spans: Vec<(usize, usize)> = diagnostics
-        .iter()
-        .filter(|d| matches!(d.rule, Rule::VarnaVinyasNiyam("3(घ)")))
-        .map(|d| d.span)
-        .collect();
-    let same_span_non_ambiguous_padayog: HashSet<(usize, usize)> = diagnostics
-        .iter()
-        .filter(|d| {
-            matches!(d.rule, Rule::VarnaVinyasNiyam("3(घ)"))
-                && !matches!(d.kind, DiagnosticKind::Ambiguous)
-        })
-        .map(|d| d.span)
-        .collect();
-
-    diagnostics.retain(|diag| {
-        let nested = padayog_spans.iter().any(|&(start, end)| {
-            diag.span != (start, end) && start <= diag.span.0 && diag.span.1 <= end
-        });
-        if nested {
-            return false;
-        }
-
-        if same_span_non_ambiguous_padayog.contains(&diag.span)
-            && !matches!(diag.rule, Rule::VarnaVinyasNiyam("3(घ)"))
-        {
-            return false;
-        }
-
-        if matches!(diag.kind, DiagnosticKind::Ambiguous)
-            && same_span_non_ambiguous_padayog.contains(&diag.span)
-        {
-            return false;
-        }
-
-        true
-    });
 }
 
 fn is_noop_heuristic_diagnostic(d: &Diagnostic) -> bool {
