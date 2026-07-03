@@ -1823,6 +1823,73 @@ fn section4_inferred_ko_ka_style_variants_use_shared_token_spans() {
 }
 
 #[test]
+fn arbitration_word_error_suppresses_overlapping_style_variant() {
+    let diags = check_text_with_options(
+        "अत्याधिकको सम्बन्धमा छलफल भयो।",
+        CheckOptions {
+            grammar: true,
+            ..Default::default()
+        },
+    );
+
+    assert!(
+        diags.iter().any(|d| {
+            d.incorrect == "अत्याधिकको"
+                && d.correction == "अत्यधिकको"
+                && matches!(d.kind, DiagnosticKind::Error)
+        }),
+        "Expected word-level error to survive, got: {diags:?}"
+    );
+    assert!(
+        diags.iter().all(|d| {
+            d.rule != varnavinyas_prakriya::Rule::Vyakaran("section4-phrase-style-inferred-ko-ka")
+        }),
+        "Overlapping style variant should not displace a word-level error, got: {diags:?}"
+    );
+}
+
+#[test]
+fn arbitration_punctuation_survives_next_to_word_error() {
+    let diags = check_text("अत्याधिक.");
+
+    assert!(
+        diags.iter().any(|d| {
+            d.incorrect == "अत्याधिक"
+                && d.correction == "अत्यधिक"
+                && matches!(d.kind, DiagnosticKind::Error)
+        }),
+        "Expected word-level correction, got: {diags:?}"
+    );
+    assert!(
+        diags.iter().any(|d| {
+            d.category == DiagnosticCategory::Punctuation
+                && d.incorrect == "."
+                && d.correction == "।"
+        }),
+        "Expected adjacent punctuation correction, got: {diags:?}"
+    );
+}
+
+#[test]
+fn arbitration_same_span_same_correction_keeps_single_primary_diagnostic() {
+    let diags = check_text("व्यवहारिक");
+    let matches = diags
+        .iter()
+        .filter(|d| d.incorrect == "व्यवहारिक" && d.correction == "व्यावहारिक")
+        .collect::<Vec<_>>();
+
+    assert_eq!(
+        matches.len(),
+        1,
+        "Same-span same-correction reasons should stay on one primary diagnostic, got: {diags:?}"
+    );
+    assert!(
+        !matches[0].alternate_reasons.is_empty(),
+        "Expected duplicate applicable reasons to be preserved as alternates, got: {diags:?}"
+    );
+}
+
+#[test]
 fn section4_sentence_style_variant_detected() {
     let text = "यहाँको सहयोगप्रति म कृतघ्न छु।";
     let diags = check_text_with_options(
