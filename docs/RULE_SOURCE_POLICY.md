@@ -77,7 +77,7 @@ Current conflict resolutions
   - `Notices-pages-77-99.md` uses `विम्ब` in पञ्चम-वर्ण and `ब` examples.
   - `PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md` ४(घ) explicitly lists Sanskrit-व् words that take `ब` in Nepali: `बिन्दु`, `बिम्ब`, `बेला`, `कुबेला`, `सुबेला`, `बार`, `आइतबार`, `बुधबार`, `बिना`.
   - current policy: prefer the `PS-Saisanik...` ब-forms for this listed family, even when raw lexicon assets contain both ब/व variants.
-  - current implementation status: pending explicit `ba_va.rs` rule/guard.
+  - current implementation: `crates/prakriya/src/varna_vinyasa/ustai_ucharan_varnaharu/ba_va.rs` (`3(ग)(आ)-PS-Saisanik-4(घ)-ब`)
 - `बधू` / `वधू`
   - `Notices-pages-77-99.md` lists `बधू` under a broad द/ध/ल/ह-before-ब pattern.
   - `PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md` lists `वधू`, and the Sanskrit tatsam principle also supports `वधू`.
@@ -87,7 +87,11 @@ Current conflict resolutions
   - `Notices-pages-77-99.md` states final `ति/धि/नि/टि/पि` classes broadly as hrasva.
   - `PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md` adds exceptions whose word-final इ is conventionally dirgha: `श्रेणी`, `युवती`, `सूची`, `अञ्जली` / `श्रद्धाञ्जली`, `आवली` / `शब्दावली`, `औषधी`.
   - current policy: prefer the `PS-Saisanik...` dirgha exceptions; these forms must not be normalized to final hrasva.
-  - current implementation status: protected today by conservative guards and lexicon attestation, with explicit inventory still pending.
+  - current implementation: explicit `PS_FINAL_DIRGHA_EXCEPTIONS` inventory in `crates/prakriya/src/varna_vinyasa/hrasva_dirgha/helpers.rs`
+- `श`-initial / `श`-bearing proper names and surnames
+  - `Notices-pages-77-99.md` and broad तद्भव/आगन्तुक श/ष/स normalization can otherwise suggest स-forms for common proper names.
+  - `PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md` examples preserve forms such as `शेर्पा`; current local policy treats reviewed proper names/surnames as lexically protected even when a broad sibilant rule would otherwise apply.
+  - current implementation: `PROPER_NOUN_SH_BASES` guard in `crates/prakriya/src/varna_vinyasa/ustai_ucharan_varnaharu/sibilant.rs` for `कुशवाह`, `जोशी`, `शाह`, `शेर्पा`, `शेरचन` with common suffixes.
 - `तिर्यक्`
   - `PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md` adds an explicit `तिर्यक् रूपको प्रयोग` rule family that is not a numbered Section 3 notice rule in `Notices-pages-77-99.md`
   - current policy: treat `तिर्यक्` as a first-class checker rule family, not as correction-table growth
