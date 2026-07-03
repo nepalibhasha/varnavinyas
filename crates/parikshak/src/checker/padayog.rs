@@ -7,6 +7,7 @@ use varnavinyas_prakriya::{DiagnosticKind, Rule};
 use varnavinyas_shabda::has_supported_analysis;
 
 use crate::diagnostic::{Diagnostic, DiagnosticCategory};
+use crate::tokenizer::AnalyzedToken;
 
 use super::common::{
     is_devanagari_word, is_numeric_segment, is_word_boundary, overlaps_existing_span,
@@ -89,6 +90,7 @@ pub(crate) fn add_padayog_padabiyog_diagnostics(
 
 pub(crate) fn add_generalized_padayog_padabiyog_diagnostics(
     text: &str,
+    tokens: &[AnalyzedToken],
     blocked_spans: &mut HashSet<(usize, usize)>,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
@@ -111,7 +113,7 @@ pub(crate) fn add_generalized_padayog_padabiyog_diagnostics(
         diagnostics,
     );
     add_generalized_padabiyog_subrule_3_lagi_nimti_split(text, blocked_spans, diagnostics);
-    add_generalized_padabiyog_subrule_4_nipat_split(text, blocked_spans, diagnostics);
+    add_generalized_padabiyog_subrule_4_nipat_split(text, tokens, blocked_spans, diagnostics);
     add_generalized_padabiyog_subrule_5_n_samyogak_split(text, blocked_spans, diagnostics);
     add_generalized_padabiyog_subrule_6_aspect_split(text, blocked_spans, diagnostics);
     add_generalized_padabiyog_subrule_7_ne_cha_split(text, blocked_spans, diagnostics);
@@ -304,10 +306,11 @@ fn add_generalized_padabiyog_subrule_3_lagi_nimti_split(
 
 fn add_generalized_padabiyog_subrule_4_nipat_split(
     text: &str,
+    tokens: &[AnalyzedToken],
     blocked_spans: &mut HashSet<(usize, usize)>,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
-    add_nipat_split_diagnostics(text, blocked_spans, diagnostics);
+    add_nipat_split_diagnostics(text, tokens, blocked_spans, diagnostics);
 }
 
 fn add_generalized_padabiyog_subrule_5_n_samyogak_split(

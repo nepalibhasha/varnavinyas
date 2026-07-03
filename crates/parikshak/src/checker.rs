@@ -218,7 +218,12 @@ pub fn check_text_with_options(text: &str, options: CheckOptions) -> Vec<Diagnos
 
     add_tiryak_diagnostics(text, &tokens, &mut blocked_spans, &mut diagnostics);
     add_padayog_padabiyog_diagnostics(text, &mut blocked_spans, &mut diagnostics);
-    add_generalized_padayog_padabiyog_diagnostics(text, &mut blocked_spans, &mut diagnostics);
+    add_generalized_padayog_padabiyog_diagnostics(
+        text,
+        &tokens,
+        &mut blocked_spans,
+        &mut diagnostics,
+    );
     suppress_nested_diagnostics_within_padayog_spans(&mut diagnostics);
     add_context_diagnostics(text, &tokens, &mut blocked_spans, &mut diagnostics);
 

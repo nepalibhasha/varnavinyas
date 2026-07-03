@@ -5,11 +5,9 @@ use varnavinyas_prakriya::{DiagnosticKind, Rule};
 use varnavinyas_shabda::{Origin, classify, has_supported_analysis};
 
 use crate::diagnostic::{Diagnostic, DiagnosticCategory};
-use crate::tokenizer::should_prefer_whole_word_over_short_nipat_split;
+use crate::tokenizer::{AnalyzedToken, should_prefer_whole_word_over_short_nipat_split};
 
-use super::common::{
-    is_devanagari_word, is_numeric_segment, is_word_boundary, whitespace_segments,
-};
+use super::common::is_word_boundary;
 
 const WORD_BOUND_NIPAT_SPLIT_TOKENS: &[&str] = &["चाहिँ", "झैँ", "नै", "पो", "नि", "त", "ल"];
 const SENTENCE_BOUND_NIPAT_REFERENCE_TOKENS: &[&str] = &[
@@ -70,6 +68,7 @@ fn suffix_left_candidates<'a>(token: &'a str, suffix: &str) -> Vec<&'a str> {
 
 pub(super) fn add_nipat_split_diagnostics(
     text: &str,
+    tokens: &[AnalyzedToken],
     blocked_spans: &mut HashSet<(usize, usize)>,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
@@ -79,18 +78,31 @@ pub(super) fn add_nipat_split_diagnostics(
             .all(|suffix| SENTENCE_BOUND_NIPAT_REFERENCE_TOKENS.contains(suffix))
     );
 
-    let segments = whitespace_segments(text);
-
-    for (token, start, end) in segments {
-        if !is_devanagari_word(token) || is_numeric_segment(token) {
+    for token in tokens {
+        if !token.is_devanagari_word() || token.is_numeric() {
             continue;
         }
 
-        if add_word_bound_nipat_split(token, start, end, text, blocked_spans, diagnostics) {
+        let surface = token.surface();
+        if add_word_bound_nipat_split(
+            surface.as_ref(),
+            token.start,
+            token.end,
+            text,
+            blocked_spans,
+            diagnostics,
+        ) {
             continue;
         }
 
-        let _ = add_sentence_bound_nipat_split(token, start, end, text, blocked_spans, diagnostics);
+        let _ = add_sentence_bound_nipat_split(
+            surface.as_ref(),
+            token.start,
+            token.end,
+            text,
+            blocked_spans,
+            diagnostics,
+        );
     }
 }
 

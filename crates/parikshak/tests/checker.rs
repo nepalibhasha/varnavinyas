@@ -1592,6 +1592,17 @@ fn saishanik_nipat_split_applies_to_school_grammar_examples() {
 }
 
 #[test]
+fn saishanik_nipat_split_uses_shared_token_span_with_trailing_punctuation() {
+    let diags = check_text("रामनै, चिकित्सक हो।");
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.incorrect == "रामनै" && d.correction == "राम नै"),
+        "Expected token-based निपात split before trailing comma, got: {diags:?}"
+    );
+}
+
+#[test]
 fn saishanik_nipat_split_handles_contracted_nai_after_n_stem() {
     let diags = check_text("समस्या सुधार्नै पर्छ।");
     let diag = diags
