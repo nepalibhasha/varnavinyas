@@ -738,6 +738,14 @@ fn o8_ga_aa_o_1_does_not_rewrite_supported_u_initial_verb_form() {
 }
 
 #[test]
+fn o8_ga_aa_o_1_does_not_use_non_correction_target_override() {
+    assert!(
+        rule_ba_va("औठे").is_none(),
+        "ओठे is valid in the lexicon but blocked as a generic correction target"
+    );
+}
+
+#[test]
 fn o8_ga_aa_o_2_verb_citation() {
     let p = rule_ba_va("देऊस्").expect("expected o-verb correction");
     assert_eq!(p.output, "देओस्");

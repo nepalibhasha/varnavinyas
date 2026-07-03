@@ -49,7 +49,7 @@ pub fn rule_ba_va(input: &str) -> Option<Prakriya> {
     // Subrule 1/3 style: initial ओ class and tatsam ओ words.
     if input.starts_with('औ') {
         let output = input.replacen('औ', "ओ", 1);
-        if kosha.contains(&output) {
+        if kosha.is_correction_target(&output) {
             let citation = if output.starts_with("ओज") || output.starts_with("ओम्") {
                 "3(ग)(आ)-ओ-3"
             } else {
@@ -69,7 +69,8 @@ pub fn rule_ba_va(input: &str) -> Option<Prakriya> {
     }
     if input.starts_with('उ') {
         let output = input.replacen('उ', "ओ", 1);
-        if kosha.contains(&output) && !is_supported_u_initial_e_verb_form(input, kosha) {
+        if kosha.is_correction_target(&output) && !is_supported_u_initial_e_verb_form(input, kosha)
+        {
             let citation = if output.starts_with("ओज") || output.starts_with("ओम्") {
                 "3(ग)(आ)-ओ-3"
             } else {
@@ -112,7 +113,7 @@ pub fn rule_ba_va(input: &str) -> Option<Prakriya> {
     }
     if input.contains("ाउ") {
         let output = input.replacen("ाउ", "ाओ", 1);
-        if kosha.contains(&output) {
+        if kosha.is_correction_target(&output) {
             return Some(Prakriya::corrected(
                 input,
                 &output,
@@ -135,7 +136,7 @@ pub fn rule_ba_va(input: &str) -> Option<Prakriya> {
         let mut candidate = chars.clone();
         candidate[i] = swapped;
         let output: String = candidate.into_iter().collect();
-        if kosha.contains(&output) {
+        if kosha.is_correction_target(&output) {
             // (आ)-ब/व numbered subrules are largely lexical buckets.
             // We keep this as an attested candidate swap and classify by local context.
             let next_base = chars.iter().skip(i + 1).find(|&&c| !is_matra(c)).copied();
@@ -300,7 +301,7 @@ fn normalize_ps_sanskrit_va_to_ba(input: &str, kosha: &Kosha) -> Option<String> 
 }
 
 fn supported_form(output: &str, kosha: &Kosha) -> bool {
-    kosha.contains(output) || kosha.lookup(output).is_some()
+    kosha.is_correction_target(output)
 }
 
 fn is_supported_u_initial_e_verb_form(input: &str, kosha: &Kosha) -> bool {

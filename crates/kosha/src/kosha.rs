@@ -17,6 +17,9 @@ static WORDS_FST_BYTES: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/words.
 /// Static headword metadata (tab-separated: word \t pos_tags).
 static HEADWORDS_DATA: &str = include_str!("../../../data/headwords.tsv");
 
+/// Reviewed lexicon quality overrides (tab-separated with a header row).
+static LEXICON_OVERRIDES_DATA: &str = include_str!("../../../data/lexicon_overrides.tsv");
+
 /// Global singleton lexicon, built once on first access.
 static KOSHA: LazyLock<Kosha> = LazyLock::new(Kosha::from_prebuilt);
 
@@ -34,6 +37,41 @@ pub struct WordEntry {
     pub pos: &'static str,
 }
 
+/// Reviewed quality tier for a lexicon form.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LexiconTier {
+    /// The word is safe to use as a normal accepted form.
+    Canonical,
+    /// The word is generated or inflected, not necessarily a dictionary headword.
+    GeneratedInflection,
+    /// The word is attested but should not be treated as prescriptive.
+    AttestedNonstandard,
+    /// The word remains valid, but should not be used as a generic correction target.
+    NonCorrectionTarget,
+}
+
+impl LexiconTier {
+    fn from_code(code: &str) -> Option<Self> {
+        match code {
+            "canonical" => Some(Self::Canonical),
+            "generated_inflection" => Some(Self::GeneratedInflection),
+            "attested_nonstandard" => Some(Self::AttestedNonstandard),
+            "non_correction_target" => Some(Self::NonCorrectionTarget),
+            _ => None,
+        }
+    }
+}
+
+/// A reviewed override for one lexicon form.
+#[derive(Debug, Clone)]
+pub struct LexiconOverride {
+    pub word: &'static str,
+    pub tier: LexiconTier,
+    pub reason: &'static str,
+    pub source: &'static str,
+    pub review_status: &'static str,
+}
+
 /// FST-based Nepali lexicon.
 ///
 /// Uses an `fst::Set` for fast `contains()` checks over ~109K word forms,
@@ -45,6 +83,8 @@ pub struct Kosha {
     words: Vec<String>,
     /// Sorted headword entries for binary-search metadata lookup.
     headwords: Vec<WordEntry>,
+    /// Sorted reviewed lexicon quality overrides.
+    overrides: Vec<LexiconOverride>,
 }
 
 impl Kosha {
@@ -61,10 +101,12 @@ impl Kosha {
         let words = words_from_fst(&fst);
 
         let headwords = parse_headwords(HEADWORDS_DATA);
+        let overrides = parse_lexicon_overrides(LEXICON_OVERRIDES_DATA);
         Kosha {
             fst,
             words,
             headwords,
+            overrides,
         }
     }
 
@@ -76,10 +118,12 @@ impl Kosha {
         let fst = Set::new(fst_bytes).expect("FST should be valid");
         let words = words_from_fst(&fst);
         let headwords = parse_headwords(headwords_data);
+        let overrides = parse_lexicon_overrides(LEXICON_OVERRIDES_DATA);
         Kosha {
             fst,
             words,
             headwords,
+            overrides,
         }
     }
 
@@ -137,6 +181,34 @@ impl Kosha {
             .binary_search_by(|entry| entry.word.as_bytes().cmp(word.as_bytes()))
             .ok()
             .map(|idx| &self.headwords[idx])
+    }
+
+    /// Look up a reviewed lexicon quality override.
+    pub fn override_for(&self, word: &str) -> Option<&LexiconOverride> {
+        self.overrides
+            .binary_search_by(|entry| entry.word.as_bytes().cmp(word.as_bytes()))
+            .ok()
+            .map(|idx| &self.overrides[idx])
+    }
+
+    /// Return the reviewed tier for a form, or canonical for normal lexicon hits.
+    pub fn lexicon_tier(&self, word: &str) -> Option<LexiconTier> {
+        if let Some(entry) = self.override_for(word) {
+            return Some(entry.tier);
+        }
+        (self.contains(word) || self.lookup(word).is_some()).then_some(LexiconTier::Canonical)
+    }
+
+    /// Whether a form is safe to use as a generic correction target.
+    ///
+    /// This is stricter than `contains()`: a word can be valid and attested but
+    /// still unsafe as a rule-generated correction target.
+    pub fn is_correction_target(&self, word: &str) -> bool {
+        match self.lexicon_tier(word) {
+            Some(LexiconTier::Canonical | LexiconTier::GeneratedInflection) => true,
+            Some(LexiconTier::AttestedNonstandard | LexiconTier::NonCorrectionTarget) => false,
+            None => false,
+        }
     }
 
     /// Number of word forms in the FST.
@@ -197,6 +269,69 @@ fn parse_headwords(headwords_data: &'static str) -> Vec<WordEntry> {
         .collect();
     headwords.sort_by(|a, b| a.word.as_bytes().cmp(b.word.as_bytes()));
     headwords
+}
+
+/// Parse reviewed lexicon quality overrides from TSV text.
+fn parse_lexicon_overrides(overrides_data: &'static str) -> Vec<LexiconOverride> {
+    let mut lines = overrides_data.lines();
+    let header = lines
+        .next()
+        .expect("lexicon overrides must have a header row");
+    assert_eq!(
+        header, "word\ttier\treason\tsource\treview_status",
+        "unexpected lexicon override header"
+    );
+
+    let mut overrides = Vec::new();
+    for (line_idx, line) in lines.enumerate() {
+        if line.trim().is_empty() {
+            continue;
+        }
+        let fields: Vec<&'static str> = line.split('\t').collect();
+        assert_eq!(
+            fields.len(),
+            5,
+            "lexicon override line {} must have 5 TSV fields",
+            line_idx + 2
+        );
+
+        let [word, tier_code, reason, source, review_status] =
+            <[&'static str; 5]>::try_from(fields).expect("checked field count");
+        assert!(
+            !word.is_empty(),
+            "lexicon override line {} has empty word",
+            line_idx + 2
+        );
+        assert!(
+            !reason.is_empty() && !source.is_empty() && !review_status.is_empty(),
+            "lexicon override line {} must include provenance fields",
+            line_idx + 2
+        );
+        let tier = LexiconTier::from_code(tier_code).unwrap_or_else(|| {
+            panic!(
+                "lexicon override line {} has unknown tier `{}`",
+                line_idx + 2,
+                tier_code
+            )
+        });
+        overrides.push(LexiconOverride {
+            word,
+            tier,
+            reason,
+            source,
+            review_status,
+        });
+    }
+
+    overrides.sort_by(|a, b| a.word.as_bytes().cmp(b.word.as_bytes()));
+    for pair in overrides.windows(2) {
+        assert_ne!(
+            pair[0].word, pair[1].word,
+            "duplicate lexicon override for {}",
+            pair[0].word
+        );
+    }
+    overrides
 }
 
 #[cfg(any(test, feature = "test-seam"))]
@@ -337,5 +472,21 @@ mod tests {
                 assert_eq!(hit.as_deref(), Some("अध्ययन"));
             },
         );
+    }
+
+    #[test]
+    fn lexicon_override_keeps_word_valid_but_blocks_correction_target() {
+        let k = kosha();
+        assert!(k.contains("ओठे"));
+
+        let override_entry = k.override_for("ओठे").expect("ओठे override");
+        assert_eq!(override_entry.tier, LexiconTier::NonCorrectionTarget);
+        assert!(!override_entry.reason.is_empty());
+        assert!(!override_entry.source.is_empty());
+        assert!(!override_entry.review_status.is_empty());
+
+        assert_eq!(k.lexicon_tier("ओठे"), Some(LexiconTier::NonCorrectionTarget));
+        assert!(!k.is_correction_target("ओठे"));
+        assert!(k.is_correction_target("नेपाल"));
     }
 }
