@@ -94,6 +94,64 @@ fn flags_common_pancham_varna_spellings_in_strict_mode() {
 }
 
 #[test]
+fn flags_ps_final_nga_without_ga_spellings() {
+    let diags = check_text("गुरुङ्ग बिल्डिङ्ग रङ्ग प्रसङ्ग");
+    let expected = [("गुरुङ्ग", "गुरुङ"), ("बिल्डिङ्ग", "बिल्डिङ"), ("रङ्ग", "रङ")];
+
+    assert_eq!(
+        diags.len(),
+        expected.len(),
+        "Expected only PS final-ङ diagnostics, got: {diags:?}"
+    );
+    for (incorrect, correction) in expected {
+        assert!(
+            diags.iter().any(|d| {
+                d.incorrect == incorrect
+                    && d.correction == correction
+                    && d.category == DiagnosticCategory::Chandrabindu
+            }),
+            "Expected {incorrect} -> {correction}, got: {diags:?}"
+        );
+    }
+}
+
+#[test]
+fn check_word_applies_ps_final_nga_without_ga_before_suffix() {
+    let diag = check_word("गुरुङ्गले").expect("गुरुङ्गले should normalize through गुरुङ + ले");
+    assert_eq!(diag.incorrect, "गुरुङ्गले");
+    assert_eq!(diag.correction, "गुरुङले");
+    assert_eq!(diag.category, DiagnosticCategory::Chandrabindu);
+}
+
+#[test]
+fn flags_ps_sanskrit_va_words_that_take_ba_even_when_lexicon_attests_va() {
+    let diags = check_text("विम्ब विन्दु विना प्रतिविम्ब केन्द्रविन्दु विनाश");
+    let expected = [
+        ("विम्ब", "बिम्ब"),
+        ("विन्दु", "बिन्दु"),
+        ("विना", "बिना"),
+        ("प्रतिविम्ब", "प्रतिबिम्ब"),
+        ("केन्द्रविन्दु", "केन्द्रबिन्दु"),
+    ];
+
+    assert_eq!(
+        diags.len(),
+        expected.len(),
+        "Expected only PS Sanskrit-व् to ब diagnostics, got: {diags:?}"
+    );
+    for (incorrect, correction) in expected {
+        assert!(
+            diags.iter().any(|d| {
+                d.incorrect == incorrect
+                    && d.correction == correction
+                    && d.category == DiagnosticCategory::BaVa
+            }),
+            "Expected {incorrect} -> {correction}, got: {diags:?}"
+        );
+    }
+}
+
+#[test]
 fn common_editorial_mode_downgrades_reviewed_orthographic_variants() {
     let diags = check_text_with_options(
         "संघीय संघ संचार संकेत संसद नेपाल . नेपाली कांग्रेस",
@@ -1067,7 +1125,7 @@ fn sarah_join_rule_still_applies() {
 
 #[test]
 fn documented_false_positive_pins_remain_unflagged() {
-    let text = "सामान्यीकरण केन्द्रीकरण एकीकरण राष्ट्रिय क्षत्रिय इन्द्रिय श्रेणी युवती सूची औषधी अञ्जली शेर्पा जोशी शाह कुशवाहले शुभ समाचार।";
+    let text = "सामान्यीकरण केन्द्रीकरण एकीकरण राष्ट्रिय क्षत्रिय इन्द्रिय श्रोत्रिय श्रेणी युवती सूची औषधी अञ्जली शेर्पा जोशी शाह कुशवाहले शुभ समाचार।";
     let diags = check_text(text);
 
     for token in [
@@ -1077,6 +1135,7 @@ fn documented_false_positive_pins_remain_unflagged() {
         "राष्ट्रिय",
         "क्षत्रिय",
         "इन्द्रिय",
+        "श्रोत्रिय",
         "श्रेणी",
         "युवती",
         "सूची",
@@ -1099,6 +1158,33 @@ fn documented_false_positive_pins_remain_unflagged() {
         }),
         "Split शुभ समाचार should not be joined, got: {diags:?}"
     );
+}
+
+#[test]
+fn flags_ps_iya_exception_dirgha_forms() {
+    let diags = check_text("राष्ट्रीय क्षत्रीय इन्द्रीय श्रोत्रीय");
+    let expected = [
+        ("राष्ट्रीय", "राष्ट्रिय"),
+        ("क्षत्रीय", "क्षत्रिय"),
+        ("इन्द्रीय", "इन्द्रिय"),
+        ("श्रोत्रीय", "श्रोत्रिय"),
+    ];
+
+    assert_eq!(
+        diags.len(),
+        expected.len(),
+        "Expected only PS ईय exception diagnostics, got: {diags:?}"
+    );
+    for (incorrect, correction) in expected {
+        assert!(
+            diags.iter().any(|d| {
+                d.incorrect == incorrect
+                    && d.correction == correction
+                    && d.category == DiagnosticCategory::HrasvaDirgha
+            }),
+            "Expected {incorrect} -> {correction}, got: {diags:?}"
+        );
+    }
 }
 
 #[test]
@@ -1626,6 +1712,67 @@ fn section4_style_variants_are_opt_in() {
                 && matches!(d.kind, DiagnosticKind::Variant)
         }),
         "Expected style variant when grammar mode is enabled, got: {on:?}"
+    );
+}
+
+#[test]
+fn section4_inferred_ko_ka_style_variants_generalize_in_grammar_mode() {
+    let text = "घरको लागि समाजको निम्ति विषयको सम्बन्धमा तथ्यको आधारमा रोगको बारेमा।";
+
+    let off = check_text(text);
+    assert!(
+        off.iter().all(|d| {
+            d.rule != varnavinyas_prakriya::Rule::Vyakaran("section4-phrase-style-inferred-ko-ka")
+        }),
+        "Inferred style variants should not appear in default mode, got: {off:?}"
+    );
+
+    let on = check_text_with_options(
+        text,
+        CheckOptions {
+            grammar: true,
+            ..Default::default()
+        },
+    );
+    let expected = [
+        ("घरको लागि", "घरका लागि"),
+        ("समाजको निम्ति", "समाजका निम्ति"),
+        ("विषयको सम्बन्धमा", "विषयका सम्बन्धमा"),
+        ("तथ्यको आधारमा", "तथ्यका आधारमा"),
+        ("रोगको बारेमा", "रोगका बारेमा"),
+    ];
+
+    for (incorrect, correction) in expected {
+        assert!(
+            on.iter().any(|d| {
+                d.rule
+                    == varnavinyas_prakriya::Rule::Vyakaran("section4-phrase-style-inferred-ko-ka")
+                    && d.incorrect == incorrect
+                    && d.correction == correction
+                    && matches!(d.kind, DiagnosticKind::Variant)
+                    && d.explanation.contains("अनुमित")
+            }),
+            "Expected inferred style variant {incorrect} -> {correction}, got: {on:?}"
+        );
+    }
+}
+
+#[test]
+fn section4_inferred_ko_ka_style_variants_require_exact_follower_word() {
+    let text = "घरको लागिरहने कुरा र विषयको सम्बन्धमात्र फरक छन्।";
+    let diags = check_text_with_options(
+        text,
+        CheckOptions {
+            grammar: true,
+            ..Default::default()
+        },
+    );
+
+    assert!(
+        diags.iter().all(|d| {
+            d.rule != varnavinyas_prakriya::Rule::Vyakaran("section4-phrase-style-inferred-ko-ka")
+        }),
+        "Longer follower tokens should not trigger inferred style variants, got: {diags:?}"
     );
 }
 

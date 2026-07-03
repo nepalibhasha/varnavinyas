@@ -2,6 +2,9 @@ use varnavinyas_prakriya::orthographic::{
     rule_ba_va, rule_chandrabindu, rule_gya_gyan, rule_ksha_chhya, rule_panchham_varna,
     rule_ri_kri, rule_sibilant, rule_ya_e,
 };
+use varnavinyas_prakriya::varna_vinyasa::hrasva_dirgha::{
+    rule_ps_iya_hrasva_exceptions, rule_suffix_preserves_dirgha,
+};
 use varnavinyas_prakriya::{Rule, collect_rule_hits, derive};
 
 // P1: Corrects अत्याधिक → अत्यधिक
@@ -525,6 +528,81 @@ fn o8_ga_aa_b_6_verb_bucket_citation() {
 }
 
 #[test]
+fn ps_4_gha_sanskrit_va_words_take_ba() {
+    let cases = [
+        ("विन्दु", "बिन्दु"),
+        ("विम्ब", "बिम्ब"),
+        ("वेला", "बेला"),
+        ("कुवेला", "कुबेला"),
+        ("सुवेला", "सुबेला"),
+        ("वार", "बार"),
+        ("आइतवार", "आइतबार"),
+        ("बुधवार", "बुधबार"),
+        ("विना", "बिना"),
+    ];
+
+    for (input, expected) in cases {
+        let p = rule_ba_va(input).expect("expected PS Sanskrit-व् to ब correction");
+        assert_eq!(p.output, expected, "wrong correction for {input}");
+        assert!(
+            has_varna_niyam_code(&p, "3(ग)(आ)-PS-Saisanik-4(घ)-ब"),
+            "Expected PS-Saisanik 4(घ) citation for {input}, got: {:?}",
+            p.steps
+        );
+    }
+}
+
+#[test]
+fn ps_4_gha_sanskrit_va_to_ba_supported_families() {
+    let cases = [
+        ("प्रतिविम्ब", "प्रतिबिम्ब"),
+        ("अनुविम्बित", "अनुबिम्बित"),
+        ("केन्द्रविन्दु", "केन्द्रबिन्दु"),
+        ("प्रयासविना", "प्रयासबिना"),
+    ];
+
+    for (input, expected) in cases {
+        let p = rule_ba_va(input).expect("expected supported PS Sanskrit-व् family correction");
+        assert_eq!(p.output, expected, "wrong correction for {input}");
+        assert!(
+            has_varna_niyam_code(&p, "3(ग)(आ)-PS-Saisanik-4(घ)-ब"),
+            "Expected PS-Saisanik 4(घ) citation for {input}, got: {:?}",
+            p.steps
+        );
+    }
+}
+
+#[test]
+fn ps_4_gha_sanskrit_va_to_ba_is_derive_winner() {
+    let p = derive("विम्ब");
+    assert_eq!(p.output, "बिम्ब");
+    assert!(
+        has_varna_niyam_code(&p, "3(ग)(आ)-PS-Saisanik-4(घ)-ब"),
+        "Expected PS-Saisanik 4(घ) to win, got: {:?}",
+        p.steps
+    );
+
+    let hits = collect_rule_hits("विम्ब");
+    assert_eq!(
+        hits.iter()
+            .filter(|hit| hit.prakriya.output == "बिम्ब")
+            .count(),
+        1,
+        "Expected one PS Sanskrit-व् to ब hit for विम्ब, got: {hits:?}"
+    );
+}
+
+#[test]
+fn ps_4_gha_sanskrit_va_to_ba_guard_keeps_unlisted_va_words() {
+    for word in ["विनाश", "विनायक", "तवेला", "परिवार"] {
+        assert!(
+            rule_ba_va(word).is_none(),
+            "Should not rewrite unlisted व word {word}"
+        );
+    }
+}
+
+#[test]
 fn o8_ga_i_y_4_tatsam_ya_class_citation() {
     let p = rule_ya_e("एथार्थ").expect("expected ya/e correction");
     assert_eq!(p.output, "यथार्थ");
@@ -885,6 +963,132 @@ fn o10_kha_a_3_non_tatsam_palatal_cluster_normalization() {
         has_varna_niyam_code(&p, "3(ख)(अ)-3"),
         "Expected 3(ख)(अ)-3 citation, got: {:?}",
         p.steps
+    );
+}
+
+#[test]
+fn ps_6_gha_final_nga_without_ga_examples() {
+    let cases = [
+        ("मनाङ्ग", "मनाङ"),
+        ("मोरङ्ग", "मोरङ"),
+        ("गुरुङ्ग", "गुरुङ"),
+        ("तामाङ्ग", "तामाङ"),
+        ("बागलुङ्ग", "बागलुङ"),
+        ("दाङ्ग", "दाङ"),
+        ("बझाङ्ग", "बझाङ"),
+        ("दार्जिलिङ्ग", "दार्जिलिङ"),
+        ("हङकङ्ग", "हङकङ"),
+        ("करङ्ग", "करङ"),
+        ("इन्जिनियरिङ्ग", "इन्जिनियरिङ"),
+        ("बोर्डिङ्ग", "बोर्डिङ"),
+        ("बिल्डिङ्ग", "बिल्डिङ"),
+        ("ट्रेनिङ्ग", "ट्रेनिङ"),
+        ("रङ्ग", "रङ"),
+        ("छर्लङ्ग", "छर्लङ"),
+        ("तुर्लुङ्ग", "तुर्लुङ"),
+        ("फुरुङ्ग", "फुरुङ"),
+        ("भुङ्ग", "भुङ"),
+        ("डङ्ग", "डङ"),
+        ("खटङ्ग", "खटङ"),
+        ("छ्याङ्ग", "छ्याङ"),
+    ];
+
+    for (input, expected) in cases {
+        let p = rule_panchham_varna(input).expect("expected final-ङ correction");
+        assert_eq!(p.output, expected, "wrong correction for {input}");
+        assert!(
+            has_varna_niyam_code(&p, "3(ख)-PS-Saisanik-6(घ)-पदान्त-ङ"),
+            "Expected PS-Saisanik 6(घ) citation for {input}, got: {:?}",
+            p.steps
+        );
+    }
+}
+
+#[test]
+fn ps_6_gha_final_nga_without_ga_is_derive_winner() {
+    let p = derive("गुरुङ्ग");
+    assert_eq!(p.output, "गुरुङ");
+    assert!(
+        has_varna_niyam_code(&p, "3(ख)-PS-Saisanik-6(घ)-पदान्त-ङ"),
+        "Expected PS-Saisanik 6(घ) to win, got: {:?}",
+        p.steps
+    );
+
+    let hits = collect_rule_hits("गुरुङ्ग");
+    assert_eq!(
+        hits.iter()
+            .filter(|hit| hit.prakriya.output == "गुरुङ")
+            .count(),
+        1,
+        "Expected one final-ङ hit for गुरुङ्ग, got: {hits:?}"
+    );
+}
+
+#[test]
+fn ps_6_gha_final_nga_without_ga_guard_keeps_tatsam_forms() {
+    for word in ["अङ्ग", "सङ्ग", "प्रसङ्ग"] {
+        assert!(
+            rule_panchham_varna(word).is_none(),
+            "Should not rewrite tatsam final ङ्ग form {word}"
+        );
+    }
+}
+
+#[test]
+fn ps_tha_iya_exceptions_correct_dirgha_to_hrasva() {
+    let cases = [
+        ("राष्ट्रीय", "राष्ट्रिय"),
+        ("क्षत्रीय", "क्षत्रिय"),
+        ("इन्द्रीय", "इन्द्रिय"),
+        ("श्रोत्रीय", "श्रोत्रिय"),
+    ];
+
+    for (input, expected) in cases {
+        let p = rule_ps_iya_hrasva_exceptions(input)
+            .expect("expected PS ईय exception hrasva correction");
+        assert_eq!(p.output, expected, "wrong correction for {input}");
+        assert!(
+            has_varna_niyam_code(&p, "3(क)(उ)-PS-Saisanik-(ठ)-ईय-अपवाद"),
+            "Expected PS-Saisanik (ठ) citation for {input}, got: {:?}",
+            p.steps
+        );
+    }
+}
+
+#[test]
+fn ps_tha_iya_exceptions_are_guarded_against_suffix_dirgha() {
+    for word in ["राष्ट्रिय", "क्षत्रिय", "इन्द्रिय", "श्रोत्रिय"]
+    {
+        assert!(
+            rule_suffix_preserves_dirgha(word).is_none(),
+            "Should not force PS ईय exception {word} to dirgha"
+        );
+        let p = derive(word);
+        assert!(
+            p.is_correct,
+            "Expected PS ईय exception {word} to remain correct, got '{}'",
+            p.output
+        );
+    }
+}
+
+#[test]
+fn ps_tha_iya_exception_is_derive_winner() {
+    let p = derive("श्रोत्रीय");
+    assert_eq!(p.output, "श्रोत्रिय");
+    assert!(
+        has_varna_niyam_code(&p, "3(क)(उ)-PS-Saisanik-(ठ)-ईय-अपवाद"),
+        "Expected PS-Saisanik (ठ) to win, got: {:?}",
+        p.steps
+    );
+
+    let hits = collect_rule_hits("श्रोत्रीय");
+    assert_eq!(
+        hits.iter()
+            .filter(|hit| hit.prakriya.output == "श्रोत्रिय")
+            .count(),
+        1,
+        "Expected one PS ईय exception hit for श्रोत्रीय, got: {hits:?}"
     );
 }
 
