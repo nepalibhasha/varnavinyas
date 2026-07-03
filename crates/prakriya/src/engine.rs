@@ -221,6 +221,7 @@ mod tests {
             "hd-pronoun",
             "hd-initial-adjective-hrasva",
             "hd-initial-number-hrasva",
+            "hd-ps-iya-hrasva-exceptions",
             "hd-initial-avyaya-hrasva",
             "hd-initial-onomatopoeic-hrasva",
             "hd-medial-prefix-hrasva",

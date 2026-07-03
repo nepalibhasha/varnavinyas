@@ -112,6 +112,10 @@ pub fn rule_su_prefix_preserves_dirgha(input: &str) -> Option<Prakriya> {
 }
 
 pub fn rule_suffix_preserves_dirgha(input: &str) -> Option<Prakriya> {
+    if hrasva_helpers::is_ps_iya_hrasva_exception(input) {
+        return None;
+    }
+
     static KNOWN_CORRECTIONS: &[(&str, &str, &str)] = &[
         ("पुर्वी", "पूर्वी", "प्रत्यय -ई ले दीर्घ: पूर्व + ई = पूर्वी"),
         ("पुर्वीय", "पूर्वीय", "प्रत्यय -ईय ले दीर्घ: पूर्व + ईय = पूर्वीय"),

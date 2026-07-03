@@ -56,6 +56,10 @@ fn ka_rules() -> Vec<PatternRule> {
             apply: hrasva_dirgha::rule_initial_number_hrasva,
         },
         PatternRule {
+            spec: hrasva_dirgha::SPEC_PS_IYA_HRASVA_EXCEPTIONS,
+            apply: hrasva_dirgha::rule_ps_iya_hrasva_exceptions,
+        },
+        PatternRule {
             spec: hrasva_dirgha::SPEC_INITIAL_AVYAYA_HRASVA,
             apply: hrasva_dirgha::rule_initial_avyaya_hrasva,
         },

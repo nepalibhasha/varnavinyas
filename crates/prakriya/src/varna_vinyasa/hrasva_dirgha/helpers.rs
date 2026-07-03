@@ -356,6 +356,18 @@ pub(super) mod final_classes {
 
 pub(super) mod hrasva_helpers {
     use super::*;
+    pub(crate) fn ps_iya_hrasva_exception_for_dirgha(input: &str) -> Option<&'static str> {
+        PS_IYA_HRASVA_EXCEPTIONS
+            .iter()
+            .find_map(|(hrasva, dirgha)| (*dirgha == input).then_some(*hrasva))
+    }
+
+    pub(crate) fn is_ps_iya_hrasva_exception(input: &str) -> bool {
+        PS_IYA_HRASVA_EXCEPTIONS
+            .iter()
+            .any(|(hrasva, _)| *hrasva == input)
+    }
+
     pub(crate) fn has_tatsam_suffix(input: &str) -> bool {
         input.ends_with("ीकरण")
             || input.ends_with("ीकृत")
@@ -502,6 +514,13 @@ pub(super) mod hrasva_helpers {
                     | "टुलुटुलु"
             )
     }
+
+    const PS_IYA_HRASVA_EXCEPTIONS: &[(&str, &str)] = &[
+        ("राष्ट्रिय", "राष्ट्रीय"),
+        ("क्षत्रिय", "क्षत्रीय"),
+        ("इन्द्रिय", "इन्द्रीय"),
+        ("श्रोत्रिय", "श्रोत्रीय"),
+    ];
 
     pub(crate) fn is_adjective_pos(pos: &str) -> bool {
         (pos.contains("विशेषण") && !pos.contains("क्रियाविशेषण"))

@@ -18,7 +18,17 @@ use varnavinyas_shabda::{Origin, classify, decompose};
 // - 8  TODO: कर्म वा भाव वाच्यका क्रियापद
 // - 9  implemented in `rule_medial_avyaya_hrasva`
 // - 10 implemented in `rule_medial_onomatopoeic_hrasva`
+// - PS `(ठ)` अपवाद implemented in `rule_ps_iya_hrasva_exceptions`
 // -----------------------------------------------------------------------------
+pub const SPEC_PS_IYA_HRASVA_EXCEPTIONS: RuleSpec = RuleSpec {
+    id: "hd-ps-iya-hrasva-exceptions",
+    category: RuleCategory::HrasvaDirgha,
+    kind: DiagnosticKind::Error,
+    priority: 227,
+    citation: Rule::VarnaVinyasNiyam("3(क)(उ)-PS-Saisanik-(ठ)-ईय-अपवाद"),
+    examples: &[("राष्ट्रीय", "राष्ट्रिय"), ("श्रोत्रीय", "श्रोत्रिय")],
+};
+
 pub const SPEC_MEDIAL_PREFIX_HRASVA: RuleSpec = RuleSpec {
     id: "hd-medial-prefix-hrasva",
     category: RuleCategory::HrasvaDirgha,
@@ -90,6 +100,20 @@ pub const SPEC_MEDIAL_ONOMATOPOEIC_HRASVA: RuleSpec = RuleSpec {
     citation: Rule::VarnaVinyasNiyam("3(क)(आ)-10"),
     examples: &[("सूटुक्क", "सुटुक्क"), ("टीलिक्क", "टिलिक्क")],
 };
+
+pub fn rule_ps_iya_hrasva_exceptions(input: &str) -> Option<Prakriya> {
+    let output = hrasva_helpers::ps_iya_hrasva_exception_for_dirgha(input)?;
+    Some(Prakriya::corrected(
+        input,
+        output,
+        vec![Step::new(
+            Rule::VarnaVinyasNiyam("3(क)(उ)-PS-Saisanik-(ठ)-ईय-अपवाद"),
+            "शैक्षणिक व्याकरण (ठ) अपवाद: राष्ट्रिय, इन्द्रिय, श्रोत्रिय, क्षत्रियमा बिचको इकार ह्रस्व हुन्छ",
+            input,
+            output,
+        )],
+    ))
+}
 
 pub fn rule_medial_prefix_hrasva(input: &str) -> Option<Prakriya> {
     const PREFIX_PATTERNS: &[(&str, &str, &str)] = &[
