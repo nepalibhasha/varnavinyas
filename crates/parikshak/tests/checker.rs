@@ -1786,6 +1786,32 @@ fn section4_inferred_ko_ka_style_variants_require_exact_follower_word() {
 }
 
 #[test]
+fn section4_inferred_ko_ka_style_variants_use_shared_token_spans() {
+    let text = "(घरको लागि,) तर घरको,लागि होइन।";
+    let diags = check_text_with_options(
+        text,
+        CheckOptions {
+            grammar: true,
+            ..Default::default()
+        },
+    );
+
+    assert!(
+        diags.iter().any(|d| {
+            d.rule == varnavinyas_prakriya::Rule::Vyakaran("section4-phrase-style-inferred-ko-ka")
+                && d.incorrect == "घरको लागि"
+                && d.correction == "घरका लागि"
+                && matches!(d.kind, DiagnosticKind::Variant)
+        }),
+        "Expected inferred style variant across shared token span, got: {diags:?}"
+    );
+    assert!(
+        diags.iter().all(|d| d.incorrect != "घरको,लागि"),
+        "Comma without a whitespace gap should preserve prior conservative behavior, got: {diags:?}"
+    );
+}
+
+#[test]
 fn section4_sentence_style_variant_detected() {
     let text = "यहाँको सहयोगप्रति म कृतघ्न छु।";
     let diags = check_text_with_options(

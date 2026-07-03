@@ -223,7 +223,7 @@ pub fn check_text_with_options(text: &str, options: CheckOptions) -> Vec<Diagnos
     add_context_diagnostics(text, &tokens, &mut blocked_spans, &mut diagnostics);
 
     if options.grammar {
-        add_style_variant_diagnostics(text, &mut blocked_spans, &mut diagnostics);
+        add_style_variant_diagnostics(text, &tokens, &mut blocked_spans, &mut diagnostics);
     }
 
     #[cfg(feature = "grammar-pass")]

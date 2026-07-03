@@ -3,10 +3,9 @@ use std::collections::HashSet;
 use varnavinyas_prakriya::{DiagnosticKind, Rule};
 
 use crate::diagnostic::{Diagnostic, DiagnosticCategory};
+use crate::tokenizer::AnalyzedToken;
 
-use super::common::{
-    is_devanagari_word, is_word_boundary, overlaps_existing_span, whitespace_segments,
-};
+use super::common::{is_word_boundary, overlaps_existing_span};
 
 const INFERRED_KO_KA_RULE_CODE: &str = "section4-phrase-style-inferred-ko-ka";
 const INFERRED_KO_KA_FOLLOWERS: &[(&str, &str)] = &[
@@ -137,6 +136,7 @@ const STYLE_VARIANT_CORRECTIONS: &[(&str, &str, &str)] = &[
 
 pub(crate) fn add_style_variant_diagnostics(
     text: &str,
+    tokens: &[AnalyzedToken],
     blocked_spans: &mut HashSet<(usize, usize)>,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
@@ -167,23 +167,28 @@ pub(crate) fn add_style_variant_diagnostics(
         }
     }
 
-    add_inferred_ko_ka_style_variants(text, blocked_spans, diagnostics);
+    add_inferred_ko_ka_style_variants(text, tokens, blocked_spans, diagnostics);
 }
 
 fn add_inferred_ko_ka_style_variants(
     text: &str,
+    tokens: &[AnalyzedToken],
     blocked_spans: &mut HashSet<(usize, usize)>,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
-    let segments = whitespace_segments(text);
-
-    for pair in segments.windows(2) {
-        let (left, lstart, _) = pair[0];
-        let (right, _, rend) = pair[1];
-        if !is_devanagari_word(left) || !is_devanagari_word(right) {
+    for pair in tokens.windows(2) {
+        let left = &pair[0];
+        let right = &pair[1];
+        if !left.is_devanagari_word() || !right.is_devanagari_word() {
             continue;
         }
-        let Some(base) = left.strip_suffix("को") else {
+        if !text[left.end..right.start].chars().any(char::is_whitespace) {
+            continue;
+        }
+
+        let left_surface = left.surface();
+        let right_surface = right.surface();
+        let Some(base) = left_surface.strip_suffix("को") else {
             continue;
         };
         if base.is_empty() {
@@ -191,12 +196,12 @@ fn add_inferred_ko_ka_style_variants(
         }
         let Some((_, explanation)) = INFERRED_KO_KA_FOLLOWERS
             .iter()
-            .find(|(follower, _)| right == *follower)
+            .find(|(follower, _)| right_surface.as_ref() == *follower)
         else {
             continue;
         };
 
-        let span = (lstart, rend);
+        let span = (left.start, right.end);
         if blocked_spans.contains(&span) || overlaps_existing_span(diagnostics, span) {
             continue;
         }
@@ -207,7 +212,7 @@ fn add_inferred_ko_ka_style_variants(
         diagnostics.push(Diagnostic {
             span,
             incorrect: text[span.0..span.1].to_string(),
-            correction: format!("{base}का {right}"),
+            correction: format!("{base}का {right_surface}"),
             rule: Rule::Vyakaran(INFERRED_KO_KA_RULE_CODE),
             explanation: format!("Section 4 पदावली शैली सुझाव (अनुमित): {explanation}"),
             category: DiagnosticCategory::ShuddhaTable,
