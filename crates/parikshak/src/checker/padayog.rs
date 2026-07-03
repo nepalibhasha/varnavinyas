@@ -11,7 +11,6 @@ use crate::tokenizer::AnalyzedToken;
 
 use super::common::{
     is_devanagari_word, is_numeric_segment, is_word_boundary, overlaps_existing_span,
-    whitespace_segments,
 };
 use super::padayog_rules::PADAYOG_PADABIYOG_RULES;
 use super::particles::add_nipat_split_diagnostics;
@@ -108,14 +107,14 @@ pub(crate) fn add_generalized_padayog_padabiyog_diagnostics(
     diagnostics: &mut Vec<Diagnostic>,
 ) {
     add_generalized_padayog_subrule_1_upasarga_join(text, blocked_spans, diagnostics);
-    add_generalized_padayog_subrule_2_pratyaya_join(text, blocked_spans, diagnostics);
-    add_generalized_padayog_subrule_3_vibhakti_join(text, blocked_spans, diagnostics);
-    add_generalized_padayog_subrule_4_namayogi_join(text, blocked_spans, diagnostics);
+    add_generalized_padayog_subrule_2_pratyaya_join(text, tokens, blocked_spans, diagnostics);
+    add_generalized_padayog_subrule_3_vibhakti_join(text, tokens, blocked_spans, diagnostics);
+    add_generalized_padayog_subrule_4_namayogi_join(text, tokens, blocked_spans, diagnostics);
     add_generalized_padayog_subrule_5_samasta_join(text, blocked_spans, diagnostics);
     add_generalized_padayog_subrule_6_nirarthak_dwitva_join(text, blocked_spans, diagnostics);
     add_generalized_padayog_subrule_7_akaran_n_join(text, blocked_spans, diagnostics);
     add_generalized_padayog_subrule_8_milit_kriyapad_join(text, blocked_spans, diagnostics);
-    add_generalized_padayog_subrule_9_samyogak_join(text, blocked_spans, diagnostics);
+    add_generalized_padayog_subrule_9_samyogak_join(text, tokens, blocked_spans, diagnostics);
     add_generalized_padayog_subrule_10_ota_varga_sambandhi_join(text, blocked_spans, diagnostics);
     add_generalized_padayog_subrule_11_sarah_join(text, blocked_spans, diagnostics);
 
@@ -126,17 +125,22 @@ pub(crate) fn add_generalized_padayog_padabiyog_diagnostics(
         blocked_spans,
         diagnostics,
     );
-    add_generalized_padabiyog_subrule_3_lagi_nimti_split(text, blocked_spans, diagnostics);
+    add_generalized_padabiyog_subrule_3_lagi_nimti_split(text, tokens, blocked_spans, diagnostics);
     add_generalized_padabiyog_subrule_4_nipat_split(text, tokens, blocked_spans, diagnostics);
     add_generalized_padabiyog_subrule_5_n_samyogak_split(text, blocked_spans, diagnostics);
-    add_generalized_padabiyog_subrule_6_aspect_split(text, blocked_spans, diagnostics);
-    add_generalized_padabiyog_subrule_7_ne_cha_split(text, blocked_spans, diagnostics);
+    add_generalized_padabiyog_subrule_6_aspect_split(text, tokens, blocked_spans, diagnostics);
+    add_generalized_padabiyog_subrule_7_ne_cha_split(text, tokens, blocked_spans, diagnostics);
     add_generalized_padabiyog_subrule_8_samyukta_kriya_nipat_split(
         text,
         blocked_spans,
         diagnostics,
     );
-    add_generalized_padabiyog_subrule_9_nu_n_pachhi_kriya_split(text, blocked_spans, diagnostics);
+    add_generalized_padabiyog_subrule_9_nu_n_pachhi_kriya_split(
+        text,
+        tokens,
+        blocked_spans,
+        diagnostics,
+    );
     add_generalized_padabiyog_subrule_10_sarthak_dwitva_split(
         text,
         tokens,
@@ -168,27 +172,30 @@ fn add_generalized_padayog_subrule_1_upasarga_join(
 
 fn add_generalized_padayog_subrule_2_pratyaya_join(
     text: &str,
+    tokens: &[AnalyzedToken],
     blocked_spans: &mut HashSet<(usize, usize)>,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
-    add_generalized_padayog_pratyaya_join(text, blocked_spans, diagnostics);
+    add_generalized_padayog_pratyaya_join(text, tokens, blocked_spans, diagnostics);
 }
 
 fn add_generalized_padayog_subrule_3_vibhakti_join(
     text: &str,
+    tokens: &[AnalyzedToken],
     blocked_spans: &mut HashSet<(usize, usize)>,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
-    add_generalized_padayog_vibhakti_join(text, blocked_spans, diagnostics);
+    add_generalized_padayog_vibhakti_join(text, tokens, blocked_spans, diagnostics);
 }
 
 fn add_generalized_padayog_subrule_4_namayogi_join(
     text: &str,
+    tokens: &[AnalyzedToken],
     blocked_spans: &mut HashSet<(usize, usize)>,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
-    add_generalized_padayog_layered_join(text, blocked_spans, diagnostics);
-    add_generalized_padayog_namayogi_join(text, blocked_spans, diagnostics);
+    add_generalized_padayog_layered_join(text, tokens, blocked_spans, diagnostics);
+    add_generalized_padayog_namayogi_join(text, tokens, blocked_spans, diagnostics);
 }
 
 fn add_generalized_padayog_subrule_5_samasta_join(
@@ -225,10 +232,11 @@ fn add_generalized_padayog_subrule_8_milit_kriyapad_join(
 
 fn add_generalized_padayog_subrule_9_samyogak_join(
     text: &str,
+    tokens: &[AnalyzedToken],
     blocked_spans: &mut HashSet<(usize, usize)>,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
-    add_generalized_padayog_conjunction_join(text, blocked_spans, diagnostics);
+    add_generalized_padayog_conjunction_join(text, tokens, blocked_spans, diagnostics);
 }
 
 fn add_generalized_padayog_subrule_10_ota_varga_sambandhi_join(
@@ -316,10 +324,11 @@ fn add_generalized_padabiyog_subrule_2_vibhakti_pachhi_namayogi_split(
 
 fn add_generalized_padabiyog_subrule_3_lagi_nimti_split(
     text: &str,
+    tokens: &[AnalyzedToken],
     blocked_spans: &mut HashSet<(usize, usize)>,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
-    add_generalized_padabiyog_vibhakti_split(text, blocked_spans, diagnostics);
+    add_generalized_padabiyog_vibhakti_split(text, tokens, blocked_spans, diagnostics);
 }
 
 fn add_generalized_padabiyog_subrule_4_nipat_split(
@@ -341,11 +350,13 @@ fn add_generalized_padabiyog_subrule_5_n_samyogak_split(
 
 fn add_generalized_padabiyog_subrule_6_aspect_split(
     text: &str,
+    tokens: &[AnalyzedToken],
     blocked_spans: &mut HashSet<(usize, usize)>,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
     add_generalized_padabiyog_verb_complex_split(
         text,
+        tokens,
         blocked_spans,
         diagnostics,
         true,
@@ -356,11 +367,13 @@ fn add_generalized_padabiyog_subrule_6_aspect_split(
 
 fn add_generalized_padabiyog_subrule_7_ne_cha_split(
     text: &str,
+    tokens: &[AnalyzedToken],
     blocked_spans: &mut HashSet<(usize, usize)>,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
     add_generalized_padabiyog_verb_complex_split(
         text,
+        tokens,
         blocked_spans,
         diagnostics,
         false,
@@ -379,11 +392,13 @@ fn add_generalized_padabiyog_subrule_8_samyukta_kriya_nipat_split(
 
 fn add_generalized_padabiyog_subrule_9_nu_n_pachhi_kriya_split(
     text: &str,
+    tokens: &[AnalyzedToken],
     blocked_spans: &mut HashSet<(usize, usize)>,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
     add_generalized_padabiyog_verb_complex_split(
         text,
+        tokens,
         blocked_spans,
         diagnostics,
         false,
@@ -1253,14 +1268,18 @@ fn has_same_rewrite(diagnostics: &[Diagnostic], span: (usize, usize), correction
 
 fn add_generalized_padayog_layered_join(
     text: &str,
+    tokens: &[AnalyzedToken],
     blocked_spans: &mut HashSet<(usize, usize)>,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
-    let segments = whitespace_segments(text);
+    let segments = token_segments(text, tokens).collect::<Vec<_>>();
 
     for pair in segments.windows(2) {
         let (left, lstart, _) = pair[0];
         let (right, _, rend) = pair[1];
+        if !has_whitespace_gap(text, pair[0], pair[1]) {
+            continue;
+        }
         if !is_devanagari_word(left) || !is_devanagari_word(right) {
             continue;
         }
@@ -1329,6 +1348,11 @@ fn add_generalized_padayog_layered_join(
         let (left, lstart, _) = triple[0];
         let (mid, _, _) = triple[1];
         let (right, _, rend) = triple[2];
+        if !has_whitespace_gap(text, triple[0], triple[1])
+            || !has_whitespace_gap(text, triple[1], triple[2])
+        {
+            continue;
+        }
         if !is_devanagari_word(left) || !is_devanagari_word(mid) || !is_devanagari_word(right) {
             continue;
         }
@@ -1379,15 +1403,19 @@ fn add_generalized_padayog_layered_join(
 
 fn add_generalized_padayog_vibhakti_join(
     text: &str,
+    tokens: &[AnalyzedToken],
     blocked_spans: &mut HashSet<(usize, usize)>,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
     // 3(घ)-पदयोग-३: सबै विभक्तिहरू जोडेर लेख्नुपर्छ
-    let segments = whitespace_segments(text);
+    let segments = token_segments(text, tokens).collect::<Vec<_>>();
 
     for pair in segments.windows(2) {
         let (left, lstart, _) = pair[0];
         let (right, _, rend) = pair[1];
+        if !has_whitespace_gap(text, pair[0], pair[1]) {
+            continue;
+        }
         if !is_devanagari_word(left) || !is_devanagari_word(right) {
             continue;
         }
@@ -1435,14 +1463,18 @@ fn add_generalized_padayog_vibhakti_join(
 
 fn add_generalized_padayog_pratyaya_join(
     text: &str,
+    tokens: &[AnalyzedToken],
     blocked_spans: &mut HashSet<(usize, usize)>,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
-    let segments = whitespace_segments(text);
+    let segments = token_segments(text, tokens).collect::<Vec<_>>();
 
     for pair in segments.windows(2) {
         let (left, lstart, _) = pair[0];
         let (right, _, rend) = pair[1];
+        if !has_whitespace_gap(text, pair[0], pair[1]) {
+            continue;
+        }
         if !is_devanagari_word(left) || !is_devanagari_word(right) {
             continue;
         }
@@ -1514,14 +1546,18 @@ fn normalize_honorific_suffix_like(token: &str) -> Option<String> {
 
 fn add_generalized_padayog_namayogi_join(
     text: &str,
+    tokens: &[AnalyzedToken],
     blocked_spans: &mut HashSet<(usize, usize)>,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
-    let segments = whitespace_segments(text);
+    let segments = token_segments(text, tokens).collect::<Vec<_>>();
 
     for pair in segments.windows(2) {
         let (left, lstart, _) = pair[0];
         let (right, _, rend) = pair[1];
+        if !has_whitespace_gap(text, pair[0], pair[1]) {
+            continue;
+        }
         if !is_devanagari_word(left) || !is_devanagari_word(right) {
             continue;
         }
@@ -1572,11 +1608,12 @@ fn add_generalized_padayog_namayogi_join(
 
 fn add_generalized_padabiyog_vibhakti_split(
     text: &str,
+    tokens: &[AnalyzedToken],
     blocked_spans: &mut HashSet<(usize, usize)>,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
     // 3(घ)-पदवियोग-३: लागि, निम्ति र दुईओटा विभक्ति एकै ठाउँमा आएमा छुट्याएर
-    for (seg, start, end) in whitespace_segments(text) {
+    for (seg, start, end) in token_segments(text, tokens) {
         if !is_devanagari_word(seg) {
             continue;
         }
@@ -1634,6 +1671,7 @@ fn add_generalized_padabiyog_vibhakti_split(
 
 fn add_generalized_padayog_conjunction_join(
     text: &str,
+    tokens: &[AnalyzedToken],
     blocked_spans: &mut HashSet<(usize, usize)>,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
@@ -1644,10 +1682,13 @@ fn add_generalized_padayog_conjunction_join(
         ("यद्य", "पि", "यद्यपि"),
         ("तथा", "पि", "तथापि"),
     ];
-    let segments = whitespace_segments(text);
+    let segments = token_segments(text, tokens).collect::<Vec<_>>();
     for pair in segments.windows(2) {
         let (left, lstart, _) = pair[0];
         let (right, _, rend) = pair[1];
+        if !has_whitespace_gap(text, pair[0], pair[1]) {
+            continue;
+        }
         for &(a, b, joined) in JOINS {
             if left != a || right != b {
                 continue;
@@ -1679,6 +1720,7 @@ fn add_generalized_padayog_conjunction_join(
 
 fn add_generalized_padabiyog_verb_complex_split(
     text: &str,
+    tokens: &[AnalyzedToken],
     blocked_spans: &mut HashSet<(usize, usize)>,
     diagnostics: &mut Vec<Diagnostic>,
     include_aspect: bool,
@@ -1703,7 +1745,7 @@ fn add_generalized_padabiyog_verb_complex_split(
     ];
     const MODAL_SUFFIXES: &[&str] = &["सक्छन्", "सक्छु", "सक्छौ", "सक्छ", "सक्दैन"];
 
-    for (seg, start, end) in whitespace_segments(text) {
+    for (seg, start, end) in token_segments(text, tokens) {
         if !is_devanagari_word(seg) {
             continue;
         }
