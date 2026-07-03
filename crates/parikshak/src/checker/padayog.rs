@@ -142,16 +142,16 @@ pub(crate) fn add_generalized_padayog_padabiyog_diagnostics(
     add_generalized_padabiyog_subrule_11_jana_thari_split(text, blocked_spans, diagnostics);
     add_generalized_padabiyog_subrule_12_shirsha_nam_split(text, blocked_spans, diagnostics);
     add_generalized_padabiyog_subrule_13_visheshan_nam_split(text, blocked_spans, diagnostics);
-    add_generalized_saishanik_comparison_split(text, blocked_spans, diagnostics);
+    add_generalized_saishanik_comparison_split(text, tokens, blocked_spans, diagnostics);
     add_generalized_saishanik_swarup_join(text, blocked_spans, diagnostics);
     add_generalized_saishanik_middle_name_join(text, blocked_spans, diagnostics);
     add_generalized_saishanik_ekarthi_join(text, blocked_spans, diagnostics);
-    add_generalized_saishanik_namik_kriya_split(text, blocked_spans, diagnostics);
-    add_generalized_saishanik_gari_split(text, blocked_spans, diagnostics);
-    add_generalized_saishanik_jana_split(text, blocked_spans, diagnostics);
-    add_generalized_saishanik_multiword_samasa_split(text, blocked_spans, diagnostics);
-    add_generalized_saishanik_institutional_split(text, blocked_spans, diagnostics);
-    add_generalized_saishanik_title_name_split(text, blocked_spans, diagnostics);
+    add_generalized_saishanik_namik_kriya_split(text, tokens, blocked_spans, diagnostics);
+    add_generalized_saishanik_gari_split(text, tokens, blocked_spans, diagnostics);
+    add_generalized_saishanik_jana_split(text, tokens, blocked_spans, diagnostics);
+    add_generalized_saishanik_multiword_samasa_split(text, tokens, blocked_spans, diagnostics);
+    add_generalized_saishanik_institutional_split(text, tokens, blocked_spans, diagnostics);
+    add_generalized_saishanik_title_name_split(text, tokens, blocked_spans, diagnostics);
 }
 
 fn add_generalized_padayog_subrule_1_upasarga_join(
@@ -468,12 +468,11 @@ fn add_generalized_padabiyog_subrule_13_visheshan_nam_split(
 
 fn add_generalized_saishanik_comparison_split(
     text: &str,
+    tokens: &[AnalyzedToken],
     blocked_spans: &mut HashSet<(usize, usize)>,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
-    let segments = whitespace_segments(text);
-
-    for (token, start, end) in segments {
+    for (token, start, end) in token_segments(text, tokens) {
         if !is_devanagari_word(token) || is_numeric_segment(token) {
             continue;
         }
@@ -574,12 +573,11 @@ fn add_generalized_saishanik_swarup_join(
 
 fn add_generalized_saishanik_namik_kriya_split(
     text: &str,
+    tokens: &[AnalyzedToken],
     blocked_spans: &mut HashSet<(usize, usize)>,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
-    let segments = whitespace_segments(text);
-
-    for (token, start, end) in segments {
+    for (token, start, end) in token_segments(text, tokens) {
         if !is_devanagari_word(token) || is_numeric_segment(token) {
             continue;
         }
@@ -631,12 +629,11 @@ fn add_generalized_saishanik_namik_kriya_split(
 
 fn add_generalized_saishanik_gari_split(
     text: &str,
+    tokens: &[AnalyzedToken],
     blocked_spans: &mut HashSet<(usize, usize)>,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
-    let segments = whitespace_segments(text);
-
-    for (token, start, end) in segments {
+    for (token, start, end) in token_segments(text, tokens) {
         if !is_devanagari_word(token) || is_numeric_segment(token) {
             continue;
         }
@@ -683,12 +680,11 @@ fn add_generalized_saishanik_gari_split(
 
 fn add_generalized_saishanik_jana_split(
     text: &str,
+    tokens: &[AnalyzedToken],
     blocked_spans: &mut HashSet<(usize, usize)>,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
-    let segments = whitespace_segments(text);
-
-    for (token, start, end) in segments {
+    for (token, start, end) in token_segments(text, tokens) {
         if !is_devanagari_word(token) || is_numeric_segment(token) {
             continue;
         }
@@ -857,12 +853,11 @@ fn add_generalized_saishanik_ekarthi_join(
 
 fn add_generalized_saishanik_institutional_split(
     text: &str,
+    tokens: &[AnalyzedToken],
     blocked_spans: &mut HashSet<(usize, usize)>,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
-    let segments = whitespace_segments(text);
-
-    for (token, start, end) in segments {
+    for (token, start, end) in token_segments(text, tokens) {
         if !is_devanagari_word(token) || is_numeric_segment(token) {
             continue;
         }
@@ -906,12 +901,11 @@ fn add_generalized_saishanik_institutional_split(
 
 fn add_generalized_saishanik_title_name_split(
     text: &str,
+    tokens: &[AnalyzedToken],
     blocked_spans: &mut HashSet<(usize, usize)>,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
-    let segments = whitespace_segments(text);
-
-    for (token, start, end) in segments {
+    for (token, start, end) in token_segments(text, tokens) {
         if !is_devanagari_word(token) || is_numeric_segment(token) {
             continue;
         }
@@ -955,12 +949,11 @@ fn add_generalized_saishanik_title_name_split(
 
 fn add_generalized_saishanik_multiword_samasa_split(
     text: &str,
+    tokens: &[AnalyzedToken],
     blocked_spans: &mut HashSet<(usize, usize)>,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
-    let segments = whitespace_segments(text);
-
-    for (token, start, end) in segments {
+    for (token, start, end) in token_segments(text, tokens) {
         if !is_devanagari_word(token) || is_numeric_segment(token) {
             continue;
         }
