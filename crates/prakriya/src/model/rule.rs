@@ -70,6 +70,7 @@ impl Rule {
             },
             Rule::Vyakaran(code) => match *code {
                 "section4-phrase-style" => "शैलीगत/प्रयोगगत सुझाव",
+                "section4-phrase-style-inferred-ko-ka" => "शैलीगत/प्रयोगगत सुझाव (अनुमित)",
                 "PS-Saisanik-7(क)-तिर्यक्" => {
                     "शैक्षणिक व्याकरण ७(क) — तिर्यक् रूपको प्रयोग"
                 }
@@ -124,6 +125,10 @@ mod tests {
     fn vyakaran_codes_map_to_expected_descriptions() {
         let cases = [
             ("section4-phrase-style", "शैलीगत/प्रयोगगत सुझाव"),
+            (
+                "section4-phrase-style-inferred-ko-ka",
+                "शैलीगत/प्रयोगगत सुझाव (अनुमित)",
+            ),
             (
                 "PS-Saisanik-7(क)-तिर्यक्",
                 "शैक्षणिक व्याकरण ७(क) — तिर्यक् रूपको प्रयोग",

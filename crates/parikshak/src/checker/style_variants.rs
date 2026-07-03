@@ -4,7 +4,21 @@ use varnavinyas_prakriya::{DiagnosticKind, Rule};
 
 use crate::diagnostic::{Diagnostic, DiagnosticCategory};
 
-use super::common::{is_word_boundary, overlaps_existing_span};
+use super::common::{
+    is_devanagari_word, is_word_boundary, overlaps_existing_span, whitespace_segments,
+};
+
+const INFERRED_KO_KA_RULE_CODE: &str = "section4-phrase-style-inferred-ko-ka";
+const INFERRED_KO_KA_FOLLOWERS: &[(&str, &str)] = &[
+    ("लागि", "लागि अघि -को भन्दा -का शैलीगत रूपमा उपयुक्त मानिन्छ"),
+    ("निम्ति", "निम्ति अघि -को भन्दा -का शैलीगत रूपमा उपयुक्त मानिन्छ"),
+    (
+        "सम्बन्धमा",
+        "सम्बन्धमा अघि -को भन्दा -का शैलीगत रूपमा उपयुक्त मानिन्छ",
+    ),
+    ("आधारमा", "आधारमा अघि -को भन्दा -का शैलीगत रूपमा उपयुक्त मानिन्छ"),
+    ("बारेमा", "बारेमा अघि -को भन्दा -का शैलीगत रूपमा उपयुक्त मानिन्छ"),
+];
 
 /// Section 4 phrase/sentence-level style variants.
 /// These are guidance suggestions, not hard errors.
@@ -151,5 +165,56 @@ pub(crate) fn add_style_variant_diagnostics(
             });
             blocked_spans.insert(span);
         }
+    }
+
+    add_inferred_ko_ka_style_variants(text, blocked_spans, diagnostics);
+}
+
+fn add_inferred_ko_ka_style_variants(
+    text: &str,
+    blocked_spans: &mut HashSet<(usize, usize)>,
+    diagnostics: &mut Vec<Diagnostic>,
+) {
+    let segments = whitespace_segments(text);
+
+    for pair in segments.windows(2) {
+        let (left, lstart, _) = pair[0];
+        let (right, _, rend) = pair[1];
+        if !is_devanagari_word(left) || !is_devanagari_word(right) {
+            continue;
+        }
+        let Some(base) = left.strip_suffix("को") else {
+            continue;
+        };
+        if base.is_empty() {
+            continue;
+        }
+        let Some((_, explanation)) = INFERRED_KO_KA_FOLLOWERS
+            .iter()
+            .find(|(follower, _)| right == *follower)
+        else {
+            continue;
+        };
+
+        let span = (lstart, rend);
+        if blocked_spans.contains(&span) || overlaps_existing_span(diagnostics, span) {
+            continue;
+        }
+        if !is_word_boundary(text, span.0, span.1) {
+            continue;
+        }
+
+        diagnostics.push(Diagnostic {
+            span,
+            incorrect: text[span.0..span.1].to_string(),
+            correction: format!("{base}का {right}"),
+            rule: Rule::Vyakaran(INFERRED_KO_KA_RULE_CODE),
+            explanation: format!("Section 4 पदावली शैली सुझाव (अनुमित): {explanation}"),
+            category: DiagnosticCategory::ShuddhaTable,
+            kind: DiagnosticKind::Variant,
+            confidence: 0.7,
+            alternate_reasons: Vec::new(),
+        });
+        blocked_spans.insert(span);
     }
 }
