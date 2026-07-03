@@ -698,6 +698,56 @@ fn ps_halanta_inventory_covered_forms_restore_padanta_halanta() {
 }
 
 #[test]
+fn ps_loanword_ajanta_inventory_removes_terminal_halanta() {
+    for (incorrect, correct) in [
+        ("कोट्", "कोट"),
+        ("टेलिफोन्", "टेलिफोन"),
+        ("कम्प्युटर्", "कम्प्युटर"),
+        ("रिजल्ट्", "रिजल्ट"),
+        ("सिमेन्ट्", "सिमेन्ट"),
+        ("बल्ब्", "बल्ब"),
+        ("फिल्ड्", "फिल्ड"),
+    ] {
+        let diag = check_word(incorrect)
+            .unwrap_or_else(|| panic!("Expected PS loanword ajanta diagnostic for {incorrect}"));
+        assert_eq!(diag.correction, correct);
+        assert_eq!(diag.category, DiagnosticCategory::Halanta);
+        assert_eq!(
+            diag.rule,
+            varnavinyas_prakriya::Rule::VarnaVinyasNiyam("3(ङ)-PS-Saisanik-3(ग)-आगन्तुक")
+        );
+        assert!(
+            diag.explanation.contains("आगन्तुक"),
+            "Expected PS loanword explanation for {incorrect}, got: {diag:?}"
+        );
+    }
+}
+
+#[test]
+fn ps_loanword_ajanta_rule_does_not_touch_legitimate_halanta_forms() {
+    for word in [
+        "पढ्",
+        "गर्",
+        "भन्",
+        "हेर्",
+        "जान्छन्",
+        "गर्छस्",
+        "पढोस्",
+        "अर्थात्",
+        "श्रीमान्",
+        "संसद्",
+        "जगत्",
+        "विद्युत्",
+    ] {
+        let diag = check_word(word);
+        assert!(
+            diag.is_none(),
+            "Legitimate halanta form {word} should not be diagnosed, got: {diag:?}"
+        );
+    }
+}
+
+#[test]
 fn ya_e_correction_gets_ya_e_category() {
     let diag = check_word("यकता").expect("Expected diagnostic for यकता");
     assert_eq!(diag.correction, "एकता");

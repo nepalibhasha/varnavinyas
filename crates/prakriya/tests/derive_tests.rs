@@ -817,6 +817,45 @@ fn o9_nga_ajanta_8_terminal_halanta_removed() {
 }
 
 #[test]
+fn o9_ps_loanword_ajanta_terminal_halanta_removed() {
+    for (incorrect, correct) in [
+        ("कोट्", "कोट"),
+        ("टेलिफोन्", "टेलिफोन"),
+        ("कम्प्युटर्", "कम्प्युटर"),
+        ("रिजल्ट्", "रिजल्ट"),
+        ("सिमेन्ट्", "सिमेन्ट"),
+        ("बल्ब्", "बल्ब"),
+        ("फिल्ड्", "फिल्ड"),
+    ] {
+        let p = derive(incorrect);
+        assert_eq!(p.output, correct);
+        assert!(
+            has_varna_niyam_code(&p, "3(ङ)-PS-Saisanik-3(ग)-आगन्तुक"),
+            "Expected PS 3(ग) loanword ajanta citation for {incorrect}, got: {:?}",
+            p.steps
+        );
+    }
+}
+
+#[test]
+fn o9_ps_loanword_ajanta_does_not_touch_legitimate_halanta_forms() {
+    for word in [
+        "जान्छन्",
+        "गर्छस्",
+        "पढोस्",
+        "अर्थात्",
+        "श्रीमान्",
+        "संसद्",
+        "जगत्",
+        "विद्युत्",
+    ] {
+        let p = derive(word);
+        assert_eq!(p.output, word, "{word} should remain unchanged");
+        assert!(p.is_correct, "{word} should be treated as correct: {p:?}");
+    }
+}
+
+#[test]
 fn o9_nga_ajanta_1_singletons() {
     assert_eq!(derive("र्").output, "र");
     assert_eq!(derive("न्").output, "न");

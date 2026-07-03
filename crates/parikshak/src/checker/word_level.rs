@@ -145,6 +145,9 @@ pub(crate) fn check_word_impl(word: &str) -> Option<Diagnostic> {
             .first()
             .map(|s| s.rule)
             .unwrap_or(Rule::ShuddhaAshuddha("unknown"));
+        if is_context_free_ajanta_verb_root(word, rule) {
+            return None;
+        }
         let explanation = prakriya
             .steps
             .first()
@@ -197,6 +200,15 @@ pub(crate) fn check_word_impl(word: &str) -> Option<Diagnostic> {
     }
 
     None
+}
+
+fn is_context_free_ajanta_verb_root(word: &str, rule: Rule) -> bool {
+    if !matches!(rule, Rule::VarnaVinyasNiyam("3(ङ)-अजन्त-3")) {
+        return false;
+    }
+
+    word.strip_suffix('्')
+        .is_some_and(|stem| AMBIGUOUS_HALANTA_DHATU_FORMS.contains(&stem))
 }
 
 pub(crate) fn adjust_context_sensitive_nga_halanta_rule(

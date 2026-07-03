@@ -1,17 +1,22 @@
 use crate::model::prakriya::Prakriya;
 use crate::model::rule::Rule;
 use crate::model::step::Step;
+use std::sync::LazyLock;
 use varnavinyas_shabda::{Origin, classify};
 
-const AJANTA_1_SINGLETONS: &[&str] = &["म", "तँ", "र", "न", "त"];
-const AJANTA_2_AVYAYA: &[&str] = &["बाहिर", "भित्र", "आज", "तिर", "जब", "तब", "निर"];
-const AJANTA_3_AJNAARTHA: &[&str] = &["भन", "पढ", "गर", "हेर", "बुझ", "लुक", "लेख"];
-const AJANTA_4_NEG_N: &[&str] = &["जान्नँ", "गर्दैन", "भन्दैन", "लेखिन", "भनेन"];
-const AJANTA_6_ASAMAPAK: &[&str] = &["गर्न", "हेर्न", "लेख्न", "पढ्न", "जान"];
-const AJANTA_7_ANUKARANATMAK: &[&str] = &["टिलिक्क", "टुप्लुक्क", "स्वाट्ट"];
-const AJANTA_8_NAMES: &[&str] = &["भात", "झ्याल", "राम", "रात", "देश", "हिमाल"];
-const AJANTA_8_PRONOUNS: &[&str] = &["यस", "त्यस", "जस", "कस", "उस", "जुन"];
-const AJANTA_8_ADJECTIVES: &[&str] = &["कठोर", "गरिब", "बिस", "तिस", "जवान"];
+const PS_LOANWORD_AJANTA_RULE_CODE: &str = "3(ङ)-PS-Saisanik-3(ग)-आगन्तुक";
+const AJANTA_INVENTORY_DATA: &str =
+    include_str!("../../../../../data/rule_inventories/ajanta_halanta.tsv");
+
+static AJANTA_INVENTORY: LazyLock<Vec<AjantaInventoryEntry>> =
+    LazyLock::new(|| parse_ajanta_inventory(AJANTA_INVENTORY_DATA));
+
+#[derive(Debug, Clone, Copy)]
+struct AjantaInventoryEntry {
+    input: &'static str,
+    output: &'static str,
+    rule_code: &'static str,
+}
 
 fn corrected(
     input: &str,
@@ -35,6 +40,7 @@ fn corrected(
 // 3(ङ) अजन्त लेख्नुपर्ने रूप
 // Implemented subrules:
 // - 3(ङ)-अजन्त-1 .. 8
+// - PS-Saisanik 3(ग) आगन्तुक अजन्त examples
 // -----------------------------------------------------------------------------
 pub(super) fn rule_ajanta_required(input: &str) -> Option<Prakriya> {
     let stem = input.strip_suffix('्')?;
@@ -49,43 +55,16 @@ pub(super) fn rule_ajanta_required(input: &str) -> Option<Prakriya> {
         return None;
     }
 
+    if let Some(entry) = AJANTA_INVENTORY.iter().find(|entry| entry.input == input) {
+        return Some(corrected(
+            input,
+            entry.output.to_string(),
+            entry.rule_code,
+            ajanta_explanation(entry.rule_code),
+        ));
+    }
+
     let output = stem.to_string();
-    if AJANTA_1_SINGLETONS.contains(&output.as_str()) {
-        return Some(corrected(
-            input,
-            output,
-            "3(ङ)-अजन्त-1",
-            "एकाक्षरी सर्वनाम/अव्ययमा हलन्त लेखिँदैन",
-        ));
-    }
-
-    if AJANTA_2_AVYAYA.contains(&output.as_str()) {
-        return Some(corrected(
-            input,
-            output,
-            "3(ङ)-अजन्त-2",
-            "स्वरान्त अव्ययमा हलन्त लेखिँदैन",
-        ));
-    }
-
-    if AJANTA_3_AJNAARTHA.contains(&output.as_str()) {
-        return Some(corrected(
-            input,
-            output,
-            "3(ङ)-अजन्त-3",
-            "सामान्य आदरार्थी आज्ञार्थ क्रियापदमा हलन्त लेखिँदैन",
-        ));
-    }
-
-    if AJANTA_4_NEG_N.contains(&output.as_str()) {
-        return Some(corrected(
-            input,
-            output,
-            "3(ङ)-अजन्त-4",
-            "अन्त्यमा 'न' आउने अकरण क्रियापदमा हलन्त लेखिँदैन",
-        ));
-    }
-
     if output.ends_with('छ') {
         return Some(corrected(
             input,
@@ -95,35 +74,104 @@ pub(super) fn rule_ajanta_required(input: &str) -> Option<Prakriya> {
         ));
     }
 
-    if AJANTA_6_ASAMAPAK.contains(&output.as_str()) {
-        return Some(corrected(
-            input,
-            output,
-            "3(ङ)-अजन्त-6",
-            "असमापक क्रियापदमा हलन्त लेखिँदैन",
-        ));
-    }
-
-    if AJANTA_7_ANUKARANATMAK.contains(&output.as_str()) {
-        return Some(corrected(
-            input,
-            output,
-            "3(ङ)-अजन्त-7",
-            "अनुकरणात्मक शब्दको अन्त्यमा हलन्त लेखिँदैन",
-        ));
-    }
-
-    if AJANTA_8_NAMES.contains(&output.as_str())
-        || AJANTA_8_PRONOUNS.contains(&output.as_str())
-        || AJANTA_8_ADJECTIVES.contains(&output.as_str())
-    {
-        return Some(corrected(
-            input,
-            output,
-            "3(ङ)-अजन्त-8",
-            "कतिपय नाम/सर्वनाम/विशेषणमा लेखन अजन्त हुन्छ",
-        ));
-    }
-
     None
+}
+
+fn ajanta_explanation(rule_code: &str) -> &'static str {
+    match rule_code {
+        "3(ङ)-अजन्त-1" => "एकाक्षरी सर्वनाम/अव्ययमा हलन्त लेखिँदैन",
+        "3(ङ)-अजन्त-2" => "स्वरान्त अव्ययमा हलन्त लेखिँदैन",
+        "3(ङ)-अजन्त-3" => "सामान्य आदरार्थी आज्ञार्थ क्रियापदमा हलन्त लेखिँदैन",
+        "3(ङ)-अजन्त-4" => "अन्त्यमा 'न' आउने अकरण क्रियापदमा हलन्त लेखिँदैन",
+        "3(ङ)-अजन्त-6" => "असमापक क्रियापदमा हलन्त लेखिँदैन",
+        "3(ङ)-अजन्त-7" => "अनुकरणात्मक शब्दको अन्त्यमा हलन्त लेखिँदैन",
+        "3(ङ)-अजन्त-8" => "कतिपय नाम/सर्वनाम/विशेषणमा लेखन अजन्त हुन्छ",
+        PS_LOANWORD_AJANTA_RULE_CODE => "शैक्षणिक व्याकरण ३(ग): उच्चारण हलन्त हुने आगन्तुक शब्द अजन्त लेखिन्छन्",
+        _ => panic!("unknown ajanta inventory rule code `{rule_code}`"),
+    }
+}
+
+fn parse_ajanta_inventory(data: &'static str) -> Vec<AjantaInventoryEntry> {
+    let mut lines = data.lines();
+    let header = lines.next().expect("ajanta inventory must have a header");
+    assert_eq!(
+        header, "input\toutput\tmatch_kind\trule_code\tsource\treview_status",
+        "unexpected ajanta inventory header"
+    );
+
+    let mut entries = Vec::new();
+    for (line_idx, line) in lines.enumerate() {
+        if line.trim().is_empty() {
+            continue;
+        }
+        let fields: Vec<&'static str> = line.split('\t').collect();
+        assert_eq!(
+            fields.len(),
+            6,
+            "ajanta inventory line {} must have 6 TSV fields",
+            line_idx + 2
+        );
+        let [input, output, match_kind, rule_code, source, review_status] =
+            <[&'static str; 6]>::try_from(fields).expect("checked field count");
+        assert!(
+            !input.is_empty() && !output.is_empty(),
+            "ajanta inventory line {} has empty input/output",
+            line_idx + 2
+        );
+        assert_eq!(
+            match_kind,
+            "exact",
+            "ajanta inventory line {} has unsupported match kind `{}`",
+            line_idx + 2,
+            match_kind
+        );
+        assert!(
+            !rule_code.is_empty() && !source.is_empty() && !review_status.is_empty(),
+            "ajanta inventory line {} must include provenance fields",
+            line_idx + 2
+        );
+        let expected_input = format!("{output}्");
+        assert_eq!(
+            input,
+            expected_input,
+            "ajanta inventory line {} input must be output plus terminal halanta",
+            line_idx + 2
+        );
+        let _ = ajanta_explanation(rule_code);
+        entries.push(AjantaInventoryEntry {
+            input,
+            output,
+            rule_code,
+        });
+    }
+
+    for (idx, entry) in entries.iter().enumerate() {
+        assert!(
+            entries[..idx]
+                .iter()
+                .all(|other| other.input != entry.input),
+            "duplicate ajanta inventory row for {}",
+            entry.input
+        );
+    }
+
+    entries
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn ajanta_inventory_schema_is_valid() {
+        let entries = &*AJANTA_INVENTORY;
+        assert_eq!(entries.len(), 56);
+        assert_eq!(
+            entries
+                .iter()
+                .filter(|entry| entry.rule_code == PS_LOANWORD_AJANTA_RULE_CODE)
+                .count(),
+            7
+        );
+    }
 }
