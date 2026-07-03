@@ -87,6 +87,10 @@ pub(super) mod final_classes {
     }
 
     pub(crate) fn final_hrasva_class_for(output: &str) -> Option<(&'static str, String)> {
+        if is_ps_final_dirgha_exception(output) {
+            return None;
+        }
+
         if is_location_inanimate_final_hrasva(output) {
             return Some((
                 "3(क)(इ)-2",
@@ -224,7 +228,23 @@ pub(super) mod final_classes {
             || output.ends_with("पि")
     }
 
+    pub(crate) fn ps_final_dirgha_exception_for_hrasva(input: &str) -> Option<&'static str> {
+        PS_FINAL_DIRGHA_EXCEPTIONS
+            .iter()
+            .find_map(|(hrasva, dirgha)| (*hrasva == input).then_some(*dirgha))
+    }
+
+    pub(crate) fn is_ps_final_dirgha_exception(input: &str) -> bool {
+        PS_FINAL_DIRGHA_EXCEPTIONS
+            .iter()
+            .any(|(_, dirgha)| *dirgha == input)
+    }
+
     pub(crate) fn is_known_correct_final_dirgha(input: &str) -> bool {
+        if is_ps_final_dirgha_exception(input) {
+            return true;
+        }
+
         let hrasva = super::hrasva_helpers::replace_final_dirgha_with_hrasva(input);
         if hrasva == input {
             return false;
@@ -255,6 +275,17 @@ pub(super) mod final_classes {
 
         false
     }
+
+    const PS_FINAL_DIRGHA_EXCEPTIONS: &[(&str, &str)] = &[
+        ("श्रेणि", "श्रेणी"),
+        ("युवति", "युवती"),
+        ("सूचि", "सूची"),
+        ("अञ्जलि", "अञ्जली"),
+        ("श्रद्धाञ्जलि", "श्रद्धाञ्जली"),
+        ("आवलि", "आवली"),
+        ("शब्दावलि", "शब्दावली"),
+        ("औषधि", "औषधी"),
+    ];
 
     pub(crate) fn is_profession_jati_thar_dirgha(output: &str) -> bool {
         matches!(

@@ -1066,6 +1066,66 @@ fn sarah_join_rule_still_applies() {
 }
 
 #[test]
+fn documented_false_positive_pins_remain_unflagged() {
+    let text = "सामान्यीकरण केन्द्रीकरण एकीकरण राष्ट्रिय क्षत्रिय इन्द्रिय श्रेणी युवती सूची औषधी अञ्जली शेर्पा जोशी शाह कुशवाहले शुभ समाचार।";
+    let diags = check_text(text);
+
+    for token in [
+        "सामान्यीकरण",
+        "केन्द्रीकरण",
+        "एकीकरण",
+        "राष्ट्रिय",
+        "क्षत्रिय",
+        "इन्द्रिय",
+        "श्रेणी",
+        "युवती",
+        "सूची",
+        "औषधी",
+        "अञ्जली",
+        "शेर्पा",
+        "जोशी",
+        "शाह",
+        "कुशवाहले",
+    ] {
+        assert!(
+            diags.iter().all(|d| d.incorrect != token),
+            "Expected {token} to remain unflagged, got: {diags:?}"
+        );
+    }
+
+    assert!(
+        diags.iter().all(|d| {
+            !(d.incorrect == "शुभ समाचार" || d.correction == "शुभसमाचार")
+        }),
+        "Split शुभ समाचार should not be joined, got: {diags:?}"
+    );
+}
+
+#[test]
+fn ps_final_dirgha_exception_diagnostics_apply() {
+    let diags = check_text("श्रेणि युवति सूचि अञ्जलि श्रद्धाञ्जलि आवलि शब्दावलि औषधि।");
+    for (incorrect, correction) in [
+        ("श्रेणि", "श्रेणी"),
+        ("युवति", "युवती"),
+        ("सूचि", "सूची"),
+        ("अञ्जलि", "अञ्जली"),
+        ("श्रद्धाञ्जलि", "श्रद्धाञ्जली"),
+        ("आवलि", "आवली"),
+        ("शब्दावलि", "शब्दावली"),
+        ("औषधि", "औषधी"),
+    ] {
+        assert!(
+            diags.iter().any(|d| {
+                d.incorrect == incorrect
+                    && d.correction == correction
+                    && d.category == DiagnosticCategory::HrasvaDirgha
+            }),
+            "Expected PS final-dirgha exception {incorrect} -> {correction}, got: {diags:?}"
+        );
+    }
+}
+
+#[test]
 fn saishanik_swarup_join_applies() {
     let diags = check_text("फल स्वरूप यो नतिजा आयो।");
     let diag = diags

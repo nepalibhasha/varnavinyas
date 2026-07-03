@@ -178,6 +178,13 @@ fn exact_headword_sibilant_form_is_not_overcorrected() {
 }
 
 #[test]
+fn proper_noun_sh_suffix_is_not_overcorrected() {
+    let p = derive("कुशवाहले");
+    assert_eq!(p.output, "कुशवाहले");
+    assert!(p.is_correct);
+}
+
+#[test]
 fn exact_headword_chandrabindu_form_is_not_overcorrected() {
     let p = derive("भुईं");
     assert_eq!(p.output, "भुईं");
@@ -189,6 +196,30 @@ fn exact_headword_final_hrasva_variant_is_not_overcorrected() {
     let p = derive("औषधी");
     assert_eq!(p.output, "औषधी");
     assert!(p.is_correct);
+}
+
+#[test]
+fn ps_final_dirgha_exceptions_correct_hrasva_forms() {
+    for (incorrect, correct) in [
+        ("श्रेणि", "श्रेणी"),
+        ("युवति", "युवती"),
+        ("सूचि", "सूची"),
+        ("अञ्जलि", "अञ्जली"),
+        ("श्रद्धाञ्जलि", "श्रद्धाञ्जली"),
+        ("आवलि", "आवली"),
+        ("शब्दावलि", "शब्दावली"),
+        ("औषधि", "औषधी"),
+    ] {
+        let p = derive(incorrect);
+        assert_eq!(p.output, correct, "Expected {incorrect} -> {correct}");
+        assert!(!p.is_correct);
+        assert!(
+            p.steps.iter().any(|step| {
+                step.rule == Rule::VarnaVinyasNiyam("PS-Saisanik-ह्रस्वदीर्घ-(च)-अपवाद")
+            }),
+            "Expected PS exception rule for {incorrect}, got: {p:?}"
+        );
+    }
 }
 
 #[test]

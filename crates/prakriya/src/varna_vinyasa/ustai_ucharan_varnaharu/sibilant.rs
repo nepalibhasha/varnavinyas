@@ -9,6 +9,37 @@ fn lexically_supported(word: &str) -> bool {
     lex.contains(word) || lex.lookup(word).is_some()
 }
 
+const PROPER_NOUN_SH_BASES: &[&str] = &["कुशवाह", "जोशी", "शाह", "शेर्पा", "शेरचन"];
+const PROPER_NOUN_SUFFIXES: &[&str] = &[
+    "ले",
+    "लाई",
+    "को",
+    "का",
+    "की",
+    "मा",
+    "बाट",
+    "सँग",
+    "संग",
+    "हरू",
+    "हरु",
+    "ज्यू",
+    "ज्यु",
+    "जी",
+];
+
+fn is_protected_proper_noun_sh(input: &str) -> bool {
+    PROPER_NOUN_SH_BASES.iter().any(|base| {
+        if input == *base {
+            return true;
+        }
+
+        let Some(rest) = input.strip_prefix(base) else {
+            return false;
+        };
+        !rest.is_empty() && PROPER_NOUN_SUFFIXES.contains(&rest)
+    })
+}
+
 fn corrected_if_attested(
     input: &str,
     output: String,
@@ -37,6 +68,9 @@ pub fn rule_sibilant(input: &str) -> Option<Prakriya> {
     let input_exact_headword = lex.lookup(input).is_some();
     let input_supported = lex.contains(input) || lex.lookup(input).is_some();
     if input_exact_headword {
+        return None;
+    }
+    if is_protected_proper_noun_sh(input) {
         return None;
     }
     match origin {
@@ -281,4 +315,20 @@ pub fn rule_sibilant(input: &str) -> Option<Prakriya> {
     }
 
     None
+}
+
+#[cfg(test)]
+mod tests {
+    use super::is_protected_proper_noun_sh;
+
+    #[test]
+    fn protected_proper_noun_sh_guard_covers_suffixes() {
+        for word in ["कुशवाहले", "जोशीले", "शाहले", "शेर्पाले", "शेरचनले"]
+        {
+            assert!(
+                is_protected_proper_noun_sh(word),
+                "Expected {word} to be protected from श->स normalization"
+            );
+        }
+    }
 }

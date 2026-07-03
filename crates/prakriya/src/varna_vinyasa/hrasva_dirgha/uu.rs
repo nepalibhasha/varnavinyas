@@ -131,6 +131,9 @@ pub fn rule_final_vati_vi_dirgha(input: &str) -> Option<Prakriya> {
     if matches!(origin, Origin::Tatsam) || !input.ends_with('ि') {
         return None;
     }
+    if final_classes::ps_final_dirgha_exception_for_hrasva(input).is_some() {
+        return None;
+    }
 
     let chars: Vec<char> = input.chars().collect();
     let mut output_chars = chars.clone();
@@ -194,6 +197,19 @@ pub fn rule_final_adjective_dirgha(input: &str) -> Option<Prakriya> {
 }
 
 pub fn rule_dirgha_endings(input: &str) -> Option<Prakriya> {
+    if let Some(output) = final_classes::ps_final_dirgha_exception_for_hrasva(input) {
+        return Some(Prakriya::corrected(
+            input,
+            output,
+            vec![Step::new(
+                Rule::VarnaVinyasNiyam("PS-Saisanik-ह्रस्वदीर्घ-(च)-अपवाद"),
+                "शैक्षणिक व्याकरण ह्रस्वदीर्घ (च): शब्दान्तमा दीर्घ चलेका अपवाद शब्द दीर्घ नै लेखिन्छन्",
+                input,
+                output,
+            )],
+        ));
+    }
+
     let origin = classify(input);
     if matches!(origin, Origin::Tatsam) {
         return None;
