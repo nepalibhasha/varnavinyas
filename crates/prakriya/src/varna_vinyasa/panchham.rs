@@ -14,11 +14,50 @@ pub const SPEC_PANCHHAM: RuleSpec = RuleSpec {
     examples: &[("संकेत", "सङ्केत"), ("संघीय", "सङ्घीय")],
 };
 
+const PS_FINAL_NGA_WITHOUT_GA_RULE_CODE: &str = "3(ख)-PS-Saisanik-6(घ)-पदान्त-ङ";
+const PS_FINAL_NGA_WITHOUT_GA_FORMS: &[&str] = &[
+    "मनाङ",
+    "मोरङ",
+    "गुरुङ",
+    "तामाङ",
+    "बागलुङ",
+    "दाङ",
+    "बझाङ",
+    "दार्जिलिङ",
+    "हङकङ",
+    "करङ",
+    "इन्जिनियरिङ",
+    "बोर्डिङ",
+    "बिल्डिङ",
+    "ट्रेनिङ",
+    "रङ",
+    "छर्लङ",
+    "तुर्लुङ",
+    "फुरुङ",
+    "भुङ",
+    "डङ",
+    "खटङ",
+    "छ्याङ",
+];
+
 /// Academy 3(ख)(अ): panchham varna rules for तत्सम words.
 /// In तत्सम words, anusvara (ं) before stop consonants -> panchham varna.
 pub fn rule_panchham_varna(input: &str) -> Option<Prakriya> {
     if has_supported_non_tatsam_chandrabindu_variant(input) {
         return None;
+    }
+
+    if let Some(output) = normalize_final_nga_without_ga(input) {
+        return Some(Prakriya::corrected(
+            input,
+            &output,
+            vec![Step::new(
+                Rule::VarnaVinyasNiyam(PS_FINAL_NGA_WITHOUT_GA_RULE_CODE),
+                "शैक्षणिक व्याकरण ६(घ): हलन्त ङ मात्र उच्चारण हुने शब्दमा ङ्ग होइन ङ लेखिन्छ",
+                input,
+                &output,
+            )],
+        ));
     }
 
     let origin = classify(input);
@@ -131,6 +170,16 @@ fn has_supported_non_tatsam_chandrabindu_variant(input: &str) -> bool {
     }
 
     false
+}
+
+fn normalize_final_nga_without_ga(input: &str) -> Option<String> {
+    let stem = input.strip_suffix("ङ्ग")?;
+    let output = format!("{stem}ङ");
+    if PS_FINAL_NGA_WITHOUT_GA_FORMS.contains(&output.as_str()) {
+        Some(output)
+    } else {
+        None
+    }
 }
 
 fn chandrabindu_override_is_productive(candidate: &str) -> bool {
