@@ -579,6 +579,58 @@ fn tatsam_padanta_halanta_beats_edit_distance() {
 }
 
 #[test]
+fn text_level_tatsam_halanta_beats_nipat_split() {
+    let diags = check_text("जगत ठुलो छ। अकस्मात भयो। साक्षात देखियो। पश्चात आयो।");
+
+    let jagat = diags
+        .iter()
+        .find(|d| d.incorrect == "जगत")
+        .unwrap_or_else(|| panic!("Expected halanta diagnostic for जगत, got: {diags:?}"));
+    assert_eq!(jagat.correction, "जगत्");
+    assert_eq!(jagat.category, DiagnosticCategory::Halanta);
+
+    for wrong_split in ["जग त", "अकस्मा त", "साक्षा त", "पश्चा त"]
+    {
+        assert!(
+            diags.iter().all(|d| d.correction != wrong_split),
+            "Tatsam padanta halanta forms must not be intercepted by निपात split {wrong_split}, got: {diags:?}"
+        );
+    }
+}
+
+#[test]
+fn ps_halanta_inventory_covered_forms_restore_padanta_halanta() {
+    for (incorrect, correct) in [
+        ("पृथक", "पृथक्"),
+        ("सम्राट", "सम्राट्"),
+        ("जगत", "जगत्"),
+        ("अर्थात", "अर्थात्"),
+        ("अकस्मात", "अकस्मात्"),
+        ("साक्षात", "साक्षात्"),
+        ("पश्चात", "पश्चात्"),
+        ("विद्युत", "विद्युत्"),
+        ("विपत", "विपत्"),
+        ("आपत", "आपत्"),
+        ("संसद", "संसद्"),
+        ("बृहत", "बृहत्"),
+        ("महान", "महान्"),
+        ("स्वयम", "स्वयम्"),
+        ("अनुष्टुप", "अनुष्टुप्"),
+        ("शुभम", "शुभम्"),
+    ] {
+        let diags = check_text(incorrect);
+        assert!(
+            diags.iter().any(|d| {
+                d.incorrect == incorrect
+                    && d.correction == correct
+                    && d.category == DiagnosticCategory::Halanta
+            }),
+            "Expected {incorrect} -> {correct} via halanta restoration, got: {diags:?}"
+        );
+    }
+}
+
+#[test]
 fn ya_e_correction_gets_ya_e_category() {
     let diag = check_word("यकता").expect("Expected diagnostic for यकता");
     assert_eq!(diag.correction, "एकता");

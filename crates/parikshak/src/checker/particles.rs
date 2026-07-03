@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use varnavinyas_kosha::kosha;
 use varnavinyas_prakriya::{DiagnosticKind, Rule};
-use varnavinyas_shabda::has_supported_analysis;
+use varnavinyas_shabda::{Origin, classify, has_supported_analysis};
 
 use crate::diagnostic::{Diagnostic, DiagnosticCategory};
 use crate::tokenizer::should_prefer_whole_word_over_short_nipat_split;
@@ -102,6 +102,10 @@ fn add_word_bound_nipat_split(
     blocked_spans: &mut HashSet<(usize, usize)>,
     diagnostics: &mut Vec<Diagnostic>,
 ) -> bool {
+    if has_tatsam_padanta_halanta_restoration(token) {
+        return false;
+    }
+
     for &suffix in WORD_BOUND_NIPAT_SPLIT_TOKENS {
         for left in suffix_left_candidates(token, suffix) {
             let normalized_left = normalize_joined_word(left).unwrap_or_else(|| left.to_string());
@@ -244,6 +248,15 @@ fn candidate_is_supported(candidate: &str) -> bool {
 fn candidate_is_lexically_attested(candidate: &str) -> bool {
     let lex = kosha();
     lex.contains(candidate) || lex.lookup(candidate).is_some()
+}
+
+fn has_tatsam_padanta_halanta_restoration(token: &str) -> bool {
+    if token.ends_with('्') {
+        return false;
+    }
+
+    let restored = format!("{token}्");
+    kosha().contains(&restored) && matches!(classify(&restored), Origin::Tatsam)
 }
 
 fn normalize_joined_word(candidate: &str) -> Option<String> {
