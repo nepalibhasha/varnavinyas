@@ -16,6 +16,7 @@ The root workspace defines `default-members` for day-to-day Rust work. Use expli
 | `cargo test --workspace -q` | Run all unit and integration tests |
 | `cargo fmt --all --check` | Formatting check |
 | `cargo clippy --workspace --all-targets -- -D warnings` | Strict lint gate |
+| `cargo test -p varnavinyas-parikshak --test corpus_snapshot -q` | Checker corpus snapshot parity gate |
 | `cargo deny check advisories bans licenses sources` | Dependency/license/advisory checks |
 | `bash web/build.sh` | Build `web/pkg` from WASM bindings |
 | `bash web/package-artifact.sh` | Build downstream browser artifact package |
@@ -67,7 +68,16 @@ We maintain a canonical "Gold" dataset in `docs/tests/gold.toml`.
 *   **Rule**: ALL entries in `gold.toml` must pass.
 *   **Run**: `cargo test -p varnavinyas-parikshak gold_incorrect_forms_detected -- --nocapture`.
 
-### 4. Property-Based Tests
+### 4. Corpus Snapshot Tests
+
+`crates/parikshak/tests/corpus_snapshot.rs` records full checker diagnostic
+output for fixed corpora, including the grammar-pass variant. Use it when
+changing tokenization, pass ordering, arbitration, or broad fallback behavior.
+
+*   **Run**: `cargo test -p varnavinyas-parikshak --test corpus_snapshot -q`.
+*   **Update intentionally**: inspect the diff, then run `VARNAVINYAS_UPDATE_CORPUS_SNAPSHOT=1 cargo test -p varnavinyas-parikshak --test corpus_snapshot -q`.
+
+### 5. Property-Based Tests
 We use `proptest` to verify invariants, such as:
 - `transliterate(transliterate(x)) == x` (Round-trip)
 - `normalize(normalize(x)) == normalize(x)` (Idempotence)

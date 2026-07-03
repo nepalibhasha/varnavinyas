@@ -13,6 +13,7 @@ It is the rule engine behind word-level correction and is responsible for:
 
 - looking up authoritative corrections from the static correction table
 - applying pattern-based orthographic rules when no direct table entry exists
+- loading small provenance-checked rule inventories for cited example families
 - returning a trace of which rule fired and how the output was derived
 
 This is the closest thing the workspace has to a central normative orthography engine.
@@ -63,7 +64,7 @@ input token
   ↓
 correction table
   ↓
-pattern rules
+pattern rules + compiled inventories
   ↓
 winner selection
   ↓
@@ -73,6 +74,10 @@ Prakriya + Explanation
 - correction table lookup first
 - pattern rules second
 - “already correct” fallback last
+
+Some pattern-rule modules compile schema-checked TSV inventories from
+`data/rule_inventories/`. These inventories are for cited, reviewed example
+families and are validated by parser tests in the owning rule module.
 
 Pattern rules are registered via a domain-oriented registry:
 
@@ -94,6 +99,8 @@ Within `src/`, implementation is organized by domain:
 - `model/` -> core derivation types such as `Prakriya`, `Rule`, `RuleSpec`, and `Step`
 - `explanation.rs` -> shared outward-facing `Explanation` model used by analysis and diagnostics
 - `runtime.rs` -> pattern-rule dispatch assembly and caching
+- `data/rule_inventories/*.tsv` -> provenance-checked inventories compiled
+  into selected rule modules
 
 ## Crate Boundary (Important)
 
@@ -161,7 +168,7 @@ Implemented rule families:
 
 - `rule_sibilant` for श/ष/स.
 - `rule_ri_kri` for ऋ/रि and कृ/क्रि.
-- `rule_ba_va` for ब/व.
+- `rule_ba_va` for ब/व, including the TSV-backed `PS-Saisanik` Sanskrit व-to-ब inventory.
 - `rule_ya_e` for य/ए.
 - `rule_ksha_chhya` for क्ष/छ्य.
 - `rule_gya_gyan` for ज्ञ/gya variants.
@@ -179,7 +186,10 @@ Owned by `src/varna_vinyasa/halanta_ra_ajanta.rs` and its submodules.
 Implemented highlights:
 
 - Halanta numbered subrules: `3(ङ)-1,2,3,4`.
-- Ajanta numbered subrules: `3(ङ)-अजन्त-1..8`.
+- Ajanta numbered subrules: `3(ङ)-अजन्त-1..8`, backed by
+  `data/rule_inventories/ajanta_halanta.tsv` for exact cited examples.
+- `PS-Saisanik` `3(ग)` loanword-ajanta examples such as `कोट् -> कोट`,
+  `टेलिफोन् -> टेलिफोन`, and `रिजल्ट् -> रिजल्ट`.
 - Dedicated halanta and ajanta functions orchestrated by `rule_halanta`.
 
 Known gaps:

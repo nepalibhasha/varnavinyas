@@ -24,7 +24,10 @@ Lexical plausibility/metadata  -> kosha + shabda
 Surface-specific presentation  -> CLI / LSP / Web / Bindings
 ```
 
-Rules are plain Rust functions, not external JSON/YAML logic. Shared metadata and browser rule labels live outside the rule engine, but production decisions come from code.
+Rules are plain Rust functions plus small schema-checked TSV inventories that
+are compiled into the owning rule modules. There is no external JSON/YAML rule
+engine. Shared metadata and browser rule labels live outside the rule engine,
+but production decisions remain in code and reviewed inventories.
 
 ## Rule Categories
 
@@ -44,6 +47,8 @@ Rules are plain Rust functions, not external JSON/YAML logic. Shared metadata an
 
 - Section 3 `(क)` has broad coverage for many initial, medial, and final hrasva-dirgha classes. Remaining gaps are mostly verb-sensitive classes and semantic classes that need stronger morphology/lexicon signals.
 - Section 3 `(घ)` and `PS-Saisanik` spacing rules live in `parikshak` because they need neighboring tokens, spacing, punctuation, or phrase context.
+- `parikshak` arbitrates overlapping text diagnostics explicitly; see `crates/parikshak/ARBITRATION.md` for the current `kind > specificity > pass > confidence` contract.
+- Section 3 `(ङ)` includes inventory-backed ajanta coverage for the Notice example lists and the `PS-Saisanik` loanword-ajanta examples such as `कोट् -> कोट`.
 - Section 4 is not simply a lexicon lookup. `correction_table.rs` currently contains 81 entries: 38 Section 4-style entries, 42 rule-backed holdouts, and 1 documented stopgap. See `crates/prakriya/README.md`.
 - `तिर्यक्`, comparison spacing, institutional/title splits, and similar school-grammar phrase behavior should be first-class checker rules, not correction-table growth.
 
@@ -78,3 +83,5 @@ Stable diagnostic categories are defined in `crates/parikshak/src/diagnostic.rs`
 - Keep `docs/tests/gold.toml` as the regression ground truth, not as independent linguistic authority.
 - Prefer first-class rules over one-off table entries.
 - Keep broad fallbacks below specific numbered rules and suppress duplicate alternate hits when a specific rule already explains the same correction.
+- Prefer schema-checked inventories with provenance fields for growing cited example lists, especially when the alternative is scattered Rust constants.
+- Treat raw lexicon attestation as plausibility evidence, not proof that a form is a safe correction target.

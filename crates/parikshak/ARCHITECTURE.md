@@ -35,34 +35,42 @@ flowchart TD
     A[Input text]
     B[Tokenize]
     C[check_word / word-level checks]
-    D[Context-sensitive token adjustments]
+    D[Tiryak pass]
     E[Padayog / padabiyog passes]
-    F[Optional style / grammar]
-    G[Punctuation]
-    H[Sort by span]
-    I[Diagnostics]
+    F[Arbitrate overlaps]
+    G[Context diagnostics]
+    H[Optional style / grammar]
+    I[Arbitrate overlaps]
+    J[Punctuation]
+    K[Sort by span]
+    L[Diagnostics]
 
-    A --> B --> C --> D --> E --> F --> G --> H --> I
+    A --> B --> C --> D --> E --> F --> G --> H --> I --> J --> K --> L
 ```
 
 1. tokenize text into `AnalyzedToken`s
 2. run token-level orthography checks through `check_word`
 3. adjust context-sensitive token cases that need neighboring token context
-4. run text-level padayog/padabiyog passes
-5. optionally run style/grammar heuristic passes
-6. run punctuation diagnostics
-7. filter noop heuristics if disabled
-8. sort diagnostics by span
+4. run `PS-Saisanik` tiryak diagnostics
+5. run text-level padayog/padabiyog passes
+6. arbitrate word/tiryak/padayog overlaps
+7. run context-sensitive diagnostics
+8. optionally run style/grammar heuristic passes
+9. arbitrate overlaps again after late passes
+10. run punctuation diagnostics
+11. filter noop heuristics if disabled
+12. sort diagnostics by span
 
-This keeps the highest-confidence token corrections early and lets later passes
-respect already-blocked spans.
+This keeps high-confidence token corrections early, lets later passes respect
+blocked spans, and makes cross-pass overlap behavior explicit in
+`checker/arbitration.rs`.
 
 ## Token Contract
 
-`check_text_with_options` tokenizes once into `AnalyzedToken`s. New text-level
+`check_text_with_options` tokenizes once into `AnalyzedToken`s. Text-level
 passes should consume that shared token slice instead of re-splitting the source
-string. Existing `whitespace_segments` users are migration targets for the
-tokenize-once refactor.
+string. The old `whitespace_segments` helper has been removed, so new passes
+cannot silently reintroduce the pre-migration path.
 
 The token contract is:
 
@@ -98,6 +106,11 @@ passes in the same pipeline.
 
 - `checker.rs`
   Owns pipeline orchestration and runtime options.
+
+- `checker/arbitration.rs`
+  Owns private diagnostic overlap arbitration. Current precedence is
+  `kind > specificity > pass > confidence`, with a composite padayog exception
+  for broader rewrites that already include the nested correction.
 
 - `checker/word_level.rs`
   Owns token-level integration with `prakriya` and `kosha`.
@@ -185,6 +198,28 @@ reflected in:
 - `web/css/style.css`
 - any smoke tests that assume the category set
 
+## Arbitration Contract
+
+`parikshak` currently uses both legacy `blocked_spans` and explicit arbitration.
+`blocked_spans` prevents later passes from proposing obvious overlaps, while
+`checker/arbitration.rs` resolves candidates that still collide after pass
+execution.
+
+The public contract is documented in [`ARBITRATION.md`](./ARBITRATION.md). The
+important current rules are:
+
+- non-overlapping diagnostics survive together
+- for overlapping diagnostics, precedence is `kind > specificity > pass > confidence`
+- same-span duplicate corrections merge alternate reasons instead of surfacing
+  duplicate primary diagnostics
+- broader padayog rewrites can suppress a nested diagnostic only when the
+  broader replacement already contains the nested correction
+- punctuation is appended after the final resolver today, so punctuation overlap
+  arbitration remains future work
+
+Any change to these rules should add focused arbitration tests and run the
+corpus snapshot gate.
+
 ## Design Principles
 
 - Prefer explicit passes over generic rule frameworks.
@@ -192,3 +227,5 @@ reflected in:
 - Keep heuristic suggestions conservative and easy to disable.
 - Treat token-level and text-level correctness as separate concerns.
 - Preserve stable outward-facing diagnostic codes.
+- Use corpus snapshots to verify that large text-pipeline refactors are
+  behaviorally neutral unless a reviewed diff says otherwise.

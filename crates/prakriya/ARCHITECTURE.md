@@ -34,7 +34,7 @@ presentation-facing shared model, not part of the core derivation state.
 flowchart TD
     A[Input token]
     B[Correction table lookup]
-    C[Pattern-rule collection]
+    C[Pattern-rule + inventory collection]
     D[Priority sort + dedupe]
     E[Choose winner]
     F[Return Prakriya]
@@ -43,7 +43,7 @@ flowchart TD
 ```
 
 1. authoritative correction-table lookup
-2. pattern-rule collection from the registry
+2. pattern-rule and compiled-inventory collection from the registry
 3. priority sort and equivalent-hit deduplication
 4. choose the top hit as the production correction
 5. if nothing fires, return the input as already correct
@@ -53,6 +53,10 @@ single-winner behavior of `derive()`.
 
 This design keeps correction behavior deterministic while enabling callers to
 show alternate applicable reasons.
+
+Rule inventories under `data/rule_inventories/` are not a separate rule engine.
+They are parsed and validated by the rule modules that own them, then exposed
+through the same `RuleHit` path as normal pattern functions.
 
 ### Example
 
@@ -102,6 +106,9 @@ src/
   analysis.rs       word analysis
   explanation.rs    outward-facing reason model
   presentation.rs   serializable DTOs
+
+data/rule_inventories/
+  *.tsv             cited inventories compiled into specific rule modules
 ```
 
 - `varna_vinyasa/`

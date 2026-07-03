@@ -679,8 +679,8 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "अध्ययन",
                 rule: Rule::Vyakaran("kosha"),
-                // Temporary stopgap: this is tracked in docs/CORRECTION_TABLE_AUDIT.md
-                // until we replace it with direct source support or a rule-backed path.
+                // Temporary stopgap: this is tracked in the correction-table audit in
+                // crates/prakriya/README.md until direct source support or a rule-backed path exists.
                 description: "शब्दकोशमा अध्ययन मात्र छ; अध्यन रूप भेटिँदैन",
             },
         ),

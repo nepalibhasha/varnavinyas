@@ -23,6 +23,8 @@ Supporting coverage and audit docs
 
 - `crates/prakriya/README.md` for token-level rule coverage and correction-table audit notes
 - `crates/parikshak/README.md` for text-level `(घ)` and `तिर्यक्` coverage notes
+- `data/rule_inventories/*.tsv` for reviewed, provenance-carrying rule inventories compiled into rule modules
+- `data/lexicon_overrides.tsv` for reviewed lexicon-tier overrides that keep raw attestation from becoming an unsafe correction target
 
 Policy
 
@@ -45,6 +47,13 @@ Policy
 8. Common-editorial orthography mode is not frequency-based. Only reviewed
    common-vs-strict forms in the curated checker registry may be downgraded
    from `Error` to `Variant`; unreviewed rule hits remain errors.
+9. Raw lexicon attestation is not enough to make a form a safe correction
+   target. When a rule uses lexical validation for a proposed output, prefer
+   `kosha::is_correction_target()` unless the rule has a stronger source-backed
+   reason to accept any attested form.
+10. Growing source example lists should move toward schema-checked TSV
+    inventories with mandatory source and review-status fields instead of
+    scattered Rust constants.
 
 Current conflict resolutions
 
@@ -88,6 +97,10 @@ Current conflict resolutions
   - `PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md` adds exceptions whose word-final इ is conventionally dirgha: `श्रेणी`, `युवती`, `सूची`, `अञ्जली` / `श्रद्धाञ्जली`, `आवली` / `शब्दावली`, `औषधी`.
   - current policy: prefer the `PS-Saisanik...` dirgha exceptions; these forms must not be normalized to final hrasva.
   - current implementation: explicit `PS_FINAL_DIRGHA_EXCEPTIONS` inventory in `crates/prakriya/src/varna_vinyasa/hrasva_dirgha/helpers.rs`
+- loanword-ajanta (`आगन्तुक` words pronounced halanta)
+  - `PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md` ३(ग) explicitly says loanwords pronounced halanta are written ajanta, with examples such as `कोट`, `टेलिफोन`, `कम्प्युटर`, `रिजल्ट`, `सिमेन्ट`, `बल्ब`, and `फिल्ड`.
+  - current policy: implement the explicit PS examples as reviewed ajanta corrections, but do not generalize by "strip terminal halanta if the stripped form is attested" because verb roots and other legitimate halanta forms can be false positives.
+  - current implementation: `data/rule_inventories/ajanta_halanta.tsv` consumed by `crates/prakriya/src/varna_vinyasa/halanta_ra_ajanta/ajanta.rs`; context-free checker diagnostics suppress ambiguous verb-root ajanta examples in `crates/parikshak/src/checker/word_level.rs`.
 - `श`-initial / `श`-bearing proper names and surnames
   - `Notices-pages-77-99.md` and broad तद्भव/आगन्तुक श/ष/स normalization can otherwise suggest स-forms for common proper names.
   - `PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md` examples preserve forms such as `शेर्पा`; current local policy treats reviewed proper names/surnames as lexically protected even when a broad sibilant rule would otherwise apply.

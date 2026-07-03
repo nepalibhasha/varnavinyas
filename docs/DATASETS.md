@@ -30,11 +30,11 @@ CI regression gate
 
 ### Current Fixture Counts
 
-As of 2026-05-01:
+As of 2026-07-03:
 
 | File | Records |
 |---|---:|
-| `docs/tests/gold.toml` | 103 total records, including 47 `[[shuddha_table]]` records |
+| `docs/tests/gold.toml` | 110 total records, including 47 `[[shuddha_table]]` records and 8 `[[halanta]]` records |
 | `docs/tests/needs_review.toml` | 21 records |
 | `docs/tests/grammar_sentences.toml` | 7 records |
 | `docs/tests/morph_gold.toml` | 22 records |
@@ -57,6 +57,15 @@ As of 2026-05-01:
     *   Surface-form lexicon used to build the fast containment index for spell-checking.
     *   Current scale: ~207k entries.
 
+*   **`data/lexicon_overrides.tsv`**
+    *   Reviewed quality-tier overrides for forms whose raw lexical attestation is not enough to make them safe correction targets.
+    *   Used by `kosha::lexicon_tier()` and `kosha::is_correction_target()`.
+
+*   **`data/rule_inventories/*.tsv`**
+    *   Schema-checked rule inventories compiled into specific rule modules.
+    *   Current pilots include `ajanta_halanta.tsv` and `ba_va_ps_sanskrit.tsv`.
+    *   Rows must include source and review-status provenance and are validated by parser tests in the owning rule modules.
+
 ## Lexicon Provenance
 
 `data/words.txt` and `data/headwords.tsv` are derived from the Sabdasakha dictionary database, whose Nepali lexicon is anchored in:
@@ -68,6 +77,7 @@ Usage in Varnavinyas:
 
 1.  `words.txt` powers the compiled FST for fast existence checks.
 2.  `headwords.tsv` provides headword-level metadata (POS/origin-tag parsing).
+3.  `lexicon_overrides.tsv` marks reviewed forms that are attested but unsafe as generic correction outputs.
 
 ## Provenance Policy
 

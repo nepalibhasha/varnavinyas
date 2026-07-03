@@ -60,10 +60,12 @@ flowchart LR
   - lexicon lookup
   - headword metadata
   - compile-time lexical assets
+  - reviewed lexicon tiers for correction-target safety
 
 - `crates/prakriya`
   - token-level orthography engine
   - Academy-aligned rule families under `src/varna_vinyasa/`
+  - schema-checked rule inventories compiled into owning rule modules where cited example lists are growing
   - later cleanup rules under `src/usage_fixes/`
   - runtime rule dispatch in `src/runtime.rs`
   - shared outward-facing explanation model in `src/explanation.rs`
@@ -76,6 +78,7 @@ flowchart LR
   - tokenization
   - token-level integration with `prakriya`
   - padayog/padabiyog passes
+  - span-overlap arbitration for text diagnostics
   - punctuation integration
   - optional grammar/style passes
   - stable outward-facing `category_code` contract
@@ -138,6 +141,10 @@ Important boundary:
 
 If a rule transforms one token into another token, it generally belongs in `prakriya`.
 If a rule needs neighboring tokens, spacing, punctuation context, or sentence-level heuristics, it generally belongs in `parikshak`.
+
+`parikshak` also owns text-diagnostic arbitration. The current resolver contract
+is documented in `crates/parikshak/ARBITRATION.md` and uses `kind >
+specificity > pass > confidence` for overlapping candidates.
 
 ## Main Correction Pipeline
 

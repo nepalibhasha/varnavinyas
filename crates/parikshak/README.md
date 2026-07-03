@@ -94,6 +94,8 @@ Presentation        -> CLI / web / LSP / bindings
 - It should preserve distinctions between hard errors, variants, and heuristic suggestions.
 - `DiagnosticReason` shares the same outward-facing `Explanation` shape used by `prakriya::WordAnalysis`.
 - `category_code` is a stable contract used across CLI, web, LSP, and bindings.
+- Text-level overlap arbitration is documented in [`ARBITRATION.md`](./ARBITRATION.md). Current precedence is `kind > specificity > pass > confidence`, with composite padayog rewrites allowed to subsume nested diagnostics only when the broader replacement already includes the nested correction.
+- Shared tokenization is the expected path for text-level passes; new passes should consume `AnalyzedToken`s instead of doing independent whitespace splitting.
 
 ## Text-Level Rule Coverage
 
@@ -134,7 +136,24 @@ Known gaps:
 - `3(घ)-पदवियोग-१,५,८,११,१२,१३` remain broad/context-sensitive and are not safe as standalone rewrites.
 - `सरह` remains notice-only evidence in the local sources and is not part of the current `PS-Saisanik` comparison override.
 - `थरी` remains notice-backed only in the current local source set.
-- Punctuation-attached token handling and broader `PS-Saisanik` inventories need wider regression coverage.
+- Most token-window passes now work across attached punctuation because they share tokenizer spans; exact literal phrase rewrites may still need punctuation-specific coverage.
+- Broader `PS-Saisanik` inventories need wider regression coverage before broad expansion.
+
+## Regression Gates
+
+Use the corpus snapshot when changing tokenization, pass ordering, arbitration,
+or broad checker fallbacks:
+
+```bash
+cargo test -p varnavinyas-parikshak --test corpus_snapshot -q
+```
+
+If a behavior change is intentional, inspect the snapshot diff line-by-line and
+then refresh with:
+
+```bash
+VARNAVINYAS_UPDATE_CORPUS_SNAPSHOT=1 cargo test -p varnavinyas-parikshak --test corpus_snapshot -q
+```
 
 ### `PS-Saisanik` Tiryak
 

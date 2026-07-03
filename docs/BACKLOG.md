@@ -1,6 +1,6 @@
 # Backlog
 
-Last reviewed: 2026-05-01
+Last reviewed: 2026-07-03
 
 This backlog is aligned against:
 
@@ -15,8 +15,11 @@ The source policy remains: prefer explicit Academy rules, prefer `PS-Saisanik...
 
 - The previous “Next 4-8 Weeks” window is expired.
 - Current state now lives here instead of in a separate status page.
-- `docs/tests/gold.toml` now has 103 fixture entries, not the older 91-entry shape.
+- `docs/tests/gold.toml` now has 110 fixture entries, not the older 91-entry shape.
 - The old `अध्यन -> अध्ययन` implementation item is no longer open as an implementation bug: it exists in `docs/tests/gold.toml`, `crates/prakriya/src/correction_table.rs`, and the CLI flags it. The remaining work is source/audit cleanup because it is a stopgap, not a direct niyama derivation.
+- `parikshak` now has a corpus snapshot regression gate and a documented arbitration contract in `crates/parikshak/ARBITRATION.md`.
+- `kosha` now has lazy lexicon-tier overrides for attested forms that are unsafe as correction targets.
+- Growing cited rule example lists have TSV inventory pilots under `data/rule_inventories/`.
 
 ## Current Implementation Snapshot
 
@@ -27,6 +30,7 @@ The source policy remains: prefer explicit Academy rules, prefer `PS-Saisanik...
 - `lekhya` punctuation diagnostics are stable.
 - `sandhi`, `vyakaran`, and `samasa` are active but still need broader eval coverage before being treated as mature language analysis layers.
 - User-facing surfaces are active: CLI, web app, LSP, WASM, Python, C, and UniFFI bindings.
+- No new user-facing diagnostic category codes were added by the arbitration, lexicon-tier, or ajanta-inventory work.
 
 ## Near-Term Priorities
 
@@ -84,7 +88,7 @@ Keep `crates/prakriya/src/correction_table.rs` from becoming a second rule engin
 
 - [ ] Section 3(ख): broaden chandrabindu/shirbindu/panchham coverage, especially non-tatsam over-Sanskritized variants where pronunciation-based inference is currently conservative.
 - [ ] Section 3(ग): harden exception handling for `श/ष/स`, `ब/व`, `य/ए`, `ऋ/रि`, `क्ष/छ्य`, and `ज्ञ/ग्या/ग्याँ` so rule fallbacks do not flag valid inflected or derivational forms.
-- [ ] Section 3(ङ): continue halanta/ajanta context handling for ambiguous imperative-like forms and productive verb paradigms.
+- [ ] Section 3(ङ): continue halanta/ajanta context handling for ambiguous imperative-like forms and productive verb paradigms; PS loanword-ajanta example coverage is implemented through `data/rule_inventories/ajanta_halanta.tsv`, but broad origin-gated generalization remains deferred.
 - [ ] Section 5: keep punctuation stable, but add broader positive/negative examples from the notice document for quote, slash, abbreviation, hyphen, ellipsis, and spacing behavior.
 - [ ] Section 3(च): decide whether lipi-specific guidance needs a dedicated module and crate-level coverage note or should remain scattered across existing utilities.
 
