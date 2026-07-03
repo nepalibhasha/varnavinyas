@@ -9,9 +9,8 @@ use varnavinyas_shabda::has_supported_analysis;
 use crate::diagnostic::{Diagnostic, DiagnosticCategory};
 use crate::tokenizer::AnalyzedToken;
 
-use super::common::{
-    is_devanagari_word, is_numeric_segment, is_word_boundary, overlaps_existing_span,
-};
+use super::arbitration::overlaps_existing_span;
+use super::common::{is_devanagari_word, is_numeric_segment, is_word_boundary};
 use super::padayog_rules::PADAYOG_PADABIYOG_RULES;
 use super::particles::add_nipat_split_diagnostics;
 

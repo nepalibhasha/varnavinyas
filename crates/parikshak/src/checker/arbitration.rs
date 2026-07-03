@@ -119,6 +119,20 @@ pub(super) fn resolve_diagnostic_overlaps(diagnostics: &mut Vec<Diagnostic>) {
     merge_same_replacement_diagnostics(diagnostics);
 }
 
+pub(super) fn overlaps_existing_span(
+    diagnostics: &[Diagnostic],
+    candidate: (usize, usize),
+) -> bool {
+    diagnostics
+        .iter()
+        .filter(|diagnostic| blocks_overlapping_candidate(Candidate::new(diagnostic)))
+        .any(|diagnostic| diagnostic.span.0 < candidate.1 && candidate.0 < diagnostic.span.1)
+}
+
+fn blocks_overlapping_candidate(candidate: Candidate<'_>) -> bool {
+    candidate.precedence_tuple().0 > kind_rank(DiagnosticKind::Ambiguous)
+}
+
 fn infer_pass(diagnostic: &Diagnostic) -> DiagnosticPass {
     match diagnostic.rule {
         Rule::ChihnaNiyam(_) => DiagnosticPass::Punctuation,

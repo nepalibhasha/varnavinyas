@@ -7,7 +7,7 @@ use varnavinyas_shabda::has_supported_analysis;
 use crate::diagnostic::{Diagnostic, DiagnosticCategory};
 use crate::tokenizer::{AnalyzedToken, tokenize_analyzed};
 
-use super::common::overlaps_existing_span;
+use super::arbitration::overlaps_existing_span;
 
 const RULE_CODE_KA: &str = "PS-Saisanik-7(क)-तिर्यक्";
 const RULE_CODE_KHA: &str = "PS-Saisanik-7(ख)-तिर्यक्";

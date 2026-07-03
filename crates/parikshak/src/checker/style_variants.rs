@@ -5,7 +5,8 @@ use varnavinyas_prakriya::{DiagnosticKind, Rule};
 use crate::diagnostic::{Diagnostic, DiagnosticCategory};
 use crate::tokenizer::AnalyzedToken;
 
-use super::common::{is_word_boundary, overlaps_existing_span};
+use super::arbitration::overlaps_existing_span;
+use super::common::is_word_boundary;
 
 const INFERRED_KO_KA_RULE_CODE: &str = "section4-phrase-style-inferred-ko-ka";
 const INFERRED_KO_KA_FOLLOWERS: &[(&str, &str)] = &[

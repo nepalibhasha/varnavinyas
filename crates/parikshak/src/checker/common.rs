@@ -1,6 +1,3 @@
-use crate::diagnostic::Diagnostic;
-use varnavinyas_prakriya::DiagnosticKind;
-
 pub(super) fn is_devanagari_word(s: &str) -> bool {
     !s.is_empty()
         && s.chars().all(|c| {
@@ -22,20 +19,6 @@ pub(super) fn is_numeric_segment(s: &str) -> bool {
         return false;
     }
     saw_digit
-}
-
-pub(super) fn overlaps_existing_span(
-    diagnostics: &[Diagnostic],
-    candidate: (usize, usize),
-) -> bool {
-    diagnostics
-        .iter()
-        .filter(|d| !is_non_blocking_diagnostic(d))
-        .any(|d| d.span.0 < candidate.1 && candidate.0 < d.span.1)
-}
-
-fn is_non_blocking_diagnostic(d: &Diagnostic) -> bool {
-    matches!(d.kind, DiagnosticKind::Ambiguous)
 }
 
 pub(super) fn is_word_boundary(text: &str, start: usize, end: usize) -> bool {

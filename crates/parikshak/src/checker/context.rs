@@ -6,7 +6,7 @@ use varnavinyas_prakriya::{DiagnosticKind, Rule};
 use crate::diagnostic::{Diagnostic, DiagnosticCategory};
 use crate::tokenizer::AnalyzedToken;
 
-use super::common::overlaps_existing_span;
+use super::arbitration::overlaps_existing_span;
 
 #[derive(Debug, Clone, Copy)]
 struct SentenceSpan {
