@@ -238,6 +238,8 @@ pub fn check_text_with_options(text: &str, options: CheckOptions) -> Vec<Diagnos
         add_grammar_diagnostics(&tokens, &blocked_spans, &mut diagnostics);
     }
 
+    resolve_diagnostic_overlaps(&mut diagnostics);
+
     // Punctuation checks
     let punctuation_kind = match options.punctuation_mode {
         PunctuationMode::Strict => DiagnosticKind::Error,
