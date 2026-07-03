@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use varnavinyas_prakriya::{DiagnosticKind, Rule};
 
-use crate::diagnostic::Diagnostic;
+use crate::diagnostic::{Diagnostic, DiagnosticReason};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum DiagnosticPass {
@@ -115,6 +115,8 @@ pub(super) fn resolve_diagnostic_overlaps(diagnostics: &mut Vec<Diagnostic>) {
 
         true
     });
+
+    merge_same_replacement_diagnostics(diagnostics);
 }
 
 fn infer_pass(diagnostic: &Diagnostic) -> DiagnosticPass {
@@ -160,6 +162,81 @@ fn confidence_rank(confidence: f32) -> u16 {
     (confidence.clamp(0.0, 1.0) * 1000.0).round() as u16
 }
 
+fn merge_same_replacement_diagnostics(diagnostics: &mut Vec<Diagnostic>) {
+    let mut merged = Vec::with_capacity(diagnostics.len());
+
+    for diagnostic in diagnostics.drain(..) {
+        if let Some(existing) = merged
+            .iter_mut()
+            .find(|existing| has_same_replacement(existing, &diagnostic))
+        {
+            merge_duplicate_into(existing, diagnostic);
+        } else {
+            merged.push(diagnostic);
+        }
+    }
+
+    *diagnostics = merged;
+}
+
+fn has_same_replacement(left: &Diagnostic, right: &Diagnostic) -> bool {
+    left.span == right.span && left.correction == right.correction
+}
+
+fn merge_duplicate_into(existing: &mut Diagnostic, duplicate: Diagnostic) {
+    if Candidate::new(&duplicate).precedence_tuple() > Candidate::new(existing).precedence_tuple() {
+        let old_primary = std::mem::replace(existing, duplicate);
+        push_primary_as_alternate(existing, &old_primary);
+        for reason in old_primary.alternate_reasons {
+            push_unique_reason(existing, reason);
+        }
+    } else {
+        push_primary_as_alternate(existing, &duplicate);
+        for reason in duplicate.alternate_reasons {
+            push_unique_reason(existing, reason);
+        }
+    }
+}
+
+fn push_primary_as_alternate(diagnostic: &mut Diagnostic, alternate: &Diagnostic) {
+    push_unique_reason(
+        diagnostic,
+        DiagnosticReason {
+            rule: alternate.rule,
+            explanation: alternate.explanation.clone(),
+            correction: Some(alternate.correction.clone()),
+            category: None,
+        },
+    );
+}
+
+fn push_unique_reason(diagnostic: &mut Diagnostic, reason: DiagnosticReason) {
+    if reason_matches_primary(diagnostic, &reason) {
+        return;
+    }
+    if diagnostic
+        .alternate_reasons
+        .iter()
+        .any(|existing| same_reason(existing, &reason))
+    {
+        return;
+    }
+    diagnostic.alternate_reasons.push(reason);
+}
+
+fn reason_matches_primary(diagnostic: &Diagnostic, reason: &DiagnosticReason) -> bool {
+    diagnostic.rule == reason.rule
+        && diagnostic.explanation == reason.explanation
+        && reason.correction.as_deref() == Some(diagnostic.correction.as_str())
+}
+
+fn same_reason(left: &DiagnosticReason, right: &DiagnosticReason) -> bool {
+    left.rule == right.rule
+        && left.explanation == right.explanation
+        && left.correction == right.correction
+        && left.category == right.category
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -171,16 +248,28 @@ mod tests {
         kind: DiagnosticKind,
         incorrect: &str,
     ) -> Diagnostic {
+        diagnostic_with(span, rule, kind, incorrect, "y", "x", Vec::new())
+    }
+
+    fn diagnostic_with(
+        span: (usize, usize),
+        rule: Rule,
+        kind: DiagnosticKind,
+        incorrect: &str,
+        correction: &str,
+        explanation: &str,
+        alternate_reasons: Vec<DiagnosticReason>,
+    ) -> Diagnostic {
         Diagnostic {
             span,
             incorrect: incorrect.to_string(),
-            correction: "y".to_string(),
+            correction: correction.to_string(),
             rule,
-            explanation: "x".to_string(),
+            explanation: explanation.to_string(),
             category: DiagnosticCategory::ShuddhaTable,
             kind,
             confidence: 1.0,
-            alternate_reasons: Vec::new(),
+            alternate_reasons,
         }
     }
 
@@ -233,23 +322,105 @@ mod tests {
     #[test]
     fn ambiguous_padayog_candidate_does_not_suppress_same_span_error() {
         let mut diagnostics = vec![
-            diagnostic(
+            diagnostic_with(
                 (0, 6),
                 Rule::VarnaVinyasNiyam("3(घ)"),
                 DiagnosticKind::Ambiguous,
                 "padayog",
+                "padayog-correct",
+                "x",
+                Vec::new(),
             ),
-            diagnostic(
+            diagnostic_with(
                 (0, 6),
                 Rule::ShuddhaAshuddha("Section 4"),
                 DiagnosticKind::Error,
                 "same-span",
+                "word-correct",
+                "x",
+                Vec::new(),
             ),
         ];
 
         resolve_diagnostic_overlaps(&mut diagnostics);
 
         assert_eq!(diagnostics.len(), 2);
+    }
+
+    #[test]
+    fn same_span_same_correction_merges_duplicate_as_alternate_reason() {
+        let mut diagnostics = vec![
+            diagnostic_with(
+                (0, 6),
+                Rule::ShuddhaAshuddha("Section 4"),
+                DiagnosticKind::Error,
+                "primary",
+                "correct",
+                "primary explanation",
+                Vec::new(),
+            ),
+            diagnostic_with(
+                (0, 6),
+                Rule::Vyakaran("samasa-heuristic"),
+                DiagnosticKind::Variant,
+                "duplicate",
+                "correct",
+                "secondary explanation",
+                Vec::new(),
+            ),
+        ];
+
+        resolve_diagnostic_overlaps(&mut diagnostics);
+
+        assert_eq!(diagnostics.len(), 1);
+        assert_eq!(diagnostics[0].rule, Rule::ShuddhaAshuddha("Section 4"));
+        assert_eq!(diagnostics[0].alternate_reasons.len(), 1);
+        assert_eq!(
+            diagnostics[0].alternate_reasons[0].rule,
+            Rule::Vyakaran("samasa-heuristic")
+        );
+        assert_eq!(
+            diagnostics[0].alternate_reasons[0].explanation,
+            "secondary explanation"
+        );
+    }
+
+    #[test]
+    fn same_span_same_correction_prefers_higher_precedence_primary() {
+        let mut diagnostics = vec![
+            Diagnostic {
+                confidence: 0.55,
+                ..diagnostic_with(
+                    (0, 6),
+                    Rule::Vyakaran("samasa-heuristic"),
+                    DiagnosticKind::Variant,
+                    "weaker",
+                    "correct",
+                    "weaker explanation",
+                    Vec::new(),
+                )
+            },
+            diagnostic_with(
+                (0, 6),
+                Rule::ShuddhaAshuddha("Section 4"),
+                DiagnosticKind::Error,
+                "stronger",
+                "correct",
+                "stronger explanation",
+                Vec::new(),
+            ),
+        ];
+
+        resolve_diagnostic_overlaps(&mut diagnostics);
+
+        assert_eq!(diagnostics.len(), 1);
+        assert_eq!(diagnostics[0].rule, Rule::ShuddhaAshuddha("Section 4"));
+        assert_eq!(diagnostics[0].incorrect, "stronger");
+        assert_eq!(diagnostics[0].alternate_reasons.len(), 1);
+        assert_eq!(
+            diagnostics[0].alternate_reasons[0].rule,
+            Rule::Vyakaran("samasa-heuristic")
+        );
     }
 
     #[test]
