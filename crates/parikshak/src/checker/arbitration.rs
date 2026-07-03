@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 use varnavinyas_prakriya::{DiagnosticKind, Rule};
 
 use crate::diagnostic::{Diagnostic, DiagnosticReason};
@@ -71,52 +69,98 @@ impl<'a> Candidate<'a> {
     fn precedence_tuple(self) -> (u8, u8, u8, u16) {
         (
             kind_rank(self.diagnostic.kind),
-            self.pass.rank(),
             self.specificity.rank(),
+            self.pass.rank(),
             confidence_rank(self.diagnostic.confidence),
         )
     }
 }
 
 pub(super) fn resolve_diagnostic_overlaps(diagnostics: &mut Vec<Diagnostic>) {
+    resolve_padayog_overlaps(diagnostics);
+    merge_same_replacement_diagnostics(diagnostics);
+}
+
+fn resolve_padayog_overlaps(diagnostics: &mut Vec<Diagnostic>) {
+    let mut remove = vec![false; diagnostics.len()];
+
+    for i in 0..diagnostics.len() {
+        if remove[i] {
+            continue;
+        }
+        for j in (i + 1)..diagnostics.len() {
+            if remove[j] {
+                continue;
+            }
+
+            let left = Candidate::new(&diagnostics[i]);
+            let right = Candidate::new(&diagnostics[j]);
+            let Some(winner) = same_span_padayog_winner(left, right) else {
+                continue;
+            };
+
+            if winner == 0 {
+                remove[j] = true;
+            } else {
+                remove[i] = true;
+                break;
+            }
+        }
+    }
+
+    retain_by_remove_mask(diagnostics, &remove);
+
     let padayog_spans: Vec<(usize, usize)> = diagnostics
         .iter()
-        .filter(|d| Candidate::new(d).is_padayog())
-        .map(|d| d.span)
-        .collect();
-    let same_span_non_ambiguous_padayog: HashSet<(usize, usize)> = diagnostics
-        .iter()
-        .filter(|d| {
-            let candidate = Candidate::new(d);
-            candidate.is_padayog()
-                && candidate.precedence_tuple().0 > kind_rank(DiagnosticKind::Ambiguous)
+        .filter(|diagnostic| {
+            let candidate = Candidate::new(diagnostic);
+            candidate.is_padayog() && !is_ambiguous(candidate)
         })
-        .map(|d| d.span)
+        .map(|diagnostic| diagnostic.span)
         .collect();
 
-    diagnostics.retain(|diag| {
-        let candidate = Candidate::new(diag);
-        let nested = padayog_spans.iter().any(|&(start, end)| {
-            diag.span != (start, end) && start <= diag.span.0 && diag.span.1 <= end
-        });
-        if nested {
-            return false;
-        }
-
-        if same_span_non_ambiguous_padayog.contains(&diag.span) && !candidate.is_padayog() {
-            return false;
-        }
-
-        if candidate.precedence_tuple().0 <= kind_rank(DiagnosticKind::Ambiguous)
-            && same_span_non_ambiguous_padayog.contains(&diag.span)
-        {
-            return false;
-        }
-
-        true
+    diagnostics.retain(|diagnostic| {
+        !padayog_spans
+            .iter()
+            .any(|&span| diagnostic.span != span && contains_span(span, diagnostic.span))
     });
+}
 
-    merge_same_replacement_diagnostics(diagnostics);
+fn retain_by_remove_mask(diagnostics: &mut Vec<Diagnostic>, remove: &[bool]) {
+    let mut idx = 0;
+    diagnostics.retain(|_| {
+        let keep = !remove[idx];
+        idx += 1;
+        keep
+    });
+}
+
+fn same_span_padayog_winner(left: Candidate<'_>, right: Candidate<'_>) -> Option<usize> {
+    if !(left.is_padayog() || right.is_padayog()) {
+        return None;
+    }
+
+    if left.diagnostic.span == right.diagnostic.span {
+        return higher_precedence_index(left, right);
+    }
+
+    None
+}
+
+fn higher_precedence_index(left: Candidate<'_>, right: Candidate<'_>) -> Option<usize> {
+    match left.precedence_tuple().cmp(&right.precedence_tuple()) {
+        std::cmp::Ordering::Greater => Some(0),
+        std::cmp::Ordering::Less => Some(1),
+        std::cmp::Ordering::Equal => None,
+    }
+}
+
+fn is_ambiguous(candidate: Candidate<'_>) -> bool {
+    candidate.precedence_tuple().0 <= kind_rank(DiagnosticKind::Ambiguous)
+}
+
+fn contains_span(outer: (usize, usize), inner: (usize, usize)) -> bool {
+    outer != inner && outer.0 <= inner.0 && inner.1 <= outer.1
 }
 
 pub(super) fn overlaps_existing_span(
@@ -154,10 +198,30 @@ fn infer_specificity(diagnostic: &Diagnostic) -> Specificity {
         Rule::Vyakaran("section4-phrase-style-inferred-ko-ka") => Specificity::Generalized,
         Rule::Vyakaran(code) if is_tiryak_rule(code) => Specificity::Exact,
         Rule::Vyakaran(_) => Specificity::Heuristic,
-        Rule::VarnaVinyasNiyam("3(घ)") => Specificity::Generalized,
+        Rule::VarnaVinyasNiyam("3(घ)") => infer_padayog_specificity(diagnostic),
         Rule::VarnaVinyasNiyam(code) if code.contains("-context-") => Specificity::CuratedInventory,
-        Rule::VarnaVinyasNiyam(_) => Specificity::Exact,
+        Rule::VarnaVinyasNiyam(code) => infer_varna_vinyas_specificity(code),
     }
+}
+
+fn infer_padayog_specificity(diagnostic: &Diagnostic) -> Specificity {
+    if diagnostic.explanation.contains("पदवियोग (च)") {
+        return Specificity::Exact;
+    }
+    if diagnostic.explanation.starts_with("शैक्षणिक व्याकरण") {
+        return Specificity::CuratedInventory;
+    }
+    Specificity::Generalized
+}
+
+fn infer_varna_vinyas_specificity(code: &str) -> Specificity {
+    if code.contains("-पदान्त") {
+        return Specificity::Exact;
+    }
+    if code.contains("-lex") || code.contains("-PS-Saisanik") || code == "3(ई)" {
+        return Specificity::CuratedInventory;
+    }
+    Specificity::Generalized
 }
 
 fn is_tiryak_rule(code: &str) -> bool {
@@ -288,7 +352,7 @@ mod tests {
     }
 
     #[test]
-    fn removes_diagnostics_nested_inside_padayog_span() {
+    fn padayog_error_suppresses_weaker_nested_variant() {
         let mut diagnostics = vec![
             diagnostic(
                 (0, 12),
@@ -298,8 +362,8 @@ mod tests {
             ),
             diagnostic(
                 (3, 9),
-                Rule::ShuddhaAshuddha("Section 4"),
-                DiagnosticKind::Error,
+                Rule::Vyakaran("section4-phrase-style"),
+                DiagnosticKind::Variant,
                 "nested",
             ),
         ];
@@ -311,7 +375,7 @@ mod tests {
     }
 
     #[test]
-    fn same_span_padayog_error_suppresses_non_padayog_candidate() {
+    fn same_span_word_error_beats_generalized_padayog_candidate() {
         let mut diagnostics = vec![
             diagnostic(
                 (0, 6),
@@ -330,11 +394,57 @@ mod tests {
         resolve_diagnostic_overlaps(&mut diagnostics);
 
         assert_eq!(diagnostics.len(), 1);
-        assert_eq!(diagnostics[0].incorrect, "padayog");
+        assert_eq!(diagnostics[0].incorrect, "same-span");
     }
 
     #[test]
-    fn ambiguous_padayog_candidate_does_not_suppress_same_span_error() {
+    fn exact_padayog_particle_split_beats_generalized_word_candidate() {
+        let mut diagnostics = vec![
+            diagnostic(
+                (20, 24),
+                Rule::ShuddhaAshuddha("Section 4"),
+                DiagnosticKind::Error,
+                "unrelated",
+            ),
+            diagnostic_with(
+                (0, 6),
+                Rule::VarnaVinyasNiyam("3(घ)"),
+                DiagnosticKind::Error,
+                "padayog",
+                "padayog-correct",
+                "शैक्षणिक व्याकरण पदवियोग (च): शब्दाश्रित निपातहरू पदवियोग गरी लेखिन्छन् ।",
+                Vec::new(),
+            ),
+            diagnostic_with(
+                (0, 6),
+                Rule::VarnaVinyasNiyam("3(क)(अ)-5"),
+                DiagnosticKind::Error,
+                "word",
+                "word-correct",
+                "x",
+                Vec::new(),
+            ),
+        ];
+
+        resolve_diagnostic_overlaps(&mut diagnostics);
+
+        assert_eq!(diagnostics.len(), 2);
+        assert!(
+            diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.incorrect == "padayog"),
+            "exact padayog candidate should survive same-span generalized word rule at a nonzero index: {diagnostics:?}"
+        );
+        assert!(
+            diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.incorrect == "unrelated"),
+            "unrelated diagnostic should survive arbitration: {diagnostics:?}"
+        );
+    }
+
+    #[test]
+    fn ambiguous_padayog_candidate_loses_to_same_span_error() {
         let mut diagnostics = vec![
             diagnostic_with(
                 (0, 6),
@@ -358,7 +468,42 @@ mod tests {
 
         resolve_diagnostic_overlaps(&mut diagnostics);
 
+        assert_eq!(diagnostics.len(), 1);
+        assert_eq!(diagnostics[0].incorrect, "same-span");
+    }
+
+    #[test]
+    fn ambiguous_padayog_candidate_does_not_suppress_nested_error() {
+        let mut diagnostics = vec![
+            diagnostic_with(
+                (0, 12),
+                Rule::VarnaVinyasNiyam("3(घ)"),
+                DiagnosticKind::Ambiguous,
+                "padayog",
+                "padayog-correct",
+                "x",
+                Vec::new(),
+            ),
+            diagnostic_with(
+                (3, 9),
+                Rule::ShuddhaAshuddha("Section 4"),
+                DiagnosticKind::Error,
+                "nested",
+                "word-correct",
+                "x",
+                Vec::new(),
+            ),
+        ];
+
+        resolve_diagnostic_overlaps(&mut diagnostics);
+
         assert_eq!(diagnostics.len(), 2);
+        assert!(
+            diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.incorrect == "nested"),
+            "nested error should survive ambiguous padayog candidate: {diagnostics:?}"
+        );
     }
 
     #[test]
@@ -506,16 +651,37 @@ mod tests {
                 Specificity::Heuristic,
                 "grammar",
             ),
+            (
+                Rule::VarnaVinyasNiyam("3(ङ)-पदान्त"),
+                Specificity::Exact,
+                "padanta-halanta",
+            ),
+            (
+                Rule::VarnaVinyasNiyam("3(क)(अ)-5"),
+                Specificity::Generalized,
+                "broad-word-rule",
+            ),
         ];
 
         for (rule, expected, label) in cases {
             let diag = diagnostic((0, 1), rule, DiagnosticKind::Error, label);
             assert_eq!(Candidate::new(&diag).specificity, expected, "{label}");
         }
+
+        let padayog = diagnostic_with(
+            (0, 1),
+            Rule::VarnaVinyasNiyam("3(घ)"),
+            DiagnosticKind::Error,
+            "padayog",
+            "y",
+            "शैक्षणिक व्याकरण पदवियोग (च): शब्दाश्रित निपातहरू पदवियोग गरी लेखिन्छन् ।",
+            Vec::new(),
+        );
+        assert_eq!(Candidate::new(&padayog).specificity, Specificity::Exact);
     }
 
     #[test]
-    fn precedence_tuple_encodes_kind_pass_specificity_confidence() {
+    fn precedence_tuple_encodes_kind_specificity_pass_confidence() {
         let word = diagnostic(
             (0, 1),
             Rule::ShuddhaAshuddha("Section 4"),
