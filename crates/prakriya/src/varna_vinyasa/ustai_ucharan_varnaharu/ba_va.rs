@@ -2,7 +2,22 @@ use crate::model::prakriya::Prakriya;
 use crate::model::rule::Rule;
 use crate::model::step::Step;
 use varnavinyas_akshar::is_matra;
-use varnavinyas_kosha::kosha;
+use varnavinyas_kosha::{Kosha, kosha};
+
+const PS_SANSKRIT_VA_TO_BA_RULE_CODE: &str = "3(ग)(आ)-PS-Saisanik-4(घ)-ब";
+const PS_SANSKRIT_VA_TO_BA_EXACT_OVERRIDES: &[(&str, &str)] = &[
+    ("विन्दु", "बिन्दु"),
+    ("विम्ब", "बिम्ब"),
+    ("वेला", "बेला"),
+    ("कुवेला", "कुबेला"),
+    ("सुवेला", "सुबेला"),
+    ("वार", "बार"),
+    ("आइतवार", "आइतबार"),
+    ("बुधवार", "बुधबार"),
+    ("विना", "बिना"),
+];
+const PS_SANSKRIT_VA_TO_BA_SUPPORTED_REPLACEMENTS: &[(&str, &str)] =
+    &[("विन्दु", "बिन्दु"), ("विम्ब", "बिम्ब"), ("विना", "बिना")];
 
 // Academy 3(ग)(आ): single-position ब/व swap with kosha validation.
 // -----------------------------------------------------------------------------
@@ -13,6 +28,18 @@ pub fn rule_ba_va(input: &str) -> Option<Prakriya> {
         return None;
     }
     let kosha = kosha();
+    if let Some(output) = normalize_ps_sanskrit_va_to_ba(input, kosha) {
+        return Some(Prakriya::corrected(
+            input,
+            &output,
+            vec![Step::new(
+                Rule::VarnaVinyasNiyam(PS_SANSKRIT_VA_TO_BA_RULE_CODE),
+                "शैक्षणिक व्याकरण ४(घ): संस्कृत व् भएका केही शब्द नेपालीमा ब लेखिन्छ",
+                input,
+                &output,
+            )],
+        ));
+    }
     if kosha.contains(input) {
         return None;
     }
@@ -243,4 +270,35 @@ pub fn rule_ba_va(input: &str) -> Option<Prakriya> {
         }
     }
     None
+}
+
+fn normalize_ps_sanskrit_va_to_ba(input: &str, kosha: &Kosha) -> Option<String> {
+    for &(wrong, right) in PS_SANSKRIT_VA_TO_BA_EXACT_OVERRIDES {
+        if input == wrong {
+            return Some(right.to_string());
+        }
+    }
+
+    for &(wrong, right) in PS_SANSKRIT_VA_TO_BA_SUPPORTED_REPLACEMENTS {
+        if !input.contains(wrong) {
+            continue;
+        }
+        let output = input.replacen(wrong, right, 1);
+        if supported_form(&output, kosha) {
+            return Some(output);
+        }
+    }
+
+    if let Some(stem) = input.strip_suffix("वार") {
+        let output = format!("{stem}बार");
+        if supported_form(&output, kosha) {
+            return Some(output);
+        }
+    }
+
+    None
+}
+
+fn supported_form(output: &str, kosha: &Kosha) -> bool {
+    kosha.contains(output) || kosha.lookup(output).is_some()
 }
