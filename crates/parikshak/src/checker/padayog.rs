@@ -59,6 +59,10 @@ fn token_segments<'a>(
         .map(move |token| (token.source_text(text), token.start, token.end))
 }
 
+fn has_whitespace_gap(text: &str, left: (&str, usize, usize), right: (&str, usize, usize)) -> bool {
+    text[left.2..right.1].chars().any(char::is_whitespace)
+}
+
 pub(crate) fn add_padayog_padabiyog_diagnostics(
     text: &str,
     blocked_spans: &mut HashSet<(usize, usize)>,
@@ -143,9 +147,9 @@ pub(crate) fn add_generalized_padayog_padabiyog_diagnostics(
     add_generalized_padabiyog_subrule_12_shirsha_nam_split(text, blocked_spans, diagnostics);
     add_generalized_padabiyog_subrule_13_visheshan_nam_split(text, blocked_spans, diagnostics);
     add_generalized_saishanik_comparison_split(text, tokens, blocked_spans, diagnostics);
-    add_generalized_saishanik_swarup_join(text, blocked_spans, diagnostics);
-    add_generalized_saishanik_middle_name_join(text, blocked_spans, diagnostics);
-    add_generalized_saishanik_ekarthi_join(text, blocked_spans, diagnostics);
+    add_generalized_saishanik_swarup_join(text, tokens, blocked_spans, diagnostics);
+    add_generalized_saishanik_middle_name_join(text, tokens, blocked_spans, diagnostics);
+    add_generalized_saishanik_ekarthi_join(text, tokens, blocked_spans, diagnostics);
     add_generalized_saishanik_namik_kriya_split(text, tokens, blocked_spans, diagnostics);
     add_generalized_saishanik_gari_split(text, tokens, blocked_spans, diagnostics);
     add_generalized_saishanik_jana_split(text, tokens, blocked_spans, diagnostics);
@@ -523,14 +527,18 @@ fn add_generalized_saishanik_comparison_split(
 
 fn add_generalized_saishanik_swarup_join(
     text: &str,
+    tokens: &[AnalyzedToken],
     blocked_spans: &mut HashSet<(usize, usize)>,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
-    let segments = whitespace_segments(text);
+    let segments = token_segments(text, tokens).collect::<Vec<_>>();
 
     for pair in segments.windows(2) {
         let (left, lstart, _) = pair[0];
         let (right, _, rend) = pair[1];
+        if !has_whitespace_gap(text, pair[0], pair[1]) {
+            continue;
+        }
         if !is_devanagari_word(left) || !is_devanagari_word(right) || is_numeric_segment(left) {
             continue;
         }
@@ -733,15 +741,21 @@ fn add_generalized_saishanik_jana_split(
 
 fn add_generalized_saishanik_middle_name_join(
     text: &str,
+    tokens: &[AnalyzedToken],
     blocked_spans: &mut HashSet<(usize, usize)>,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
-    let segments = whitespace_segments(text);
+    let segments = token_segments(text, tokens).collect::<Vec<_>>();
 
     for triple in segments.windows(3) {
         let (left, lstart, _) = triple[0];
         let (middle, _, _) = triple[1];
         let (right, _, rend) = triple[2];
+        if !has_whitespace_gap(text, triple[0], triple[1])
+            || !has_whitespace_gap(text, triple[1], triple[2])
+        {
+            continue;
+        }
         if !is_devanagari_word(left) || !is_devanagari_word(middle) || !is_devanagari_word(right) {
             continue;
         }
@@ -799,14 +813,18 @@ fn add_generalized_saishanik_middle_name_join(
 
 fn add_generalized_saishanik_ekarthi_join(
     text: &str,
+    tokens: &[AnalyzedToken],
     blocked_spans: &mut HashSet<(usize, usize)>,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
-    let segments = whitespace_segments(text);
+    let segments = token_segments(text, tokens).collect::<Vec<_>>();
 
     for pair in segments.windows(2) {
         let (left, lstart, _) = pair[0];
         let (right, _, rend) = pair[1];
+        if !has_whitespace_gap(text, pair[0], pair[1]) {
+            continue;
+        }
         if !is_devanagari_word(left) || !is_devanagari_word(right) || is_numeric_segment(left) {
             continue;
         }
