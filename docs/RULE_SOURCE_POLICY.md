@@ -1,6 +1,6 @@
 # Rule Source Policy
 
-> **Last reviewed**: 2026-05-01
+> **Last reviewed**: 2026-07-03
 
 This project treats the two source markdowns under `docs/` as normative linguistic references.
 
@@ -66,13 +66,28 @@ Current conflict resolutions
 - `सरह`
   - `सरह` appears in `Notices-pages-77-99.md` with the older join-style comparison family.
   - `PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md` does not currently list `सरह` in the explicit split family (`जस्तो/जस्तै/जत्रो/जसरी` only).
-  - current policy: treat `सरह` as notice-only evidence for now, not as part of the school-grammar override set
-  - current implementation status: unresolved policy item; do not silently fold it into the `PS-Saisanik` comparison rule
+  - current policy: keep the Notice-default join behavior for `सरह`; do not fold it into the `PS-Saisanik` split comparison rule unless a future source explicitly adds it there.
+  - current implementation: `crates/parikshak/src/checker/padayog_rules.rs` (`बुद्धि सरह -> बुद्धिसरह`), pinned by `sarah_join_rule_still_applies`.
 - honorific `ज्यू` vs `ज्यु`
   - `PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md` explicitly uses `ज्यू`
   - current policy: `ज्यू` is the preferred honorific suffix form for generalized `पदयोग-२` joining
   - caveat: `ज्यु` is still an attested lexical noun in the lexicon, so normalization to `ज्यू` is only applied in honorific-suffix context after a plausible host word; it is not a blanket word-level rewrite
   - current implementation: `crates/parikshak/src/checker/padayog.rs`
+- `विम्ब` / `बिम्ब` family
+  - `Notices-pages-77-99.md` uses `विम्ब` in पञ्चम-वर्ण and `ब` examples.
+  - `PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md` ४(घ) explicitly lists Sanskrit-व् words that take `ब` in Nepali: `बिन्दु`, `बिम्ब`, `बेला`, `कुबेला`, `सुबेला`, `बार`, `आइतबार`, `बुधबार`, `बिना`.
+  - current policy: prefer the `PS-Saisanik...` ब-forms for this listed family, even when raw lexicon assets contain both ब/व variants.
+  - current implementation status: pending explicit `ba_va.rs` rule/guard.
+- `बधू` / `वधू`
+  - `Notices-pages-77-99.md` lists `बधू` under a broad द/ध/ल/ह-before-ब pattern.
+  - `PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md` lists `वधू`, and the Sanskrit tatsam principle also supports `वधू`.
+  - current policy: prefer `वधू`; treat the Notice `बधू` listing as a source defect for this word, not as a reason to generalize the broad ब-pattern over tatsam `वधू`.
+  - current implementation status: pending explicit rule/guard if normalization is added.
+- final-dirgha exception inventory
+  - `Notices-pages-77-99.md` states final `ति/धि/नि/टि/पि` classes broadly as hrasva.
+  - `PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md` adds exceptions whose word-final इ is conventionally dirgha: `श्रेणी`, `युवती`, `सूची`, `अञ्जली` / `श्रद्धाञ्जली`, `आवली` / `शब्दावली`, `औषधी`.
+  - current policy: prefer the `PS-Saisanik...` dirgha exceptions; these forms must not be normalized to final hrasva.
+  - current implementation status: protected today by conservative guards and lexicon attestation, with explicit inventory still pending.
 - `तिर्यक्`
   - `PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md` adds an explicit `तिर्यक् रूपको प्रयोग` rule family that is not a numbered Section 3 notice rule in `Notices-pages-77-99.md`
   - current policy: treat `तिर्यक्` as a first-class checker rule family, not as correction-table growth
@@ -109,7 +124,6 @@ Current local consolidation priorities
 
 1. Broaden eval/gold coverage for the newly implemented `PS-Saisanik` phrase families.
 2. Re-review unresolved policy-sensitive families:
-   - `सरह`
    - `थरी`
    - broader `पदयोग-२` suffix inventory
    - broader `पदवियोग-१` baseline splitting
@@ -123,7 +137,7 @@ Repository expectations
 - `PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md` may introduce rule families that are not explicit in the notice document, such as `तिर्यक्`; implement those as first-class rules rather than as growing correction-table exceptions.
 - When a family is only partially shared across the two sources, record that distinction explicitly:
   - `जस्तो/जस्तै/जत्रो/जसरी` are currently school-grammar-backed split forms
-  - `सरह` is not yet school-grammar-backed in the local extract
+  - `सरह` is currently a Notice-backed join form, not a school-grammar-backed split override
   - `जना` is school-grammar-backed
   - `थरी` is currently notice-backed only
 - When a `PS-Saisanik...` override changes already-attested lexical spellings in `data/words.txt` or `data/headwords.tsv`, prefer the rule policy over raw lexicon acceptance and document the override here.
