@@ -50,6 +50,15 @@ const MULTIWORD_SAMASA_FINAL_TOKENS: &[&str] = &["आयोग", "प्रा�
 const HYPHENATED_MULTIWORD_TAILS: &[(&str, &str, &str)] =
     &[("प्रज्ञा", "प्रतिष्ठान", "प्रज्ञा-प्रतिष्ठान")];
 
+fn token_segments<'a>(
+    text: &'a str,
+    tokens: &'a [AnalyzedToken],
+) -> impl Iterator<Item = (&'a str, usize, usize)> + 'a {
+    tokens
+        .iter()
+        .map(move |token| (token.source_text(text), token.start, token.end))
+}
+
 pub(crate) fn add_padayog_padabiyog_diagnostics(
     text: &str,
     blocked_spans: &mut HashSet<(usize, usize)>,
@@ -109,6 +118,7 @@ pub(crate) fn add_generalized_padayog_padabiyog_diagnostics(
     add_generalized_padabiyog_subrule_1_every_word_split(text, blocked_spans, diagnostics);
     add_generalized_padabiyog_subrule_2_vibhakti_pachhi_namayogi_split(
         text,
+        tokens,
         blocked_spans,
         diagnostics,
     );
@@ -123,7 +133,12 @@ pub(crate) fn add_generalized_padayog_padabiyog_diagnostics(
         diagnostics,
     );
     add_generalized_padabiyog_subrule_9_nu_n_pachhi_kriya_split(text, blocked_spans, diagnostics);
-    add_generalized_padabiyog_subrule_10_sarthak_dwitva_split(text, blocked_spans, diagnostics);
+    add_generalized_padabiyog_subrule_10_sarthak_dwitva_split(
+        text,
+        tokens,
+        blocked_spans,
+        diagnostics,
+    );
     add_generalized_padabiyog_subrule_11_jana_thari_split(text, blocked_spans, diagnostics);
     add_generalized_padabiyog_subrule_12_shirsha_nam_split(text, blocked_spans, diagnostics);
     add_generalized_padabiyog_subrule_13_visheshan_nam_split(text, blocked_spans, diagnostics);
@@ -238,12 +253,11 @@ fn add_generalized_padabiyog_subrule_1_every_word_split(
 
 fn add_generalized_padabiyog_subrule_2_vibhakti_pachhi_namayogi_split(
     text: &str,
+    tokens: &[AnalyzedToken],
     blocked_spans: &mut HashSet<(usize, usize)>,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
-    let segments = whitespace_segments(text);
-
-    for (seg, start, end) in segments {
+    for (seg, start, end) in token_segments(text, tokens) {
         if !is_devanagari_word(seg) || is_numeric_segment(seg) {
             continue;
         }
@@ -376,12 +390,11 @@ fn add_generalized_padabiyog_subrule_9_nu_n_pachhi_kriya_split(
 
 fn add_generalized_padabiyog_subrule_10_sarthak_dwitva_split(
     text: &str,
+    tokens: &[AnalyzedToken],
     blocked_spans: &mut HashSet<(usize, usize)>,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
-    let segments = whitespace_segments(text);
-
-    for (token, start, end) in segments {
+    for (token, start, end) in token_segments(text, tokens) {
         if !is_devanagari_word(token) || is_numeric_segment(token) {
             continue;
         }
