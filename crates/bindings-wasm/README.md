@@ -79,10 +79,31 @@ The following are downstream contract:
 - object-vs-null return shape
 - top-level field names returned by typed APIs
 - local/offline execution
+- `check_text_value(text, grammar)` remains the backward-compatible default text
+  checker API and uses `academy-strict` orthography mode.
+- `check_text_value_with_options(text, grammar, orthography_mode)` is the
+  options-aware text checker API for clients that need explicit policy control.
 
 `orthography_mode` accepts `"academy-strict"` or `"common-editorial"`.
 Academy-strict is the compatibility default. Common-editorial downgrades only
 reviewed common-vs-strict orthographic forms to `kind: "Variant"`.
+
+Browser artifact manifests expose `artifact_api_version`, `capabilities`, and
+`required_exports`. Downstream clients should branch from those manifest fields
+instead of probing behavior from release names.
+
+For clients that support multiple artifact generations, keep the compatibility
+wrapper in the client adapter:
+
+```js
+function checkTextValueCompat(wasm, text, grammar = false, options = {}) {
+  const mode = options.orthographyMode || options.orthography_mode;
+  if (mode && typeof wasm.check_text_value_with_options === "function") {
+    return wasm.check_text_value_with_options(text, grammar, mode);
+  }
+  return wasm.check_text_value(text, grammar);
+}
+```
 
 ## Design Notes
 

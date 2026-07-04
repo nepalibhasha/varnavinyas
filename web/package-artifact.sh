@@ -32,11 +32,14 @@ if [ ! -f "$PKG_DIR/varnavinyas_bindings_wasm.js" ]; then
 fi
 
 REQUIRED_EXPORTS="
+check_text_value
+check_text_value_with_options
 check_word_value
 analyze_word_value
 best_affix_analysis_value
 decompose_word_value
 sandhi_split_value
+sandhi_split_best_for_compound_value
 analyze_compound_value
 "
 
@@ -88,18 +91,33 @@ cat > "$ARTIFACT_DIR/manifest.json" <<EOF
 {
   "artifact": "varnavinyas-browser-artifact",
   "artifact_version": "${ARTIFACT_VERSION}",
+  "artifact_api_version": 1,
   "git_sha": "${GIT_SHA}",
   "description": "Browser-consumable WASM package for downstream extension clients",
   "pkg_dir": "pkg",
   "entry_js": "pkg/varnavinyas_bindings_wasm.js",
   "entry_wasm": "pkg/varnavinyas_bindings_wasm_bg.wasm",
   "build_info": "build-info.json",
+  "capabilities": {
+    "offline": true,
+    "typed_diagnostics": true,
+    "diagnostic_schema_version": 1,
+    "check_text_value_default_orthography_mode": "academy-strict",
+    "check_text_value_with_options": true,
+    "orthography_modes": [
+      "academy-strict",
+      "common-editorial"
+    ]
+  },
   "required_exports": [
+    "check_text_value",
+    "check_text_value_with_options",
     "check_word_value",
     "analyze_word_value",
     "best_affix_analysis_value",
     "decompose_word_value",
     "sandhi_split_value",
+    "sandhi_split_best_for_compound_value",
     "analyze_compound_value"
   ]
 }

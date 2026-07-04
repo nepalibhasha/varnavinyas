@@ -74,6 +74,17 @@ This emits:
 - `web/dist/varnavinyas-browser-artifact/`
 - `web/dist/varnavinyas-browser-artifact.zip`
 
+The artifact `manifest.json` is the downstream contract surface. It includes:
+
+- `artifact_api_version`
+- `capabilities`
+- `required_exports`
+
+`check_text_value(text, grammar)` is the backward-compatible default text API
+and uses `academy-strict` orthography mode. Clients that need explicit policy
+control should prefer `check_text_value_with_options(text, grammar,
+orthography_mode)` when the manifest advertises that capability.
+
 ## Editing Notes
 
 - Keep diagnostics keyed by `category_code` (machine-stable), not display labels.

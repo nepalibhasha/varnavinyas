@@ -47,3 +47,9 @@ Surface-specific option names:
 | Python | `orthography_mode="academy_strict"` or `"common_editorial"` |
 | C | `varnavinyas_check_text_with_all_options(..., orthography_mode, ...)` |
 | UniFFI | `check_text_with_all_options(..., OrthographyMode, ...)` |
+
+For browser artifacts, `check_text_value(text, grammar)` remains the
+backward-compatible default API and uses `academy-strict`. Downstream clients
+that need explicit policy selection should use
+`check_text_value_with_options(text, grammar, orthography_mode)` when
+`manifest.json` advertises the capability.
