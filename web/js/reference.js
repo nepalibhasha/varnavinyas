@@ -262,6 +262,16 @@ function renderTargetExamples(examples = []) {
 }
 
 function onSearchInput(e) {
+  const selectionStart = e.target.selectionStart;
+  const selectionEnd = e.target.selectionEnd;
   currentSearch = (e.target.value || '').trim();
   renderReferenceView();
+
+  const search = container.querySelector('#reference-search');
+  if (search) {
+    search.focus({ preventScroll: true });
+    if (selectionStart != null && selectionEnd != null) {
+      search.setSelectionRange(selectionStart, selectionEnd);
+    }
+  }
 }

@@ -154,15 +154,54 @@ fn higher_precedence_index(left: Candidate<'_>, right: Candidate<'_>) -> Option<
 }
 
 fn padayog_replacement_subsumes_nested(padayog: Candidate<'_>, nested: Candidate<'_>) -> bool {
-    kind_rank(padayog.diagnostic.kind) > kind_rank(DiagnosticKind::Ambiguous)
-        && padayog
-            .diagnostic
-            .incorrect
-            .contains(nested.diagnostic.incorrect.as_str())
-        && padayog
-            .diagnostic
-            .correction
-            .contains(nested.diagnostic.correction.as_str())
+    if kind_rank(padayog.diagnostic.kind) <= kind_rank(DiagnosticKind::Ambiguous) {
+        return false;
+    }
+
+    let Some(relative_start) = nested
+        .diagnostic
+        .span
+        .0
+        .checked_sub(padayog.diagnostic.span.0)
+    else {
+        return false;
+    };
+    let Some(relative_end) = nested
+        .diagnostic
+        .span
+        .1
+        .checked_sub(padayog.diagnostic.span.0)
+    else {
+        return false;
+    };
+    let Some(nested_source) = padayog
+        .diagnostic
+        .incorrect
+        .get(relative_start..relative_end)
+    else {
+        return false;
+    };
+    if nested_source != nested.diagnostic.incorrect {
+        return false;
+    }
+
+    // Padayog/padabiyog rewrites change spacing. Apply the nested correction at
+    // its actual relative span, then compare both results without whitespace.
+    // This avoids treating a matching correction on a repeated, different
+    // occurrence as evidence that the nested diagnostic was incorporated.
+    let mut expected = String::with_capacity(
+        padayog.diagnostic.incorrect.len() - nested_source.len()
+            + nested.diagnostic.correction.len(),
+    );
+    expected.push_str(&padayog.diagnostic.incorrect[..relative_start]);
+    expected.push_str(&nested.diagnostic.correction);
+    expected.push_str(&padayog.diagnostic.incorrect[relative_end..]);
+
+    without_whitespace(&expected) == without_whitespace(&padayog.diagnostic.correction)
+}
+
+fn without_whitespace(text: &str) -> String {
+    text.chars().filter(|ch| !ch.is_whitespace()).collect()
 }
 
 fn contains_span(outer: (usize, usize), inner: (usize, usize)) -> bool {
@@ -433,6 +472,35 @@ mod tests {
 
         assert_eq!(diagnostics.len(), 1);
         assert_eq!(diagnostics[0].incorrect, "abc def ghi");
+    }
+
+    #[test]
+    fn padayog_does_not_subsume_a_different_repeated_occurrence() {
+        let mut diagnostics = vec![
+            diagnostic_with(
+                (0, 7),
+                Rule::VarnaVinyasNiyam("3(घ)"),
+                DiagnosticKind::Error,
+                "bad bad",
+                "bad good",
+                "generalized padayog explanation",
+                Vec::new(),
+            ),
+            diagnostic_with(
+                (0, 3),
+                Rule::ShuddhaAshuddha("Section 4"),
+                DiagnosticKind::Error,
+                "bad",
+                "good",
+                "word explanation",
+                Vec::new(),
+            ),
+        ];
+
+        resolve_diagnostic_overlaps(&mut diagnostics);
+
+        assert_eq!(diagnostics.len(), 1);
+        assert_eq!(diagnostics[0].incorrect, "bad");
     }
 
     #[test]

@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 use serde_json::Value;
 use tokio::sync::RwLock;
@@ -17,11 +18,14 @@ struct DocumentState {
     text: String,
     line_index: LineIndex,
     diagnostics: Vec<parikshak::Diagnostic>,
+    version: i32,
 }
 
 pub struct Backend {
     client: Client,
     documents: Arc<RwLock<HashMap<Url, DocumentState>>>,
+    latest_updates: Arc<RwLock<HashMap<Url, (u64, i32)>>>,
+    next_update_id: AtomicU64,
     config: Arc<RwLock<Config>>,
 }
 
@@ -30,12 +34,24 @@ impl Backend {
         Self {
             client,
             documents: Arc::new(RwLock::new(HashMap::new())),
+            latest_updates: Arc::new(RwLock::new(HashMap::new())),
+            next_update_id: AtomicU64::new(1),
             config: Arc::new(RwLock::new(Config::default())),
         }
     }
 
     /// Run diagnostics on a document and publish results.
-    async fn update_diagnostics(&self, uri: Url, text: &str) {
+    async fn update_diagnostics(&self, uri: Url, text: &str, version: i32) {
+        let update_id = self.next_update_id.fetch_add(1, Ordering::Relaxed);
+        {
+            let mut latest = self.latest_updates.write().await;
+            let current_version = latest.get(&uri).map(|(_, version)| *version);
+            if is_older_version(version, current_version) {
+                return;
+            }
+            latest.insert(uri.clone(), (update_id, version));
+        }
+
         let line_index = LineIndex::new(text);
         let config = self.config.read().await;
         let raw_diagnostics = parikshak::check_text_with_options(
@@ -69,9 +85,17 @@ impl Backend {
             })
             .collect();
 
+        if !self.is_latest_update(&uri, update_id).await {
+            return;
+        }
+
         self.client
-            .publish_diagnostics(uri.clone(), lsp_diags, None)
+            .publish_diagnostics(uri.clone(), lsp_diags, Some(version))
             .await;
+
+        if !self.is_latest_update(&uri, update_id).await {
+            return;
+        }
 
         let mut docs = self.documents.write().await;
         docs.insert(
@@ -80,23 +104,36 @@ impl Backend {
                 text: text.to_string(),
                 line_index,
                 diagnostics: raw_diagnostics,
+                version,
             },
         );
     }
 
+    async fn is_latest_update(&self, uri: &Url, update_id: u64) -> bool {
+        self.latest_updates
+            .read()
+            .await
+            .get(uri)
+            .is_some_and(|(latest_id, _)| *latest_id == update_id)
+    }
+
     /// Re-diagnose all open documents (e.g., after config change).
     async fn rediagnose_all(&self) {
-        let snapshots: Vec<(Url, String)> = {
+        let snapshots: Vec<(Url, String, i32)> = {
             let docs = self.documents.read().await;
             docs.iter()
-                .map(|(uri, state)| (uri.clone(), state.text.clone()))
+                .map(|(uri, state)| (uri.clone(), state.text.clone(), state.version))
                 .collect()
         };
 
-        for (uri, text) in snapshots {
-            self.update_diagnostics(uri, &text).await;
+        for (uri, text, version) in snapshots {
+            self.update_diagnostics(uri, &text, version).await;
         }
     }
+}
+
+fn is_older_version(incoming: i32, current: Option<i32>) -> bool {
+    current.is_some_and(|current| incoming < current)
 }
 
 /// Find diagnostics whose span contains the given byte offset.
@@ -166,20 +203,22 @@ impl LanguageServer for Backend {
     async fn did_open(&self, params: DidOpenTextDocumentParams) {
         let uri = params.text_document.uri;
         let text = params.text_document.text;
-        self.update_diagnostics(uri, &text).await;
+        let version = params.text_document.version;
+        self.update_diagnostics(uri, &text, version).await;
     }
 
     async fn did_change(&self, params: DidChangeTextDocumentParams) {
         let uri = params.text_document.uri;
+        let version = params.text_document.version;
         if let Some(change) = params.content_changes.into_iter().next() {
-            self.update_diagnostics(uri, &change.text).await;
+            self.update_diagnostics(uri, &change.text, version).await;
         }
     }
 
     async fn did_close(&self, params: DidCloseTextDocumentParams) {
         let uri = params.text_document.uri;
-        let mut docs = self.documents.write().await;
-        docs.remove(&uri);
+        self.documents.write().await.remove(&uri);
+        self.latest_updates.write().await.remove(&uri);
         // Clear diagnostics for closed document
         self.client.publish_diagnostics(uri, vec![], None).await;
     }
@@ -380,5 +419,13 @@ mod tests {
             to_lsp_severity(parikshak::DiagnosticKind::Error),
             DiagnosticSeverity::ERROR
         );
+    }
+
+    #[test]
+    fn document_versions_reject_only_older_updates() {
+        assert!(is_older_version(4, Some(5)));
+        assert!(!is_older_version(5, Some(5)));
+        assert!(!is_older_version(6, Some(5)));
+        assert!(!is_older_version(4, None));
     }
 }

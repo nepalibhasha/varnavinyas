@@ -183,6 +183,9 @@ pub(crate) fn check_word_impl(word: &str) -> Option<Diagnostic> {
         if suggestion == word {
             return None;
         }
+        if !lex.is_correction_target(&suggestion) {
+            return None;
+        }
         if !should_offer_nearby_suggestion(word, &suggestion) {
             return None;
         }
@@ -304,6 +307,17 @@ mod tests {
         assert_eq!(
             diagnostic_reason_category(&reasons[0]),
             DiagnosticCategory::ShaShaS
+        );
+    }
+
+    #[test]
+    fn nearby_suggestions_skip_non_correction_targets() {
+        let diagnostic = check_word_impl("ओने");
+        assert!(
+            diagnostic
+                .as_ref()
+                .is_none_or(|diagnostic| diagnostic.correction != "ओठे"),
+            "reviewed non-correction targets must not be offered: {diagnostic:?}"
         );
     }
 }

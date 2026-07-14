@@ -212,8 +212,9 @@ important current rules are:
 - for overlapping diagnostics, precedence is `kind > specificity > pass > confidence`
 - same-span duplicate corrections merge alternate reasons instead of surfacing
   duplicate primary diagnostics
-- broader padayog rewrites can suppress a nested diagnostic only when the
-  broader replacement already contains the nested correction
+- broader padayog rewrites can suppress a nested diagnostic only when applying
+  the nested correction at its relative source span matches the broader
+  replacement after whitespace is ignored
 - punctuation is appended after the final resolver today, so punctuation overlap
   arbitration remains future work
 

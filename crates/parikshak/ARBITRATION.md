@@ -45,9 +45,10 @@ should encode that order directly:
 7. If candidates have the same span and correction, keep one diagnostic and
    merge distinct alternate reasons instead of surfacing duplicates.
 8. For strictly nested padayog overlaps, use the same precedence tuple unless
-   the broader non-ambiguous padayog rewrite already contains the nested
-   replacement. In that composite-rewrite case, keep the broader padayog
-   diagnostic so replacement does not regress to a partial fix.
+   applying the nested replacement at its relative source span produces the
+   broader non-ambiguous padayog correction after whitespace is ignored. In
+   that composite-rewrite case, keep the broader padayog diagnostic so
+   replacement does not regress to a partial fix.
 
 The important generalization from the `जगत` class of bugs is:
 
@@ -70,8 +71,8 @@ Before replacing `blocked_spans` with a resolver, tests should pin at least:
 - same-span word-level errors suppress generalized padayog splits.
 - explicit padayog rewrites suppress weaker same-span generalized rewrites.
 - strictly nested padayog overlaps use the same precedence tuple as same-span
-  overlaps, except when a broader padayog rewrite subsumes the nested
-  replacement.
+  overlaps, except when a broader padayog rewrite positionally subsumes the
+  nested replacement.
 - ambiguous/heuristic diagnostics do not block stronger errors.
 - optional style/grammar variants do not displace hard errors.
 - punctuation diagnostics remain visible next to word diagnostics when spans do
