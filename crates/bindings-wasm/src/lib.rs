@@ -7,6 +7,7 @@ use wasm_bindgen::prelude::*;
 #[tsify(into_wasm_abi)]
 struct JsStep {
     rule: String,
+    rule_code: String,
     description: String,
     before: String,
     after: String,
@@ -453,6 +454,7 @@ fn prakriya_to_js(p: varnavinyas_prakriya::Prakriya) -> JsPrakriya {
             .into_iter()
             .map(|s| JsStep {
                 rule: s.rule.to_string(),
+                rule_code: s.rule.code().to_string(),
                 description: s.description,
                 before: s.before,
                 after: s.after,
@@ -529,6 +531,14 @@ fn parse_scheme(s: &str) -> Result<varnavinyas_lipi::Scheme, JsError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn derivation_steps_include_source_citations_for_reference_links() {
+        let json: serde_json::Value = serde_json::from_str(&derive("भाउजु")).unwrap();
+        assert_eq!(json["output"], "भाउजू");
+        assert_eq!(json["steps"][0]["rule_code"], "3(क)(ऊ)-3");
+        assert_eq!(json["steps"][0]["rule"], "ह्रस्व/दीर्घ स्वर नियम");
+    }
 
     #[test]
     fn sandhi_type_labels_are_devanagari() {

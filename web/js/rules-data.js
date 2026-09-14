@@ -21,9 +21,9 @@ export const RULES_SECTIONS = [
     ],
     subRules: [
       'तत्सम शब्दमा मूल दीर्घ कायम',
-      'तद्भव शब्दमा ह्रस्व प्रयोग',
-      'देशज शब्दमा ह्रस्व प्रयोग',
-      'आगन्तुक शब्दमा ह्रस्व प्रयोग',
+      'सुरु, बीच र अन्त्यको स्वरका छुट्टाछुट्टै नियम',
+      'शब्दको उत्पत्तिसँगै शब्दवर्ग र प्रत्यय पनि हेर्नुपर्छ',
+      'स्त्रीलिङ्गी नाम र विध्यर्थक क्रियाको अन्त्यमा दीर्घ',
     ],
     referenceTargets: [
       {
@@ -65,7 +65,7 @@ export const RULES_SECTIONS = [
         id: 'ka-uu',
         label: '(ऊ) शब्दका अन्त्यमा दीर्घ',
         status: 'partial',
-        summary: 'अन्त्यमा दीर्घ हुने सर्वनाम, जाति/थर, स्थान/भाषा, केही प्रत्यय, र सङ्ख्यावाचक शब्दका वर्गहरू लागू छन्; निर्जीव/सजीव जस्ता अर्थसूचक वर्गहरू अझै खुला छन्।',
+        summary: 'स्त्रीलिङ्गी नाम (भाउजू, फुपू), विध्यर्थक तथा स्त्रीलिङ्गी क्रिया (जाऊ, गई), सर्वनाम, जाति/थर, स्थान/भाषा र सङ्ख्यावाचक शब्दका निर्दिष्ट वर्गमा अन्त्यको इ/उ दीर्घ हुन्छ। ई, वती र वी जस्ता प्रत्यय लागेका शब्दमा पनि दीर्घ लेखिन्छ।',
         examples: ['योगि -> योगी', 'दुइ -> दुई', 'भाउजु -> भाउजू'],
       },
     ],
@@ -500,9 +500,9 @@ const TARGET_MATCHERS = {
     { test: /3\(ङ\)/, targetId: 'nga-halanta' },
   ],
   ShuddhaTable: [
-    { test: /शैक्षणिक व्याकरण ७\(क\).*तिर्यक्/, targetId: 'tiryak-ka' },
-    { test: /शैक्षणिक व्याकरण ७\(ख\).*तिर्यक्/, targetId: 'tiryak-kha' },
-    { test: /शैक्षणिक व्याकरण ७\(ग\).*तिर्यक्/, targetId: 'tiryak-ga' },
+    { test: /(?:PS-Saisanik-7\(क\)|शैक्षणिक व्याकरण ७\(क\)).*तिर्यक्/, targetId: 'tiryak-ka' },
+    { test: /(?:PS-Saisanik-7\(ख\)|शैक्षणिक व्याकरण ७\(ख\)).*तिर्यक्/, targetId: 'tiryak-kha' },
+    { test: /(?:PS-Saisanik-7\(ग\)|शैक्षणिक व्याकरण ७\(ग\)).*तिर्यक्/, targetId: 'tiryak-ga' },
     { test: /शैक्षणिक व्याकरण पदयोग \(ङ\).*स्वरूप/, targetId: 'saishanik-padayog-nga-swarup' },
     { test: /शैक्षणिक व्याकरण पदयोग \(ञ\).*मध्यवर्ती नाम/, targetId: 'saishanik-padayog-nya-middle-name' },
     { test: /शैक्षणिक व्याकरण पदयोग \(ट\).*एकार्थी/, targetId: 'saishanik-padayog-ta-ekarthi' },
@@ -569,14 +569,15 @@ export function getReferenceTargetForRule(ruleText, categoryCode) {
  * Resolve the best available reference summary for a rule citation.
  * Prefers a matched subsection summary, then falls back to the category summary.
  */
-export function getRuleSummary(ruleText, categoryCode) {
+export function getRuleSummary(ruleText, categoryCode, fallbackText = ruleText) {
   const cat = categoryCode || getCategoryForRule(ruleText);
   if (!cat) return null;
 
   const section = RULES_SECTIONS.find((item) => item.categoryCode === cat);
   if (!section) return null;
 
-  const target = getReferenceTargetForRule(ruleText, cat);
+  const citedTarget = getReferenceTargetForRule(ruleText, cat);
+  const target = citedTarget?.targetId ? citedTarget : getReferenceTargetForRule(fallbackText, cat);
   if (target?.targetId && Array.isArray(section.referenceTargets)) {
     const referenceTarget = section.referenceTargets.find((item) => item.id === target.targetId);
     if (referenceTarget?.summary) {
@@ -592,9 +593,11 @@ export function getRuleSummary(ruleText, categoryCode) {
  * Shared by checker.js and inspector.js.
  */
 export function wrapRuleTooltip(ruleText, categoryCode, context = {}) {
-  const cat = categoryCode || getCategoryForRule(ruleText);
-  const tooltip = (cat && RULE_TOOLTIPS[cat]) || getTooltipForRule(ruleText);
-  const target = getReferenceTargetForRule(ruleText, cat);
+  const citation = context.ruleCode || ruleText;
+  const cat = categoryCode || getCategoryForRule(citation) || getCategoryForRule(ruleText);
+  const tooltip = (cat && RULE_TOOLTIPS[cat]) || getTooltipForRule(citation);
+  const citedTarget = getReferenceTargetForRule(citation, cat);
+  const target = citedTarget?.targetId ? citedTarget : getReferenceTargetForRule(ruleText, cat);
   const targetAttr = target?.targetId
     ? ` data-target="${escapeHtml(target.targetId)}"`
     : "";
@@ -603,7 +606,7 @@ export function wrapRuleTooltip(ruleText, categoryCode, context = {}) {
     incorrect: context.incorrect,
     correction: context.correction,
     explanation: context.explanation,
-    rule: ruleText,
+    rule: context.ruleCode ? `${ruleText} (${context.ruleCode})` : ruleText,
   })
     .filter(([, value]) => value)
     .map(([key, value]) => ` data-${key}="${escapeHtml(String(value))}"`)

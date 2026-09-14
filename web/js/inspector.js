@@ -14,6 +14,7 @@ import {
 } from './wasm-bridge.js';
 import { escapeHtml, ORIGIN_LABELS } from './utils.js';
 import { wrapRuleTooltip } from './rules-data.js';
+import { applyTextContext } from './inspection-context.js';
 
 /** Feature flag for word inspector. Set to false to disable. */
 const FEATURE_WORD_INSPECTOR = true;
@@ -119,17 +120,19 @@ export function showInspector(word, start, end, options = {}) {
     // no analysis available
   }
 
+  analysis = applyTextContext(analysis, options.textContext);
+
   html += '<div class="inspector-word-header">';
   html += `<span class="inspector-word">${escapeHtml(word)}</span>`;
   if (analysis) {
     const originLabel = ORIGIN_LABELS[analysis.origin] || analysis.origin;
     const originClass = `origin-${analysis.origin}`;
-    html += ` <span class="origin-badge ${originClass}">${escapeHtml(originLabel)}</span>`;
+    if (originLabel) html += ` <span class="origin-badge ${originClass}">${escapeHtml(originLabel)}</span>`;
     if (analysis.source_language) {
       html += ` <span class="source-lang">${escapeHtml(analysis.source_language)}</span>`;
     }
-    const statusIcon = analysis.is_correct ? 'correct' : 'incorrect';
-    const statusLabel = analysis.is_correct ? '\u0936\u0941\u0926\u094D\u0927' : '\u0905\u0936\u0941\u0926\u094D\u0927';
+    const statusIcon = analysis.statusClass || (analysis.is_correct ? 'correct' : 'incorrect');
+    const statusLabel = analysis.statusLabel || (analysis.is_correct ? '\u0936\u0941\u0926\u094D\u0927' : '\u0905\u0936\u0941\u0926\u094D\u0927');
     html += ` <span class="analysis-status ${statusIcon}">${statusLabel}</span>`;
   }
   html += '</div>';
@@ -139,7 +142,7 @@ export function showInspector(word, start, end, options = {}) {
     html += `
     <div class="inspector-fix-section">
       <div class="analysis-correction">
-        <span class="diag-incorrect">${escapeHtml(analysis.word)}</span>
+        <span class="${analysis.statusClass === 'uncertain' ? 'inspection-variant-word' : 'diag-incorrect'}">${escapeHtml(word)}</span>
         <span class="diag-arrow">\u2192</span>
         <span class="diag-correct">${escapeHtml(analysis.correction)}</span>
       </div>
@@ -158,7 +161,7 @@ export function showInspector(word, start, end, options = {}) {
   html += renderSandhiSection(structure.baseWord);
 
   // --- Derivation steps ---
-  html += renderDerivationSection(word);
+  html += renderDerivationSection(word, analysis);
 
   // --- Rule notes ---
   if (analysis && analysis.rule_notes && analysis.rule_notes.length > 0) {
@@ -168,9 +171,11 @@ export function showInspector(word, start, end, options = {}) {
     for (const note of analysis.rule_notes) {
       html += `
       <div class="analysis-note">
-        <span class="analysis-note-rule">${wrapRuleTooltip(note.rule, null, {
+        <span class="analysis-note-rule">${wrapRuleTooltip(note.rule, note.category_code, {
+          ruleCode: note.rule_code,
           word,
-          correction: analysis?.correction || word,
+          incorrect: note.incorrect,
+          correction: note.correction || analysis?.correction,
           explanation: note.explanation,
         })}</span>
         <span class="analysis-note-text">${escapeHtml(note.explanation)}</span>
@@ -186,9 +191,11 @@ export function showInspector(word, start, end, options = {}) {
     for (const note of analysis.alternate_rule_notes) {
       html += `
       <div class="analysis-note">
-        <span class="analysis-note-rule">${wrapRuleTooltip(note.rule, null, {
+        <span class="analysis-note-rule">${wrapRuleTooltip(note.rule, note.category_code, {
+          ruleCode: note.rule_code,
           word,
-          correction: analysis?.correction || word,
+          incorrect: note.incorrect,
+          correction: note.correction || analysis?.correction,
           explanation: note.explanation,
         })}</span>
         <span class="analysis-note-text">${escapeHtml(note.explanation)}</span>
@@ -459,15 +466,18 @@ function renderSandhiSection(word) {
   }
 }
 
-function renderDerivationSection(word) {
+function renderDerivationSection(word, analysis) {
   try {
+    if (analysis?.canShowDerivation === false) return '';
     const result = deriveWord(word);
+    if (!analysis?.correction || result.output !== analysis.correction) return '';
     if (!result.steps || result.steps.length === 0) return '';
 
     const rows = result.steps.map((s, i) => `
       <tr>
         <td>${i + 1}</td>
         <td class="rule-cell">${wrapRuleTooltip(s.rule, null, {
+          ruleCode: s.rule_code,
           word,
           incorrect: s.before,
           correction: s.after,

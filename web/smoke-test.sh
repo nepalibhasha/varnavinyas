@@ -154,6 +154,17 @@ else
   fail "WASM diagnostic serialization contract is missing category_code support"
 fi
 
+# Unit coverage for contextual inspection and rule-reference navigation.
+if command -v node >/dev/null 2>&1; then
+  if node --test tests/*.test.mjs; then
+    pass "Inspector and rule-reference regressions"
+  else
+    fail "Inspector and rule-reference regressions"
+  fi
+else
+  warn "Node unavailable; skipping frontend unit tests"
+fi
+
 # --- 7. HTTP server test (quick start/stop) ---
 echo "[7] HTTP serving"
 PORT="${PORT:-18080}"

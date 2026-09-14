@@ -982,6 +982,16 @@ body {
   border: 1px solid #bbf7d0;
 }
 
+.analysis-status.uncertain {
+  color: var(--color-text-secondary);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+}
+
+.inspection-variant-word {
+  font-weight: 700;
+}
+
 .analysis-status.incorrect {
   color: #b91c1c;
   background: #fef2f2;
@@ -1291,6 +1301,11 @@ body {
   flex-wrap: wrap;
   font-size: 1rem;
   margin-bottom: 0.3rem;
+}
+
+.reference-context-word {
+  color: var(--color-text);
+  font-weight: 700;
 }
 
 .reference-context-wrong {

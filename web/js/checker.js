@@ -10,6 +10,7 @@ import { wrapRuleTooltip, getRuleSummary } from './rules-data.js';
 import { initInspector, showInspector, hideInspector, isInspectorActive } from './inspector.js';
 
 let diagnostics = [];
+let lastCheckedText = null;
 let hiddenCategories = new Set();
 let dismissedDiagnosticKeys = new Set();
 let activeCardIndex = -1;
@@ -43,7 +44,10 @@ let previewOpen = false;
  * Initialize the spell checker module.
  */
 export function initChecker() {
-  editorInput.addEventListener('input', debouncedCheck);
+  editorInput.addEventListener('input', () => {
+    if (isInspectorActive()) hideInspector();
+    debouncedCheck();
+  });
   editorInput.addEventListener('scroll', syncScroll);
   editorInput.addEventListener('click', onEditorClick);
   fixAllBtn.addEventListener('click', fixAll);
@@ -75,7 +79,9 @@ export function initChecker() {
   }
 }
 
-const debouncedCheck = debounce(() => runCheck(), 300);
+const debouncedCheck = debounce(() => {
+  if (lastCheckedText !== editorInput.value) runCheck();
+}, 300);
 
 const HEURISTIC_RULE_LABELS = {
   "samasa-heuristic": "समास",
@@ -236,7 +242,7 @@ function diagnosticGuidance(diag) {
   if (diag.kind === "Variant") {
     return "यो अनिवार्य त्रुटि होइन; मानक वैकल्पिक रूपसम्बन्धी सूचना हो।";
   }
-  const summary = getRuleSummary(diag.rule, diag.category_code);
+  const summary = getRuleSummary(diag.rule_code || diag.rule, diag.category_code, diag.rule);
   if (summary && normalizeCopy(summary) !== normalizeCopy(diag.explanation)) {
     return summary;
   }
@@ -276,9 +282,11 @@ function isHardDiagnostic(d) {
 }
 
 function runCheck() {
+  if (isInspectorActive()) hideInspector();
   hideMobileDiagOverlay();
   const text = editorInput.value;
   runtimeErrorMessage = null;
+  lastCheckedText = text;
 
   if (!text.trim()) {
     diagnostics = [];
@@ -633,6 +641,7 @@ function renderDiagnostics() {
         ${guidanceBlock}
         <div class="diag-explanation">${escapeHtml(d.explanation)}</div>
         <div class="diag-rule">${wrapRuleTooltip(d.rule, d.category_code, {
+          ruleCode: d.rule_code,
           incorrect: d.incorrect,
           correction: d.correction,
           explanation: d.explanation,
@@ -793,6 +802,7 @@ function showMobileDiagOverlay(d, idx) {
     ${guidanceBlock}
     <div class="diag-explanation">${escapeHtml(d.explanation)}</div>
     <div class="diag-rule">${wrapRuleTooltip(d.rule, d.category_code, {
+      ruleCode: d.rule_code,
       incorrect: d.incorrect,
       correction: d.correction,
       explanation: d.explanation,
@@ -877,6 +887,7 @@ function renderAlternateReasons(d) {
         <div class="diag-alt-meta">
           <span class="diag-alt-category">${escapeHtml(altLabel)}</span>
           <span class="diag-alt-rule">${wrapRuleTooltip(alt.rule, alt.category_code, {
+            ruleCode: alt.rule_code,
             incorrect: d.incorrect,
             correction: alt.correction || d.correction,
             explanation: alt.explanation,
@@ -900,6 +911,7 @@ function renderAlternateReasons(d) {
 function onEditorClick() {
   const pos = editorInput.selectionStart;
   const text = editorInput.value;
+  if (lastCheckedText !== text) runCheck();
 
   // Check if click is on a diagnostic
   const idx = diagnostics.findIndex(
@@ -926,9 +938,21 @@ function onEditorClick() {
   }
 
   const wordInfo = getWordAtCursor(text, pos);
+  const wordDiagnostic = wordInfo ? diagnostics.find(
+    (d) => d.charStart === wordInfo.start && d.charEnd === wordInfo.end
+  ) || null : null;
+  const textContext = {
+    diagnostic: wordDiagnostic,
+    canApply: wordDiagnostic ? isApplyableDiagnostic(wordDiagnostic) : false,
+    informational: wordDiagnostic ? isInformationalDiagnostic(wordDiagnostic) : false,
+    available: !runtimeErrorMessage,
+    overlap: wordInfo ? diagnostics.find(
+      (d) => d.charStart < wordInfo.end && wordInfo.start < d.charEnd
+    ) || null : null,
+  };
   if (isMobileView()) {
     if (wordInfo) {
-      showInspector(wordInfo.word, wordInfo.start, wordInfo.end, { mobile: true });
+      showInspector(wordInfo.word, wordInfo.start, wordInfo.end, { mobile: true, textContext });
     } else if (isInspectorActive()) {
       hideInspector();
     }
@@ -938,7 +962,7 @@ function onEditorClick() {
   if (wordInfo) {
     // Hide diagnostics panel content, show inspector
     hideDiagnosticsPanel();
-    showInspector(wordInfo.word, wordInfo.start, wordInfo.end);
+    showInspector(wordInfo.word, wordInfo.start, wordInfo.end, { textContext });
   } else if (isInspectorActive()) {
     // Clicked whitespace — restore diagnostics
     hideInspector();

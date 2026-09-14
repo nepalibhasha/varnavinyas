@@ -137,3 +137,6 @@ bash web/package-artifact.sh
 ## Status
 
 Production-facing adapter used by current browser surfaces.
+
+Derivation steps from `derive` and `derive_value` include `rule` (display label)
+and `rule_code` (source citation). Use `rule_code` to resolve rule-reference links.

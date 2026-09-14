@@ -120,15 +120,15 @@ function renderContextBanner() {
   }
 
   const shownWord = currentContext.incorrect || currentContext.word;
-  const correction = currentContext.correction || '';
+  const correction = currentContext.correction !== shownWord ? currentContext.correction || '' : '';
   const explanation = currentContext.explanation || '';
   const rule = currentContext.rule || '';
 
   return `
     <div class="reference-context-banner" id="reference-context-banner">
-      <div class="reference-context-kicker">यो शब्द किन अशुद्ध/सुधारयोग्य देखियो?</div>
+      <div class="reference-context-kicker">${correction ? 'यो सुधार किन सुझाइयो?' : 'यो शब्दको वर्णविन्यासबारे'}</div>
       <div class="reference-context-main">
-        <span class="reference-context-wrong">${escapeHtml(shownWord)}</span>
+        <span class="${correction ? 'reference-context-wrong' : 'reference-context-word'}">${escapeHtml(shownWord)}</span>
         ${correction ? `<span class="reference-context-arrow">→</span><span class="reference-context-right">${escapeHtml(correction)}</span>` : ''}
       </div>
       ${rule ? `<div class="reference-context-rule">${escapeHtml(rule)}</div>` : ''}

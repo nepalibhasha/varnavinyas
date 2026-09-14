@@ -58,6 +58,7 @@ The smoke test validates:
 - WASM artifacts and exported functions
 - category mapping consistency (Rust -> JS -> CSS)
 - key static assets served by a local HTTP server
+- inspector and rule-reference regressions (`node --test web/tests/*.test.mjs`, Node 22+ recommended)
 
 ## Downstream Clients
 
@@ -92,6 +93,11 @@ orthography_mode)` when the manifest advertises that capability.
 - `checkText(..., { orthographyMode: "common-editorial" })` downgrades only
   reviewed common-vs-strict orthographic forms to non-blocking variants. See
   `../docs/INTEGRATION_NOTES.md`.
+- The editor passes its contextual result to the inspector. Corrections and severity
+  follow the current checking policy; isolated word analysis supplies linguistic
+  structure and compatible explanatory notes. Text edits and policy changes dismiss
+  stale inspector content.
+- Rule links resolve `rule_code`, retaining `rule` as their readable label.
 - Rule citations are rendered through `wrapRuleTooltip(...)` in `js/rules-data.js`.
 
 ## Common Issues
