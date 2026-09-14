@@ -7,6 +7,7 @@ use crate::model::rule::Rule;
 use crate::model::rule_spec::{DiagnosticKind, RuleCategory, RuleSpec};
 use crate::model::step::Step;
 use varnavinyas_kosha::kosha;
+use varnavinyas_kosha::part_of_speech::{is_adverb, is_avyaya, is_namayogi};
 use varnavinyas_shabda::{Origin, classify_with_provenance};
 
 pub const SPEC_CHANDRABINDU: RuleSpec = RuleSpec {
@@ -39,7 +40,7 @@ pub fn rule_chandrabindu(input: &str) -> Option<Prakriya> {
             )],
         ));
     }
-    if exact_headword_supported(input) {
+    if rule_protected_form(input) {
         return None;
     }
 
@@ -208,8 +209,8 @@ pub fn rule_chandrabindu(input: &str) -> Option<Prakriya> {
     None
 }
 
-fn exact_headword_supported(word: &str) -> bool {
-    kosha().lookup(word).is_some()
+fn rule_protected_form(word: &str) -> bool {
+    kosha().is_rule_protected(word)
 }
 
 fn supported_non_tatsam_chandrabindu_form(input: &str) -> Option<String> {
@@ -241,12 +242,7 @@ fn supported_non_tatsam_chandrabindu_form(input: &str) -> Option<String> {
             continue;
         };
         let pos = entry.pos;
-        if pos.contains("अव्य")
-            || pos.contains("क्रि.वि.")
-            || pos.contains("क्रियाविशेषण")
-            || pos.contains("नामयोगी")
-            || pos.contains("ना.यो.")
-        {
+        if is_avyaya(pos) || is_adverb(pos) || is_namayogi(pos) {
             return Some(candidate);
         }
     }

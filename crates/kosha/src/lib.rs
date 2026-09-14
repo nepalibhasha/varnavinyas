@@ -2,6 +2,7 @@
 mod builder;
 mod kosha;
 pub mod origin_tag;
+pub mod part_of_speech;
 
 #[cfg(any(test, feature = "test-seam"))]
 pub use kosha::with_test_kosha;

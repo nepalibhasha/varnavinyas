@@ -1,4 +1,7 @@
 use super::{kosha_backed_dirgha_correction, rule_dirgha_endings};
+use varnavinyas_kosha::part_of_speech::{
+    is_adjective, is_adverb, is_conjunction, is_namayogi, is_noun, is_onomatopoeic,
+};
 use varnavinyas_shabda::{Origin, classify, decompose};
 
 pub(crate) fn exact_headword_supported(word: &str) -> bool {
@@ -22,6 +25,13 @@ pub(super) mod final_classes {
         output: &str,
         vowel_label: &str,
     ) -> (&'static str, String) {
+        if is_vidhyarthak_or_feminine_verb_dirgha(output) {
+            return (
+                "3(क)(ऊ)-10",
+                "विध्यर्थक र स्त्रीलिङ्गी क्रियापदहरू अन्त्यमा दीर्घ हुन्छन्".to_string(),
+            );
+        }
+
         if is_place_river_language_dirgha(output) {
             return (
                 "3(क)(ऊ)-11",
@@ -241,7 +251,10 @@ pub(super) mod final_classes {
     }
 
     pub(crate) fn is_known_correct_final_dirgha(input: &str) -> bool {
-        if is_ps_final_dirgha_exception(input) {
+        if is_ps_final_dirgha_exception(input)
+            || is_profession_jati_thar_dirgha(input)
+            || is_vidhyarthak_or_feminine_verb_dirgha(input)
+        {
             return true;
         }
 
@@ -306,6 +319,21 @@ pub(super) mod final_classes {
                 | "सुवेदी"
                 | "प्रसाईं"
                 | "गिरी"
+        )
+    }
+
+    pub(crate) fn is_vidhyarthak_or_feminine_verb_dirgha(output: &str) -> bool {
+        matches!(
+            output,
+            "आऊ" | "जाऊ"
+                | "हेर्नू"
+                | "भन्नू"
+                | "आउनू"
+                | "लेखी"
+                | "गरी"
+                | "भनी"
+                | "हिँडी"
+                | "गई"
         )
     }
 
@@ -486,11 +514,7 @@ pub(super) mod hrasva_helpers {
             return false;
         };
 
-        entry.pos.contains("क्रि.वि.")
-            || entry.pos.contains("क्रियाविशेषण")
-            || entry.pos.contains("संयोजक")
-            || entry.pos.contains("नामयोगी")
-            || entry.pos.contains("ना.यो.")
+        is_adverb(entry.pos) || is_conjunction(entry.pos) || is_namayogi(entry.pos)
     }
 
     pub(crate) fn is_initial_hrasva_onomatopoeic(output: &str) -> bool {
@@ -499,9 +523,7 @@ pub(super) mod hrasva_helpers {
             return false;
         };
 
-        entry.pos.contains("अ.मू.")
-            || entry.pos.contains("अ. मू.")
-            || entry.pos.contains("अमू.")
+        is_onomatopoeic(entry.pos)
             || matches!(
                 output,
                 "किटिक्क"
@@ -523,11 +545,7 @@ pub(super) mod hrasva_helpers {
     ];
 
     pub(crate) fn is_adjective_pos(pos: &str) -> bool {
-        (pos.contains("विशेषण") && !pos.contains("क्रियाविशेषण"))
-            || (pos.contains("वि.")
-                && !pos.contains("क्रि.वि.")
-                && !pos.contains("ना.वि.")
-                && !pos.contains("वि.क्रि."))
+        is_adjective(pos)
     }
 
     pub(crate) fn has_medial_hrasva_suffix_family(output: &str) -> bool {
@@ -555,10 +573,7 @@ pub(super) mod hrasva_helpers {
             return false;
         };
 
-        entry.pos.contains("ना.")
-            || entry.pos.contains("नाम")
-            || entry.pos.contains("ना. ")
-            || entry.pos.contains("नाम ")
+        is_noun(entry.pos)
     }
 
     pub(crate) fn is_medial_hrasva_aagantuk_name(output: &str) -> bool {
@@ -620,11 +635,7 @@ pub(super) mod hrasva_helpers {
         let Some(entry) = lex.lookup(output) else {
             return false;
         };
-        entry.pos.contains("क्रि.वि.")
-            || entry.pos.contains("क्रियाविशेषण")
-            || entry.pos.contains("संयोजक")
-            || entry.pos.contains("नामयोगी")
-            || entry.pos.contains("ना.यो.")
+        is_adverb(entry.pos) || is_conjunction(entry.pos) || is_namayogi(entry.pos)
     }
 
     pub(crate) fn medial_dirgha_to_hrasva_candidates(input: &str) -> Vec<String> {

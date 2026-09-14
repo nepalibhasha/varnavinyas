@@ -1,0 +1,2 @@
+# Empty POS metadata is represented by an intentional trailing TSV delimiter.
+data/headwords.tsv -whitespace

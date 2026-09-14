@@ -1,6 +1,6 @@
 use varnavinyas_akshar::split_aksharas;
-use varnavinyas_kosha::WordEntry;
-use varnavinyas_kosha::kosha;
+use varnavinyas_kosha::part_of_speech::{is_adjective, is_avyaya, is_noun};
+use varnavinyas_kosha::{WordEntry, kosha};
 
 /// Initial samasa taxonomy for MVP.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -107,18 +107,17 @@ fn classify_candidate(
     }
 
     // Avyayibhava: indeclinable (अव्यय) leading component.
-    if left_pos.contains("अव्य") {
+    if is_avyaya(left_pos) {
         return (SamasaType::Avyayibhava, 0.86);
     }
 
     // Karmadharaya: adjective + noun.
-    if (left_pos.contains("वि.") || is_adjectival_prefix(left)) && right_pos.contains("ना.")
-    {
+    if (is_adjective(left_pos) || is_adjectival_prefix(left)) && is_noun(right_pos) {
         return (SamasaType::Karmadharaya, 0.84);
     }
 
     // Bahuvrihi (weak MVP signal): adjective + adjective.
-    if left_pos.contains("वि.") && right_pos.contains("वि.") {
+    if is_adjective(left_pos) && is_adjective(right_pos) {
         return (SamasaType::Bahuvrihi, 0.74);
     }
 
@@ -128,7 +127,7 @@ fn classify_candidate(
     }
 
     // Noun + noun defaults to tatpurusha in MVP.
-    if left_pos.contains("ना.") && right_pos.contains("ना.") {
+    if is_noun(left_pos) && is_noun(right_pos) {
         return (SamasaType::Tatpurusha, 0.82);
     }
 

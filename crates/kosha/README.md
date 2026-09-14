@@ -20,7 +20,8 @@ Higher-level crates use `kosha` as the main gate for deciding whether a form is 
 The crate currently builds a singleton lexicon from embedded compile-time assets:
 
 - `data/words.txt` -> word-form inventory
-- `data/headwords.tsv` -> headword metadata
+- `data/headwords.tsv` -> headword metadata with expanded grammatical labels
+- `data/headword_display_overrides.tsv` -> reviewed repairs applied while generating display headwords
 - `data/lexicon_overrides.tsv` -> reviewed tier overrides for attested forms
 
 It uses:
@@ -37,8 +38,10 @@ It uses:
 - `lookup(&str)` -> retrieve headword metadata
 - `lexicon_tier(&str)` -> retrieve reviewed quality tier for a form
 - `is_correction_target(&str)` -> test whether a form is safe as a suggested correction target
+- `is_rule_protected(&str)` -> test whether headword/reviewed evidence should suppress a generic correction
 - `origin_of(&str)` -> infer origin from dictionary tags
 - `source_language_of(&str)` -> source language from dictionary tags
+- `part_of_speech::*` -> stable predicates over canonical or legacy POS labels
 
 ## Examples
 
@@ -70,8 +73,13 @@ let _origin = lex.origin_of("नेपाल");
 ## Current Limits
 
 - Metadata is still relatively shallow and string-based.
+- Grammatical POS labels are expanded during extraction; bracketed source and
+  etymology abbreviations remain stable for origin parsing. Compatible records
+  prefer the richer bracketed evidence across Brihat and Pragya, and
+  headword-level evidence is retained when their grammatical labels conflict.
 - `contains()` only tells you that a form exists. Correction rules should use
-  `is_correction_target()` when raw attestation could cause false positives.
+  `is_correction_target()` for proposed outputs and `is_rule_protected()` for
+  input-side suppression when raw definition attestation could cause false positives.
 - Lexicon tiers are intentionally lazy and override-driven; they are not yet a
   full canonical/variant/generated classification for the whole lexicon.
 - This is a lexical index, not yet a full lexical knowledge graph.

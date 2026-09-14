@@ -33,7 +33,8 @@ thread_local! {
 pub struct WordEntry {
     /// The headword.
     pub word: &'static str,
-    /// Part-of-speech tags (e.g., "[सं.] ना.", "वि.").
+    /// Canonical part-of-speech metadata (e.g., "[सं.] नाम", "विशेषण").
+    /// Bracketed source/etymology abbreviations are intentionally preserved.
     pub pos: &'static str,
 }
 
@@ -74,7 +75,7 @@ pub struct LexiconOverride {
 
 /// FST-based Nepali lexicon.
 ///
-/// Uses an `fst::Set` for fast `contains()` checks over ~109K word forms,
+/// Uses an `fst::Set` for fast `contains()` checks over ~209K word forms,
 /// and a sorted `Vec<WordEntry>` for headword metadata lookups.
 pub struct Kosha {
     /// FST set for O(1) word existence checks.
@@ -209,6 +210,21 @@ impl Kosha {
             Some(LexiconTier::AttestedNonstandard | LexiconTier::NonCorrectionTarget) => false,
             None => false,
         }
+    }
+
+    /// Whether lexical evidence should protect an input from a generic correction rule.
+    ///
+    /// Definition-only vocabulary in `words.txt` is attested context, not necessarily
+    /// prescriptive spelling. Exact headwords are protected by default, while reviewed
+    /// overrides can explicitly protect or unprotect individual forms.
+    pub fn is_rule_protected(&self, word: &str) -> bool {
+        if let Some(entry) = self.override_for(word) {
+            return matches!(
+                entry.tier,
+                LexiconTier::Canonical | LexiconTier::GeneratedInflection
+            );
+        }
+        self.lookup(word).is_some()
     }
 
     /// Number of word forms in the FST.

@@ -3,6 +3,7 @@
 use std::collections::HashSet;
 
 use varnavinyas_kosha::kosha;
+use varnavinyas_kosha::part_of_speech::is_noun;
 use varnavinyas_prakriya::{DiagnosticKind, Rule};
 use varnavinyas_shabda::has_supported_analysis;
 
@@ -1197,7 +1198,7 @@ fn candidate_is_name_like(candidate: &str) -> bool {
         return false;
     };
 
-    entry.pos.contains("नाम") || entry.pos.contains("ना.")
+    is_noun(entry.pos)
 }
 
 fn plausible_vibhakti_attached_left(candidate: &str) -> bool {

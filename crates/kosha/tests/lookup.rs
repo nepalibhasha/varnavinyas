@@ -1,12 +1,12 @@
 use varnavinyas_kosha::{kosha, origin_tag};
 
-/// K1: The lexicon contains ~109K word forms.
+/// K1: The lexicon contains more than 200K attested word forms.
 #[test]
 fn k1_word_count() {
     let k = kosha();
     assert!(
-        k.word_count() > 100_000,
-        "Expected >100K words, got {}",
+        k.word_count() > 200_000,
+        "Expected >200K words, got {}",
         k.word_count()
     );
 }
@@ -15,15 +15,28 @@ fn k1_word_count() {
 #[test]
 fn k2_headword_lookup_returns_pos() {
     let k = kosha();
-    // "नेपाले" has POS "वि. [नेपाल+ए]" in the headwords data
+    // "नेपाले" has expanded POS metadata in the generated headwords data.
     let entry = k.lookup("नेपाले");
     assert!(entry.is_some(), "नेपाले should be a known headword");
     let entry = entry.unwrap();
-    assert!(!entry.pos.is_empty(), "POS should not be empty for नेपाले");
+    assert_eq!(entry.pos, "विशेषण [नेपाल+ए]");
 
     // Headword without POS should still be found (with empty POS)
     let nepal = k.lookup("नेपाल");
     assert!(nepal.is_some(), "नेपाल should be a known headword");
+    assert_eq!(nepal.unwrap().pos, "नाम [सं.]");
+
+    // Compatible Pragya metadata should enrich a bare Brihat POS label.
+    let lead_article = k.lookup("अग्रलेख").expect("अग्रलेख should be a headword");
+    assert_eq!(lead_article.pos, "नाम [सं.]");
+
+    // Preserve origin evidence even when the dictionaries disagree on POS.
+    let multiple_form = k.lookup("अनेक रूप").expect("अनेक रूप should be a headword");
+    assert_eq!(multiple_form.pos, "नाम [सं.]");
+
+    // Reviewed display punctuation must survive lossy upstream normalization.
+    assert!(k.lookup("अखानु/अखानो").is_some());
+    assert!(k.lookup("अखानुअखानो").is_none());
 }
 
 /// K3: Lookup is fast. In release mode: < 1μs; in debug: < 10μs.
@@ -81,6 +94,39 @@ fn common_words_present() {
     for word in common {
         assert!(k.contains(word), "{word} should be in the lexicon");
     }
+}
+
+#[test]
+fn rule_protection_distinguishes_headwords_from_definition_attestation() {
+    let k = kosha();
+
+    assert!(k.contains("बिकास"), "बिकास is attested in dictionary text");
+    assert!(
+        k.lookup("बिकास").is_none(),
+        "बिकास should not be promoted to a headword"
+    );
+    assert!(
+        !k.is_rule_protected("बिकास"),
+        "definition-only attestation must not suppress an authoritative correction"
+    );
+
+    assert!(k.contains("भुईं"), "भुईं is attested in dictionary prose");
+    assert!(
+        k.lookup("भुईं").is_none(),
+        "the refreshed database materializes भुईँ as the headword"
+    );
+    assert!(
+        k.is_rule_protected("भुईं"),
+        "the reviewed canonical override should protect भुईं"
+    );
+    assert!(
+        k.is_rule_protected("जाऊ"),
+        "the reviewed Academy override should protect जाऊ from conflicting fallbacks"
+    );
+    assert!(
+        k.is_rule_protected("पुर्वेली"),
+        "the authoritative gold form should beat the generic ब/व fallback"
+    );
 }
 
 /// Bracket invariant: in headwords.tsv, the **first** `[…]` bracket in each

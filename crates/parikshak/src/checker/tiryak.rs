@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 
 use varnavinyas_kosha::kosha;
+use varnavinyas_kosha::part_of_speech::{is_noun, is_pronoun};
 use varnavinyas_prakriya::{DiagnosticKind, Rule};
 use varnavinyas_shabda::has_supported_analysis;
 
@@ -345,7 +346,7 @@ fn is_nounish_pos(pos: Option<&str>) -> bool {
         return false;
     };
 
-    pos.contains("नाम") || pos.contains("ना.") || pos.contains("सर्व")
+    is_noun(pos) || is_pronoun(pos)
 }
 
 #[cfg(test)]

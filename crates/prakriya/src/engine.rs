@@ -40,8 +40,23 @@ pub fn collect_rule_hits(input: &str) -> Vec<RuleHit> {
     }
     hits.extend(collect_pattern_rule_hits(input));
     hits.sort_by_key(|hit| hit.priority);
+    suppress_redundant_broad_fallbacks(&mut hits);
     hits.dedup_by(rule_hits_equivalent);
     hits
+}
+
+fn suppress_redundant_broad_fallbacks(hits: &mut Vec<RuleHit>) {
+    let preferred_outputs: Vec<String> = hits
+        .iter()
+        .filter(|hit| !is_broad_fallback(hit))
+        .map(|hit| hit.prakriya.output.clone())
+        .collect();
+
+    hits.retain(|hit| !is_broad_fallback(hit) || !preferred_outputs.contains(&hit.prakriya.output));
+}
+
+fn is_broad_fallback(hit: &RuleHit) -> bool {
+    matches!(hit.spec_id, Some("hd-tadbhav"))
 }
 
 fn rule_hits_equivalent(a: &mut RuleHit, b: &mut RuleHit) -> bool {
@@ -180,6 +195,19 @@ mod tests {
                 Rule::VarnaVinyasNiyam(expected_rule)
             );
         }
+    }
+
+    #[test]
+    fn correction_table_suppresses_same_output_hd_tadbhav_fallback() {
+        let hits = collect_rule_hits("तिथीमीति");
+        assert_eq!(
+            hits.len(),
+            1,
+            "Authoritative correction-table hit should suppress the generic hd-tadbhav fallback: {hits:?}"
+        );
+        assert_eq!(hits[0].spec_id, None);
+        assert_eq!(hits[0].prakriya.output, "तिथिमिति");
+        assert_eq!(derive("तिथीमीति").output, "तिथिमिति");
     }
 
     #[test]

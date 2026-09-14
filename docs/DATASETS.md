@@ -51,15 +51,23 @@ As of 2026-07-03:
 
 *   **`data/headwords.tsv`**
     *   Canonical headword list with POS metadata (`word<TAB>pos`) used by `varnavinyas-kosha`.
-    *   Current scale: ~132k headwords.
+    *   Grammatical labels are expanded (`ना.` → `नाम`, `वि.` → `विशेषण`), while bracketed source/etymology tags such as `[सं.]` and `[अङ्.]` are preserved.
+    *   When Brihat and Pragya have the same grammatical label, extraction keeps the record with richer bracketed source/etymology evidence. If their labels conflict, dictionary precedence selects the label while compatible headword-level bracketed evidence is still retained.
+    *   Current scale: ~131k headwords.
+
+*   **`data/headword_display_overrides.tsv`**
+    *   Reviewed repairs for upstream headwords whose punctuation was normalized lossy (for example `अखानुअखानो` → `अखानु/अखानो`).
+    *   Applied to both generated assets, so the merged artifact is not accepted as a word or serialized as a headword.
+    *   Rows carry source and review status; stale rows make extraction fail for explicit re-review.
 
 *   **`data/words.txt`**
     *   Surface-form lexicon used to build the fast containment index for spell-checking.
-    *   Current scale: ~207k entries.
+    *   Materialized from unnumbered Nepali headwords plus Devanagari tokens attested in definitions.
+    *   Current scale: ~209k entries.
 
 *   **`data/lexicon_overrides.tsv`**
     *   Reviewed quality-tier overrides for forms whose raw lexical attestation is not enough to make them safe correction targets.
-    *   Used by `kosha::lexicon_tier()` and `kosha::is_correction_target()`.
+    *   Used by `kosha::lexicon_tier()`, `kosha::is_correction_target()`, and `kosha::is_rule_protected()`.
 
 *   **`data/rule_inventories/*.tsv`**
     *   Schema-checked rule inventories compiled into specific rule modules.
@@ -73,11 +81,23 @@ As of 2026-07-03:
 1.  **नेपाली बृहत् शब्दकोश** (Nepali Brihat Shabdakosh), Nepal Academy.
 2.  **प्रज्ञा नेपाली बृहत् शब्दकोश** (Pragya Nepali Brihat Shabdakosh), Nepal Academy.
 
+The current assets were refreshed on 2026-08-05 from Sabdasakha's updated
+`dictionary.db`, selecting `kosha-brihat` and `kosha-pragya` for headword metadata.
+
 Usage in Varnavinyas:
 
 1.  `words.txt` powers the compiled FST for fast existence checks.
 2.  `headwords.tsv` provides headword-level metadata (POS/origin-tag parsing).
-3.  `lexicon_overrides.tsv` marks reviewed forms that are attested but unsafe as generic correction outputs.
+3.  `headword_display_overrides.tsv` repairs reviewed lossy display-headword normalization.
+4.  `lexicon_overrides.tsv` marks reviewed forms that are attested but unsafe as generic correction outputs.
+
+`words.txt` records lexical attestation, not automatic prescriptive correctness.
+Generic correction rules should use headword or reviewed override evidence when
+deciding whether an input spelling is protected.
+
+Downstream crates use `kosha::part_of_speech` predicates rather than matching
+the serialized POS text directly. The predicates retain compatibility with
+legacy abbreviations used by test seams and older generated assets.
 
 ## Provenance Policy
 

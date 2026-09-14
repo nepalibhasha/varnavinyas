@@ -1,7 +1,12 @@
 use varnavinyas_kosha::Kosha;
 use varnavinyas_kosha::origin_tag::OriginTag;
+use varnavinyas_kosha::part_of_speech::is_noun;
 
 use crate::{AuthorityTier, LexicalStatus, RuleFamily, SandhiCandidate};
+
+/// Lexicalized proper names whose broad dictionary POS label cannot distinguish
+/// them from ordinary nouns.
+const REVIEWED_LEXICALIZED_PROPER_NAMES: &[&str] = &["नेपाल"];
 
 pub fn rank_candidates(
     mut candidates: Vec<SandhiCandidate>,
@@ -11,8 +16,8 @@ pub fn rank_candidates(
     let surface_origin = lex.origin_of(surface);
     let surface_entry = lex.lookup(surface);
     let surface_is_lexicalized = surface_entry.is_some();
-    let surface_is_proper_name =
-        surface_entry.is_some_and(|entry| entry.pos.trim_start().starts_with("नाम"));
+    let surface_is_noun = surface_entry.is_some_and(|entry| is_noun(entry.pos));
+    let surface_is_proper_name = REVIEWED_LEXICALIZED_PROPER_NAMES.contains(&surface);
 
     for candidate in &mut candidates {
         let mut score: f32 = 0.0;
@@ -73,9 +78,16 @@ pub fn rank_candidates(
             score -= 0.08;
         }
 
-        // Proper names are usually atomic lexical items for orthography UX.
-        // Penalize mechanical sandhi parses unless they are explicit direct joins.
-        if surface_is_proper_name && !matches!(candidate.family, RuleFamily::DirectJoin) {
+        // Lexicalized nouns need stronger evidence than a mechanical reconstruction,
+        // but retain genuine classical compounds when both members are tatsam. Proper
+        // names remain atomic for orthography UX even if their candidate parts happen
+        // to look classical.
+        let weak_lexicalized_noun = surface_is_noun
+            && surface_origin != Some(OriginTag::Tatsam)
+            && !(left_tatsam && right_tatsam);
+        if (surface_is_proper_name || weak_lexicalized_noun)
+            && !matches!(candidate.family, RuleFamily::DirectJoin)
+        {
             score -= 0.40;
         }
 

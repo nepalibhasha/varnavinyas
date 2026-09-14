@@ -3,6 +3,7 @@ use crate::model::rule::Rule;
 use crate::model::rule_spec::{DiagnosticKind, RuleCategory, RuleSpec};
 use crate::model::step::Step;
 use varnavinyas_kosha::kosha;
+use varnavinyas_kosha::part_of_speech::{is_adverb, is_avyaya, is_namayogi};
 use varnavinyas_shabda::{Origin, OriginSource, classify, classify_with_provenance};
 
 pub const SPEC_PANCHHAM: RuleSpec = RuleSpec {
@@ -159,12 +160,7 @@ fn has_supported_non_tatsam_chandrabindu_variant(input: &str) -> bool {
             continue;
         };
         let pos = entry.pos;
-        if pos.contains("अव्य")
-            || pos.contains("क्रि.वि.")
-            || pos.contains("क्रियाविशेषण")
-            || pos.contains("नामयोगी")
-            || pos.contains("ना.यो.")
-        {
+        if is_avyaya(pos) || is_adverb(pos) || is_namayogi(pos) {
             return true;
         }
     }

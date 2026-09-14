@@ -2,6 +2,7 @@ use std::borrow::Cow;
 
 use varnavinyas_kosha::Kosha;
 use varnavinyas_kosha::kosha;
+use varnavinyas_kosha::part_of_speech::is_noun;
 use varnavinyas_prakriya::is_in_correction_table;
 use varnavinyas_shabda::{best_analysis, has_supported_analysis};
 
@@ -103,10 +104,7 @@ pub(crate) fn should_prefer_whole_word_over_short_nipat_split(
     detached: &str,
     lex: &Kosha,
 ) -> bool {
-    detached == "ल"
-        && lex
-            .lookup(stem)
-            .is_some_and(|entry| entry.pos.contains("नाम") || entry.pos.contains("ना."))
+    detached == "ल" && lex.lookup(stem).is_some_and(|entry| is_noun(entry.pos))
 }
 
 struct SupportSuffixGroup {

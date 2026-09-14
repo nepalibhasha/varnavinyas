@@ -202,6 +202,15 @@ fn exact_headword_final_hrasva_variant_is_not_overcorrected() {
 }
 
 #[test]
+fn explicit_notice_final_dirgha_forms_beat_generic_hrasva_fallbacks() {
+    for word in ["जाऊ", "राई"] {
+        let p = derive(word);
+        assert_eq!(p.output, word);
+        assert!(p.is_correct, "{word} should remain correct");
+    }
+}
+
+#[test]
 fn ps_final_dirgha_exceptions_correct_hrasva_forms() {
     for (incorrect, correct) in [
         ("श्रेणि", "श्रेणी"),

@@ -56,7 +56,9 @@ pub fn rule_ba_va(input: &str) -> Option<Prakriya> {
             )],
         ));
     }
-    if kosha.contains(input) {
+    // A definition can mention a nonstandard spelling (for example `बिकास`).
+    // Only headword or reviewed evidence should suppress this generic rule.
+    if kosha.is_rule_protected(input) {
         return None;
     }
     let chars: Vec<char> = input.chars().collect();
