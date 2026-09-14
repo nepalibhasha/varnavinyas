@@ -154,7 +154,13 @@ pub fn rule_ba_va(input: &str) -> Option<Prakriya> {
         let mut candidate = chars.clone();
         candidate[i] = swapped;
         let output: String = candidate.into_iter().collect();
-        if kosha.is_correction_target(&output) {
+        // A generic swap needs headword/reviewed evidence, rather than a
+        // spelling merely mentioned in a definition. Never reverse an explicit
+        // source-backed व→ब decision (बुधवार → बुधबार → बुधवार).
+        if kosha.is_rule_protected(&output)
+            && kosha.is_correction_target(&output)
+            && normalize_ps_sanskrit_va_to_ba(&output, kosha).is_none()
+        {
             // (आ)-ब/व numbered subrules are largely lexical buckets.
             // We keep this as an attested candidate swap and classify by local context.
             let next_base = chars.iter().skip(i + 1).find(|&&c| !is_matra(c)).copied();

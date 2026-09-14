@@ -74,6 +74,11 @@ pub(super) fn rule_halanta_required(input: &str) -> Option<Prakriya> {
     ];
     for (wrong_suffix, correct_suffix, rule_citation) in VERB_SUFFIXES {
         if let Some(stem) = input.strip_suffix(wrong_suffix) {
+            // नन alone also ends nouns such as गजानन and प्रजनन.
+            // The negative plural verb ending is दैनन (गर्दैनन → गर्दैनन्).
+            if *wrong_suffix == "नन" && !input.ends_with("दैनन") {
+                continue;
+            }
             if *wrong_suffix == "इस" && !(stem.ends_with('ग') || stem.ends_with('आ')) {
                 continue;
             }

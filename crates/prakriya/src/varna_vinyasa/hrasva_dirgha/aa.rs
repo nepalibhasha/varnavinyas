@@ -258,6 +258,15 @@ pub fn rule_medial_underived_name_hrasva(input: &str) -> Option<Prakriya> {
 
 pub fn rule_medial_aagantuk_name_hrasva(input: &str) -> Option<Prakriya> {
     let lex = varnavinyas_kosha::kosha();
+    // Do not replace an existing lexical sense using the origin of a different
+    // word (for example Sanskrit adjective कालीन versus loanword noun कालिन).
+    if lex.lookup(input).is_some_and(|entry| {
+        !hrasva_helpers::is_name_pos(input)
+            || varnavinyas_kosha::origin_tag::parse_origin_tag(entry.pos)
+                == Some(varnavinyas_kosha::origin_tag::OriginTag::Tatsam)
+    }) {
+        return None;
+    }
     for output in hrasva_helpers::medial_dirgha_to_hrasva_candidates(input) {
         if !lex.contains(&output) || !matches!(classify(&output), Origin::Aagantuk) {
             continue;

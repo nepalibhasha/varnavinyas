@@ -80,6 +80,10 @@ pub const SPEC_KOSHA_BACKED: RuleSpec = RuleSpec {
 };
 
 pub fn rule_final_ii_suffix_dirgha(input: &str) -> Option<Prakriya> {
+    // A lexical word is not necessarily a derivative of the proposed ई-form.
+    if varnavinyas_kosha::kosha().lookup(input).is_some() {
+        return None;
+    }
     let origin = classify(input);
     if matches!(origin, Origin::Tatsam) || !input.ends_with('ि') {
         return None;
@@ -338,10 +342,21 @@ pub fn rule_dirgha_endings(input: &str) -> Option<Prakriya> {
             ));
         }
 
+        // The remaining endings are heuristic. Preserve attested headwords
+        // such as the conjunction कि and postposition पछि. Explicit source
+        // classes above and correction-table entries still take precedence.
+        if varnavinyas_kosha::kosha().lookup(input).is_some() {
+            return None;
+        }
+
         let char_count = chars.len();
         if (2..=4).contains(&char_count) {
             let penult = chars[char_count - 2];
-            if varnavinyas_akshar::is_vyanjan(penult) {
+            let stem = input.strip_suffix('ि').unwrap_or(input);
+            let verb_supported = [format!("{stem}नु"), format!("{stem}्नु")]
+                .iter()
+                .any(|verb| varnavinyas_kosha::kosha().lookup(verb).is_some());
+            if varnavinyas_akshar::is_vyanjan(penult) && verb_supported {
                 let mut output_chars = chars.clone();
                 output_chars[char_count - 1] = 'ी';
                 let output: String = output_chars.into_iter().collect();
