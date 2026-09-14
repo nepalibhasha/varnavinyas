@@ -1,35 +1,41 @@
 # parikshak Diagnostic Arbitration
 
-This document defines the target conflict-resolution contract for
+This document defines the conflict-resolution contract for
 `varnavinyas-parikshak`.
 
 Scope:
 
 - Arbitration is a `parikshak` text-pipeline concern.
 - `prakriya::derive()` remains a token-level single-winner API.
-- A future resolver should choose among text-span candidates emitted by
-  `parikshak` passes; it should not change rule derivation inside `prakriya`.
+- The resolver chooses among text-span candidates emitted by `parikshak`
+  passes; it does not change rule derivation inside `prakriya`.
 
 ## Candidate Contract
 
-Each pass should be able to emit a candidate with:
+Each pass emits diagnostics with:
 
 - `span`: byte span in the original text.
 - `incorrect` / `correction`: replacement surface.
 - `rule`, `category`, `kind`, `confidence`: outward diagnostic metadata.
-- `pass`: source pass family, such as word, tiryak, padayog, context, style,
-  grammar, or punctuation.
-- `specificity`: explicit table/exact rule, inventory-backed rule,
-  generalized structural rule, or heuristic suggestion.
+- `evidence`: explicit table/exact rule, inventory-backed rule, generalized
+  structural rule, or heuristic suggestion.
 
-The current `Diagnostic` type already carries the outward fields. The resolver
-work is mainly adding a private candidate wrapper and making the precedence
-explicit.
+The private candidate wrapper derives the source pass from stable rule metadata
+and uses `DiagnosticEvidence` directly as specificity.
+
+Evidence is assigned by the producing pass, never parsed from human-readable
+explanations. Word-level emission retains correction-table provenance from the
+`RuleHit`, even when its outward citation names a broad orthography rule.
+Inventory-backed particle splits rank below exact whole-word corrections:
+`सम्धिनि` becomes `सम्धिनी`, rather than `सम्धि नि`.
+
+Rust callers constructing `Diagnostic` must supply `evidence`. Binding and JSON
+DTOs intentionally omit this arbitration field; their payloads are unchanged.
 
 ## Precedence
 
-Current implicit precedence is pipeline order plus `blocked_spans`. The resolver
-should encode that order directly:
+The resolver encodes this precedence for padayog overlaps and duplicate
+replacements; pass-local `blocked_spans` guards still apply:
 
 1. Non-overlapping candidates all survive.
 2. Higher diagnostic kind wins for overlapping spans:
@@ -63,9 +69,9 @@ The current implementation encodes this as `kind > specificity > pass >
 confidence`. This order is deliberate: pass rank is a tie-breaker after the
 rule's evidentiary strength, not a blanket "word always wins" rule.
 
-## Current Behaviors To Pin Before Switching
+## Regression Coverage
 
-Before replacing `blocked_spans` with a resolver, tests should pin at least:
+Tests pin:
 
 - `जगत` yields `जगत्`, not `जग त`.
 - same-span word-level errors suppress generalized padayog splits.
@@ -79,18 +85,10 @@ Before replacing `blocked_spans` with a resolver, tests should pin at least:
   not overlap.
 - duplicate same-correction alternates collapse into one outward diagnostic.
 
-## Migration Plan
+## Remaining Pipeline Boundaries
 
-1. Add focused tests for the behaviors above.
-2. Introduce a private `Candidate` type and a resolver that accepts candidates
-   from the existing passes.
-3. First route only padayog/style/grammar candidates through the resolver while
-   preserving word-level blocking.
-4. Move word-level/context/tiryak candidates into the resolver after snapshot
-   diffs show no behavior change.
-5. Replace the padayog specificity shim with structured metadata. Today
-   `infer_padayog_specificity` classifies some padayog rules from explanation
-   text; distinct padayog subrule codes should carry that signal before the
-   resolver becomes the only conflict gate.
-6. Delete `blocked_spans` only after all candidate-producing passes are routed
-   through the resolver.
+The pipeline resolves word, tiryak, and padayog candidates before running
+context, style, and optional grammar passes, then resolves again. Some later
+passes still use `blocked_spans` to avoid emitting competing diagnostics. The
+resolver does not yet arbitrate every possible cross-pass overlap. Extending
+that scope requires dedicated tests and reviewed corpus snapshots.

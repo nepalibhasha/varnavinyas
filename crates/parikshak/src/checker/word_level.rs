@@ -156,6 +156,7 @@ pub(crate) fn check_word_impl(word: &str) -> Option<Diagnostic> {
         let category = choose_diagnostic_category(prakriya.category, &rule);
 
         return Some(Diagnostic {
+            evidence: rule_hit_evidence(primary_hit),
             span: (0, word.len()),
             incorrect: word.to_string(),
             correction: prakriya.output.clone(),
@@ -190,6 +191,7 @@ pub(crate) fn check_word_impl(word: &str) -> Option<Diagnostic> {
             return None;
         }
         return Some(Diagnostic {
+            evidence: crate::DiagnosticEvidence::Heuristic,
             span: (0, word.len()),
             incorrect: word.to_string(),
             correction: suggestion,
@@ -252,6 +254,27 @@ pub(crate) fn alternate_reasons_from_hits(hits: &[RuleHit]) -> Vec<DiagnosticRea
         }
     }
     reasons
+}
+
+// Capture provenance while the RuleHit is available. Table-backed corrections
+// remain exact even when their outward citation names a general orthography rule.
+fn rule_hit_evidence(hit: &RuleHit) -> crate::DiagnosticEvidence {
+    use crate::DiagnosticEvidence as Evidence;
+    if hit.spec_id.is_none() {
+        return Evidence::Exact;
+    }
+    match hit.prakriya.steps.first().map(|step| step.rule) {
+        Some(Rule::ShuddhaAshuddha(_)) => Evidence::Exact,
+        Some(Rule::VarnaVinyasNiyam(code)) if code.contains("-पदान्त") => {
+            Evidence::Exact
+        }
+        Some(Rule::VarnaVinyasNiyam(code))
+            if code.contains("-lex") || code.contains("-PS-Saisanik") || code == "3(ई)" =>
+        {
+            Evidence::CuratedInventory
+        }
+        _ => Evidence::Generalized,
+    }
 }
 
 #[cfg(test)]

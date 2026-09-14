@@ -40,6 +40,7 @@ pub(crate) fn add_grammar_diagnostics(
         if let Ok(analyses) = analyzer.analyze(&full) {
             if analyses.len() > 1 {
                 diagnostics.push(Diagnostic {
+                    evidence: crate::DiagnosticEvidence::Heuristic,
                     span,
                     incorrect: full.clone(),
                     correction: full.clone(),
@@ -61,6 +62,7 @@ pub(crate) fn add_grammar_diagnostics(
                 push_best_grammar_variant(
                     diagnostics,
                     Diagnostic {
+                        evidence: crate::DiagnosticEvidence::Heuristic,
                         span,
                         incorrect: full.clone(),
                         correction: singular,
@@ -82,6 +84,7 @@ pub(crate) fn add_grammar_diagnostics(
                 push_best_grammar_variant(
                     diagnostics,
                     Diagnostic {
+                        evidence: crate::DiagnosticEvidence::Heuristic,
                         span,
                         incorrect: full.clone(),
                         correction: token.stem.clone(),
@@ -102,6 +105,7 @@ pub(crate) fn add_grammar_diagnostics(
                 push_best_grammar_variant(
                     diagnostics,
                     Diagnostic {
+                        evidence: crate::DiagnosticEvidence::Heuristic,
                         span,
                         incorrect: full.clone(),
                         correction: format!("{}{}", token.stem, suggested_suffix),
@@ -123,6 +127,7 @@ pub(crate) fn add_grammar_diagnostics(
                 push_best_grammar_variant(
                     diagnostics,
                     Diagnostic {
+                        evidence: crate::DiagnosticEvidence::Heuristic,
                         span,
                         incorrect: full.clone(),
                         correction: format!("{} + {}", top.left, top.right),
@@ -208,6 +213,7 @@ mod tests {
 
     fn mk_variant(span: (usize, usize), rule_code: &'static str, confidence: f32) -> Diagnostic {
         Diagnostic {
+            evidence: crate::DiagnosticEvidence::Heuristic,
             span,
             incorrect: "x".to_string(),
             correction: "y".to_string(),

@@ -11,6 +11,7 @@ pub(crate) fn punctuation_diagnostics(
     check_punctuation(text)
         .into_iter()
         .map(|lekhya_diag| Diagnostic {
+            evidence: crate::DiagnosticEvidence::Exact,
             span: lekhya_diag.span,
             incorrect: lekhya_diag.found,
             correction: lekhya_diag.expected,

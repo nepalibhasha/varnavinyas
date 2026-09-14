@@ -154,6 +154,7 @@ pub(crate) fn add_style_variant_diagnostics(
             }
 
             diagnostics.push(Diagnostic {
+                evidence: crate::DiagnosticEvidence::Exact,
                 span,
                 incorrect: incorrect.to_string(),
                 correction: correct.to_string(),
@@ -211,6 +212,7 @@ fn add_inferred_ko_ka_style_variants(
         }
 
         diagnostics.push(Diagnostic {
+            evidence: crate::DiagnosticEvidence::Generalized,
             span,
             incorrect: text[span.0..span.1].to_string(),
             correction: format!("{base}का {right_surface}"),

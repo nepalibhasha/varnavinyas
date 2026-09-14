@@ -364,6 +364,7 @@ mod tests {
 
     fn sample_diagnostic(span: (usize, usize)) -> parikshak::Diagnostic {
         parikshak::Diagnostic {
+            evidence: parikshak::DiagnosticEvidence::Exact,
             span,
             incorrect: "अत्याधिक".to_string(),
             correction: "अत्यधिक".to_string(),

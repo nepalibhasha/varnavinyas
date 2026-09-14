@@ -27,24 +27,7 @@ impl DiagnosticPass {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Specificity {
-    Exact,
-    CuratedInventory,
-    Generalized,
-    Heuristic,
-}
-
-impl Specificity {
-    fn rank(self) -> u8 {
-        match self {
-            Self::Exact => 4,
-            Self::CuratedInventory => 3,
-            Self::Generalized => 2,
-            Self::Heuristic => 1,
-        }
-    }
-}
+use crate::DiagnosticEvidence as Specificity;
 
 #[derive(Debug, Clone, Copy)]
 struct Candidate<'a> {
@@ -58,7 +41,7 @@ impl<'a> Candidate<'a> {
         Self {
             diagnostic,
             pass: infer_pass(diagnostic),
-            specificity: infer_specificity(diagnostic),
+            specificity: diagnostic.evidence,
         }
     }
 
@@ -236,39 +219,6 @@ fn infer_pass(diagnostic: &Diagnostic) -> DiagnosticPass {
     }
 }
 
-fn infer_specificity(diagnostic: &Diagnostic) -> Specificity {
-    match diagnostic.rule {
-        Rule::ShuddhaAshuddha(_) | Rule::ChihnaNiyam(_) => Specificity::Exact,
-        Rule::Vyakaran("section4-phrase-style") => Specificity::Exact,
-        Rule::Vyakaran("section4-phrase-style-inferred-ko-ka") => Specificity::Generalized,
-        Rule::Vyakaran(code) if is_tiryak_rule(code) => Specificity::Exact,
-        Rule::Vyakaran(_) => Specificity::Heuristic,
-        Rule::VarnaVinyasNiyam("3(घ)") => infer_padayog_specificity(diagnostic),
-        Rule::VarnaVinyasNiyam(code) if code.contains("-context-") => Specificity::CuratedInventory,
-        Rule::VarnaVinyasNiyam(code) => infer_varna_vinyas_specificity(code),
-    }
-}
-
-fn infer_padayog_specificity(diagnostic: &Diagnostic) -> Specificity {
-    if diagnostic.explanation.contains("पदवियोग (च)") {
-        return Specificity::Exact;
-    }
-    if diagnostic.explanation.starts_with("शैक्षणिक व्याकरण") {
-        return Specificity::CuratedInventory;
-    }
-    Specificity::Generalized
-}
-
-fn infer_varna_vinyas_specificity(code: &str) -> Specificity {
-    if code.contains("-पदान्त") {
-        return Specificity::Exact;
-    }
-    if code.contains("-lex") || code.contains("-PS-Saisanik") || code == "3(ई)" {
-        return Specificity::CuratedInventory;
-    }
-    Specificity::Generalized
-}
-
 fn is_tiryak_rule(code: &str) -> bool {
     code.starts_with("PS-Saisanik-7(") && code.ends_with("-तिर्यक्")
 }
@@ -384,6 +334,7 @@ mod tests {
         alternate_reasons: Vec<DiagnosticReason>,
     ) -> Diagnostic {
         Diagnostic {
+            evidence: crate::DiagnosticEvidence::Generalized,
             span,
             incorrect: incorrect.to_string(),
             correction: correction.to_string(),
@@ -527,7 +478,7 @@ mod tests {
     }
 
     #[test]
-    fn exact_padayog_particle_split_beats_generalized_word_candidate() {
+    fn curated_padayog_particle_split_beats_generalized_word_candidate() {
         let mut diagnostics = vec![
             diagnostic(
                 (20, 24),
@@ -555,6 +506,8 @@ mod tests {
             ),
         ];
 
+        diagnostics[1].evidence = Specificity::CuratedInventory;
+
         resolve_diagnostic_overlaps(&mut diagnostics);
 
         assert_eq!(diagnostics.len(), 2);
@@ -562,7 +515,7 @@ mod tests {
             diagnostics
                 .iter()
                 .any(|diagnostic| diagnostic.incorrect == "padayog"),
-            "exact padayog candidate should survive same-span generalized word rule at a nonzero index: {diagnostics:?}"
+            "curated padayog candidate should survive same-span generalized word rule at a nonzero index: {diagnostics:?}"
         );
         assert!(
             diagnostics
@@ -753,66 +706,59 @@ mod tests {
     }
 
     #[test]
-    fn classifies_specificity_from_rule_metadata() {
-        let cases = [
-            (
-                Rule::ShuddhaAshuddha("Section 4"),
-                Specificity::Exact,
-                "table",
-            ),
-            (
-                Rule::Vyakaran("section4-phrase-style-inferred-ko-ka"),
-                Specificity::Generalized,
-                "inferred-style",
-            ),
-            (
-                Rule::VarnaVinyasNiyam("3(ङ)-context-होस्"),
-                Specificity::CuratedInventory,
-                "context",
-            ),
-            (
-                Rule::Vyakaran("samasa-heuristic"),
-                Specificity::Heuristic,
-                "grammar",
-            ),
-            (
-                Rule::VarnaVinyasNiyam("3(ङ)-पदान्त"),
-                Specificity::Exact,
-                "padanta-halanta",
-            ),
-            (
-                Rule::VarnaVinyasNiyam("3(क)(अ)-5"),
-                Specificity::Generalized,
-                "broad-word-rule",
-            ),
-        ];
-
-        for (rule, expected, label) in cases {
-            let diag = diagnostic((0, 1), rule, DiagnosticKind::Error, label);
-            assert_eq!(Candidate::new(&diag).specificity, expected, "{label}");
+    fn explanation_wording_does_not_change_the_winning_correction() {
+        for explanation in [
+            "शैक्षणिक व्याकरण पदवियोग (च): निपात",
+            "Reworded explanation without a citation",
+        ] {
+            let mut word = diagnostic_with(
+                (0, 6),
+                Rule::VarnaVinyasNiyam("3(क)"),
+                DiagnosticKind::Error,
+                "word",
+                "whole-word",
+                "table explanation",
+                Vec::new(),
+            );
+            word.evidence = Specificity::Exact;
+            let mut split = diagnostic_with(
+                (0, 6),
+                Rule::VarnaVinyasNiyam("3(घ)"),
+                DiagnosticKind::Error,
+                "word",
+                "word split",
+                explanation,
+                Vec::new(),
+            );
+            split.evidence = Specificity::CuratedInventory;
+            let mut diagnostics = vec![split, word];
+            resolve_diagnostic_overlaps(&mut diagnostics);
+            assert_eq!(diagnostics.len(), 1);
+            assert_eq!(diagnostics[0].correction, "whole-word");
         }
-
-        let padayog = diagnostic_with(
-            (0, 1),
-            Rule::VarnaVinyasNiyam("3(घ)"),
-            DiagnosticKind::Error,
-            "padayog",
-            "y",
-            "शैक्षणिक व्याकरण पदवियोग (च): शब्दाश्रित निपातहरू पदवियोग गरी लेखिन्छन् ।",
-            Vec::new(),
-        );
-        assert_eq!(Candidate::new(&padayog).specificity, Specificity::Exact);
     }
 
     #[test]
-    fn live_padayog_emitters_keep_expected_specificity_shim() {
+    fn correction_table_beats_particle_split_with_a_general_outward_citation() {
+        let diagnostics = crate::check_text("सम्धिनि");
+        assert_eq!(diagnostics.len(), 1, "{diagnostics:?}");
+        assert_eq!(diagnostics[0].correction, "सम्धिनी");
+        assert_eq!(diagnostics[0].evidence, Specificity::Exact);
+        assert!(crate::check_text("सम्धिनी").is_empty());
+    }
+
+    #[test]
+    fn live_padayog_emitters_supply_inventory_evidence() {
         let diagnostics = crate::check_text("रामनै चिकित्सक हो। नेपालसरकार गलत हो।");
 
         let nipat = diagnostics
             .iter()
             .find(|diagnostic| diagnostic.incorrect == "रामनै")
             .expect("expected live nipat padayog diagnostic");
-        assert_eq!(Candidate::new(nipat).specificity, Specificity::Exact);
+        assert_eq!(
+            Candidate::new(nipat).specificity,
+            Specificity::CuratedInventory
+        );
 
         let institutional = diagnostics
             .iter()

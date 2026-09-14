@@ -151,9 +151,32 @@ impl std::fmt::Display for DiagnosticCategory {
     }
 }
 
+/// Strength of the evidence that produced a diagnostic, independent of wording.
+/// Internal arbitration metadata; intentionally omitted from binding/JSON DTOs.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DiagnosticEvidence {
+    Exact,
+    CuratedInventory,
+    Generalized,
+    Heuristic,
+}
+
+impl DiagnosticEvidence {
+    pub(crate) fn rank(self) -> u8 {
+        match self {
+            Self::Exact => 4,
+            Self::CuratedInventory => 3,
+            Self::Generalized => 2,
+            Self::Heuristic => 1,
+        }
+    }
+}
+
 /// A spell-check diagnostic.
 #[derive(Debug, Clone)]
 pub struct Diagnostic {
+    /// Evidence supplied by the producing pass; never inferred from explanation text.
+    pub evidence: DiagnosticEvidence,
     /// Byte offset span (start, end) in the original text.
     pub span: (usize, usize),
     /// The incorrect form found.

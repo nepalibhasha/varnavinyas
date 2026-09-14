@@ -294,6 +294,7 @@ mod noop_heuristic_tests {
     #[test]
     fn filters_noop_grammar_variant() {
         let d = Diagnostic {
+            evidence: crate::DiagnosticEvidence::Generalized,
             span: (0, 6),
             incorrect: "सुनारलाई".to_string(),
             correction: "सुनारलाई".to_string(),
@@ -310,6 +311,7 @@ mod noop_heuristic_tests {
     #[test]
     fn keeps_non_noop_diagnostic() {
         let d = Diagnostic {
+            evidence: crate::DiagnosticEvidence::Generalized,
             span: (0, 3),
             incorrect: "हरु".to_string(),
             correction: "हरू".to_string(),

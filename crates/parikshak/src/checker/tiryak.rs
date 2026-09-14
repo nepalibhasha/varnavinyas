@@ -89,6 +89,7 @@ struct TiryakCandidate {
 impl TiryakCandidate {
     fn into_diagnostic(self) -> Diagnostic {
         Diagnostic {
+            evidence: crate::DiagnosticEvidence::Exact,
             span: self.span,
             incorrect: self.incorrect,
             correction: self.correction,

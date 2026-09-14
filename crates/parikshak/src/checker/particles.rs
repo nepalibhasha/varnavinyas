@@ -232,6 +232,7 @@ fn push_nipat_diagnostic(
     }
 
     diagnostics.push(Diagnostic {
+        evidence: crate::DiagnosticEvidence::CuratedInventory,
         span,
         incorrect: token.to_string(),
         correction,

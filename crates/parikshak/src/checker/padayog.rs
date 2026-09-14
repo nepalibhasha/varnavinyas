@@ -81,6 +81,7 @@ pub(crate) fn add_padayog_padabiyog_diagnostics(
                 }
 
                 diagnostics.push(Diagnostic {
+                    evidence: crate::DiagnosticEvidence::Exact,
                     span,
                     incorrect: rw.incorrect.to_string(),
                     correction: rw.correct.to_string(),
@@ -307,6 +308,7 @@ fn add_generalized_padabiyog_subrule_2_vibhakti_pachhi_namayogi_split(
         }
 
         diagnostics.push(Diagnostic {
+            evidence: crate::DiagnosticEvidence::CuratedInventory,
             span,
             incorrect: seg.to_string(),
             correction,
@@ -446,6 +448,7 @@ fn add_generalized_padabiyog_subrule_10_sarthak_dwitva_split(
         }
 
         diagnostics.push(Diagnostic {
+            evidence: crate::DiagnosticEvidence::CuratedInventory,
             span,
             incorrect: token.to_string(),
             correction,
@@ -524,6 +527,7 @@ fn add_generalized_saishanik_comparison_split(
             }
 
             diagnostics.push(Diagnostic {
+                evidence: crate::DiagnosticEvidence::CuratedInventory,
                 span,
                 incorrect: token.to_string(),
                 correction,
@@ -580,6 +584,7 @@ fn add_generalized_saishanik_swarup_join(
         }
 
         diagnostics.push(Diagnostic {
+            evidence: crate::DiagnosticEvidence::CuratedInventory,
             span,
             incorrect: text[span.0..span.1].to_string(),
             correction,
@@ -632,6 +637,7 @@ fn add_generalized_saishanik_namik_kriya_split(
             }
 
             diagnostics.push(Diagnostic {
+                evidence: crate::DiagnosticEvidence::CuratedInventory,
                 span,
                 incorrect: token.to_string(),
                 correction,
@@ -687,6 +693,7 @@ fn add_generalized_saishanik_gari_split(
         }
 
         diagnostics.push(Diagnostic {
+            evidence: crate::DiagnosticEvidence::CuratedInventory,
             span,
             incorrect: token.to_string(),
             correction,
@@ -740,6 +747,7 @@ fn add_generalized_saishanik_jana_split(
 
         diagnostics.retain(|d| !(d.span == span && matches!(d.kind, DiagnosticKind::Ambiguous)));
         diagnostics.push(Diagnostic {
+            evidence: crate::DiagnosticEvidence::CuratedInventory,
             span,
             incorrect: token.to_string(),
             correction,
@@ -812,6 +820,7 @@ fn add_generalized_saishanik_middle_name_join(
         }
 
         diagnostics.push(Diagnostic {
+            evidence: crate::DiagnosticEvidence::CuratedInventory,
             span,
             incorrect: text[span.0..span.1].to_string(),
             correction,
@@ -870,6 +879,7 @@ fn add_generalized_saishanik_ekarthi_join(
         }
 
         diagnostics.push(Diagnostic {
+            evidence: crate::DiagnosticEvidence::CuratedInventory,
             span,
             incorrect: text[span.0..span.1].to_string(),
             correction,
@@ -916,6 +926,7 @@ fn add_generalized_saishanik_institutional_split(
             }
 
             diagnostics.push(Diagnostic {
+                evidence: crate::DiagnosticEvidence::CuratedInventory,
                 span,
                 incorrect: token.to_string(),
                 correction,
@@ -964,6 +975,7 @@ fn add_generalized_saishanik_title_name_split(
             }
 
             diagnostics.push(Diagnostic {
+                evidence: crate::DiagnosticEvidence::CuratedInventory,
                 span,
                 incorrect: token.to_string(),
                 correction,
@@ -1011,6 +1023,7 @@ fn add_generalized_saishanik_multiword_samasa_split(
         }
 
         diagnostics.push(Diagnostic {
+            evidence: crate::DiagnosticEvidence::CuratedInventory,
             span,
             incorrect: token.to_string(),
             correction,
@@ -1327,6 +1340,7 @@ fn add_generalized_padayog_layered_join(
         };
 
         diagnostics.push(Diagnostic {
+            evidence: crate::DiagnosticEvidence::Generalized,
             span,
             incorrect: text[span.0..span.1].to_string(),
             correction,
@@ -1387,6 +1401,7 @@ fn add_generalized_padayog_layered_join(
         }
 
         diagnostics.push(Diagnostic {
+            evidence: crate::DiagnosticEvidence::Generalized,
             span,
             incorrect: text[span.0..span.1].to_string(),
             correction,
@@ -1445,6 +1460,7 @@ fn add_generalized_padayog_vibhakti_join(
         }
 
         diagnostics.push(Diagnostic {
+            evidence: crate::DiagnosticEvidence::Generalized,
             span,
             incorrect: text[span.0..span.1].to_string(),
             correction: candidate,
@@ -1504,6 +1520,7 @@ fn add_generalized_padayog_pratyaya_join(
         }
 
         diagnostics.push(Diagnostic {
+            evidence: if right == normalized_right { crate::DiagnosticEvidence::Generalized } else { crate::DiagnosticEvidence::CuratedInventory },
             span,
             incorrect: text[span.0..span.1].to_string(),
             correction,
@@ -1590,6 +1607,7 @@ fn add_generalized_padayog_namayogi_join(
         }
 
         diagnostics.push(Diagnostic {
+            evidence: crate::DiagnosticEvidence::Generalized,
             span,
             incorrect: text[span.0..span.1].to_string(),
             correction,
@@ -1655,6 +1673,7 @@ fn add_generalized_padabiyog_vibhakti_split(
         }
 
         diagnostics.push(Diagnostic {
+            evidence: crate::DiagnosticEvidence::Generalized,
             span,
             incorrect: seg.to_string(),
             correction,
@@ -1701,6 +1720,7 @@ fn add_generalized_padayog_conjunction_join(
                 continue;
             }
             diagnostics.push(Diagnostic {
+                evidence: crate::DiagnosticEvidence::Generalized,
                 span,
                 incorrect: text[span.0..span.1].to_string(),
                 correction: joined.to_string(),
@@ -1806,6 +1826,7 @@ fn add_generalized_padabiyog_verb_complex_split(
         }
 
         diagnostics.push(Diagnostic {
+            evidence: crate::DiagnosticEvidence::Generalized,
             span,
             incorrect: seg.to_string(),
             correction,

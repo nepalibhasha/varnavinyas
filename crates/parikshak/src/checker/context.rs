@@ -43,6 +43,7 @@ struct ContextCandidate {
 impl From<ContextCandidate> for Diagnostic {
     fn from(candidate: ContextCandidate) -> Self {
         Diagnostic {
+            evidence: crate::DiagnosticEvidence::CuratedInventory,
             span: candidate.span,
             incorrect: candidate.incorrect,
             correction: candidate.correction,
