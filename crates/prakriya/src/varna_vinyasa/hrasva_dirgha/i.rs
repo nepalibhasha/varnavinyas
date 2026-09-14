@@ -36,6 +36,16 @@ pub const SPEC_FINAL_HRASVA_ENDINGS: RuleSpec = RuleSpec {
     examples: &[("आलू", "आलु"), ("गराई", "गराइ"), ("अगाडी", "अगाडि")],
 };
 
+// Academy 3(क)(ऊ)-3, shared with explanations for accepted forms.
+pub(super) const FEM_KINSHIP_HRASVA_TO_DIRGHA: &[(&str, &str)] = &[
+    ("भाउजु", "भाउजू"),
+    ("फुपु", "फुपू"),
+    ("सासु", "सासू"),
+    ("बुहारि", "बुहारी"),
+    ("जेठानि", "जेठानी"),
+    ("कान्छि", "कान्छी"),
+];
+
 pub fn rule_kinship_tadbhav(input: &str) -> Option<Prakriya> {
     let origin = classify(input);
     if !matches!(origin, Origin::Tadbhav | Origin::Deshaj) {
@@ -86,15 +96,6 @@ pub fn rule_kinship_tadbhav(input: &str) -> Option<Prakriya> {
             ));
         }
     }
-
-    static FEM_KINSHIP_HRASVA_TO_DIRGHA: &[(&str, &str)] = &[
-        ("भाउजु", "भाउजू"),
-        ("फुपु", "फुपू"),
-        ("सासु", "सासू"),
-        ("बुहारि", "बुहारी"),
-        ("जेठानि", "जेठानी"),
-        ("कान्छि", "कान्छी"),
-    ];
 
     for &(wrong, correct) in FEM_KINSHIP_HRASVA_TO_DIRGHA {
         if input == wrong {

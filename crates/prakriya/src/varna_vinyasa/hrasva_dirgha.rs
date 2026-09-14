@@ -47,3 +47,25 @@ pub use uu::{
     rule_dirgha_endings, rule_final_adjective_dirgha, rule_final_ii_suffix_dirgha,
     rule_final_vati_vi_dirgha,
 };
+
+/// Explanations for accepted forms, using the same lexical classes as correction.
+/// Keep this conservative: an ending alone does not establish grammatical class.
+pub(crate) fn accepted_form_note(word: &str) -> Option<crate::Explanation> {
+    if i::FEM_KINSHIP_HRASVA_TO_DIRGHA
+        .iter()
+        .any(|(_, correct)| *correct == word)
+    {
+        return Some(crate::Explanation::new(
+            crate::Rule::VarnaVinyasNiyam("3(क)(ऊ)-3"),
+            "स्त्रीलिङ्ग नातागोता शब्दमा दीर्घ",
+        ));
+    }
+    if helpers::final_classes::is_vidhyarthak_or_feminine_verb_dirgha(word) {
+        let (code, description) = helpers::final_classes::final_dirgha_class_for(word, "ई/ऊ");
+        return Some(crate::Explanation::new(
+            crate::Rule::VarnaVinyasNiyam(code),
+            description,
+        ));
+    }
+    None
+}

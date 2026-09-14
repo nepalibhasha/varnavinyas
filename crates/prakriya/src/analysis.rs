@@ -89,6 +89,9 @@ pub fn analyze(input: &str) -> WordAnalysis {
 
 /// पहिले नै सही शब्दका लागि व्याख्यात्मक टिप्पणी बनाउने।
 fn generate_correct_notes(word: &str, origin: Origin, notes: &mut Vec<RuleNote>) {
+    if let Some(note) = crate::varna_vinyasa::hrasva_dirgha::accepted_form_note(word) {
+        notes.push(note);
+    }
     for template in NOTE_TEMPLATES {
         if template.origin == origin && marker_matches(word, template.marker) {
             notes.push(Explanation::new(template.rule, template.explanation));
@@ -224,7 +227,7 @@ const NOTE_TEMPLATES: &[NoteTemplate] = &[
         origin: Origin::Deshaj,
         marker: NoteMarker::Always,
         rule: Rule::VarnaVinyasNiyam("3(क)"),
-        explanation: "देशज (deshaj) शब्द: मूल नेपाली शब्द, ह्रस्व नियम लागू",
+        explanation: "देशज (deshaj) शब्द: नेपालीमा विकसित मौलिक शब्द",
     },
     // आगन्तुक
     NoteTemplate {

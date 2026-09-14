@@ -54,3 +54,26 @@ fn generic_ba_va_does_not_reverse_reviewed_forms_or_damage_inflections() {
         );
     }
 }
+
+#[test]
+fn accepted_forms_explain_their_specific_spelling_without_a_correction() {
+    for (word, code) in [("भाउजू", "3(क)(ऊ)-3"), ("जाऊ", "3(क)(ऊ)-10")] {
+        let analysis = varnavinyas_prakriya::analyze(word);
+        assert!(analysis.is_correct, "{analysis:?}");
+        assert!(analysis.correction.is_none());
+        assert_eq!(analysis.rule_notes[0].rule.code(), code);
+        assert!(
+            !analysis
+                .rule_notes
+                .iter()
+                .any(|note| note.explanation.contains("ह्रस्व नियम लागू"))
+        );
+    }
+    let unrelated = varnavinyas_prakriya::analyze("आवाज");
+    assert!(
+        !unrelated
+            .rule_notes
+            .iter()
+            .any(|note| matches!(note.rule.code(), "3(क)(ऊ)-3" | "3(क)(ऊ)-10"))
+    );
+}
