@@ -15,7 +15,7 @@ swiftc "$WORK/bindings/varnavinyas_bindings_uniffi.swift" release/evaluate.swift
   -Xcc "-fmodule-map-file=$WORK/bindings/varnavinyas_bindings_uniffiFFI.modulemap" \
   -I "$WORK/bindings" -L target/release -lvarnavinyas_bindings_uniffi \
   -Xlinker -rpath -Xlinker "$PWD/target/release" -o "$WORK/evaluate"
-"$WORK/evaluate" docs/tests/mobile_diagnostics.json
+"$WORK/evaluate" docs/tests/mobile_diagnostics.json docs/tests/origin_classification.json
 for target in aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios; do
   cargo build --release --locked --target "$target" -p varnavinyas-bindings-uniffi --lib
 done

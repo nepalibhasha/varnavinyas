@@ -46,7 +46,7 @@ print(result.sandhi_type.display_label)  # "स्वर सन्धि"
 
 - This crate should stay thin: Rust owns the actual language logic.
 - Python consumers should get the same semantics as the Rust APIs, not a separate behavior fork.
-- When the core crates gain better provenance/authority metadata, this crate should expose that directly.
+- Use `shabda.classify_with_provenance` for origin explanations; it exposes core evidence without the legacy fallback.
 
 ## Used By
 
@@ -88,9 +88,27 @@ Tags matching `python-artifact-v*` trigger
 `.github/workflows/release-python-artifact.yml`, which builds and uploads a
 wheel to GitHub Releases. This does not publish to PyPI.
 
-`shabda.classify()` retains the four-way best-effort `Origin` enum. It does not
-expose the core's origin provenance, so a fallback `Deshaj` must not be shown as
-verified etymology. See [Integration Notes](../../docs/INTEGRATION_NOTES.md).
+`shabda.classify()` retains the four-way best-effort `Origin` enum. For
+explanations, use the additive v0.1.2 API:
+
+```python
+from varnavinyas import shabda
+
+decision = shabda.classify_with_provenance("नेपाले")
+assert decision.origin is None
+assert decision.source == shabda.OriginSource.Unknown
+assert decision.confidence == 0.0
+
+documented = shabda.classify_with_provenance("टोपी")
+assert documented.origin == shabda.Origin.Deshaj
+assert documented.source == shabda.OriginSource.Override
+```
+
+`OriginDecision` is a read-only result with `origin`, `source`, and `confidence`.
+Sources are `Override`, `Kosha`, `Heuristic`, and `Unknown`. Label heuristic
+results as inferred; only dictionary/override results are documented. The
+legacy Deshaj fallback is unchanged and is not verified etymology. See
+[Integration Notes](../../docs/INTEGRATION_NOTES.md).
 
 In v0.1.1, `check_text_with_options` preserves the v0.1.0 positional order
 `(text, grammar=False, punctuation_mode="strict", include_noop_heuristics=False)`.

@@ -148,5 +148,5 @@ jobs:
           name: CLI ${{ steps.version.outputs.cli_version }}
           draft: true
           generate_release_notes: true
-          body_path: docs/releases/native-v0.1.1.md
+          body_path: docs/releases/native-v0.1.2.md
           files: release-assets/*

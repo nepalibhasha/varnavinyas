@@ -20,9 +20,12 @@ The exported API currently focuses on a compact core:
 - `check_word`
 - `transliterate`
 - `classify`
+- `classify_with_provenance`
 
 It also exports the `Scheme`, `Origin`, `PunctuationMode`, and
-`OrthographyMode` enums used by those functions.
+`OrthographyMode` enums used by those functions. `OriginDecision` is a record
+with nullable `origin`, `OriginSource` (`Override`, `Kosha`, `Heuristic`,
+`Unknown`), and `confidence`. Unknown has no origin and zero confidence.
 
 ## Example
 
@@ -55,7 +58,8 @@ The exact call shape depends on the generated Swift/Kotlin package, but the expo
 - The surface area is intentionally narrower than the Rust API.
 - Some outputs are still simplified for portability.
 - `classify` returns a best-effort four-way origin category without provenance.
-  A fallback `Deshaj` is not verified etymology; see
+  Use `classify_with_provenance` for explanations, labelling heuristic results
+  as inferred and absent origin as unknown. A fallback `Deshaj` is not verified etymology; see
   [Integration Notes](../../docs/INTEGRATION_NOTES.md).
 
 ## Status
@@ -64,9 +68,10 @@ Implemented MVP integration layer.
 
 ## Offline Evaluation Artifacts
 
-The iOS and Android v0.1.1 ZIPs include generated Swift/Kotlin bindings, native
+The iOS and Android v0.1.2 ZIPs include generated Swift/Kotlin bindings, native
 libraries, manifests with the source commit and file checksums, and identical
-diagnostic fixtures for both orthography modes. The iOS XCFramework includes
+diagnostic fixtures for both orthography modes plus origin evidence fixtures.
+Upgrade generated bindings and native libraries together. The iOS XCFramework includes
 the generated C header and module map for each platform slice.
 
 See [Mobile Evaluation](../../docs/MOBILE_EVALUATION.md) for integration,

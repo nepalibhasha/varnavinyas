@@ -42,6 +42,47 @@ pub struct PyMorpheme {
     pub origin: PyOrigin,
 }
 
+/// Evidence source; Unknown means no origin evidence is available.
+#[pyclass(from_py_object, name = "OriginSource", eq, frozen, hash)]
+#[derive(Clone, PartialEq, Eq, Hash)]
+pub enum PyOriginSource {
+    Override,
+    Kosha,
+    Heuristic,
+    Unknown,
+}
+
+impl From<shabda_core::OriginSource> for PyOriginSource {
+    fn from(source: shabda_core::OriginSource) -> Self {
+        match source {
+            shabda_core::OriginSource::Override => Self::Override,
+            shabda_core::OriginSource::Kosha => Self::Kosha,
+            shabda_core::OriginSource::Heuristic => Self::Heuristic,
+            shabda_core::OriginSource::Unknown => Self::Unknown,
+        }
+    }
+}
+
+/// Origin with evidence. `origin` is None when `source` is Unknown.
+#[pyclass(from_py_object, name = "OriginDecision", get_all, frozen)]
+#[derive(Clone)]
+pub struct PyOriginDecision {
+    pub origin: Option<PyOrigin>,
+    pub source: PyOriginSource,
+    pub confidence: f32,
+}
+
+/// Classify with evidence; missing evidence is never presented as Deshaj.
+#[pyfunction]
+pub fn classify_with_provenance(word: &str) -> PyOriginDecision {
+    let decision = shabda_core::classify_with_provenance(word);
+    PyOriginDecision {
+        origin: decision.supported_origin().map(Into::into),
+        source: decision.source.into(),
+        confidence: decision.confidence,
+    }
+}
+
 #[pyclass(from_py_object, name = "AffixKind", eq, frozen, hash)]
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub enum PyAffixKind {
@@ -231,12 +272,15 @@ pub fn has_supported_analysis(word: &str) -> bool {
 #[pymodule]
 pub fn shabda(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyOrigin>()?;
+    m.add_class::<PyOriginSource>()?;
+    m.add_class::<PyOriginDecision>()?;
     m.add_class::<PyAffixKind>()?;
     m.add_class::<PyAffixSegment>()?;
     m.add_class::<PyAffixAnalysis>()?;
     m.add_class::<PyMorpheme>()?;
     m.add_class::<PyRootCandidate>()?;
     m.add_function(wrap_pyfunction!(classify, m)?)?;
+    m.add_function(wrap_pyfunction!(classify_with_provenance, m)?)?;
     m.add_function(wrap_pyfunction!(decompose, m)?)?;
     m.add_function(wrap_pyfunction!(lookup_root_candidates, m)?)?;
     m.add_function(wrap_pyfunction!(has_known_root, m)?)?;

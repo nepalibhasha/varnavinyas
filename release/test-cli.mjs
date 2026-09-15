@@ -26,3 +26,14 @@ for (const entry of fixtures.cases) {
   });
 }
 console.log(`CLI: ${fixtures.cases.length} shared diagnostic fixtures passed`);
+const origins = JSON.parse(fs.readFileSync('docs/tests/origin_classification.json', 'utf8'));
+for (const entry of origins.cases) {
+  const result = spawnSync(process.argv[2], ['classify', entry.word, '--format', 'json'], { encoding: 'utf8' });
+  assert.ifError(result.error);
+  assert.equal(result.status, 0, result.stderr);
+  const actual = JSON.parse(result.stdout);
+  assert.equal(actual.origin, entry.expected.origin, entry.id);
+  assert.equal(actual.source, entry.expected.source, entry.id);
+  assert.ok(Math.abs(actual.confidence - entry.expected.confidence) < 1e-6, entry.id);
+}
+console.log(`CLI: ${origins.cases.length} shared origin fixtures passed`);

@@ -19,11 +19,24 @@ Browser artifact manifests advertise this through
 `capabilities.word_analysis_origin_sources`. Treat an unrecognized origin or
 source as unknown rather than claiming documented evidence.
 
-The lower-level Rust `classify()` and the Python, C, and UniFFI classification
+The lower-level Rust `classify()` and the Python, C, and UniFFI `classify`
 wrappers still return a best-effort four-way category for compatibility.
-`decompose_word_value().origin` has the same limitation. Their fallback `Deshaj`
-is not documented etymology. Rust callers can use `classify_with_provenance()`;
-the Python, C, and UniFFI classification wrappers do not yet expose provenance.
+`decompose_word_value().origin` and existing Python decomposition origin fields
+have the same limitation. Their fallback `Deshaj` is not documented etymology.
+
+Starting with native v0.1.2, Python `shabda.classify_with_provenance()` and
+Swift/Kotlin `classifyWithProvenance` expose an `OriginDecision`: nullable
+`origin`, `source` (`Override`, `Kosha`, `Heuristic`, `Unknown`), and
+`confidence`. Unknown is `None`/`nil`/`null`, with source Unknown and confidence
+zero. This is an additive API; the existing `Origin` enum has no new values.
+Rust callers use `classify_with_provenance()` and its `supported_origin()`
+method to omit the legacy fallback. Evidence scores are not calibrated
+probabilities. The C wrapper still lacks a provenance function.
+
+CLI `classify WORD --format json` returns the same three fields using lowercase
+category/source codes and JSON `null` for unknown origin. It does not change the
+existing `check` command. New native APIs use a nullable origin; browser word
+analysis retains its existing string `"unknown"` convention.
 
 Morphology is conservative: an omitted split means there is insufficient
 supported analysis, not that a word cannot have a derivation. For example,

@@ -5,6 +5,61 @@ fn cmd() -> Command {
     assert_cmd::cargo::cargo_bin_cmd!("varnavinyas")
 }
 
+#[test]
+fn classify_json_matches_shared_origin_evidence() {
+    let fixtures: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../docs/tests/origin_classification.json"
+    ))
+    .unwrap();
+    for case in fixtures["cases"].as_array().unwrap() {
+        let output = cmd()
+            .args([
+                "classify",
+                case["word"].as_str().unwrap(),
+                "--format",
+                "json",
+            ])
+            .assert()
+            .success()
+            .get_output()
+            .stdout
+            .clone();
+        let actual: serde_json::Value = serde_json::from_slice(&output).unwrap();
+        assert_eq!(
+            actual["origin"], case["expected"]["origin"],
+            "{}",
+            case["id"]
+        );
+        assert_eq!(actual["source"], case["expected"]["source"]);
+        assert!(
+            (actual["confidence"].as_f64().unwrap()
+                - case["expected"]["confidence"].as_f64().unwrap())
+            .abs()
+                < 1e-6
+        );
+    }
+}
+
+#[test]
+fn classify_text_labels_unknown_inferred_and_documented() {
+    cmd()
+        .args(["classify", "नेपाले"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Unknown (no origin evidence"))
+        .stdout(predicate::str::contains("deshaj").not());
+    cmd()
+        .args(["classify", "क़लम"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("aagantuk (inferred"));
+    cmd()
+        .args(["classify", "टोपी"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("deshaj (documented"));
+}
+
 // ── check subcommand ────────────────────────────────────────────
 
 #[test]

@@ -3,3 +3,4 @@ data/headwords.tsv -whitespace
 
 # Release fixtures must have identical bytes and checksums on every platform.
 docs/tests/mobile_diagnostics.json text eol=lf
+docs/tests/origin_classification.json text eol=lf

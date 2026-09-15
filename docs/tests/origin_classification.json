@@ -1,0 +1,13 @@
+{
+  "fixture_schema_version": 1,
+  "cases": [
+    {"id": "empty", "word": "", "expected": {"origin": null, "source": "unknown", "confidence": 0.0}, "legacy_origin": "deshaj"},
+    {"id": "unrecognized", "word": "कखगघङ", "expected": {"origin": null, "source": "unknown", "confidence": 0.0}, "legacy_origin": "deshaj"},
+    {"id": "headword-without-origin", "word": "नेपाले", "expected": {"origin": null, "source": "unknown", "confidence": 0.0}, "legacy_origin": "deshaj"},
+    {"id": "documented-deshaj", "word": "टोपी", "expected": {"origin": "deshaj", "source": "override", "confidence": 1.0}, "legacy_origin": "deshaj"},
+    {"id": "documented-tadbhav", "word": "आगो", "expected": {"origin": "tadbhav", "source": "override", "confidence": 1.0}, "legacy_origin": "tadbhav"},
+    {"id": "documented-tatsam", "word": "विज्ञान", "expected": {"origin": "tatsam", "source": "override", "confidence": 1.0}, "legacy_origin": "tatsam"},
+    {"id": "dictionary-origin", "word": "अध्ययन", "expected": {"origin": "tatsam", "source": "kosha", "confidence": 0.95}, "legacy_origin": "tatsam"},
+    {"id": "inferred-aagantuk", "word": "क़लम", "expected": {"origin": "aagantuk", "source": "heuristic", "confidence": 0.65}, "legacy_origin": "aagantuk"}
+  ]
+}

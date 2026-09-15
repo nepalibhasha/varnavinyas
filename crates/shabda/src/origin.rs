@@ -15,6 +15,16 @@ pub enum OriginSource {
 }
 
 impl OriginSource {
+    /// Stable code for public JSON and presentation contracts.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Override => "override",
+            Self::Kosha => "kosha",
+            Self::Heuristic => "heuristic",
+            Self::Unknown => "unknown",
+        }
+    }
+
     pub fn is_documented(self) -> bool {
         matches!(self, Self::Override | Self::Kosha)
     }
@@ -26,6 +36,15 @@ pub struct OriginDecision {
     pub origin: Origin,
     pub source: OriginSource,
     pub confidence: f32,
+}
+
+impl OriginDecision {
+    /// Category backed by documented or heuristic evidence, if any.
+    /// Unlike the legacy `origin` field, this never exposes an unknown fallback
+    /// as Deshaj. Callers must still label heuristic evidence as inferred.
+    pub fn supported_origin(self) -> Option<Origin> {
+        (self.source != OriginSource::Unknown).then_some(self.origin)
+    }
 }
 
 /// नेपाली शब्दलाई उत्पत्तिका आधारमा वर्गीकृत गर्ने।

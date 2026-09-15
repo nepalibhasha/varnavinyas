@@ -23,6 +23,50 @@ pub enum Origin {
     Aagantuk,
 }
 
+/// Evidence source for an origin classification.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
+pub enum OriginSource {
+    Override,
+    Kosha,
+    Heuristic,
+    Unknown,
+}
+
+/// Origin with evidence. Unknown evidence has no origin and zero confidence.
+#[derive(Debug, Clone, PartialEq, uniffi::Record)]
+pub struct OriginDecision {
+    pub origin: Option<Origin>,
+    pub source: OriginSource,
+    pub confidence: f32,
+}
+
+impl From<varnavinyas_shabda::Origin> for Origin {
+    fn from(origin: varnavinyas_shabda::Origin) -> Self {
+        match origin {
+            varnavinyas_shabda::Origin::Tatsam => Self::Tatsam,
+            varnavinyas_shabda::Origin::Tadbhav => Self::Tadbhav,
+            varnavinyas_shabda::Origin::Deshaj => Self::Deshaj,
+            varnavinyas_shabda::Origin::Aagantuk => Self::Aagantuk,
+        }
+    }
+}
+
+/// Classify with evidence without exposing the legacy unknown-to-Deshaj fallback.
+#[uniffi::export]
+pub fn classify_with_provenance(word: String) -> OriginDecision {
+    let decision = varnavinyas_shabda::classify_with_provenance(&word);
+    OriginDecision {
+        origin: decision.supported_origin().map(Into::into),
+        source: match decision.source {
+            varnavinyas_shabda::OriginSource::Override => OriginSource::Override,
+            varnavinyas_shabda::OriginSource::Kosha => OriginSource::Kosha,
+            varnavinyas_shabda::OriginSource::Heuristic => OriginSource::Heuristic,
+            varnavinyas_shabda::OriginSource::Unknown => OriginSource::Unknown,
+        },
+        confidence: decision.confidence,
+    }
+}
+
 /// Runtime punctuation classification mode for diagnostics.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
 pub enum PunctuationMode {
@@ -129,12 +173,7 @@ pub fn transliterate(input: String, from: Scheme, to: Scheme) -> Result<String, 
 /// Classify a word by its origin.
 #[uniffi::export]
 pub fn classify(word: String) -> Origin {
-    match varnavinyas_shabda::classify(&word) {
-        varnavinyas_shabda::Origin::Tatsam => Origin::Tatsam,
-        varnavinyas_shabda::Origin::Tadbhav => Origin::Tadbhav,
-        varnavinyas_shabda::Origin::Deshaj => Origin::Deshaj,
-        varnavinyas_shabda::Origin::Aagantuk => Origin::Aagantuk,
-    }
+    varnavinyas_shabda::classify(&word).into()
 }
 
 #[cfg(test)]

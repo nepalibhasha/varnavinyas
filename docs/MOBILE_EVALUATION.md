@@ -1,8 +1,8 @@
 # Offline Mobile Evaluation
 
-iOS and Android evaluation ZIPs in the v0.1.1 release set come from the same
+iOS and Android evaluation ZIPs in the v0.1.2 release set come from the same
 Git commit as the Python and CLI releases. Compare `source_commit` and
-`fixtures.sha256` in each `manifest.json` before evaluating. Every payload file
+`fixtures.sha256` and `origin_fixtures.sha256` in each `manifest.json` before evaluating. Every payload file
 has a SHA-256 checksum in the manifest. The manifest is not a signature.
 
 The dictionary and rules are compiled into each native library. Checking text
@@ -66,7 +66,24 @@ return JSON diagnostic strings with the same fields and semantics:
 - `grammar` enables heuristic diagnostics; it is off by default. In evaluation
   and production, make the option explicit rather than silently changing it.
 - `classify` preserves its four-way compatibility enum. Its fallback Deshaj
-  does not prove origin; these mobile APIs do not yet expose origin provenance.
+  does not prove origin. Use `classifyWithProvenance` for explanations.
+
+```swift
+let decision = classifyWithProvenance(word: "नेपाले")
+assert(decision.origin == nil && decision.source == .unknown)
+```
+
+```kotlin
+val decision = classifyWithProvenance("नेपाले")
+check(decision.origin == null && decision.source == OriginSource.UNKNOWN)
+```
+
+The `OriginDecision` record exposes nullable `origin`, `source`, and
+`confidence`. Source Override/Kosha means documented evidence; Heuristic means
+inferred; Unknown means no evidence, absent origin, and zero confidence.
+Scores are not calibrated probabilities. A documented Deshaj result remains
+distinct from unknown. Existing `Origin` enum cases and `classify` behavior
+are unchanged. Compile the generated bindings with the matching native library.
 
 ## Shared Fixtures and Evaluation
 
@@ -78,8 +95,9 @@ irrelevant; compare numeric confidence with a small floating-point tolerance
 if the consumer reserializes it.
 
 `evaluation/evaluate.swift` and `evaluation/Evaluate.kt` run these fixtures
-through the generated bindings. Swift's command-line harness takes the fixture
-path as its first argument; Kotlin's JVM harness also uses `org.json` (available
+through the generated bindings, followed by the eight origin cases in
+`fixtures/origins.json`. Both command-line harnesses take diagnostic and origin
+fixture paths as their first and second arguments. Kotlin's JVM harness uses `org.json` (available
 on Android, supplied separately for the host JVM). In an app test target, adapt
 the harness to read the bundled fixture resource rather than command-line args.
 

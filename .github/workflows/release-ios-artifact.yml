@@ -49,7 +49,7 @@ jobs:
           name: iOS Artifact ${{ steps.version.outputs.artifact_version }}
           draft: true
           generate_release_notes: true
-          body_path: docs/releases/native-v0.1.1.md
+          body_path: docs/releases/native-v0.1.2.md
           files: |
             dist/varnavinyas-ios-artifact-*.zip
             dist/varnavinyas-ios-artifact-*.sha256

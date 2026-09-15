@@ -17,7 +17,7 @@ curl -fL --retry 3 https://repo.maven.apache.org/maven2/org/json/json/20240303/j
 "$WORK/tools/kotlinc/bin/kotlinc" "$WORK/bindings/uniffi/varnavinyas_bindings_uniffi/varnavinyas_bindings_uniffi.kt" \
   release/Evaluate.kt -cp "$WORK/tools/jna.jar:$WORK/tools/json.jar" -include-runtime -d "$WORK/evaluate.jar"
 java -Djna.library.path="$PWD/target/release" -cp "$WORK/evaluate.jar:$WORK/tools/jna.jar:$WORK/tools/json.jar" \
-  EvaluateKt docs/tests/mobile_diagnostics.json
+  EvaluateKt docs/tests/mobile_diagnostics.json docs/tests/origin_classification.json
 export ANDROID_NDK_HOME="${ANDROID_NDK_LATEST_HOME:-${ANDROID_NDK_HOME:-}}"
 test -d "$ANDROID_NDK_HOME"
 cargo ndk --target aarch64-linux-android --target armv7-linux-androideabi --target x86_64-linux-android \

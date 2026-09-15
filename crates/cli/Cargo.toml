@@ -1,6 +1,6 @@
 [package]
 name = "varnavinyas"
-version = "0.1.1"
+version = "0.1.2"
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
@@ -16,6 +16,7 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 varnavinyas-akshar = { workspace = true }
 varnavinyas-lipi = { workspace = true }
+varnavinyas-shabda = { workspace = true }
 varnavinyas-parikshak = { workspace = true, features = ["grammar-pass"] }
 
 [dev-dependencies]

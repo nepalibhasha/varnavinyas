@@ -1,7 +1,8 @@
 # CLI JSON Output Contract
 
-This contract covers `varnavinyas check --format json`, the integration surface
-intended for editor packages such as `nepali.el`.
+The diagnostic contract below covers `varnavinyas check --format json`, the
+integration surface intended for editor packages such as `nepali.el`. The
+separate `classify` contract is described at the end of this document.
 
 ## Stability
 
@@ -86,3 +87,22 @@ Each `alternate_reasons` item has these required fields:
   }
 ]
 ```
+
+## Origin Classification (v0.1.2+)
+
+`varnavinyas classify WORD --format json` emits one object:
+
+```json
+{"origin":null,"source":"unknown","confidence":0.0}
+```
+
+`origin` is `tatsam`, `tadbhav`, `deshaj`, `aagantuk`, or JSON `null`.
+`source` is `override`, `kosha`, `heuristic`, or `unknown`. Dictionary and
+reviewed override evidence are documented; heuristics are inferred. Unknown
+has null origin and zero confidence. Confidence is an evidence score, not a
+calibrated probability. Unknown does not mean the word is misspelled or absent
+from the dictionary.
+
+Classification exits 0 even when unknown; invalid command usage exits 2.
+Consumers must ignore unfamiliar fields. The `check` contract above is
+unchanged. Shared cases live in `docs/tests/origin_classification.json`.

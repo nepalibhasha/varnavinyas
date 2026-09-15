@@ -64,5 +64,19 @@ for case in cases:
         assert [reason.rule_code for reason in found.alternate_reasons] == [
             reason["rule_code"] for reason in wanted.get("alternate_reasons", [])]
 print(f"Python: {len(cases)} shared diagnostic fixtures passed.")
+from pathlib import Path
+with open(Path(sys.argv[1]).with_name("origin_classification.json"), encoding="utf-8") as fixture_file:
+    origin_cases = json.load(fixture_file)["cases"]
+origins = {name.lower(): getattr(v.shabda.Origin, name) for name in ("Tatsam", "Tadbhav", "Deshaj", "Aagantuk")}
+sources = {name.lower(): getattr(v.shabda.OriginSource, name) for name in ("Override", "Kosha", "Heuristic", "Unknown")}
+for case in origin_cases:
+    result = v.shabda.classify_with_provenance(case["word"])
+    assert isinstance(result, v.shabda.OriginDecision)
+    expected = case["expected"]
+    assert result.origin == origins.get(expected["origin"]), case["id"]
+    assert result.source == sources[expected["source"]], case["id"]
+    assert math.isclose(result.confidence, expected["confidence"], abs_tol=1e-6)
+    assert v.shabda.classify(case["word"]) == origins[case["legacy_origin"]]
+print(f"Python: {len(origin_cases)} shared origin fixtures passed.")
 print("Python wheel import and API smoke checks passed.")
 PY

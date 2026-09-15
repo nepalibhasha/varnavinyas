@@ -1,5 +1,6 @@
 mod cmd_akshar;
 mod cmd_check;
+mod cmd_classify;
 mod cmd_lipi;
 
 use clap::{Parser, Subcommand, ValueEnum};
@@ -14,6 +15,12 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Classify word origin with documented, inferred, or unknown evidence
+    Classify {
+        word: String,
+        #[arg(long, value_enum, default_value = "text")]
+        format: OutputFormat,
+    },
     /// Spell-check Nepali text
     Check {
         /// File to check (use - for stdin, default: stdin)
@@ -91,6 +98,10 @@ fn main() -> ExitCode {
     let cli = Cli::parse();
 
     match cli.command {
+        Commands::Classify { word, format } => {
+            cmd_classify::run(&word, format);
+            ExitCode::SUCCESS
+        }
         Commands::Check {
             input,
             explain,

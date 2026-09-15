@@ -15,4 +15,16 @@ fun main(args: Array<String>) {
         check(actual.similar(entry.getJSONArray("expected_diagnostics"))) { "Fixture failed: ${entry.getString("id")}" }
     }
     println("Kotlin generated bindings: ${cases.length()} shared diagnostic fixtures passed")
+    val originCases = JSONObject(File(args[1]).readText()).getJSONArray("cases")
+    for (index in 0 until originCases.length()) {
+        val entry = originCases.getJSONObject(index)
+        val expected = entry.getJSONObject("expected")
+        val actual = classifyWithProvenance(entry.getString("word"))
+        val expectedOrigin = if (expected.isNull("origin")) null else expected.getString("origin")
+        check(actual.origin?.name?.lowercase() == expectedOrigin) { "Origin: ${entry.getString("id")}" }
+        check(actual.source.name.lowercase() == expected.getString("source"))
+        check(kotlin.math.abs(actual.confidence.toDouble() - expected.getDouble("confidence")) < 1e-6)
+        check(classify(entry.getString("word")).name.lowercase() == entry.getString("legacy_origin"))
+    }
+    println("Kotlin generated bindings: ${originCases.length()} shared origin fixtures passed")
 }

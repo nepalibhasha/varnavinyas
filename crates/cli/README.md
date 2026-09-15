@@ -13,6 +13,7 @@ The CLI currently exposes commands for:
 - `check` -> run text diagnostics
 - `akshar` -> inspect script/akshara behavior
 - `lipi` -> transliterate text
+- `classify` -> origin classification with evidence and confidence
 
 ## Example
 
@@ -54,3 +55,13 @@ JSON output contract is documented in `docs/CLI_JSON_CONTRACT.md`.
 ## Status
 
 Usable command surface for local workflows and CI.
+
+## Origin Classification
+
+Use `varnavinyas classify "नेपाले"` for a readable origin explanation or
+`varnavinyas classify "नेपाले" --format json` for the additive v0.1.2 API.
+JSON returns `origin` (nullable lowercase category), `source` (`override`,
+`kosha`, `heuristic`, `unknown`), and `confidence`. Unknown has null origin and
+zero confidence. Text output labels documented, inferred, and absent evidence.
+The command exits zero for any successful classification, including unknown.
+The existing `check` command and its JSON contract are unchanged.
