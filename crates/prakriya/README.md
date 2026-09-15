@@ -265,3 +265,7 @@ has a resolver underneath it.
 ## Status
 
 Core rule engine under active expansion.
+
+Bare verb-root/imperative pairs such as `हेर` / `हेर्` are context-dependent.
+`derive()` preserves both; `analyze()` explains Academy 3(ङ)-1 and
+3(ङ)-अजन्त-3 without proposing a context-free replacement.

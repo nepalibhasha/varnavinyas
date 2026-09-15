@@ -92,6 +92,9 @@ fn generate_correct_notes(word: &str, origin: Origin, notes: &mut Vec<RuleNote>)
     if let Some(note) = crate::varna_vinyasa::hrasva_dirgha::accepted_form_note(word) {
         notes.push(note);
     }
+    if let Some(note) = crate::varna_vinyasa::halanta_ra_ajanta::context_dependent_verb_note(word) {
+        notes.push(note);
+    }
     for template in NOTE_TEMPLATES {
         if template.origin == origin && marker_matches(word, template.marker) {
             notes.push(Explanation::new(template.rule, template.explanation));

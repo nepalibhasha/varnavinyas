@@ -783,9 +783,9 @@ fn o8_ga_aa_o_3_tatsam_citation() {
 #[test]
 fn o9_nga_halanta_1_root_forms() {
     let p = derive("पढ");
-    assert_eq!(p.output, "पढ्");
+    assert_eq!(p.output, "पढ");
     let p2 = derive("भन");
-    assert_eq!(p2.output, "भन्");
+    assert_eq!(p2.output, "भन");
 }
 
 #[test]
@@ -878,8 +878,8 @@ fn o9_nga_ajanta_2_vowel_avyaya() {
 
 #[test]
 fn o9_nga_ajanta_3_ajnartha() {
-    assert_eq!(derive("भन्").output, "भन");
-    assert_eq!(derive("लेख्").output, "लेख");
+    assert_eq!(derive("भन्").output, "भन्");
+    assert_eq!(derive("लेख्").output, "लेख्");
 }
 
 #[test]

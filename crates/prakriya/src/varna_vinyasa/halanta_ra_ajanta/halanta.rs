@@ -25,24 +25,6 @@ const FORCE_SUFFIX_EXAMPLES: &[&str] = &[
     "मित्रवत",
 ];
 
-fn corrected(
-    input: &str,
-    output: String,
-    code: &'static str,
-    explanation: &'static str,
-) -> Prakriya {
-    Prakriya::corrected(
-        input,
-        &output,
-        vec![crate::model::step::Step::new(
-            Rule::VarnaVinyasNiyam(code),
-            explanation,
-            input,
-            &output,
-        )],
-    )
-}
-
 // -----------------------------------------------------------------------------
 // 3(ङ) हलन्त लेख्नुपर्ने रूप
 // Implemented subrules:
@@ -55,16 +37,8 @@ fn corrected(
 pub(super) fn rule_halanta_required(input: &str) -> Option<Prakriya> {
     let lex = kosha();
 
-    let simple_roots = ["पढ", "भन", "उठ", "डुल", "हिँड", "हेर", "देख"];
-    if simple_roots.contains(&input) {
-        let output = format!("{input}्");
-        return Some(corrected(
-            input,
-            output,
-            "3(ङ)-1",
-            "व्यञ्जनान्त धातुमा हलन्त लेखिन्छ",
-        ));
-    }
+    // 3(ङ)-1 describes dhatu notation. The orchestrator preserves forms
+    // that can also be imperatives and supplies a contextual explanation.
 
     const VERB_SUFFIXES: &[(&str, &str, &str)] = &[
         ("छस", "छस्", "3(ङ)-2"),

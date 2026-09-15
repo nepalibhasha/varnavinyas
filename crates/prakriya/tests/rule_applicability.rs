@@ -77,3 +77,37 @@ fn accepted_forms_explain_their_specific_spelling_without_a_correction() {
             .any(|note| matches!(note.rule.code(), "3(क)(ऊ)-3" | "3(क)(ऊ)-10"))
     );
 }
+
+#[test]
+fn root_and_imperative_spellings_do_not_correct_each_other() {
+    for stem in [
+        "हेर",
+        "पढ",
+        "भन",
+        "उठ",
+        "डुल",
+        "हिँड",
+        "देख",
+        "गर",
+        "बुझ",
+        "लुक",
+        "लेख",
+    ] {
+        for word in [stem.to_string(), format!("{stem}्")] {
+            assert!(
+                collect_rule_hits(&word).is_empty(),
+                "{word}: {:?}",
+                collect_rule_hits(&word)
+            );
+            assert_eq!(derive(&derive(&word).output).output, word);
+            let a = varnavinyas_prakriya::analyze(&word);
+            assert!(
+                a.rule_notes
+                    .iter()
+                    .any(|n| n.rule.code() == "3(ङ)-1, 3(ङ)-अजन्त-3")
+            );
+        }
+    }
+    assert_eq!(derive("जान्छन").output, "जान्छन्");
+    assert_eq!(derive("बाहिर्").output, "बाहिर");
+}

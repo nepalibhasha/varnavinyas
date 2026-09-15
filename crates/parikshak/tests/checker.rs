@@ -2025,29 +2025,17 @@ fn section4_complex_sentence_variant_detected() {
 }
 
 #[test]
-fn nga_halanta_lemma_rule_is_suppressed_in_imperative_sentence_context() {
-    let text = "कृपया भन।";
-    let diags = check_text(text);
-    assert!(
-        diags.iter().any(|d| {
-            d.incorrect == "भन"
-                && d.correction == "भन्"
-                && matches!(d.kind, DiagnosticKind::Ambiguous)
-        }),
-        "Imperative sentence context should surface ambiguous भन -> भन् guidance, got: {diags:?}"
-    );
-}
-
-#[test]
-fn nga_halanta_lemma_rule_still_applies_for_standalone_token() {
-    let text = "भन";
-    let diags = check_text(text);
-    assert!(
-        diags
-            .iter()
-            .any(|d| d.incorrect == "भन" && d.correction == "भन्"),
-        "Standalone token should still allow भन -> भन् lemma suggestion, got: {diags:?}"
-    );
+fn verb_root_notation_does_not_correct_context_free_or_imperative_forms() {
+    for text in ["कृपया भन।", "यता हेर।", "भन", "हेर", "हेर्", "पढ", "पढ्"]
+    {
+        let diags = check_text(text);
+        assert!(
+            diags
+                .iter()
+                .all(|d| !matches!(d.incorrect.as_str(), "भन" | "हेर" | "हेर्" | "पढ" | "पढ्")),
+            "{text}: {diags:?}"
+        );
+    }
 }
 
 #[test]

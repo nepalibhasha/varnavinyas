@@ -6,9 +6,6 @@ use varnavinyas_prakriya::{Rule, RuleHit, collect_rule_hits};
 use crate::diagnostic::{
     Diagnostic, DiagnosticCategory, DiagnosticReason, choose_diagnostic_category,
 };
-use crate::tokenizer::AnalyzedToken;
-
-const AMBIGUOUS_HALANTA_DHATU_FORMS: &[&str] = &["भन", "गर", "पढ", "हेर", "लेख", "बुझ", "लुक"];
 
 fn is_numeric_token(word: &str) -> bool {
     let mut saw_digit = false;
@@ -145,9 +142,6 @@ pub(crate) fn check_word_impl(word: &str) -> Option<Diagnostic> {
             .first()
             .map(|s| s.rule)
             .unwrap_or(Rule::ShuddhaAshuddha("unknown"));
-        if is_context_free_ajanta_verb_root(word, rule) {
-            return None;
-        }
         let explanation = prakriya
             .steps
             .first()
@@ -205,35 +199,6 @@ pub(crate) fn check_word_impl(word: &str) -> Option<Diagnostic> {
     }
 
     None
-}
-
-fn is_context_free_ajanta_verb_root(word: &str, rule: Rule) -> bool {
-    if !matches!(rule, Rule::VarnaVinyasNiyam("3(ङ)-अजन्त-3")) {
-        return false;
-    }
-
-    word.strip_suffix('्')
-        .is_some_and(|stem| AMBIGUOUS_HALANTA_DHATU_FORMS.contains(&stem))
-}
-
-pub(crate) fn adjust_context_sensitive_nga_halanta_rule(
-    idx: usize,
-    tokens: &[AnalyzedToken],
-    token: &AnalyzedToken,
-    diag: &mut Diagnostic,
-) {
-    if !matches!(diag.rule, Rule::VarnaVinyasNiyam("3(ङ)-1")) {
-        return;
-    }
-    if !AMBIGUOUS_HALANTA_DHATU_FORMS.contains(&token.stem.as_str()) {
-        return;
-    }
-    if tokens.len() > 1 && idx < tokens.len() {
-        diag.kind = DiagnosticKind::Ambiguous;
-        diag.confidence = 0.55;
-        diag.explanation =
-            "यो रूप धातुरूप वा आज्ञार्थ दुवै सन्दर्भमा आउन सक्छ; सन्दर्भअनुसार जाँच गर्नुहोस्".to_string();
-    }
 }
 
 pub(crate) fn alternate_reasons_from_hits(hits: &[RuleHit]) -> Vec<DiagnosticReason> {

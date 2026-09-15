@@ -34,7 +34,7 @@ use padayog::{add_generalized_padayog_padabiyog_diagnostics, add_padayog_padabiy
 use punctuation::punctuation_diagnostics;
 use style_variants::add_style_variant_diagnostics;
 use tiryak::{add_tiryak_diagnostics, check_word_tiryak};
-use word_level::{adjust_context_sensitive_nga_halanta_rule, check_word_impl};
+use word_level::check_word_impl;
 
 /// Runtime options for `check_text_with_options`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -188,7 +188,7 @@ pub fn check_text_with_options(text: &str, options: CheckOptions) -> Vec<Diagnos
     // Word-level checks (suffix-aware: checks stem, spans full token)
     let tokens = tokenize_analyzed(text);
     let lex = kosha();
-    for (idx, token) in tokens.iter().enumerate() {
+    for token in &tokens {
         // If the full token (stem+suffix) is a known word, skip correction.
         // e.g. "संसदमा" = संसद + मा — the stem "संसद" triggers a halanta rule,
         // but the agglutinative form "संसदमा" is a valid word in the lexicon.
@@ -200,7 +200,6 @@ pub fn check_text_with_options(text: &str, options: CheckOptions) -> Vec<Diagnos
         }
 
         if let Some(mut diag) = check_word_with_options(&token.stem, options) {
-            adjust_context_sensitive_nga_halanta_rule(idx, &tokens, token, &mut diag);
             diag.span = (token.start, token.end);
 
             // If a suffix was detached, reattach it to the diagnostic strings.

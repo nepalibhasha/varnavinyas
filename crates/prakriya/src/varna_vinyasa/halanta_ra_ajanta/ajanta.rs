@@ -77,6 +77,12 @@ pub(super) fn rule_ajanta_required(input: &str) -> Option<Prakriya> {
     None
 }
 
+pub(super) fn is_imperative_form(word: &str) -> bool {
+    AJANTA_INVENTORY.iter().any(|entry| {
+        entry.rule_code == "3(ङ)-अजन्त-3" && (entry.input == word || entry.output == word)
+    })
+}
+
 fn ajanta_explanation(rule_code: &str) -> &'static str {
     match rule_code {
         "3(ङ)-अजन्त-1" => "एकाक्षरी सर्वनाम/अव्ययमा हलन्त लेखिँदैन",
