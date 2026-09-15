@@ -13,8 +13,9 @@ FAIL=0
 SERVER_PID=""
 SERVER_LOG=""
 
-pass() { ((PASS++)); echo "  PASS: $1"; }
-fail() { ((FAIL++)); echo "  FAIL: $1" >&2; }
+# Assignments return success even when incrementing from zero under Bash's -e.
+pass() { PASS=$((PASS + 1)); echo "  PASS: $1"; }
+fail() { FAIL=$((FAIL + 1)); echo "  FAIL: $1" >&2; }
 warn() { echo "  WARN: $1" >&2; }
 fatal() { fail "$1"; exit 1; }
 
