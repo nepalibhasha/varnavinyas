@@ -77,6 +77,11 @@ test('accepted reference context has neither an error claim nor a self-correctio
 });
 
 test('origin badges distinguish missing evidence, inference, and documented origin', () => {
+  for (const analysis of [null, { origin: 'deshaj' },
+    { origin: 'deshaj', origin_source: 'future-source' },
+    { origin: 'future-origin', origin_source: 'kosha' }]) {
+    assert.equal(originPresentation(analysis).label, 'उत्पत्ति अज्ञात');
+  }
   assert.equal(originPresentation({ origin: 'deshaj', origin_source: 'unknown' }).label, 'उत्पत्ति अज्ञात');
   assert.equal(originPresentation({ origin: 'unknown', origin_source: 'unknown' }).cssClass, 'origin-unknown');
   assert.equal(originPresentation({ origin: 'aagantuk', origin_source: 'heuristic' }).label, 'आगन्तुक (अनुमानित)');

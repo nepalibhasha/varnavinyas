@@ -21,6 +21,8 @@ The root workspace defines `default-members` for day-to-day Rust work. Use expli
 | `bash web/build.sh` | Build `web/pkg` from WASM bindings |
 | `bash web/package-artifact.sh` | Build downstream browser artifact package |
 | `bash web/smoke-test.sh` | Check web static/WASM asset consistency |
+| `node web/test-artifact.mjs` | Exercise the packaged browser API and origin presentation (Node 22+) |
+| `bash crates/bindings-python/smoke-test.sh` | Exercise an installed Python wheel; select its environment with `PYTHON` |
 
 ### Cargo Aliases
 Check `.cargo/config.toml` for shortcuts:
@@ -120,6 +122,7 @@ local candidate with an explicit version, for example:
 ```bash
 ARTIFACT_VERSION=v0.1.5-rc.1 bash web/package-artifact.sh
 bash web/smoke-test.sh
+node web/test-artifact.mjs
 unzip -l web/dist/varnavinyas-browser-artifact-v0.1.5-rc.1.zip
 ```
 
@@ -141,3 +144,8 @@ The GitHub Actions pipeline enforces:
 2. formatting and clippy
 3. dependency/license/advisory checks
 4. web and browser-artifact packaging checks where configured
+5. installed Python wheel import and API checks on Python 3.10
+
+Use a current `cargo-deny` when refreshing the advisory database. Older
+versions may fail to parse newer CVSS formats before checking dependencies;
+that is a tool failure, not a successful dependency audit.

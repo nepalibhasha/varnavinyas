@@ -22,6 +22,7 @@ web/
 - `build.sh`: builds `pkg/` from Rust WASM bindings
 - `package-artifact.sh`: packages `pkg/` + metadata for downstream browser clients
 - `smoke-test.sh`: quick end-to-end static checks
+- `test-artifact.mjs`: packaged WASM runtime and origin-presentation checks (Node 22+)
 
 ## Local Run
 
@@ -67,6 +68,7 @@ From repo root:
 
 ```bash
 bash web/package-artifact.sh
+node web/test-artifact.mjs
 ```
 
 This emits:
@@ -97,6 +99,12 @@ The artifact `manifest.json` is the downstream contract surface. It includes:
 - `artifact_api_version`
 - `capabilities`
 - `required_exports`
+
+The `word_analysis_origin_provenance` capability and
+`word_analysis_origin_sources` list advertise the origin contract, including
+`unknown`. The packaged-runtime check feeds real analysis results through the
+website's origin renderer and verifies representative correction behavior.
+CI and the browser release workflow run this check before uploading artifacts.
 
 `check_text_value(text, grammar)` is the backward-compatible default text API
 and uses `academy-strict` orthography mode. Clients that need explicit policy

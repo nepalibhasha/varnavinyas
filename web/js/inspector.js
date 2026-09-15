@@ -12,7 +12,7 @@ import {
   decomposeWord,
   sandhiSplitBestForCompound,
 } from './wasm-bridge.js';
-import { escapeHtml, ORIGIN_LABELS } from './utils.js';
+import { escapeHtml } from './utils.js';
 import { wrapRuleTooltip } from './rules-data.js';
 import { applyTextContext, originPresentation } from './inspection-context.js';
 

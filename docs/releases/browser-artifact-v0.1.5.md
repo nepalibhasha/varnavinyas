@@ -20,6 +20,9 @@ more closely reflect the available source and grammatical evidence.
   documented derivations such as `तिनी = तिन + ई` remain available.
 - Rule selection and text-level arbitration use more specific evidence, and
   derivation steps expose `rule_code` for source-reference links.
+- The workspace upgrades PyO3 to 0.29.2 and `crossbeam-epoch` to 0.9.20 to
+  resolve the dependency advisories. Python enum and result conversions retain
+  their previous behavior through explicit PyO3 conversion support.
 
 ## Consumer Compatibility
 
@@ -28,6 +31,8 @@ exports remain available. Clients must accept `origin: "unknown"` and
 `origin_source: "unknown"` in word analysis, with zero origin confidence.
 Show heuristic origins as inferred; do not label missing evidence as देशज.
 Use word analysis rather than the coarse decomposition origin for badges.
+The manifest advertises `word_analysis_origin_provenance` and lists
+`word_analysis_origin_sources`, including `unknown`.
 
 Corrections, morphology candidates, and alternate explanation counts can change.
 Use `rule_code` and `category_code` as stable identifiers; do not depend on
@@ -37,10 +42,17 @@ The ZIP contains WASM and JavaScript glue, not the website UI. The website's
 context-aware inspector and origin badges deploy separately through GitHub
 Pages; downstream clients need equivalent handling in their own UI.
 
-## Publication Follow-up
+## Release Checks
 
-Before tagging a final release, resolve or explicitly assess the dependency
-advisory failures reported by the current CI run, rerun the release checks,
-and verify downstream handling of the new origin values. Build the final
-artifact from the accepted committed revision; do not promote an older local
-candidate after changing its source.
+The refreshed dependency gate passes advisories, bans, licenses, and sources.
+The browser release workflow now runs packaged-WASM regression checks and
+checks origin rendering before upload. Python CI and release workflows install
+the built wheel and exercise imports, conversions, diagnostics, and exceptions.
+
+The website's renderer handles unknown, inferred, and documented origins;
+unrecognized future values also display as unknown. Independently maintained
+downstream clients still need to adopt the documented origin contract.
+
+Build the final artifact from the accepted committed revision; do not promote
+an older local candidate after changing its source. Source push, GitHub Pages
+deployment, and the release tag remain separate publication steps.

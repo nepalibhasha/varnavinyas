@@ -48,6 +48,15 @@ jobs:
       - name: Build browser artifact
         run: REFRESH_WEB_WASM=1 ARTIFACT_VERSION="${{ steps.version.outputs.artifact_version }}" bash web/package-artifact.sh
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Verify browser artifact and presentation compatibility
+        run: |
+          bash web/smoke-test.sh
+          node web/test-artifact.mjs
+
       - name: Upload browser artifact to workflow
         uses: actions/upload-artifact@v4
         with:

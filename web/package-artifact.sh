@@ -102,6 +102,8 @@ cat > "$ARTIFACT_DIR/manifest.json" <<EOF
     "offline": true,
     "typed_diagnostics": true,
     "diagnostic_schema_version": 1,
+    "word_analysis_origin_provenance": true,
+    "word_analysis_origin_sources": ["kosha", "override", "heuristic", "unknown"],
     "check_text_value_default_orthography_mode": "academy-strict",
     "check_text_value_with_options": true,
     "orthography_modes": [

@@ -76,7 +76,11 @@ Current gaps:
 
 - Broader wheel platform coverage and package-index publishing (the current
   workflow publishes a Linux x86_64 wheel to GitHub Releases)
-- Python-level runtime integration tests (import + API smoke tests)
+
+CI and the wheel release workflow install the built wheel and run
+`bash crates/bindings-python/smoke-test.sh`. This covers submodule imports,
+enum arguments, nested results, exceptions, and representative corrections.
+Set `PYTHON` to select an isolated environment containing the installed wheel.
 
 ## Releases and Classification Limits
 

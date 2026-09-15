@@ -29,8 +29,8 @@ export function applyTextContext(analysis, context) {
 
 /** Only dictionary tags and reviewed overrides establish origin. */
 export function originPresentation(analysis) {
-  if (!analysis || analysis.origin_source === 'unknown' || analysis.origin === 'unknown'
-      || !analysis.origin_source) {
+  if (!analysis || !Object.hasOwn(ORIGIN_LABELS, analysis.origin)
+      || !['kosha', 'override', 'heuristic'].includes(analysis.origin_source)) {
     return { label: 'उत्पत्ति अज्ञात', cssClass: 'origin-unknown',
       explanation: 'यस शब्दको उत्पत्तिको प्रमाण उपलब्ध छैन।' };
   }

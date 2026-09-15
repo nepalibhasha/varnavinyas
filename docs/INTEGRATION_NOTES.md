@@ -14,6 +14,10 @@ presenting origin and explanatory notes in a browser client:
 For the last case, word analysis also returns `origin: "unknown"`. These are
 additional string values in existing fields; clients must handle them without
 falling back to a देशज label. Lexicon membership alone does not establish origin.
+Browser artifact manifests advertise this through
+`capabilities.word_analysis_origin_provenance` and
+`capabilities.word_analysis_origin_sources`. Treat an unrecognized origin or
+source as unknown rather than claiming documented evidence.
 
 The lower-level Rust `classify()` and the Python, C, and UniFFI classification
 wrappers still return a best-effort four-way category for compatibility.

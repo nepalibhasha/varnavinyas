@@ -107,7 +107,7 @@ Keep `crates/prakriya/src/correction_table.rs` from becoming a second rule engin
 
 - [ ] Keep web rule data aligned with Rust diagnostic categories whenever rule coverage changes.
 - [ ] Re-check WASM bundle size after rule/data changes; optimize only if bundle growth becomes a real release blocker.
-- [ ] Expand Python wheel platform coverage and add import/API smoke tests; Linux wheel releases already run on `python-artifact-v*` tags. Package-index publishing is separate.
+- [ ] Expand Python wheel platform coverage; Linux wheel releases and import/API smoke checks already run on `python-artifact-v*` tags. Package-index publishing is separate.
 - [ ] Expose origin provenance through Python/C/UniFFI classification APIs; their four-way compatibility enum cannot distinguish unknown from documented origin.
 - [ ] Keep the browser artifact versioning workflow aligned with downstream consumers.
 
