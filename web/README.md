@@ -106,3 +106,7 @@ orthography_mode)` when the manifest advertises that capability.
   run the version printed by `web/build.sh`.
 - Browser still shows old behavior:
   hard refresh after rebuilding `web/pkg/`.
+
+Origin badges distinguish documented (`kosha` / `override`), inferred
+(`heuristic`), and unknown (`unknown`) origins. They never treat a missing
+origin tag as evidence that a word is देशज.

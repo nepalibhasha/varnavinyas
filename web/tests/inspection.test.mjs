@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { applyTextContext } from '../js/inspection-context.js';
+import { applyTextContext, originPresentation } from '../js/inspection-context.js';
 import { wrapRuleTooltip } from '../js/rules-data.js';
 
 const raw = { word: 'आवाजमा', is_correct: false, correction: 'आबाजमा',
@@ -74,4 +74,12 @@ test('accepted reference context has neither an error claim nor a self-correctio
   setReferenceContext({ incorrect: 'भाउजु', correction: 'भाउजू', categoryCode: 'HrasvaDirgha' });
   assert.match(referenceHost.innerHTML, /यो सुधार किन सुझाइयो/);
   assert.match(referenceHost.innerHTML, /reference-context-arrow/);
+});
+
+test('origin badges distinguish missing evidence, inference, and documented origin', () => {
+  assert.equal(originPresentation({ origin: 'deshaj', origin_source: 'unknown' }).label, 'उत्पत्ति अज्ञात');
+  assert.equal(originPresentation({ origin: 'unknown', origin_source: 'unknown' }).cssClass, 'origin-unknown');
+  assert.equal(originPresentation({ origin: 'aagantuk', origin_source: 'heuristic' }).label, 'आगन्तुक (अनुमानित)');
+  assert.equal(originPresentation({ origin: 'tatsam', origin_source: 'kosha' }).label, 'तत्सम');
+  assert.equal(originPresentation({ origin: 'tadbhav', origin_source: 'override' }).label, 'तद्भव');
 });

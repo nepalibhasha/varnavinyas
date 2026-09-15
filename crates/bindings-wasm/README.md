@@ -140,3 +140,8 @@ Production-facing adapter used by current browser surfaces.
 
 Derivation steps from `derive` and `derive_value` include `rule` (display label)
 and `rule_code` (source citation). Use `rule_code` to resolve rule-reference links.
+
+Word analysis reports `origin: "unknown"`, `origin_source: "unknown"`, and zero
+`origin_confidence` when no origin evidence exists. `heuristic` sources are
+inferences; only `kosha` and `override` sources support factual origin notes.
+The fields are unchanged; `unknown` is an additional string value.

@@ -103,11 +103,11 @@ fn classify_with_provenance_heuristic_source() {
 }
 
 #[test]
-fn classify_with_provenance_headword_without_origin_defaults_to_deshaj() {
+fn classify_with_provenance_headword_without_origin_is_unknown() {
     // "नेपाले" is a known headword with non-origin bracket metadata.
     let d = classify_with_provenance("नेपाले");
-    assert_eq!(d.source, OriginSource::Kosha);
-    assert_eq!(d.origin, Origin::Deshaj);
+    assert_eq!(d.source, OriginSource::Unknown);
+    assert_eq!(d.confidence, 0.0);
 }
 
 #[test]
@@ -382,4 +382,19 @@ fn iterative_root_candidates_handle_plural_suffixes() {
     let candidate = best_root("घरहरु").expect("घरहरु should resolve to घर");
     assert_eq!(candidate.root, "घर");
     assert_eq!(candidate.suffixes, vec!["हरु"]);
+}
+
+#[test]
+fn unknown_words_have_no_claimed_origin_evidence() {
+    for word in ["", "कखगघङ", "नेपाले"] {
+        let d = classify_with_provenance(word);
+        assert_eq!(d.source, OriginSource::Unknown, "{word}: {d:?}");
+        assert_eq!(d.confidence, 0.0);
+    }
+    assert!(classify_with_provenance("अध्ययन").source.is_documented());
+    assert!(classify_with_provenance("भाउजू").source.is_documented());
+    assert_eq!(
+        classify_with_provenance("क़लम").source,
+        OriginSource::Heuristic
+    );
 }

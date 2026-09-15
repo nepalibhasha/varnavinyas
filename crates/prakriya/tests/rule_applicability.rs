@@ -111,3 +111,17 @@ fn root_and_imperative_spellings_do_not_correct_each_other() {
     assert_eq!(derive("जान्छन").output, "जान्छन्");
     assert_eq!(derive("बाहिर्").output, "बाहिर");
 }
+
+#[test]
+fn unknown_or_inferred_origin_does_not_generate_etymological_facts() {
+    for word in ["कखगघङ", "नेपाले"] {
+        let a = varnavinyas_prakriya::analyze(word);
+        assert!(a.rule_notes.is_empty(), "{word}: {:?}", a.rule_notes);
+        let api = varnavinyas_prakriya::ApiWordAnalysis::from(a);
+        assert_eq!(api.origin, "unknown");
+        assert_eq!(api.origin_source, "unknown");
+        assert_eq!(api.origin_confidence, 0.0);
+    }
+    let documented = varnavinyas_prakriya::analyze("अध्ययन");
+    assert!(!documented.rule_notes.is_empty());
+}

@@ -49,7 +49,11 @@ impl From<&WordAnalysis> for ApiWordAnalysis {
     fn from(analysis: &WordAnalysis) -> Self {
         Self {
             word: analysis.word.clone(),
-            origin: origin_to_string(analysis.origin).to_string(),
+            origin: if analysis.origin_source == OriginSource::Unknown {
+                "unknown".to_string()
+            } else {
+                origin_to_string(analysis.origin).to_string()
+            },
             origin_source: origin_source_to_string(analysis.origin_source).to_string(),
             origin_confidence: analysis.origin_confidence,
             source_language: analysis.source_language.clone(),
@@ -85,5 +89,6 @@ fn origin_source_to_string(source: OriginSource) -> &'static str {
         OriginSource::Override => "override",
         OriginSource::Kosha => "kosha",
         OriginSource::Heuristic => "heuristic",
+        OriginSource::Unknown => "unknown",
     }
 }

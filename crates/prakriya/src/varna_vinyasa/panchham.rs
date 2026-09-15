@@ -4,7 +4,7 @@ use crate::model::rule_spec::{DiagnosticKind, RuleCategory, RuleSpec};
 use crate::model::step::Step;
 use varnavinyas_kosha::kosha;
 use varnavinyas_kosha::part_of_speech::{is_adverb, is_avyaya, is_namayogi};
-use varnavinyas_shabda::{Origin, OriginSource, classify, classify_with_provenance};
+use varnavinyas_shabda::{Origin, classify, classify_with_provenance};
 
 pub const SPEC_PANCHHAM: RuleSpec = RuleSpec {
     id: "struct-panchham",
@@ -224,7 +224,7 @@ fn normalize_non_tatsam_panchham(input: &str) -> Option<String> {
         if matches!(output_origin.origin, Origin::Tatsam) {
             continue;
         }
-        if matches!(output_origin.source, OriginSource::Heuristic) && !kosha().contains(&output) {
+        if !output_origin.source.is_documented() && !kosha().contains(&output) {
             continue;
         }
         return Some(output);

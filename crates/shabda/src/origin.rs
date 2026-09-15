@@ -10,6 +10,14 @@ pub enum OriginSource {
     Kosha,
     /// heuristic fallback नियमबाट।
     Heuristic,
+    /// No origin evidence. `origin` retains the legacy rule-engine fallback.
+    Unknown,
+}
+
+impl OriginSource {
+    pub fn is_documented(self) -> bool {
+        matches!(self, Self::Override | Self::Kosha)
+    }
 }
 
 /// शब्दउत्पत्ति निर्णय र provenance metadata।
@@ -21,6 +29,9 @@ pub struct OriginDecision {
 }
 
 /// नेपाली शब्दलाई उत्पत्तिका आधारमा वर्गीकृत गर्ने।
+///
+/// `classify` retains a best-effort category for rule compatibility. Use
+/// `classify_with_provenance` before presenting origin as a linguistic fact.
 ///
 /// चार-स्तरीय lookup:
 /// 1. Override तालिका (dictionary/heuristic ले छुटाउन सक्ने किनाराका केस)
@@ -95,7 +106,7 @@ pub fn classify_with_provenance(word: &str) -> OriginDecision {
     if word.is_empty() {
         return OriginDecision {
             origin: Origin::Deshaj,
-            source: OriginSource::Heuristic,
+            source: OriginSource::Unknown,
             confidence: 0.0,
         };
     }
@@ -119,12 +130,12 @@ pub fn classify_with_provenance(word: &str) -> OriginDecision {
         };
     }
     // If the word is a known headword but has no explicit origin tag,
-    // treat it as Deshaj by default (dictionary-backed fallback).
+    // keep the legacy category, but do not misrepresent membership as etymology.
     if kosha.lookup(word).is_some() {
         return OriginDecision {
             origin: Origin::Deshaj,
-            source: OriginSource::Kosha,
-            confidence: 0.85,
+            source: OriginSource::Unknown,
+            confidence: 0.0,
         };
     }
 
@@ -144,8 +155,8 @@ pub fn classify_with_provenance(word: &str) -> OriginDecision {
                 if kosha.lookup(stem).is_some() {
                     return OriginDecision {
                         origin: Origin::Deshaj,
-                        source: OriginSource::Kosha,
-                        confidence: 0.80,
+                        source: OriginSource::Unknown,
+                        confidence: 0.0,
                     };
                 }
             }
@@ -153,10 +164,16 @@ pub fn classify_with_provenance(word: &str) -> OriginDecision {
     }
 
     // 3. Heuristic वर्गीकरण
+    let origin = classify_heuristic(word);
+    let has_evidence = origin != Origin::Deshaj;
     OriginDecision {
-        origin: classify_heuristic(word),
-        source: OriginSource::Heuristic,
-        confidence: 0.65,
+        origin,
+        source: if has_evidence {
+            OriginSource::Heuristic
+        } else {
+            OriginSource::Unknown
+        },
+        confidence: if has_evidence { 0.65 } else { 0.0 },
     }
 }
 

@@ -38,7 +38,7 @@ pub fn analyze(input: &str) -> WordAnalysis {
         return WordAnalysis {
             word: String::new(),
             origin: Origin::Deshaj,
-            origin_source: OriginSource::Heuristic,
+            origin_source: OriginSource::Unknown,
             origin_confidence: 0.0,
             source_language: None,
             is_correct: true,
@@ -61,7 +61,7 @@ pub fn analyze(input: &str) -> WordAnalysis {
 
     if prakriya.is_correct {
         // शब्द सही हुँदा किन सही हो भन्ने व्याख्या बनाउने।
-        generate_correct_notes(input, origin, &mut rule_notes);
+        generate_correct_notes(input, origin, origin_decision.source, &mut rule_notes);
     } else {
         // शब्द गलत हुँदा किन गलत हो भन्ने व्याख्या बनाउने।
         for step in &prakriya.steps {
@@ -88,12 +88,22 @@ pub fn analyze(input: &str) -> WordAnalysis {
 }
 
 /// पहिले नै सही शब्दका लागि व्याख्यात्मक टिप्पणी बनाउने।
-fn generate_correct_notes(word: &str, origin: Origin, notes: &mut Vec<RuleNote>) {
+fn generate_correct_notes(
+    word: &str,
+    origin: Origin,
+    source: OriginSource,
+    notes: &mut Vec<RuleNote>,
+) {
     if let Some(note) = crate::varna_vinyasa::hrasva_dirgha::accepted_form_note(word) {
         notes.push(note);
     }
     if let Some(note) = crate::varna_vinyasa::halanta_ra_ajanta::context_dependent_verb_note(word) {
         notes.push(note);
+    }
+    // Origin-conditioned explanations require etymological evidence. Lexicon
+    // membership or a phonetic guess alone cannot establish these claims.
+    if !source.is_documented() {
+        return;
     }
     for template in NOTE_TEMPLATES {
         if template.origin == origin && marker_matches(word, template.marker) {
@@ -270,7 +280,12 @@ mod tests {
     #[test]
     fn tatsam_templates_emit_expected_notes() {
         let mut notes = Vec::new();
-        generate_correct_notes("कृतीषशक्षज्ञण्", Origin::Tatsam, &mut notes);
+        generate_correct_notes(
+            "कृतीषशक्षज्ञण्",
+            Origin::Tatsam,
+            OriginSource::Kosha,
+            &mut notes,
+        );
 
         assert_eq!(notes.len(), 9);
         assert_eq!(notes[0].rule, Rule::VarnaVinyasNiyam("3(क)"));
@@ -287,7 +302,7 @@ mod tests {
     #[test]
     fn tadbhav_templates_emit_expected_notes() {
         let mut notes = Vec::new();
-        generate_correct_notes("हिँड्नु", Origin::Tadbhav, &mut notes);
+        generate_correct_notes("हिँड्नु", Origin::Tadbhav, OriginSource::Kosha, &mut notes);
 
         assert_eq!(notes.len(), 3);
         assert_eq!(notes[0].rule, Rule::VarnaVinyasNiyam("3(क)"));
@@ -298,11 +313,16 @@ mod tests {
     #[test]
     fn aagantuk_sa_note_requires_no_sha_or_ssa() {
         let mut notes = Vec::new();
-        generate_correct_notes("साबुन", Origin::Aagantuk, &mut notes);
+        generate_correct_notes("साबुन", Origin::Aagantuk, OriginSource::Kosha, &mut notes);
         assert_eq!(notes.len(), 2);
 
         let mut notes_with_sha = Vec::new();
-        generate_correct_notes("शहर", Origin::Aagantuk, &mut notes_with_sha);
+        generate_correct_notes(
+            "शहर",
+            Origin::Aagantuk,
+            OriginSource::Kosha,
+            &mut notes_with_sha,
+        );
         assert_eq!(notes_with_sha.len(), 1);
     }
 

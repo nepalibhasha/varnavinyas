@@ -1,3 +1,5 @@
+import { ORIGIN_LABELS } from './utils.js';
+
 /** Reconcile isolated word analysis with the editor's contextual checker result. */
 export function applyTextContext(analysis, context) {
   if (!context) return analysis;
@@ -23,4 +25,20 @@ export function applyTextContext(analysis, context) {
     rule_notes: [diagnostic], alternate_rule_notes: diagnostic.alternate_reasons || [],
     statusLabel: context.informational ? 'जानकारी' : ambiguous ? 'सन्दर्भ जाँच्नुहोस्' : variant ? 'वैकल्पिक रूप' : 'अशुद्ध',
     statusClass: context.informational || ambiguous || variant ? 'uncertain' : 'incorrect' };
+}
+
+/** Only dictionary tags and reviewed overrides establish origin. */
+export function originPresentation(analysis) {
+  if (!analysis || analysis.origin_source === 'unknown' || analysis.origin === 'unknown'
+      || !analysis.origin_source) {
+    return { label: 'उत्पत्ति अज्ञात', cssClass: 'origin-unknown',
+      explanation: 'यस शब्दको उत्पत्तिको प्रमाण उपलब्ध छैन।' };
+  }
+  const label = ORIGIN_LABELS[analysis.origin] || analysis.origin;
+  if (analysis.origin_source === 'heuristic') {
+    return { label: `${label} (अनुमानित)`, cssClass: `origin-${analysis.origin}`,
+      explanation: 'अक्षरको ढाँचाबाट गरिएको अनुमान; शब्दकोशबाट पुष्टि भएको होइन।' };
+  }
+  return { label, cssClass: `origin-${analysis.origin}`,
+    explanation: analysis.origin_source === 'kosha' ? 'शब्दकोशको उत्पत्ति सूचनामा आधारित।' : 'समीक्षा गरिएको उत्पत्ति सूचनामा आधारित।' };
 }

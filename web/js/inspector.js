@@ -14,7 +14,7 @@ import {
 } from './wasm-bridge.js';
 import { escapeHtml, ORIGIN_LABELS } from './utils.js';
 import { wrapRuleTooltip } from './rules-data.js';
-import { applyTextContext } from './inspection-context.js';
+import { applyTextContext, originPresentation } from './inspection-context.js';
 
 /** Feature flag for word inspector. Set to false to disable. */
 const FEATURE_WORD_INSPECTOR = true;
@@ -125,9 +125,8 @@ export function showInspector(word, start, end, options = {}) {
   html += '<div class="inspector-word-header">';
   html += `<span class="inspector-word">${escapeHtml(word)}</span>`;
   if (analysis) {
-    const originLabel = ORIGIN_LABELS[analysis.origin] || analysis.origin;
-    const originClass = `origin-${analysis.origin}`;
-    if (originLabel) html += ` <span class="origin-badge ${originClass}">${escapeHtml(originLabel)}</span>`;
+    const origin = originPresentation(analysis);
+    html += ` <span class="origin-badge ${origin.cssClass}" title="${escapeHtml(origin.explanation)}">${escapeHtml(origin.label)}</span>`;
     if (analysis.source_language) {
       html += ` <span class="source-lang">${escapeHtml(analysis.source_language)}</span>`;
     }

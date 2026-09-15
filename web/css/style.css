@@ -949,6 +949,7 @@ body {
 .origin-tadbhav { background: #0891b2; }
 .origin-deshaj { background: #059669; }
 .origin-aagantuk { background: #c2410c; }
+.origin-unknown { background: #64748b; }
 
 .source-lang {
   display: inline-flex;

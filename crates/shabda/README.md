@@ -47,7 +47,12 @@ let _root = analysis.root;
 ## Design Notes
 
 - The crate prefers dictionary-backed facts when available.
-- When no lexical tag exists, it falls back to explicit heuristics.
+- `classify()` retains a best-effort four-way category for existing rule consumers.
+  A fallback `Deshaj` value is not proof of native origin. Present origin using
+  `classify_with_provenance()`: `Override` / `Kosha` indicate documented evidence,
+  `Heuristic` indicates a positive spelling-pattern inference, and `Unknown`
+  indicates no evidence (confidence zero). Headword membership alone is not origin
+  evidence. Existing tagged headwords and reviewed overrides retain precedence.
 - Morphological decomposition is intentionally conservative and lexicality-gated.
 
 ## Current Limits

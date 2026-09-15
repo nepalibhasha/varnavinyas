@@ -533,6 +533,15 @@ mod tests {
     use super::*;
 
     #[test]
+    fn unknown_origin_is_not_serialized_as_a_native_word_fact() {
+        let json: serde_json::Value = serde_json::from_str(&analyze_word("कखगघङ")).unwrap();
+        assert_eq!(json["origin"], "unknown");
+        assert_eq!(json["origin_source"], "unknown");
+        assert_eq!(json["origin_confidence"], 0.0);
+        assert!(json["rule_notes"].as_array().unwrap().is_empty());
+    }
+
+    #[test]
     fn derivation_steps_include_source_citations_for_reference_links() {
         let json: serde_json::Value = serde_json::from_str(&derive("भाउजु")).unwrap();
         assert_eq!(json["output"], "भाउजू");
