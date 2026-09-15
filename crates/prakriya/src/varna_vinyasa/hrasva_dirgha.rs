@@ -3,6 +3,7 @@ mod aa;
 #[path = "hrasva_dirgha/helpers.rs"]
 mod helpers;
 mod i;
+mod ii_suffix;
 mod u;
 mod uu;
 
@@ -51,6 +52,12 @@ pub use uu::{
 /// Explanations for accepted forms, using the same lexical classes as correction.
 /// Keep this conservative: an ending alone does not establish grammatical class.
 pub(crate) fn accepted_form_note(word: &str) -> Option<crate::Explanation> {
+    if a::PRONOUNS.contains(&word) {
+        return Some(crate::Explanation::new(
+            crate::Rule::VarnaVinyasNiyam("3(क)(ऊ)-7"),
+            "सर्वनामको अन्त्यमा दीर्घ हुन्छ",
+        ));
+    }
     if i::FEM_KINSHIP_HRASVA_TO_DIRGHA
         .iter()
         .any(|(_, correct)| *correct == word)

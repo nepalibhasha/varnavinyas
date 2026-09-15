@@ -125,3 +125,54 @@ fn unknown_or_inferred_origin_does_not_generate_etymological_facts() {
     let documented = varnavinyas_prakriya::analyze("अध्ययन");
     assert!(!documented.rule_notes.is_empty());
 }
+
+#[test]
+fn pronoun_alternates_require_independent_grammatical_evidence() {
+    for input in ["तीमी", "तीनी", "यीनी", "ऊनी"] {
+        assert_eq!(derive(input).steps[0].rule.code(), "3(क)(अ)-5", "{input}");
+        assert!(
+            collect_rule_hits(input)
+                .iter()
+                .all(|hit| hit.prakriya.steps[0].rule.code() != "3(क)(अ)-3")
+        );
+    }
+    for (input, output, codes) in [
+        ("हामि", "हामी", &["3(क)(ऊ)-7"][..]),
+        ("तिमि", "तिमी", &["3(क)(ऊ)-7"][..]),
+        ("यिनि", "यिनी", &["3(क)(ऊ)-7"][..]),
+        // The headword explicitly documents तिन+ई, so keep this alternate.
+        ("तिनि", "तिनी", &["3(क)(ऊ)-7", "3(क)(ऊ)-1"][..]),
+        // उनी also has an adjective sense in the lexicon.
+        ("उनि", "उनी", &["3(क)(ऊ)-7", "3(क)(ऊ)-8"][..]),
+    ] {
+        let hits = collect_rule_hits(input);
+        assert_eq!(derive(input).output, output);
+        let actual: Vec<_> = hits
+            .iter()
+            .map(|h| h.prakriya.steps[0].rule.code())
+            .collect();
+        assert_eq!(actual, codes, "{input}: {hits:?}");
+    }
+    for input in ["योगि", "त्यागि", "ज्ञानि", "घाति", "द्रोहि"]
+    {
+        assert!(
+            collect_rule_hits(input).iter().any(|hit| hit
+                .prakriya
+                .steps
+                .iter()
+                .any(|step| step.rule.code() == "3(क)(ऊ)-1")),
+            "{input}"
+        );
+    }
+    assert_eq!(
+        varnavinyas_prakriya::analyze("हामी").rule_notes[0]
+            .rule
+            .code(),
+        "3(क)(ऊ)-7"
+    );
+    let adjective = collect_rule_hits("भौतीक");
+    assert!(
+        adjective.len() > 1,
+        "distinct supported reasons must remain"
+    );
+}

@@ -324,6 +324,21 @@ fn collect_suffix_group_analyses(
 }
 
 fn suffix_rest_candidates<'a>(current: &'a str, suffix: &str) -> Vec<&'a str> {
+    // A homographic noun (हाम) cannot establish a derivation for a pronoun
+    // (हामी). Preserve pronouns unless their own metadata states the relation,
+    // as in तिनी [तिन+ई]. This applies to both decomposition algorithms.
+    if matches!(suffix, "ई" | "ी") {
+        if let Some(entry) = kosha().lookup(current) {
+            if varnavinyas_kosha::part_of_speech::is_pronoun(entry.pos) {
+                let explicit = current
+                    .strip_suffix(suffix)
+                    .is_some_and(|root| entry.pos.contains(&format!("[{root}+ई]")));
+                if !explicit {
+                    return Vec::new();
+                }
+            }
+        }
+    }
     let mut candidates = Vec::new();
     let current_len = current.chars().count();
     let suffix_len = suffix.chars().count();

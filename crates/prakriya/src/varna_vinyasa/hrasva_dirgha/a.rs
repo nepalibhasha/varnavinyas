@@ -231,7 +231,7 @@ pub fn rule_initial_name_hrasva(input: &str) -> Option<Prakriya> {
     if !lexically_supported(&output) {
         return None;
     }
-    if input == "तीन" || output == "तिन" {
+    if input == "तीन" || output == "तिन" || PRONOUNS.contains(&output.as_str()) {
         return None;
     }
     if hrasva_helpers::is_initial_hrasva_adjective(&output)
@@ -453,9 +453,9 @@ pub fn rule_tadbhav_hrasva(input: &str) -> Option<Prakriya> {
 /// Academy 3(क)(अ)-5 and 3(क)(ऊ)-7:
 /// one-syllable pronouns are excluded, but the common multi-syllable pronouns
 /// start with hrasva and end with dirgha.
-pub fn rule_pronoun_vowel_length(input: &str) -> Option<Prakriya> {
-    static PRONOUNS: &[&str] = &["तिमी", "तिनी", "यिनी", "उनी", "हामी"];
+pub(super) const PRONOUNS: &[&str] = &["तिमी", "तिनी", "यिनी", "उनी", "हामी"];
 
+pub fn rule_pronoun_vowel_length(input: &str) -> Option<Prakriya> {
     for &correct in PRONOUNS {
         let hrasva_final = hrasva_helpers::replace_final_dirgha_with_hrasva(correct);
         if input == hrasva_final {

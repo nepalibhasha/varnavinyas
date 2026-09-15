@@ -4,7 +4,7 @@ use crate::model::prakriya::Prakriya;
 use crate::model::rule::Rule;
 use crate::model::rule_spec::{DiagnosticKind, RuleCategory, RuleSpec};
 use crate::model::step::Step;
-use varnavinyas_shabda::{Origin, classify, decompose};
+use varnavinyas_shabda::{Origin, classify};
 
 // -----------------------------------------------------------------------------
 // 3(क)(ऊ) शब्दका अन्त्यमा दीर्घ ईकार/ऊकारको प्रयोग
@@ -80,41 +80,9 @@ pub const SPEC_KOSHA_BACKED: RuleSpec = RuleSpec {
 };
 
 pub fn rule_final_ii_suffix_dirgha(input: &str) -> Option<Prakriya> {
-    // A lexical word is not necessarily a derivative of the proposed ई-form.
-    if varnavinyas_kosha::kosha().lookup(input).is_some() {
-        return None;
-    }
-    let origin = classify(input);
-    if matches!(origin, Origin::Tatsam) || !input.ends_with('ि') {
-        return None;
-    }
-
-    // 3(क)(ऊ)-1 should not override words that already belong to explicit
-    // final-hrasva classes like मूल अव्यय (e.g. पनि, अनि). The Academy text
-    // gives those classes separately under 3(क)(इ), so this derived-ई rule
-    // must back off when the input itself is already explained there.
-    if final_classes::final_hrasva_class_for(input).is_some() {
-        return None;
-    }
-
-    let chars: Vec<char> = input.chars().collect();
-    let mut output_chars = chars.clone();
-    *output_chars.last_mut().unwrap() = 'ी';
-    let output: String = output_chars.into_iter().collect();
-
-    let kosha = varnavinyas_kosha::kosha();
-    if !kosha.contains(&output) {
-        return None;
-    }
-
-    let morphology = decompose(&output);
-    if !morphology.suffixes.iter().any(|suffix| suffix == "ई") {
-        return None;
-    }
-    let final_rule = final_classes::final_dirgha_class_for(&output, "ई").0;
-    if final_rule != "3(क)(ऊ)"
-        && !(final_rule == "3(क)(ऊ)-8" && matches!(morphology.root.as_str(), "योग" | "त्याग"))
-    {
+    let stem = input.strip_suffix('ि')?;
+    let output = format!("{stem}ी");
+    if !super::ii_suffix::is_reviewed_derivative(&output) {
         return None;
     }
 
@@ -123,7 +91,7 @@ pub fn rule_final_ii_suffix_dirgha(input: &str) -> Option<Prakriya> {
         &output,
         vec![Step::new(
             Rule::VarnaVinyasNiyam("3(क)(ऊ)-1"),
-            "'ई' प्रत्यय अन्त्यमा आउने शब्दहरू दीर्घ हुन्छन्",
+            super::ii_suffix::EXPLANATION,
             input,
             &output,
         )],
@@ -201,6 +169,12 @@ pub fn rule_final_adjective_dirgha(input: &str) -> Option<Prakriya> {
 }
 
 pub fn rule_dirgha_endings(input: &str) -> Option<Prakriya> {
+    // The pronoun class supplies the applicable reason. Its final ी does not
+    // establish a feminine noun or gerund. Independently evidenced suffix
+    // and adjective senses are still collected by their own rules.
+    if super::rule_pronoun_vowel_length(input).is_some() {
+        return None;
+    }
     if let Some(output) = final_classes::ps_final_dirgha_exception_for_hrasva(input) {
         return Some(Prakriya::corrected(
             input,
@@ -521,5 +495,6 @@ fn has_specific_final_dirgha_rule(input: &str, expected_output: &str) -> bool {
     super::rule_dirgha_endings(input)
         .into_iter()
         .chain(super::rule_kinship_tadbhav(input))
+        .chain(super::rule_pronoun_vowel_length(input))
         .any(|p| p.output == expected_output)
 }

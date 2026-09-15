@@ -269,3 +269,10 @@ Core rule engine under active expansion.
 Bare verb-root/imperative pairs such as `हेर` / `हेर्` are context-dependent.
 `derive()` preserves both; `analyze()` explains Academy 3(ङ)-1 and
 3(ङ)-अजन्त-3 without proposing a context-free replacement.
+
+The ई-suffix explanation uses reviewed root/output pairs from
+`data/rule_inventories/ii_suffix_derivatives.tsv`. Mechanical suffix stripping
+is not derivational evidence. Morphology also protects pronouns such as हामी
+unless their own dictionary metadata explicitly records the suffix derivation
+(as it does for तिनी [तिन+ई]). Pronoun corrections retain their own source rule
+and suppress generic final-vowel explanations for the same correction.

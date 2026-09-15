@@ -418,3 +418,22 @@ fn prefix_stripping_needs_independent_root_evidence() {
     assert_eq!(supported.prefixes, ["प्र"]);
     assert!(has_supported_analysis("मच्छिन्द्रनाथको"));
 }
+
+#[test]
+fn pronoun_suffix_splits_require_an_explicit_derivation() {
+    for word in ["हामी", "तिमी", "हामीको"] {
+        let m = decompose(word);
+        assert!(!m.suffixes.contains(&"ई".to_string()), "{word}: {m:?}");
+        assert!(
+            lookup_root_candidates(word)
+                .iter()
+                .all(|c| !c.suffixes.contains(&"ई".to_string())),
+            "{word}"
+        );
+    }
+    for (word, root) in [("तिनी", "तिन"), ("नेपाली", "नेपाल")] {
+        let m = decompose(word);
+        assert_eq!(m.root, root);
+        assert!(m.suffixes.contains(&"ई".to_string()));
+    }
+}
