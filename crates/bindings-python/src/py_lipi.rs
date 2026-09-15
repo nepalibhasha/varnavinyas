@@ -1,7 +1,7 @@
 use pyo3::prelude::*;
 use varnavinyas_lipi::{self as lipi_core, Scheme};
 
-#[pyclass(name = "Scheme", eq, frozen, hash)]
+#[pyclass(from_py_object, name = "Scheme", eq, frozen, hash)]
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub enum PyScheme {
     Devanagari,

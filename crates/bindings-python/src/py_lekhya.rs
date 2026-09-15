@@ -1,7 +1,7 @@
 use pyo3::prelude::*;
 use varnavinyas_lekhya as lekhya_core;
 
-#[pyclass(name = "LekhyaDiagnostic", get_all, frozen)]
+#[pyclass(from_py_object, name = "LekhyaDiagnostic", get_all, frozen)]
 #[derive(Clone)]
 pub struct PyLekhyaDiagnostic {
     pub span_start: usize,

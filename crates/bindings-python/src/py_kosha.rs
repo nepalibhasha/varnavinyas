@@ -1,7 +1,7 @@
 use pyo3::prelude::*;
 use varnavinyas_kosha as kosha_core;
 
-#[pyclass(name = "WordEntry", get_all, frozen)]
+#[pyclass(from_py_object, name = "WordEntry", get_all, frozen)]
 #[derive(Clone)]
 pub struct PyWordEntry {
     pub word: String,

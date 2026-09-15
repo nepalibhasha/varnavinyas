@@ -1,7 +1,7 @@
 use pyo3::prelude::*;
 use varnavinyas_akshar::{self as akshar_core, CharType, SvarType};
 
-#[pyclass(name = "CharType", eq, frozen, hash)]
+#[pyclass(from_py_object, name = "CharType", eq, frozen, hash)]
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub enum PyCharType {
     Svar,
@@ -57,7 +57,7 @@ impl PyCharType {
     }
 }
 
-#[pyclass(name = "SvarType", eq, frozen, hash)]
+#[pyclass(from_py_object, name = "SvarType", eq, frozen, hash)]
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub enum PySvarType {
     Hrasva,
@@ -83,7 +83,7 @@ impl PySvarType {
     }
 }
 
-#[pyclass(name = "Akshara", get_all, frozen)]
+#[pyclass(from_py_object, name = "Akshara", get_all, frozen)]
 #[derive(Clone)]
 pub struct PyAkshara {
     pub text: String,

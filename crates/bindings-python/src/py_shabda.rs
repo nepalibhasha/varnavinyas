@@ -1,7 +1,7 @@
 use pyo3::prelude::*;
 use varnavinyas_shabda::{self as shabda_core, AffixKind, Origin};
 
-#[pyclass(name = "Origin", eq, frozen, hash)]
+#[pyclass(from_py_object, name = "Origin", eq, frozen, hash)]
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub enum PyOrigin {
     Tatsam,
@@ -33,7 +33,7 @@ impl PyOrigin {
     }
 }
 
-#[pyclass(name = "Morpheme", get_all, frozen)]
+#[pyclass(from_py_object, name = "Morpheme", get_all, frozen)]
 #[derive(Clone)]
 pub struct PyMorpheme {
     pub root: String,
@@ -42,7 +42,7 @@ pub struct PyMorpheme {
     pub origin: PyOrigin,
 }
 
-#[pyclass(name = "AffixKind", eq, frozen, hash)]
+#[pyclass(from_py_object, name = "AffixKind", eq, frozen, hash)]
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub enum PyAffixKind {
     Prefix,
@@ -62,14 +62,14 @@ impl From<AffixKind> for PyAffixKind {
     }
 }
 
-#[pyclass(name = "AffixSegment", get_all, frozen)]
+#[pyclass(from_py_object, name = "AffixSegment", get_all, frozen)]
 #[derive(Clone)]
 pub struct PyAffixSegment {
     pub text: String,
     pub kind: PyAffixKind,
 }
 
-#[pyclass(name = "AffixAnalysis", get_all, frozen)]
+#[pyclass(from_py_object, name = "AffixAnalysis", get_all, frozen)]
 #[derive(Clone)]
 pub struct PyAffixAnalysis {
     pub surface: String,
@@ -82,7 +82,7 @@ pub struct PyAffixAnalysis {
     pub score: u16,
 }
 
-#[pyclass(name = "RootCandidate", get_all, frozen)]
+#[pyclass(from_py_object, name = "RootCandidate", get_all, frozen)]
 #[derive(Clone)]
 pub struct PyRootCandidate {
     pub root: String,

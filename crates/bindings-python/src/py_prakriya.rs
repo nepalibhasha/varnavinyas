@@ -1,7 +1,7 @@
 use pyo3::prelude::*;
 use varnavinyas_prakriya::{self as prakriya_core, Rule};
 
-#[pyclass(name = "Rule", get_all, frozen)]
+#[pyclass(from_py_object, name = "Rule", get_all, frozen)]
 #[derive(Clone)]
 pub struct PyRule {
     pub source: String,
@@ -28,7 +28,7 @@ impl PyRule {
     }
 }
 
-#[pyclass(name = "Step", get_all, frozen)]
+#[pyclass(from_py_object, name = "Step", get_all, frozen)]
 #[derive(Clone)]
 pub struct PyStep {
     pub rule: PyRule,
@@ -49,7 +49,7 @@ impl PyStep {
     }
 }
 
-#[pyclass(name = "Prakriya", get_all, frozen)]
+#[pyclass(from_py_object, name = "Prakriya", get_all, frozen)]
 #[derive(Clone)]
 pub struct PyPrakriya {
     pub input: String,

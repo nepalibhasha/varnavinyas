@@ -1,7 +1,7 @@
 use pyo3::prelude::*;
 use varnavinyas_sandhi::{self as sandhi_core, SandhiType};
 
-#[pyclass(name = "SandhiType", eq, frozen, hash)]
+#[pyclass(from_py_object, name = "SandhiType", eq, frozen, hash)]
 #[derive(Clone, PartialEq, Eq, Hash)]
 #[allow(clippy::enum_variant_names)]
 pub enum PySandhiType {
@@ -41,7 +41,7 @@ impl PySandhiType {
     }
 }
 
-#[pyclass(name = "SandhiResult", get_all, frozen)]
+#[pyclass(from_py_object, name = "SandhiResult", get_all, frozen)]
 #[derive(Clone)]
 pub struct PySandhiResult {
     pub output: String,

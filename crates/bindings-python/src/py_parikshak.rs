@@ -4,7 +4,7 @@ use varnavinyas_parikshak::diagnostic_reason_category;
 
 use crate::py_prakriya::PyRule;
 
-#[pyclass(name = "Diagnostic", get_all, frozen)]
+#[pyclass(from_py_object, name = "Diagnostic", get_all, frozen)]
 #[derive(Clone)]
 pub struct PyDiagnostic {
     pub span_start: usize,
@@ -21,7 +21,7 @@ pub struct PyDiagnostic {
     pub alternate_reasons: Vec<PyDiagnosticReason>,
 }
 
-#[pyclass(name = "DiagnosticReason", get_all, frozen)]
+#[pyclass(from_py_object, name = "DiagnosticReason", get_all, frozen)]
 #[derive(Clone)]
 pub struct PyDiagnosticReason {
     pub rule: PyRule,
