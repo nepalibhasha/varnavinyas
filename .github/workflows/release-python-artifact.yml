@@ -25,6 +25,10 @@ jobs:
         id: version
         run: echo "artifact_version=${GITHUB_REF_NAME#python-artifact-}" >> "$GITHUB_OUTPUT"
 
+      # Keep the parent directory runner-owned when maturin writes from Docker.
+      - name: Prepare wheel output directory
+        run: mkdir -p dist
+
       - name: Build manylinux wheel
         uses: PyO3/maturin-action@v1
         with:
