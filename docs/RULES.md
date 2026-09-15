@@ -49,6 +49,8 @@ but production decisions remain in code and reviewed inventories.
 - Section 3 `(घ)` and `PS-Saisanik` spacing rules live in `parikshak` because they need neighboring tokens, spacing, punctuation, or phrase context.
 - `parikshak` arbitrates overlapping text diagnostics explicitly; see `crates/parikshak/ARBITRATION.md` for the current `kind > specificity > pass > confidence` contract.
 - Section 3 `(ङ)` includes inventory-backed ajanta coverage for the Notice example lists and the `PS-Saisanik` loanword-ajanta examples such as `कोट् -> कोट`.
+- Ambiguous bare root/imperative pairs such as `हेर` / `हेर्` are preserved and explained through word-analysis notes until grammatical context can resolve the choice.
+- The Section 3 `(क)(ऊ)-1` ई-suffix explanation requires reviewed derivational evidence in `data/rule_inventories/ii_suffix_derivatives.tsv`. Mechanical suffix stripping alone does not establish the rule's applicability; pronouns retain their specific vowel-length rule.
 - Section 4 is not simply a lexicon lookup. `correction_table.rs` currently contains 81 entries: 38 Section 4-style entries, 42 rule-backed holdouts, and 1 documented stopgap. See `crates/prakriya/README.md`.
 - `तिर्यक्`, comparison spacing, institutional/title splits, and similar school-grammar phrase behavior should be first-class checker rules, not correction-table growth.
 
@@ -85,3 +87,4 @@ Stable diagnostic categories are defined in `crates/parikshak/src/diagnostic.rs`
 - Keep broad fallbacks below specific numbered rules and suppress duplicate alternate hits when a specific rule already explains the same correction.
 - Prefer schema-checked inventories with provenance fields for growing cited example lists, especially when the alternative is scattered Rust constants.
 - Treat raw lexicon attestation as plausibility evidence, not proof that a form is a safe correction target.
+- Keep explanation evidence distinct from spelling plausibility: origin notes require documented provenance, and alternate rule notes require independent support. See `docs/INTEGRATION_NOTES.md` for the consumer-facing contract.

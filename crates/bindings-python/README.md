@@ -74,5 +74,16 @@ Implemented modules:
 
 Current gaps:
 
-- Publish/release automation for Python wheels in CI
+- Broader wheel platform coverage and package-index publishing (the current
+  workflow publishes a Linux x86_64 wheel to GitHub Releases)
 - Python-level runtime integration tests (import + API smoke tests)
+
+## Releases and Classification Limits
+
+Tags matching `python-artifact-v*` trigger
+`.github/workflows/release-python-artifact.yml`, which builds and uploads a
+wheel to GitHub Releases. This does not publish to PyPI.
+
+`shabda.classify()` retains the four-way best-effort `Origin` enum. It does not
+expose the core's origin provenance, so a fallback `Deshaj` must not be shown as
+verified etymology. See [Integration Notes](../../docs/INTEGRATION_NOTES.md).

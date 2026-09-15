@@ -29,7 +29,6 @@ From repo root:
 
 ```bash
 bash web/build.sh
-bash web/package-artifact.sh
 python3 -m http.server 8080 --directory web/
 ```
 
@@ -74,6 +73,24 @@ This emits:
 
 - `web/dist/varnavinyas-browser-artifact/`
 - `web/dist/varnavinyas-browser-artifact.zip`
+- `web/dist/varnavinyas-browser-artifact-<version>.zip`
+
+Packaging rebuilds WASM by default. Set `REFRESH_WEB_WASM=0` only when reusing
+a verified build of the same source revision. Set `ARTIFACT_VERSION` explicitly
+for a release; without it, this workspace currently uses a `git-<sha>` version.
+Build from committed source so `build-info.json.git_sha` identifies the contents.
+Its `built_at_utc` value is the source commit time, not the packaging time.
+
+The ZIP contains the WASM binary, JavaScript glue, manifest, and build metadata.
+It does **not** include the website's editor, inspector, CSS, or rule-reference
+modules. Downstream clients must update their own rendering when adopting
+analysis changes such as `origin: "unknown"`; see
+[Integration Notes](../docs/INTEGRATION_NOTES.md).
+
+GitHub Pages rebuilds the full website on pushes to `main`. A separate tag
+matching `browser-artifact-v*` builds and publishes the downstream ZIP through
+`.github/workflows/release-browser-artifact.yml`. See the
+[release procedure](../docs/DEVELOPMENT.md#publishing-browser-artifacts).
 
 The artifact `manifest.json` is the downstream contract surface. It includes:
 

@@ -48,7 +48,7 @@ Legacy JSON-string helpers are also exposed:
 ## Example
 
 ```js
-import init, { check_word_value, sandhi_split_value } from "./pkg/varnavinyas_bindings_wasm.js";
+import init, { check_word_value, check_text_value_with_options, sandhi_split_value } from "./pkg/varnavinyas_bindings_wasm.js";
 
 await init();
 
@@ -145,3 +145,6 @@ Word analysis reports `origin: "unknown"`, `origin_source: "unknown"`, and zero
 `origin_confidence` when no origin evidence exists. `heuristic` sources are
 inferences; only `kosha` and `override` sources support factual origin notes.
 The fields are unchanged; `unknown` is an additional string value.
+The lower-level `decompose_word_value().origin` remains a best-effort category;
+use word analysis for origin badges. See [Integration Notes](../../docs/INTEGRATION_NOTES.md)
+for provenance, context-dependent verb forms, and conservative morphology.

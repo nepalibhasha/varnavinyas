@@ -78,6 +78,9 @@ if (common_json != NULL) {
 - The API is intentionally narrower than the Rust API.
 - Structured outputs are flattened into JSON for portability.
 - ABI versioning is still minimal and should be strengthened before broad external adoption.
+- `varnavinyas_classify` returns a best-effort four-way origin category without
+  provenance. A fallback `Deshaj` is not verified etymology; see
+  [Integration Notes](../../docs/INTEGRATION_NOTES.md).
 
 ## Status
 

@@ -1,5 +1,43 @@
 # Integration Notes
 
+## Word Analysis and Explanations
+
+Use `analyze_word_value` (or its JSON-string equivalent `analyze_word`) when
+presenting origin and explanatory notes in a browser client:
+
+| `origin_source` | Meaning | Presentation |
+| --- | --- | --- |
+| `kosha`, `override` | Dictionary metadata or reviewed evidence | Documented origin |
+| `heuristic` | Inference from spelling patterns | Label as inferred |
+| `unknown` | No origin evidence; `origin_confidence` is zero | Show unknown origin |
+
+For the last case, word analysis also returns `origin: "unknown"`. These are
+additional string values in existing fields; clients must handle them without
+falling back to a देशज label. Lexicon membership alone does not establish origin.
+
+The lower-level Rust `classify()` and the Python, C, and UniFFI classification
+wrappers still return a best-effort four-way category for compatibility.
+`decompose_word_value().origin` has the same limitation. Their fallback `Deshaj`
+is not documented etymology. Rust callers can use `classify_with_provenance()`;
+the Python, C, and UniFFI classification wrappers do not yet expose provenance.
+
+Morphology is conservative: an omitted split means there is insufficient
+supported analysis, not that a word cannot have a derivation. For example,
+`संघीय` no longer supplies `सम् + घीय` through circular sibling evidence, and
+`हामी` does not borrow the unrelated noun `हाम` to justify an ई suffix.
+The explicitly documented `तिनी = तिन + ई` analysis remains available.
+
+`derive()` preserves ambiguous root/imperative pairs such as `हेर` / `हेर्`.
+Word analysis explains both source rules without proposing a context-free
+replacement. An unchanged derivation is not a claim that every grammatical
+use of that spelling is correct.
+
+Use `rule_code` for reference links and `alternate_reasons` / alternate rule
+notes for independently supported additional explanations. Their count can
+decrease when unsupported or redundant reasons are removed. In the web editor,
+the current text diagnostic determines the correction and severity; isolated
+word analysis supplements it with compatible linguistic information.
+
 ## Orthography Mode
 
 The checker supports two orthography policies:

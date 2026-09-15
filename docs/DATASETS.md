@@ -71,7 +71,8 @@ As of 2026-07-03:
 
 *   **`data/rule_inventories/*.tsv`**
     *   Schema-checked rule inventories compiled into specific rule modules.
-    *   Current pilots include `ajanta_halanta.tsv` and `ba_va_ps_sanskrit.tsv`.
+    *   Inventories include `ajanta_halanta.tsv`, `ba_va_ps_sanskrit.tsv`, and `ii_suffix_derivatives.tsv`.
+    *   `ii_suffix_derivatives.tsv` records reviewed root/output pairs for the ई-suffix explanation, sourced from Academy examples or explicit dictionary derivations.
     *   Rows must include source and review-status provenance and are validated by parser tests in the owning rule modules.
 
 ## Lexicon Provenance

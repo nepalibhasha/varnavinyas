@@ -54,6 +54,9 @@ The exact call shape depends on the generated Swift/Kotlin package, but the expo
 
 - The surface area is intentionally narrower than the Rust API.
 - Some outputs are still simplified for portability.
+- `classify` returns a best-effort four-way origin category without provenance.
+  A fallback `Deshaj` is not verified etymology; see
+  [Integration Notes](../../docs/INTEGRATION_NOTES.md).
 
 ## Status
 

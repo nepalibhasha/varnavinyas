@@ -103,6 +103,36 @@ bash web/package-artifact.sh
 - Downstream consumers should fetch published browser artifacts from GitHub Releases, not from this repo layout.
 - In sandbox-restricted environments, `web/smoke-test.sh` may skip HTTP-serving checks. Treat that as expected when the static asset checks still pass.
 
+### Publishing Browser Artifacts
+
+Website deployment and downstream artifact publication are separate:
+
+- A push to `main` triggers `.github/workflows/pages.yml`, which rebuilds and
+  deploys the full web app.
+- A `browser-artifact-v*` tag triggers
+  `.github/workflows/release-browser-artifact.yml`, which rebuilds and uploads a
+  versioned WASM ZIP to GitHub Releases. The ZIP does not contain the web UI.
+
+Before publishing, commit the source, run the relevant tests and dependency
+gate, and verify that downstream clients handle any new result values. Build a
+local candidate with an explicit version, for example:
+
+```bash
+ARTIFACT_VERSION=v0.1.5-rc.1 bash web/package-artifact.sh
+bash web/smoke-test.sh
+unzip -l web/dist/varnavinyas-browser-artifact-v0.1.5-rc.1.zip
+```
+
+Check the packaged manifest and `build-info.json` against the intended Git
+revision. The packager rebuilds by default; `REFRESH_WEB_WASM=0` is only for
+deliberate reuse of a verified build. Generated assets remain untracked.
+
+After the candidate is accepted and the chosen version is unused, push the
+source and its `browser-artifact-v<version>` tag, then verify the release
+workflow and uploaded asset. Local packaging alone neither deploys the site
+nor uploads a release. Use a new version for changed contents rather than
+replacing an existing release asset.
+
 ## CI
 
 The GitHub Actions pipeline enforces:
