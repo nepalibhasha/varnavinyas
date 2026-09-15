@@ -398,3 +398,23 @@ fn unknown_words_have_no_claimed_origin_evidence() {
         OriginSource::Heuristic
     );
 }
+
+#[test]
+fn prefix_stripping_needs_independent_root_evidence() {
+    let lex = varnavinyas_kosha::kosha();
+    assert!(!lex.contains("घीय") && lex.lookup("घीय").is_none());
+    assert!(lex.contains("सङ्घीय"));
+    assert!(!has_supported_analysis("घीय"));
+    for word in ["संघीय", "सङ्घीय", "संघीयमा", "सङ्घीयमा"]
+    {
+        assert!(
+            analyze_affixes(word).iter().all(|a| a.root != "घीय"),
+            "{word}"
+        );
+        assert_ne!(decompose(word).root, "घीय", "{word}");
+    }
+    let supported = best_analysis("प्रशासनमा").unwrap();
+    assert_eq!(supported.root, "शासन");
+    assert_eq!(supported.prefixes, ["प्र"]);
+    assert!(has_supported_analysis("मच्छिन्द्रनाथको"));
+}

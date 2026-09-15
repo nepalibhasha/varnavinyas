@@ -68,12 +68,11 @@ fn lexical_support(word: &str, lex: &Kosha) -> LexicalSupport {
 struct BaseSupport {
     lexical: LexicalSupport,
     suffixed_sibling: bool,
-    prefixed_sibling: bool,
 }
 
 impl BaseSupport {
     fn is_supported(self) -> bool {
-        self.lexical.is_exact() || self.suffixed_sibling || self.prefixed_sibling
+        self.lexical.is_exact() || self.suffixed_sibling
     }
 }
 
@@ -88,13 +87,9 @@ fn has_attested_suffixed_sibling(word: &str, lex: &Kosha) -> bool {
         })
 }
 
-fn has_attested_prefixed_sibling(word: &str, lex: &Kosha) -> bool {
-    tables::PREFIX_FORMS.iter().any(|&(_, sandhi_form, _)| {
-        let candidate = format!("{sandhi_form}{word}");
-        lex.contains(&candidate) || lex.lookup(&candidate).is_some()
-    })
-}
-
+// A prefixed word does not independently establish its remainder as a root:
+// सङ्घीय cannot justify घीय and then serve as proof for सम् + घीय. Attested
+// case/particle siblings still support productive inflection of missing stems.
 fn base_support(word: &str, lex: &Kosha) -> BaseSupport {
     if word.is_empty() {
         return BaseSupport::default();
@@ -103,7 +98,6 @@ fn base_support(word: &str, lex: &Kosha) -> BaseSupport {
     BaseSupport {
         lexical: lexical_support(word, lex),
         suffixed_sibling: has_attested_suffixed_sibling(word, lex),
-        prefixed_sibling: has_attested_prefixed_sibling(word, lex),
     }
 }
 
@@ -131,9 +125,6 @@ fn affix_score(
         score += 150;
     }
     if support.suffixed_sibling {
-        score += 60;
-    }
-    if support.prefixed_sibling {
         score += 60;
     }
     score += (prefixes.len() as u16) * 20;

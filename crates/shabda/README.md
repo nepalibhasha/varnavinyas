@@ -63,3 +63,8 @@ let _root = analysis.root;
 ## Status
 
 Important lexical interpretation layer, still evolving beyond MVP heuristics.
+
+Prefix analyses require root evidence independent of prefixed whole words.
+A word such as सङ्घीय cannot prove the proposed root घीय. Attested case or
+particle siblings remain usable for productive inflections whose bare stem is
+missing from the lexicon (for example मच्छिन्द्रनाथको).
