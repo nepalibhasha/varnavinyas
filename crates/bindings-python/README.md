@@ -91,3 +91,9 @@ wheel to GitHub Releases. This does not publish to PyPI.
 `shabda.classify()` retains the four-way best-effort `Origin` enum. It does not
 expose the core's origin provenance, so a fallback `Deshaj` must not be shown as
 verified etymology. See [Integration Notes](../../docs/INTEGRATION_NOTES.md).
+
+In v0.1.1, `check_text_with_options` preserves the v0.1.0 positional order
+`(text, grammar=False, punctuation_mode="strict", include_noop_heuristics=False)`.
+Use the keyword-only `orthography_mode="common_editorial"` to request reviewed
+editorial variants. Omitting it keeps Academy-strict behavior. See
+[coordinated release notes](../../docs/releases/native-v0.1.1.md).

@@ -138,6 +138,11 @@ replacing an existing release asset.
 
 ## CI
 
+Python, CLI, iOS, and Android release workflows create draft releases. For a
+coordinated set, point all four new tags at the same commit, wait for all build
+and evaluation jobs, verify manifests/fixture checksums, then publish the drafts
+together. Do not move a tag after its release is published.
+
 The GitHub Actions pipeline enforces:
 
 1. build and test coverage on the Rust workspace

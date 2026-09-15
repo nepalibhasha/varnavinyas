@@ -1,0 +1,391 @@
+{
+  "cases": [
+    {
+      "expected_diagnostics": [],
+      "id": "clean-academy-strict",
+      "options": {
+        "grammar": false,
+        "include_noop_heuristics": false,
+        "orthography_mode": "academy-strict",
+        "punctuation_mode": "strict"
+      },
+      "text": "हामी"
+    },
+    {
+      "expected_diagnostics": [],
+      "id": "clean-common-editorial",
+      "options": {
+        "grammar": false,
+        "include_noop_heuristics": false,
+        "orthography_mode": "common-editorial",
+        "punctuation_mode": "strict"
+      },
+      "text": "हामी"
+    },
+    {
+      "expected_diagnostics": [
+        {
+          "category": "ह्रस्व/दीर्घ",
+          "category_code": "HrasvaDirgha",
+          "confidence": 1.0,
+          "correction": "हामी",
+          "explanation": "सर्वनामको अन्त्यमा दीर्घ हुन्छ",
+          "incorrect": "हामि",
+          "kind": "Error",
+          "rule": "ह्रस्व/दीर्घ स्वर नियम",
+          "rule_code": "3(क)(ऊ)-7",
+          "span_end": 12,
+          "span_start": 0
+        }
+      ],
+      "id": "pronoun-academy-strict",
+      "options": {
+        "grammar": false,
+        "include_noop_heuristics": false,
+        "orthography_mode": "academy-strict",
+        "punctuation_mode": "strict"
+      },
+      "text": "हामि"
+    },
+    {
+      "expected_diagnostics": [
+        {
+          "category": "ह्रस्व/दीर्घ",
+          "category_code": "HrasvaDirgha",
+          "confidence": 1.0,
+          "correction": "हामी",
+          "explanation": "सर्वनामको अन्त्यमा दीर्घ हुन्छ",
+          "incorrect": "हामि",
+          "kind": "Error",
+          "rule": "ह्रस्व/दीर्घ स्वर नियम",
+          "rule_code": "3(क)(ऊ)-7",
+          "span_end": 12,
+          "span_start": 0
+        }
+      ],
+      "id": "pronoun-common-editorial",
+      "options": {
+        "grammar": false,
+        "include_noop_heuristics": false,
+        "orthography_mode": "common-editorial",
+        "punctuation_mode": "strict"
+      },
+      "text": "हामि"
+    },
+    {
+      "expected_diagnostics": [],
+      "id": "ambiguous-verb-academy-strict",
+      "options": {
+        "grammar": false,
+        "include_noop_heuristics": false,
+        "orthography_mode": "academy-strict",
+        "punctuation_mode": "strict"
+      },
+      "text": "हेर हेर्"
+    },
+    {
+      "expected_diagnostics": [],
+      "id": "ambiguous-verb-common-editorial",
+      "options": {
+        "grammar": false,
+        "include_noop_heuristics": false,
+        "orthography_mode": "common-editorial",
+        "punctuation_mode": "strict"
+      },
+      "text": "हेर हेर्"
+    },
+    {
+      "expected_diagnostics": [
+        {
+          "alternate_reasons": [
+            {
+              "category": "चन्द्रबिन्दु",
+              "category_code": "Chandrabindu",
+              "correction": "सङ्घीय",
+              "explanation": "तत्सम शब्दमा स्पर्श व्यञ्जन अघि पञ्चम वर्ण प्रयोग",
+              "rule": "चन्द्रबिन्दु/शिरबिन्दु नियम",
+              "rule_code": "3(ख)(अ)-2-ङ्"
+            }
+          ],
+          "category": "चन्द्रबिन्दु",
+          "category_code": "Chandrabindu",
+          "confidence": 1.0,
+          "correction": "सङ्घीय",
+          "explanation": "घ अघि पञ्चम वर्ण ङ अनिवार्य (शिरबिन्दु ं होइन)",
+          "incorrect": "संघीय",
+          "kind": "Error",
+          "rule": "चन्द्रबिन्दु/शिरबिन्दु नियम",
+          "rule_code": "3(ख)-पञ्चम",
+          "span_end": 15,
+          "span_start": 0
+        }
+      ],
+      "id": "reviewed-variant-academy-strict",
+      "options": {
+        "grammar": false,
+        "include_noop_heuristics": false,
+        "orthography_mode": "academy-strict",
+        "punctuation_mode": "strict"
+      },
+      "text": "संघीय"
+    },
+    {
+      "expected_diagnostics": [
+        {
+          "alternate_reasons": [
+            {
+              "category": "चन्द्रबिन्दु",
+              "category_code": "Chandrabindu",
+              "correction": "सङ्घीय",
+              "explanation": "तत्सम शब्दमा स्पर्श व्यञ्जन अघि पञ्चम वर्ण प्रयोग",
+              "rule": "चन्द्रबिन्दु/शिरबिन्दु नियम",
+              "rule_code": "3(ख)(अ)-2-ङ्"
+            }
+          ],
+          "category": "चन्द्रबिन्दु",
+          "category_code": "Chandrabindu",
+          "confidence": 0.72,
+          "correction": "सङ्घीय",
+          "explanation": "प्रचलित आधुनिक लेखन; कडा प्रज्ञा रूप सङ्घीय हो। घ अघि पञ्चम वर्ण ङ अनिवार्य (शिरबिन्दु ं होइन)",
+          "incorrect": "संघीय",
+          "kind": "Variant",
+          "rule": "चन्द्रबिन्दु/शिरबिन्दु नियम",
+          "rule_code": "3(ख)-पञ्चम",
+          "span_end": 15,
+          "span_start": 0
+        }
+      ],
+      "id": "reviewed-variant-common-editorial",
+      "options": {
+        "grammar": false,
+        "include_noop_heuristics": false,
+        "orthography_mode": "common-editorial",
+        "punctuation_mode": "strict"
+      },
+      "text": "संघीय"
+    },
+    {
+      "expected_diagnostics": [
+        {
+          "category": "ह्रस्व/दीर्घ",
+          "category_code": "HrasvaDirgha",
+          "confidence": 1.0,
+          "correction": "हामी",
+          "explanation": "सर्वनामको अन्त्यमा दीर्घ हुन्छ",
+          "incorrect": "हामि",
+          "kind": "Error",
+          "rule": "ह्रस्व/दीर्घ स्वर नियम",
+          "rule_code": "3(क)(ऊ)-7",
+          "span_end": 28,
+          "span_start": 16
+        }
+      ],
+      "id": "utf8-multiline-academy-strict",
+      "options": {
+        "grammar": false,
+        "include_noop_heuristics": false,
+        "orthography_mode": "academy-strict",
+        "punctuation_mode": "strict"
+      },
+      "text": "नेपाल\nहामि"
+    },
+    {
+      "expected_diagnostics": [
+        {
+          "category": "ह्रस्व/दीर्घ",
+          "category_code": "HrasvaDirgha",
+          "confidence": 1.0,
+          "correction": "हामी",
+          "explanation": "सर्वनामको अन्त्यमा दीर्घ हुन्छ",
+          "incorrect": "हामि",
+          "kind": "Error",
+          "rule": "ह्रस्व/दीर्घ स्वर नियम",
+          "rule_code": "3(क)(ऊ)-7",
+          "span_end": 28,
+          "span_start": 16
+        }
+      ],
+      "id": "utf8-multiline-common-editorial",
+      "options": {
+        "grammar": false,
+        "include_noop_heuristics": false,
+        "orthography_mode": "common-editorial",
+        "punctuation_mode": "strict"
+      },
+      "text": "नेपाल\nहामि"
+    },
+    {
+      "expected_diagnostics": [
+        {
+          "alternate_reasons": [
+            {
+              "category": "ह्रस्व/दीर्घ",
+              "category_code": "HrasvaDirgha",
+              "correction": "भौतिक",
+              "explanation": "सबै विशेषणहरू बिचमा ह्रस्व हुन्छन्",
+              "rule": "ह्रस्व/दीर्घ स्वर नियम",
+              "rule_code": "3(क)(आ)-6"
+            }
+          ],
+          "category": "ह्रस्व/दीर्घ",
+          "category_code": "HrasvaDirgha",
+          "confidence": 1.0,
+          "correction": "भौतिक",
+          "explanation": "इक, इका, इत, इम, इमा, इष्ठ, उक प्रत्यय लागेका शब्दमा बिचमा ह्रस्व हुन्छ",
+          "incorrect": "भौतीक",
+          "kind": "Error",
+          "rule": "ह्रस्व/दीर्घ स्वर नियम",
+          "rule_code": "3(क)(आ)-2",
+          "span_end": 15,
+          "span_start": 0
+        }
+      ],
+      "id": "alternate-reasons-academy-strict",
+      "options": {
+        "grammar": false,
+        "include_noop_heuristics": false,
+        "orthography_mode": "academy-strict",
+        "punctuation_mode": "strict"
+      },
+      "text": "भौतीक"
+    },
+    {
+      "expected_diagnostics": [
+        {
+          "alternate_reasons": [
+            {
+              "category": "ह्रस्व/दीर्घ",
+              "category_code": "HrasvaDirgha",
+              "correction": "भौतिक",
+              "explanation": "सबै विशेषणहरू बिचमा ह्रस्व हुन्छन्",
+              "rule": "ह्रस्व/दीर्घ स्वर नियम",
+              "rule_code": "3(क)(आ)-6"
+            }
+          ],
+          "category": "ह्रस्व/दीर्घ",
+          "category_code": "HrasvaDirgha",
+          "confidence": 1.0,
+          "correction": "भौतिक",
+          "explanation": "इक, इका, इत, इम, इमा, इष्ठ, उक प्रत्यय लागेका शब्दमा बिचमा ह्रस्व हुन्छ",
+          "incorrect": "भौतीक",
+          "kind": "Error",
+          "rule": "ह्रस्व/दीर्घ स्वर नियम",
+          "rule_code": "3(क)(आ)-2",
+          "span_end": 15,
+          "span_start": 0
+        }
+      ],
+      "id": "alternate-reasons-common-editorial",
+      "options": {
+        "grammar": false,
+        "include_noop_heuristics": false,
+        "orthography_mode": "common-editorial",
+        "punctuation_mode": "strict"
+      },
+      "text": "भौतीक"
+    },
+    {
+      "expected_diagnostics": [
+        {
+          "category": "सन्धि",
+          "category_code": "Sandhi",
+          "confidence": 0.82,
+          "correction": "सूर्य + उदय",
+          "explanation": "समास सम्भावना (Tatpurusha): सूर्य को उदय",
+          "incorrect": "सूर्योदय",
+          "kind": "Variant",
+          "rule": "व्याकरण नियम",
+          "rule_code": "samasa-heuristic",
+          "span_end": 24,
+          "span_start": 0
+        }
+      ],
+      "id": "grammar-academy-strict",
+      "options": {
+        "grammar": true,
+        "include_noop_heuristics": false,
+        "orthography_mode": "academy-strict",
+        "punctuation_mode": "strict"
+      },
+      "text": "सूर्योदय भयो।"
+    },
+    {
+      "expected_diagnostics": [
+        {
+          "category": "सन्धि",
+          "category_code": "Sandhi",
+          "confidence": 0.82,
+          "correction": "सूर्य + उदय",
+          "explanation": "समास सम्भावना (Tatpurusha): सूर्य को उदय",
+          "incorrect": "सूर्योदय",
+          "kind": "Variant",
+          "rule": "व्याकरण नियम",
+          "rule_code": "samasa-heuristic",
+          "span_end": 24,
+          "span_start": 0
+        }
+      ],
+      "id": "grammar-common-editorial",
+      "options": {
+        "grammar": true,
+        "include_noop_heuristics": false,
+        "orthography_mode": "common-editorial",
+        "punctuation_mode": "strict"
+      },
+      "text": "सूर्योदय भयो।"
+    },
+    {
+      "expected_diagnostics": [
+        {
+          "category": "चिह्न",
+          "category_code": "Punctuation",
+          "confidence": 1.0,
+          "correction": ",",
+          "explanation": "Section 5: punctuation should attach to the previous word",
+          "incorrect": " ,",
+          "kind": "Error",
+          "rule": "विराम चिह्न नियम",
+          "rule_code": "Section 5",
+          "span_end": 17,
+          "span_start": 15
+        }
+      ],
+      "id": "punctuation-academy-strict",
+      "options": {
+        "grammar": false,
+        "include_noop_heuristics": false,
+        "orthography_mode": "academy-strict",
+        "punctuation_mode": "strict"
+      },
+      "text": "नेपाल , राम्रो"
+    },
+    {
+      "expected_diagnostics": [
+        {
+          "category": "चिह्न",
+          "category_code": "Punctuation",
+          "confidence": 1.0,
+          "correction": ",",
+          "explanation": "Section 5: punctuation should attach to the previous word",
+          "incorrect": " ,",
+          "kind": "Error",
+          "rule": "विराम चिह्न नियम",
+          "rule_code": "Section 5",
+          "span_end": 17,
+          "span_start": 15
+        }
+      ],
+      "id": "punctuation-common-editorial",
+      "options": {
+        "grammar": false,
+        "include_noop_heuristics": false,
+        "orthography_mode": "common-editorial",
+        "punctuation_mode": "strict"
+      },
+      "text": "नेपाल , राम्रो"
+    }
+  ],
+  "diagnostic_schema_version": 1,
+  "fixture_schema_version": 1,
+  "span_unit": "utf8-bytes"
+}

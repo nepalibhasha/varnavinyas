@@ -60,7 +60,7 @@ pub fn check_word(word: &str) -> Option<PyDiagnostic> {
 /// Returns a list of Diagnostic objects.
 #[pyfunction]
 pub fn check_text(text: &str) -> PyResult<Vec<PyDiagnostic>> {
-    check_text_with_options(text, false, "strict", "academy_strict", false)
+    check_text_with_options(text, false, "strict", false, "academy_strict")
 }
 
 fn parse_punctuation_mode(mode: &str) -> PyResult<varnavinyas_parikshak::PunctuationMode> {
@@ -89,13 +89,13 @@ fn parse_orthography_mode(mode: &str) -> PyResult<varnavinyas_parikshak::Orthogr
 
 /// Check full text with runtime options.
 #[pyfunction]
-#[pyo3(signature = (text, grammar=false, punctuation_mode="strict", orthography_mode="academy_strict", include_noop_heuristics=false))]
+#[pyo3(signature = (text, grammar=false, punctuation_mode="strict", include_noop_heuristics=false, *, orthography_mode="academy_strict"))]
 pub fn check_text_with_options(
     text: &str,
     grammar: bool,
     punctuation_mode: &str,
-    orthography_mode: &str,
     include_noop_heuristics: bool,
+    orthography_mode: &str,
 ) -> PyResult<Vec<PyDiagnostic>> {
     let punctuation_mode = parse_punctuation_mode(punctuation_mode)?;
     let orthography_mode = parse_orthography_mode(orthography_mode)?;

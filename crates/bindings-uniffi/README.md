@@ -61,3 +61,13 @@ The exact call shape depends on the generated Swift/Kotlin package, but the expo
 ## Status
 
 Implemented MVP integration layer.
+
+## Offline Evaluation Artifacts
+
+The iOS and Android v0.1.1 ZIPs include generated Swift/Kotlin bindings, native
+libraries, manifests with the source commit and file checksums, and identical
+diagnostic fixtures for both orthography modes. The iOS XCFramework includes
+the generated C header and module map for each platform slice.
+
+See [Mobile Evaluation](../../docs/MOBILE_EVALUATION.md) for integration,
+UTF-8 span handling, dependencies, and the included evaluation harnesses.

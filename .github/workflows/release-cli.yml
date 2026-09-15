@@ -30,7 +30,7 @@ jobs:
             target: aarch64-apple-darwin
             archive_ext: tar.gz
             bin_name: varnavinyas
-          - os: macos-latest
+          - os: macos-15-intel
             target: x86_64-apple-darwin
             archive_ext: tar.gz
             bin_name: varnavinyas
@@ -62,6 +62,13 @@ jobs:
       - name: Build CLI
         run: cargo build --release --locked --target ${{ matrix.target }} --package varnavinyas
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Evaluate shared diagnostics
+        run: node release/test-cli.mjs target/${{ matrix.target }}/release/${{ matrix.bin_name }}
+
       - name: Package Unix CLI
         if: runner.os != 'Windows'
         shell: bash
@@ -73,6 +80,7 @@ jobs:
           mkdir -p "dist/${STAGING}"
           cp "target/${TARGET}/release/${{ matrix.bin_name }}" "dist/${STAGING}/"
           cp LICENSE-APACHE LICENSE-MIT README.md docs/CLI_JSON_CONTRACT.md "dist/${STAGING}/"
+          node release/package-metadata.mjs cli "$VERSION" "dist/${STAGING}" "$TARGET"
           (cd dist && tar -czf "${STAGING}.tar.gz" "${STAGING}")
           shasum -a 256 "dist/${STAGING}.tar.gz" > "dist/${STAGING}.tar.gz.sha256"
 
@@ -86,6 +94,7 @@ jobs:
           New-Item -ItemType Directory -Force -Path "dist/$Staging" | Out-Null
           Copy-Item "target/$Target/release/${{ matrix.bin_name }}" "dist/$Staging/"
           Copy-Item LICENSE-APACHE,LICENSE-MIT,README.md,docs/CLI_JSON_CONTRACT.md "dist/$Staging/"
+          node release/package-metadata.mjs cli "$Version" "dist/$Staging" "$Target"
           Compress-Archive -Path "dist/$Staging" -DestinationPath "dist/$Staging.zip" -Force
           $Hash = (Get-FileHash -Algorithm SHA256 "dist/$Staging.zip").Hash.ToLowerInvariant()
           "$Hash  $Staging.zip" | Out-File -Encoding ascii "dist/$Staging.zip.sha256"
@@ -106,6 +115,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
+      - uses: actions/checkout@v4
       - name: Derive CLI version
         id: version
         shell: bash
@@ -136,5 +146,7 @@ jobs:
         with:
           tag_name: ${{ steps.version.outputs.release_tag }}
           name: CLI ${{ steps.version.outputs.cli_version }}
+          draft: true
           generate_release_notes: true
+          body_path: docs/releases/native-v0.1.1.md
           files: release-assets/*

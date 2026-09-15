@@ -29,55 +29,35 @@ jobs:
         id: version
         run: echo "artifact_version=${GITHUB_REF_NAME#android-artifact-}" >> "$GITHUB_OUTPUT"
 
-      - name: Build Android targets
-        run: |
-          cargo ndk \
-            --target aarch64-linux-android \
-            --target armv7-linux-androideabi \
-            --target x86_64-linux-android \
-            --platform 21 \
-            -- build --release --package varnavinyas-bindings-uniffi
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
 
-      - name: Generate Kotlin bindings
-        run: |
-          mkdir -p out
-          cargo run --bin uniffi-bindgen \
-            --package varnavinyas-bindings-uniffi \
-            -- generate \
-            --library target/aarch64-linux-android/release/libvarnavinyas_bindings_uniffi.so \
-            --language kotlin \
-            --out-dir ./out/
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
 
-      - name: Assemble zip
-        run: |
-          STAGING="varnavinyas-android-artifact-${{ steps.version.outputs.artifact_version }}"
-          mkdir -p "$STAGING/jniLibs/arm64-v8a"
-          mkdir -p "$STAGING/jniLibs/armeabi-v7a"
-          mkdir -p "$STAGING/jniLibs/x86_64"
-
-          cp target/aarch64-linux-android/release/libvarnavinyas_bindings_uniffi.so \
-            "$STAGING/jniLibs/arm64-v8a/"
-          cp target/armv7-linux-androideabi/release/libvarnavinyas_bindings_uniffi.so \
-            "$STAGING/jniLibs/armeabi-v7a/"
-          cp target/x86_64-linux-android/release/libvarnavinyas_bindings_uniffi.so \
-            "$STAGING/jniLibs/x86_64/"
-
-          # uniffi-bindgen may write into a namespace subdirectory; find the .kt file
-          KT_FILE="$(find out -name '*.kt' | head -1)"
-          cp "$KT_FILE" "$STAGING/varnavinyas_bindings_uniffi.kt"
-
-          zip -r "${STAGING}.zip" "$STAGING"
+      - name: Build and evaluate android package
+        run: bash release/build-android.sh "${{ steps.version.outputs.artifact_version }}"
 
       - name: Upload artifact to workflow
         uses: actions/upload-artifact@v4
         with:
           name: varnavinyas-android-artifact-${{ steps.version.outputs.artifact_version }}
-          path: varnavinyas-android-artifact-${{ steps.version.outputs.artifact_version }}.zip
+          path: |
+            dist/varnavinyas-android-artifact-*.zip
+            dist/varnavinyas-android-artifact-*.sha256
+          if-no-files-found: error
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           name: Android Artifact ${{ steps.version.outputs.artifact_version }}
+          draft: true
           generate_release_notes: true
-          files: varnavinyas-android-artifact-${{ steps.version.outputs.artifact_version }}.zip
+          body_path: docs/releases/native-v0.1.1.md
+          files: |
+            dist/varnavinyas-android-artifact-*.zip
+            dist/varnavinyas-android-artifact-*.sha256
