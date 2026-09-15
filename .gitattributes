@@ -1,2 +1,5 @@
 # Empty POS metadata is represented by an intentional trailing TSV delimiter.
 data/headwords.tsv -whitespace
+
+# Release fixtures must have identical bytes and checksums on every platform.
+docs/tests/mobile_diagnostics.json text eol=lf

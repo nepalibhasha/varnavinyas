@@ -10,6 +10,10 @@ if (!['python', 'cli', 'ios', 'android'].includes(platform) || !/^v\d+\.\d+\.\d+
   throw new Error('Expected platform, vX.Y.Z version, directory, and optional target');
 }
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
+const fixtureBytes = fs.readFileSync('docs/tests/mobile_diagnostics.json');
+if (fixtureBytes.includes(13)) {
+  throw new Error('Shared diagnostic fixtures must use LF line endings on every platform');
+}
 fs.mkdirSync(directory, { recursive: true });
 for (const [source, destination] of [
   ['docs/tests/mobile_diagnostics.json', 'fixtures/diagnostics.json'],
@@ -44,7 +48,7 @@ const manifest = {
   diagnostic_schema_version: 1,
   span_unit: platform === 'cli' ? 'one-based-line-and-character-column' : 'utf8-bytes',
   fixtures: { path: 'fixtures/diagnostics.json', schema_version: 1,
-    sha256: digest(fs.readFileSync('docs/tests/mobile_diagnostics.json')) },
+    sha256: digest(fixtureBytes) },
   orthography_modes: ['academy-strict', 'common-editorial'],
   default_orthography_mode: 'academy-strict',
   default_punctuation_mode: 'strict', grammar_pass_available: true,
