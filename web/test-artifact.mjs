@@ -96,4 +96,13 @@ for (const row of semanticInventory.trim().split('\n').slice(1)) {
 for (const word of ['माथि', 'नाति', 'समिति', 'गाडीमा', 'फर्सीको']) {
   assert.deepEqual(wasm.check_text_value(word, false), [], word);
 }
+for (const [surface, left, right] of [['अत्याचार', 'अति', 'आचार'],
+  ['प्रत्यादेश', 'प्रति', 'आदेश'], ['स्वागत', 'सु', 'आगत']]) {
+  assert.equal(wasm.sandhi_apply_value(left, right).output, surface);
+  const candidate = wasm.sandhi_split_value(surface).find(c => c.left === left && c.right === right);
+  assert.ok(candidate, surface);
+  assert.notEqual(candidate.authority, 'Exploratory');
+  assert.equal(wasm.sandhi_apply_value(candidate.left, candidate.right).output, surface);
+}
+assert.deepEqual(wasm.sandhi_split_value('नेपाल'), []);
 console.log(`Browser artifact ${manifest.artifact_version} (${manifest.git_sha}): runtime and origin presentation checks passed.`);

@@ -105,8 +105,11 @@ Every word now must receive an expected replacement and a cited explanation;
 both correct-form false-positive tests and corpus snapshots remain separate
 gates. This is fixture coverage, not a percentage of all Academy rules.
 
-Sandhi currently recovers 8 of 10 expected pairs. The two named gaps are
-अत्याचार and विद्यार्थी; every other expected pair is required individually.
+Sandhi currently recovers 9 of 10 expected pairs. The named gap is विद्यार्थी
+(the morphology-first eval pipeline strips its final ई); every other expected
+pair is required individually. यण् forward/reverse encoding now preserves the
+right member's vowel sign, recovering अत्याचार as अति + आचार with lexical
+and exact forward-verification guards intact.
 Samasa has three fixtures, with the मह/महा pair for महोत्सव explicitly under
 review and the two confirmed pairs/types required. Morphology has 22 fixtures.
 The seven grammar sentences require only two positive samasa hints; case and

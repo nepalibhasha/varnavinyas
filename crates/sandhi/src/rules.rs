@@ -1,6 +1,6 @@
 use varnavinyas_akshar::{
-    is_matra, is_panchham, is_svar, is_voiced, is_voiceless, is_vyanjan, panchham_of,
-    svar_to_matra, varga, voiced_counterpart,
+    is_matra, is_panchham, is_svar, is_voiced, is_voiceless, is_vyanjan, matra_to_svar,
+    panchham_of, svar_to_matra, varga, voiced_counterpart,
 };
 use varnavinyas_kosha::Kosha;
 use varnavinyas_kosha::origin_tag::OriginTag;
@@ -576,10 +576,9 @@ fn match_vowel_rule(rule: &SandhiRule, first: &str, second: &str) -> Option<Sand
         "vowel-yan-i" if matches!(last, 'ि' | 'ी' | 'इ' | 'ई') && is_svar(first_of_second) =>
         {
             let prefix: String = first_chars[..first_chars.len() - 1].iter().collect();
-            let second_remainder: String = if first_of_second == 'अ' {
-                second_chars[1..].iter().collect()
-            } else {
-                second.to_string()
+            let second_remainder = match svar_to_matra(first_of_second) {
+                Some(matra) => format!("{matra}{rest}"),
+                None => rest.clone(), // अ is inherent in the resulting य.
             };
             let ya_form = if is_matra(last) { "्य" } else { "य" };
             Some(vowel_result(
@@ -592,10 +591,9 @@ fn match_vowel_rule(rule: &SandhiRule, first: &str, second: &str) -> Option<Sand
         "vowel-yan-u" if matches!(last, 'ु' | 'ू' | 'उ' | 'ऊ') && is_svar(first_of_second) =>
         {
             let prefix: String = first_chars[..first_chars.len() - 1].iter().collect();
-            let second_remainder: String = if first_of_second == 'अ' {
-                second_chars[1..].iter().collect()
-            } else {
-                second.to_string()
+            let second_remainder = match svar_to_matra(first_of_second) {
+                Some(matra) => format!("{matra}{rest}"),
+                None => rest.clone(), // अ is inherent in the resulting व.
             };
             let va_form = if is_matra(last) { "्व" } else { "व" };
             Some(vowel_result(
@@ -1048,6 +1046,15 @@ fn reverse_vowel_suffix(
     lex: &Kosha,
     out: &mut Vec<SandhiCandidate>,
 ) {
+    // After यण्/अयादि, the right member's initial vowel is written as a
+    // matra on य/व: अत्य + ाचार must reconstruct आचार, not अाचार.
+    // Lexical evidence and exact forward verification still gate promotion.
+    let mut right_chars = raw_right.chars();
+    if let Some(vowel) = right_chars.next().and_then(matra_to_svar) {
+        let right = format!("{vowel}{}", right_chars.as_str());
+        push_verified_candidate(surface, left, &right, lex, out);
+        return;
+    }
     for v in VOWELS {
         let right = format!("{v}{raw_right}");
         push_verified_candidate(surface, left, &right, lex, out);

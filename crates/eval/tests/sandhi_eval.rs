@@ -30,20 +30,12 @@ const EXPECTED_SPLITS: &[(&str, &str, &str)] = &[
 // Named reconstruction gaps, not permission to lose any currently found pair.
 // Keep the expected pairs visible in the recall denominator. Improvements may
 // close these gaps without updating a percentage floor.
-const KNOWN_SPLIT_GAPS: &[(&str, &str, &str, &str)] = &[
-    (
-        "अत्याचार",
-        "अति",
-        "आचार",
-        "यण् reconstruction does not recover the long-आ right component",
-    ),
-    (
-        "विद्यार्थी",
-        "विद्या",
-        "अर्थी",
-        "morphology-first splitting removes final ई before recovering अर्थी",
-    ),
-];
+const KNOWN_SPLIT_GAPS: &[(&str, &str, &str, &str)] = &[(
+    "विद्यार्थी",
+    "विद्या",
+    "अर्थी",
+    "morphology-first splitting removes final ई before recovering अर्थी",
+)];
 
 /// Words that must NOT produce any sandhi split.
 const NO_SPLIT_EXPECTED: &[&str] = &[

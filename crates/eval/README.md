@@ -57,8 +57,8 @@ false-positive check.
 - Checker gold: all 97 word entries require an expected correction and a cited
   explanation; correct-form and 13 paragraph fixtures are checked separately.
 - Sandhi: all currently covered expected pairs are required individually.
-  अत्याचार (long-आ reconstruction) and विद्यार्थी (morphology-first removal of
-  final ई) remain named gaps in the 10-pair recall denominator. A generic
+  अत्याचार now round-trips as अति + आचार. विद्यार्थी (morphology-first removal
+  of final ई) remains the named gap in the 10-pair recall denominator. A generic
   three-of-ten floor no longer allows covered examples to regress.
 - Samasa: both confirmed pairs and their types are required. The third fixture,
   महोत्सव, explicitly records its मह/महा disagreement in `pair_review`; review

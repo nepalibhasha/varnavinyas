@@ -63,9 +63,16 @@ The main purpose of reverse splitting is to reconstruct plausible pre-sandhi for
 For example, the crate should be able to recover candidates such as:
 
 - `अत्यधिक` -> `अति + अधिक`
+- `अत्याचार` -> `अति + आचार`
 - `पुनरवलोकन` -> `पुनः + अवलोकन`
 
 The current API returns `SandhiCandidate` values with confidence and authority metadata, not just raw string pairs.
+
+For यण् joins, a vowel following the resulting य/व is encoded as its vowel
+sign (`अति + आचार -> अत्याचार`, not `अत्यआचार`). Reverse splitting restores
+that sign to the right member's independent vowel, then requires lexical
+membership and an exact forward round trip. Ranking and proper-name safeguards
+remain in force; reversible spelling alone does not establish a safe analysis.
 
 Use `split_best` for public-facing safe suggestions where false positives must be minimized.
 
