@@ -10,6 +10,7 @@ fn all_reviewed_semantic_examples_have_specific_corrections_and_accepted_notes()
             "feminine_adjective" => "3(क)(ऊ)-4",
             "inanimate_noun" => "3(क)(ऊ)-6",
             "ps_inanimate_noun" => "PS-Saisanik-ह्रस्वदीर्घ-(थ)",
+            "ps_animate_noun" => "PS-Saisanik-ह्रस्वदीर्घ-(थ)-सजीव",
             other => panic!("unknown class: {other}"),
         };
         let wrong = format!("{}ि", correct.strip_suffix('ी').unwrap());
@@ -49,7 +50,13 @@ fn ending_alone_does_not_establish_a_semantic_class() {
     ] {
         assert_eq!(derive(word).output, word, "{word}");
         assert!(!analyze(word).rule_notes.iter().any(|n| {
-            ["3(क)(ऊ)-4", "3(क)(ऊ)-6", "PS-Saisanik-ह्रस्वदीर्घ-(थ)"].contains(&n.rule.code())
+            [
+                "3(क)(ऊ)-4",
+                "3(क)(ऊ)-6",
+                "PS-Saisanik-ह्रस्वदीर्घ-(थ)",
+                "PS-Saisanik-ह्रस्वदीर्घ-(थ)-सजीव",
+            ]
+            .contains(&n.rule.code())
         }));
     }
 }

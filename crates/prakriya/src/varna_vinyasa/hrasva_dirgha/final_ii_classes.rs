@@ -82,7 +82,13 @@ mod tests {
             lookup("कोदाली").unwrap().rule_code,
             "PS-Saisanik-ह्रस्वदीर्घ-(थ)"
         );
-        for word in ["माथि", "प्रभु", "सम्धी", "ज्ञानी", "अपरिचिती"]
+        for word in ["सम्धी", "जोगी", "खसी", "हात्ती"] {
+            assert_eq!(
+                lookup(word).unwrap().rule_code,
+                "PS-Saisanik-ह्रस्वदीर्घ-(थ)-सजीव"
+            );
+        }
+        for word in ["माथि", "प्रभु", "ज्ञानी", "अपरिचिती"]
         {
             assert!(lookup(word).is_none(), "{word}");
         }
