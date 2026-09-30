@@ -3,3 +3,4 @@ word	tier	reason	source	review_status
 भुईं	canonical	Reviewed dictionary-prose spelling retained as an accepted variant even though the refreshed headword table materializes भुईँ.	Sabdasakha dictionary.db:kosha-brihat/100/kosha_0019_0020.txt	reviewed
 जाऊ	canonical	Academy-supported विध्यर्थक form; definition-only जाउ newly exposes conflicting generic ह्रस्व and ओ-form fallbacks.	docs/Notices-pages-77-99.md#ऊ-शब्दका-अन्त्यमा-दीर्घ-ईकारऊकारको-प्रयोग	reviewed
 पुर्वेली	canonical	Authoritative gold form produced by the reviewed -एली rule; the refreshed lexicon also materializes पुर्बेली as a headword.	docs/tests/gold.toml#hrasva_dirgha	reviewed
+कैंची	canonical	Source-listed spelling must remain accepted alongside the dictionary headword कैँची; nasal normalization must not override the reviewed example.	Notices-3(क)(ऊ)-6	reviewed

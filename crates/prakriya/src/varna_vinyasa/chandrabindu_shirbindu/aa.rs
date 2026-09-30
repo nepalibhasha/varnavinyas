@@ -7,8 +7,8 @@ use crate::model::rule::Rule;
 use crate::model::rule_spec::{DiagnosticKind, RuleCategory, RuleSpec};
 use crate::model::step::Step;
 use varnavinyas_kosha::kosha;
-use varnavinyas_kosha::part_of_speech::{is_adverb, is_avyaya, is_namayogi};
-use varnavinyas_shabda::{Origin, classify_with_provenance};
+use varnavinyas_kosha::part_of_speech::{is_adjective, is_adverb, is_avyaya, is_namayogi, is_noun};
+use varnavinyas_shabda::{Origin, best_analysis, classify_with_provenance};
 
 pub const SPEC_CHANDRABINDU: RuleSpec = RuleSpec {
     id: "ortho-chandrabindu",
@@ -44,6 +44,24 @@ pub fn rule_chandrabindu(input: &str) -> Option<Prakriya> {
         return None;
     }
 
+    // Origin inherited from a Sanskrit stem does not describe a Nepali suffix.
+    // Analyze only the supported stem, leaving case markers such as सँग intact.
+    if let Some(analysis) = best_analysis(input) {
+        if !analysis.suffixes.is_empty() && analysis.prefixes.is_empty() {
+            if let Some(suffix) = input.strip_prefix(&analysis.stem) {
+                return rule_chandrabindu(&analysis.stem).map(|p| {
+                    let output = format!("{}{suffix}", p.output);
+                    let mut steps = p.steps;
+                    for step in &mut steps {
+                        step.before = input.to_string();
+                        step.after = output.clone();
+                    }
+                    Prakriya::corrected(input, &output, steps)
+                });
+            }
+        }
+    }
+
     let origin_decision = classify_with_provenance(input);
     let origin = origin_decision.origin;
     let source = origin_decision.source;
@@ -52,6 +70,11 @@ pub fn rule_chandrabindu(input: &str) -> Option<Prakriya> {
         Origin::Tatsam => {
             if input.contains('ँ') {
                 let output = input.replace('ँ', "ं");
+                // A heuristic classification cannot establish an unattested
+                // compound as a Sanskrit word or erase its native nasal vowels.
+                if !kosha().is_rule_protected(&output) {
+                    return None;
+                }
                 return Some(Prakriya::corrected(
                     input,
                     &output,
@@ -106,7 +129,8 @@ pub fn rule_chandrabindu(input: &str) -> Option<Prakriya> {
                         candidate_chars[i] = 'ँ';
                         let candidate: String = candidate_chars.into_iter().collect();
                         let subrule = chandrabindu_subrule_for(&candidate);
-                        let force = subrule != "3(ख)(आ)-1";
+                        let force =
+                            subrule != "3(ख)(आ)-1" && kosha().is_correction_target(&candidate);
                         let before_stop = next.is_some_and(is_stop_consonant);
                         if before_stop && !force {
                             continue;
@@ -176,7 +200,8 @@ pub fn rule_chandrabindu(input: &str) -> Option<Prakriya> {
                         candidate_chars[i] = 'ँ';
                         let candidate: String = candidate_chars.into_iter().collect();
                         let subrule = chandrabindu_subrule_for(&candidate);
-                        let force = subrule != "3(ख)(आ)-1";
+                        let force =
+                            subrule != "3(ख)(आ)-1" && kosha().is_correction_target(&candidate);
                         let before_stop = next.is_some_and(is_stop_consonant);
                         if before_stop && !force {
                             continue;
@@ -214,7 +239,7 @@ fn rule_protected_form(word: &str) -> bool {
 }
 
 fn supported_non_tatsam_chandrabindu_form(input: &str) -> Option<String> {
-    if !input.contains('ं') {
+    if !input.contains('ं') || kosha().is_rule_protected(input) {
         return None;
     }
 
@@ -242,7 +267,13 @@ fn supported_non_tatsam_chandrabindu_form(input: &str) -> Option<String> {
             continue;
         };
         let pos = entry.pos;
-        if is_avyaya(pos) || is_adverb(pos) || is_namayogi(pos) {
+        if lex.is_correction_target(&candidate)
+            && (is_avyaya(pos)
+                || is_adverb(pos)
+                || is_namayogi(pos)
+                || ((is_noun(pos) || is_adjective(pos))
+                    && chars.get(i + 1).copied().is_some_and(is_stop_consonant)))
+        {
             return Some(candidate);
         }
     }

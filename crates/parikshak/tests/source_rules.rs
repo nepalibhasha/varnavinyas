@@ -223,3 +223,50 @@ fn suffix_splits_require_evidence_and_preserve_whole_word_corrections() {
         }
     }
 }
+
+#[test]
+fn nasal_rules_keep_native_suffixes_and_require_supported_targets() {
+    for mode in [
+        OrthographyMode::AcademyStrict,
+        OrthographyMode::CommonEditorial,
+    ] {
+        let options = CheckOptions {
+            orthography_mode: mode,
+            ..CheckOptions::default()
+        };
+        for word in [
+            "एवं",
+            "गुरुसँग",
+            "समाजसँग",
+            "विज्ञानसुहाउँदो",
+            "आँख्लाद्वारा",
+            "आँखा",
+            "पाँच",
+            "भुईं",
+        ] {
+            assert!(derive(word).is_correct, "{word}: {:?}", derive(word));
+            let ds = check_text_with_options(word, options);
+            assert!(
+                !ds.iter().any(|d| d.kind == DiagnosticKind::Error),
+                "{word}: {ds:?}"
+            );
+        }
+        for (wrong, correct) in [
+            ("आंखा", "आँखा"),
+            ("पांच", "पाँच"),
+            ("सिँह", "सिंह"),
+            ("सँवाद", "संवाद"),
+            ("आउंदा", "आउँदा"),
+            ("जान्छौं", "जान्छौँ"),
+        ] {
+            let p = derive(wrong);
+            assert_eq!(p.output, correct, "{wrong}");
+            let text = format!("🙂 {wrong}।");
+            let ds = check_text_with_options(&text, options);
+            let d = ds.iter().find(|d| d.incorrect == wrong).expect(wrong);
+            assert_eq!(d.correction, correct, "{wrong}");
+            assert_eq!(d.kind, DiagnosticKind::Error);
+            assert_eq!(&text[d.span.0..d.span.1], wrong);
+        }
+    }
+}
