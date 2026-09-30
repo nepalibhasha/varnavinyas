@@ -48,6 +48,12 @@ pub fn rule_ya_e(input: &str) -> Option<Prakriya> {
             ));
         }
     }
+    // The specific source-backed rules above can override an attested alias.
+    // A generic initial-letter swap cannot establish that an attested input
+    // shares the candidate's meaning (e.g. abbreviation एम versus deity यम).
+    if kosha.contains(input) {
+        return None;
+    }
     let chars: Vec<char> = input.chars().collect();
     if chars.is_empty() {
         return None;
@@ -60,7 +66,7 @@ pub fn rule_ya_e(input: &str) -> Option<Prakriya> {
     let mut swapped = chars;
     swapped[0] = swap_char;
     let candidate: String = swapped.into_iter().collect();
-    if kosha.contains(&candidate) {
+    if kosha.is_correction_target(&candidate) {
         let citation = if input.starts_with('य') {
             // य -> ए correction path.
             if candidate.ends_with("एँ")

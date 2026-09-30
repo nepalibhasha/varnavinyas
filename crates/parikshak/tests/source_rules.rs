@@ -728,3 +728,36 @@ fn final_i_verb_recovery_preserves_independent_short_lexemes() {
         assert!(!ds.iter().any(|d| d.incorrect == "लेखि"), "{ds:?}");
     }
 }
+
+#[test]
+fn generic_initial_ya_e_preserves_attested_abbreviation_letters() {
+    for mode in [
+        OrthographyMode::AcademyStrict,
+        OrthographyMode::CommonEditorial,
+    ] {
+        let options = CheckOptions {
+            orthography_mode: mode,
+            ..CheckOptions::default()
+        };
+        assert!(derive("एम").is_correct);
+        assert!(check_word("एम").is_none());
+        let ds = check_text_with_options("एम.ए., एम.एड., एम एससी", options);
+        assert!(!ds.iter().any(|d| d.incorrect == "एम"), "{ds:?}");
+        // Specific source-backed rules still recover attested aliases and
+        // internal participial endings before the generic membership guard.
+        for (wrong, right) in [
+            ("तेता", "त्यता"),
+            ("तेहाँ", "त्यहाँ"),
+            ("लियेको", "लिएको"),
+            ("एथार्थ", "यथार्थ"),
+        ] {
+            assert_eq!(derive(wrong).output, right, "{wrong}");
+            assert!(
+                check_text_with_options(wrong, options)
+                    .iter()
+                    .any(|d| d.correction == right),
+                "{wrong}"
+            );
+        }
+    }
+}
