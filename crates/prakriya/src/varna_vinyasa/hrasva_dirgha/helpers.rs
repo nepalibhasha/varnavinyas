@@ -718,12 +718,18 @@ pub(super) mod hrasva_helpers {
             if !saw_initial_vowel {
                 match ch {
                     'ई' => {
+                        if consonants_before_vowel > 0 {
+                            return None;
+                        }
                         output.push('इ');
                         replaced = true;
                         saw_initial_vowel = true;
                         continue;
                     }
                     'ऊ' => {
+                        if consonants_before_vowel > 0 {
+                            return None;
+                        }
                         output.push('उ');
                         replaced = true;
                         saw_initial_vowel = true;

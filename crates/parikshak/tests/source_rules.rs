@@ -575,3 +575,59 @@ fn supported_verb_vowels_use_the_numbered_rules() {
         }
     }
 }
+
+#[test]
+fn final_i_rules_preserve_case_endings_and_supported_converbs() {
+    for mode in [
+        OrthographyMode::AcademyStrict,
+        OrthographyMode::CommonEditorial,
+    ] {
+        let options = CheckOptions {
+            orthography_mode: mode,
+            ..CheckOptions::default()
+        };
+        for word in [
+            "मलाई",
+            "लाई",
+            "तिमीलाई",
+            "मिलाई",
+            "पकाई",
+            "लगाई",
+            "बनाई",
+            "नभई",
+            "दिई",
+            "भई",
+            "पारी",
+            "लेखी",
+            "मिलाइ",
+            "कमाइ",
+            "पढाइ",
+            "गराइ",
+        ] {
+            assert!(derive(word).is_correct, "{word}: {:?}", derive(word));
+            assert!(
+                !check_text_with_options(word, options)
+                    .iter()
+                    .any(|d| d.kind == DiagnosticKind::Error),
+                "{word}"
+            );
+        }
+        for text in [
+            "विषय मिति मिलाई लेखिएको सूची",
+            "फलको रस पकाई बाक्लो बनाइएको खाद्य पदार्थ",
+            "स्वच्छ वातावरण बनाई स्वास्थ्योपचार गर्ने कार्यक्रम",
+            "घरद्वार नभई पाटीमा बस्नुपर्ने अवस्था",
+            "मामाले साइकल किनी मलाई दिनुभयो",
+        ] {
+            let ds = check_text_with_options(text, options);
+            assert!(
+                !ds.iter()
+                    .any(|d| ["मिलाई", "पकाई", "बनाई", "नभई", "मलाई"]
+                        .contains(&d.incorrect.as_str())),
+                "{text}: {ds:?}"
+            );
+        }
+        assert_eq!(derive("गराई").output, "गराइ");
+        assert_eq!(derive("आलू").output, "आलु");
+    }
+}

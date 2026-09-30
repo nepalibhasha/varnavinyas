@@ -163,6 +163,14 @@ forms `चुच्चि -> चुच्ची` and `फर्सि -> फर�
 back off for these examples. This is a reviewed semantic inventory, not a
 classifier that infers gender or animacy from the final vowel or raw POS tags.
 
+Final ई is also valid in the school grammar's feminine predicates `(ब)` and
+एर-equivalent converbs `(भ)`. Supported verb forms such as `मिलाई`, `पकाई`,
+`बनाई`, and `नभई` are preserved, even when a short nominal form is attested.
+The explicit nominal example `गराई -> गराइ` retains its word-level default.
+Short nouns such as `मिलाइ`, `कमाइ`, and `पढाइ` cannot be diagnosed as verb
+misspellings without grammatical context; spelling alone does not resolve that
+ambiguity. The long case ending `लाई`, including `मलाई`, is preserved.
+
 ### Section 3 `(ख)` Chandrabindu / Shirbindu / Panchham
 
 Owned by `src/varna_vinyasa/chandrabindu_shirbindu.rs`, `src/varna_vinyasa/chandrabindu_shirbindu/*`, and `src/varna_vinyasa/panchham.rs`.

@@ -115,3 +115,20 @@ fn correction(
         )],
     ))
 }
+
+/// A long ई can mark a feminine predicate or an एर-equivalent converb under
+/// PS (ब)/(भ), even when the short spelling is independently attested as a noun.
+pub(super) fn is_supported_i_verb_form(word: &str) -> bool {
+    fn positive(word: &str) -> bool {
+        let Some(stem) = word.strip_suffix('ी').or_else(|| word.strip_suffix('ई')) else {
+            return false;
+        };
+        has_supported_infinitive(stem)
+            || match stem {
+                "भ" => is_infinitive("हुनु"),
+                "ग" => is_infinitive("जानु"),
+                _ => false,
+            }
+    }
+    positive(word) || word.strip_prefix('न').is_some_and(positive)
+}

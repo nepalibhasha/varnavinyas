@@ -142,6 +142,23 @@ pub fn rule_final_hrasva_endings(input: &str) -> Option<Prakriya> {
     if final_classes::is_known_correct_final_dirgha(input) {
         return None;
     }
+    // PS (ट), and Notice 3(क)(इ)-6, explicitly keep लाई long. A lexical
+    // noun such as मलाई is valid too; it must not be mistaken for an आइ noun.
+    if input == "लाई"
+        || input.strip_suffix("लाई").is_some_and(|base| {
+            !base.is_empty()
+                && (lex.is_correction_target(base)
+                    || varnavinyas_shabda::has_supported_analysis(base))
+        })
+    {
+        return None;
+    }
+    // गराई -> गराइ is the exact nominal example for this rule. Beyond that
+    // default, lexical infinitive evidence prevents inventing a nominal role
+    // for a valid feminine predicate or converb (मिलाई, पकाई, बनाई, नभई).
+    if input != "गराई" && super::verb_forms::is_supported_i_verb_form(input) {
+        return None;
+    }
     if !lex.contains(&output) {
         return None;
     }
