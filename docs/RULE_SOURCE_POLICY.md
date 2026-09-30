@@ -91,6 +91,7 @@ Current conflict resolutions
   - `Notices-pages-77-99.md` lists `बधू` under a broad द/ध/ल/ह-before-ब pattern.
   - `PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md` lists `वधू`, and the Sanskrit tatsam principle also supports `वधू`.
   - current policy: prefer `वधू`; treat the Notice `बधू` listing as a source defect for this word, not as a reason to generalize the broad ब-pattern over tatsam `वधू`.
+  - current implementation: an exact `बधू -> वधू` exception in `ba_va.rs` precedes raw headword protection. It remains an error in both orthography modes; the exception does not generalize to other ब/व words.
   - current implementation status: pending explicit rule/guard if normalization is added.
 - final-dirgha exception inventory
   - `Notices-pages-77-99.md` states final `ति/धि/नि/टि/पि` classes broadly as hrasva.

@@ -54,5 +54,22 @@ for (const mode of ['academy-strict', 'common-editorial']) {
   assert.ok(nearby.some(d => d.incorrect === 'हामि' && d.correction === 'हामी'));
   assert.ok(nearby.some(d => d.incorrect === '.' && d.correction === '।'));
   assert.ok(!nearby.some(d => d.incorrect === 'सी'));
+  for (const [wrong, correct] of [['मीलेको', 'मिलेको'], ['प्रभू', 'प्रभु'],
+    ['साधू', 'साधु'], ['श्रद्धालू', 'श्रद्धालु'], ['बधू', 'वधू']]) {
+    const text = `🙂 ${wrong}।`;
+    const diagnostics = wasm.check_text_value_with_options(text, false, mode);
+    assert.equal(diagnostics.length, 1, text);
+    assert.equal(diagnostics[0].correction, correct);
+    assert.equal(diagnostics[0].kind, 'Error');
+    const bytes = new TextEncoder().encode(text);
+    const { span_start: start, span_end: end } = diagnostics[0];
+    assert.equal(new TextDecoder().decode(bytes.slice(start, end)), wrong);
+    assert.equal(wasm.check_word_value(wrong).correction, correct);
+  }
+  for (const word of ['मिलेको', 'प्रभु', 'साधु', 'श्रद्धालु', 'वधू', 'रामकोपनि', 'संसदमा']) {
+    assert.deepEqual(wasm.check_text_value_with_options(word, false, mode), [], word);
+  }
 }
+assert.ok(wasm.analyze_word_value('प्रभु').rule_notes
+  .some(note => note.rule_code === '3(क)(इ)-PS-Saisanik-(छ)'));
 console.log(`Browser artifact ${manifest.artifact_version} (${manifest.git_sha}): runtime and origin presentation checks passed.`);

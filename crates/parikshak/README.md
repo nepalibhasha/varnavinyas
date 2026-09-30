@@ -101,6 +101,12 @@ Presentation        -> CLI / web / LSP / bindings
 
 `parikshak` owns rules that need neighboring tokens, spacing, punctuation, or sentence context.
 
+Word and text checking consult whole-word rules before speculative outer-suffix
+detachment. For an unknown surface, the early correction must have a safe
+lexical target; an unsupported suffix rewrite must not override a supported
+case-marker/particle stack. This preserves `मीलेको -> मिलेको` without changing
+valid `रामकोपनि` or `संसदमा`. Text diagnostics cover the original full token.
+
 ### Section 3 `(घ)` Padayog / Padabiyog
 
 Owned by:

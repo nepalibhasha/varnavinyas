@@ -134,33 +134,8 @@ pub(crate) fn check_word_impl(word: &str) -> Option<Diagnostic> {
         return None;
     }
 
-    let hits = collect_rule_hits(word);
-    if let Some(primary_hit) = hits.first() {
-        let prakriya = &primary_hit.prakriya;
-        let rule = prakriya
-            .steps
-            .first()
-            .map(|s| s.rule)
-            .unwrap_or(Rule::ShuddhaAshuddha("unknown"));
-        let explanation = prakriya
-            .steps
-            .first()
-            .map(|s| s.description.clone())
-            .unwrap_or_default();
-        let category = choose_diagnostic_category(prakriya.category, &rule);
-
-        return Some(Diagnostic {
-            evidence: rule_hit_evidence(primary_hit),
-            span: (0, word.len()),
-            incorrect: word.to_string(),
-            correction: prakriya.output.clone(),
-            rule,
-            explanation,
-            category,
-            kind: prakriya.kind,
-            confidence: 1.0,
-            alternate_reasons: alternate_reasons_from_hits(&hits),
-        });
+    if let Some(diagnostic) = check_word_rules(word) {
+        return Some(diagnostic);
     }
 
     let lex = kosha();
@@ -195,6 +170,40 @@ pub(crate) fn check_word_impl(word: &str) -> Option<Diagnostic> {
             kind: DiagnosticKind::Ambiguous,
             confidence: 0.72,
             alternate_reasons: Vec::new(),
+        });
+    }
+
+    None
+}
+
+/// Only rule-backed corrections, before speculative suffix detachment.
+pub(crate) fn check_word_rules(word: &str) -> Option<Diagnostic> {
+    let hits = collect_rule_hits(word);
+    if let Some(primary_hit) = hits.first() {
+        let prakriya = &primary_hit.prakriya;
+        let rule = prakriya
+            .steps
+            .first()
+            .map(|s| s.rule)
+            .unwrap_or(Rule::ShuddhaAshuddha("unknown"));
+        let explanation = prakriya
+            .steps
+            .first()
+            .map(|s| s.description.clone())
+            .unwrap_or_default();
+        let category = choose_diagnostic_category(prakriya.category, &rule);
+
+        return Some(Diagnostic {
+            evidence: rule_hit_evidence(primary_hit),
+            span: (0, word.len()),
+            incorrect: word.to_string(),
+            correction: prakriya.output.clone(),
+            rule,
+            explanation,
+            category,
+            kind: prakriya.kind,
+            confidence: 1.0,
+            alternate_reasons: alternate_reasons_from_hits(&hits),
         });
     }
 

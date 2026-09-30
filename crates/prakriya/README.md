@@ -144,6 +144,12 @@ Known gaps:
 - `(क)(ऊ)-4/-6/-10` need stronger POS or semantic metadata.
 - Some numbered classes still rely on conservative attested-family logic rather than full derivational analysis.
 
+The PS-Saisanik tatsam final-उ `(छ)` examples are an exact reviewed inventory
+in `data/rule_inventories/ps_final_u_hrasva.tsv`. They correct forms such as
+`प्रभू -> प्रभु`, `साधू -> साधु`, and `श्रद्धालू -> श्रद्धालु`, and explain the
+accepted short-vowel forms. This does not shorten arbitrary ऊ-ending words;
+imperatives and long-vowel neighbors retain their existing guards.
+
 ### Section 3 `(ख)` Chandrabindu / Shirbindu / Panchham
 
 Owned by `src/varna_vinyasa/chandrabindu_shirbindu.rs`, `src/varna_vinyasa/chandrabindu_shirbindu/*`, and `src/varna_vinyasa/panchham.rs`.

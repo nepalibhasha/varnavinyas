@@ -399,7 +399,7 @@ pub static CORRECTION_TABLE: LazyLock<Vec<(&'static str, CorrectionEntry)>> = La
             CorrectionEntry {
                 correct: "मुखमा",
                 rule: Rule::VarnaVinyasNiyam("3(क)"),
-                description: "तत्सम शब्द मुख मा मूल ह्रस्व उ नै रहन्छ (दीर्घ ऊ होइन)",
+                description: "तत्सम 'मुख' शब्दको मूल उकार ह्रस्व हुन्छ (दीर्घ ऊ होइन)",
             },
         ),
         (

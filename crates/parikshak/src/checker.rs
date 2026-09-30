@@ -34,7 +34,7 @@ use padayog::{add_generalized_padayog_padabiyog_diagnostics, add_padayog_padabiy
 use punctuation::punctuation_diagnostics;
 use style_variants::add_style_variant_diagnostics;
 use tiryak::{add_tiryak_diagnostics, check_word_tiryak};
-use word_level::check_word_impl;
+use word_level::{check_word_impl, check_word_rules};
 
 /// Runtime options for `check_text_with_options`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -103,6 +103,15 @@ pub fn check_word_with_options(word: &str, options: CheckOptions) -> Option<Diag
     if lex.contains(word) || lex.lookup(word).is_some() {
         return check_word_impl(word)
             .map(|diag| apply_orthography_mode(diag, options.orthography_mode));
+    }
+
+    // A safe whole-word correction beats guessed suffix detachment. Do not
+    // promote an unsupported rewrite (e.g. रामकोपनि -> रामकोपनी) over an
+    // independently supported case-marker/particle stack.
+    if let Some(diag) =
+        check_word_rules(word).filter(|diag| lex.is_correction_target(&diag.correction))
+    {
+        return Some(apply_orthography_mode(diag, options.orthography_mode));
     }
 
     if let Some(analysis) = best_analysis(word) {
@@ -187,7 +196,6 @@ pub fn check_text_with_options(text: &str, options: CheckOptions) -> Vec<Diagnos
 
     // Word-level checks (suffix-aware: checks stem, spans full token)
     let tokens = tokenize_analyzed(text);
-    let lex = kosha();
     let abbreviations = varnavinyas_lekhya::dotted_abbreviation_spans(text);
     for token in &tokens {
         if abbreviations
@@ -196,26 +204,11 @@ pub fn check_text_with_options(text: &str, options: CheckOptions) -> Vec<Diagnos
         {
             continue;
         }
-        // If the full token (stem+suffix) is a known word, skip correction.
-        // e.g. "संसदमा" = संसद + मा — the stem "संसद" triggers a halanta rule,
-        // but the agglutinative form "संसदमा" is a valid word in the lexicon.
-        if let Some(ref sfx) = token.suffix {
-            let full = format!("{}{}", token.stem, sfx);
-            if lex.contains(&full) {
-                continue;
-            }
-        }
-
-        if let Some(mut diag) = check_word_with_options(&token.stem, options) {
+        // Match the public word-checking order: whole-word rules first, then
+        // supported suffix detachment. A guessed suffix stack must not hide
+        // an existing correction such as मीलेको -> मिलेको.
+        if let Some(mut diag) = check_word_with_options(token.source_text(text), options) {
             diag.span = (token.start, token.end);
-
-            // If a suffix was detached, reattach it to the diagnostic strings.
-            // The span covers the full token (stem+suffix), so the correction
-            // must also be the full form to avoid data loss on replacement.
-            if let Some(ref sfx) = token.suffix {
-                diag.incorrect.push_str(sfx);
-                diag.correction.push_str(sfx);
-            }
 
             if !matches!(diag.kind, DiagnosticKind::Ambiguous) {
                 blocked_spans.insert(diag.span);

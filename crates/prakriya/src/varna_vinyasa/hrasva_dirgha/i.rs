@@ -117,14 +117,31 @@ pub fn rule_kinship_tadbhav(input: &str) -> Option<Prakriya> {
 
 pub fn rule_final_hrasva_endings(input: &str) -> Option<Prakriya> {
     let lex = varnavinyas_kosha::kosha();
+    let output = hrasva_helpers::replace_final_dirgha_with_hrasva(input);
+    if output == input {
+        return None;
+    }
+    // Exact reviewed source examples beat the generic imperative-नू guard.
+    // The source itself establishes these targets even if kosha lacks a form.
+    if super::ps_final_u::is_reviewed_example(&output) {
+        return Some(Prakriya::corrected(
+            input,
+            &output,
+            vec![Step::new(
+                Rule::VarnaVinyasNiyam(super::ps_final_u::RULE_CODE),
+                super::ps_final_u::EXPLANATION,
+                input,
+                &output,
+            )],
+        ));
+    }
     if input.ends_with("नू") {
         return None;
     }
     if final_classes::is_known_correct_final_dirgha(input) {
         return None;
     }
-    let output = hrasva_helpers::replace_final_dirgha_with_hrasva(input);
-    if output == input || !lex.contains(&output) {
+    if !lex.contains(&output) {
         return None;
     }
 

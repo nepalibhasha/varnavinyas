@@ -4,6 +4,7 @@ mod aa;
 mod helpers;
 mod i;
 mod ii_suffix;
+mod ps_final_u;
 mod u;
 mod uu;
 
@@ -52,6 +53,12 @@ pub use uu::{
 /// Explanations for accepted forms, using the same lexical classes as correction.
 /// Keep this conservative: an ending alone does not establish grammatical class.
 pub(crate) fn accepted_form_note(word: &str) -> Option<crate::Explanation> {
+    if ps_final_u::is_reviewed_example(word) {
+        return Some(crate::Explanation::new(
+            crate::Rule::VarnaVinyasNiyam(ps_final_u::RULE_CODE),
+            ps_final_u::EXPLANATION,
+        ));
+    }
     if a::PRONOUNS.contains(&word) {
         return Some(crate::Explanation::new(
             crate::Rule::VarnaVinyasNiyam("3(क)(ऊ)-7"),

@@ -44,6 +44,21 @@ pub fn rule_ba_va(input: &str) -> Option<Prakriya> {
         return None;
     }
     let kosha = kosha();
+    // RULE_SOURCE_POLICY.md resolves the Notice बधू listing in favor of the
+    // school grammar's tatsam वधू. Raw headword attestation must not reverse
+    // that reviewed decision; keep the exception exact, not a blanket ब rule.
+    if input == "बधू" {
+        return Some(Prakriya::corrected(
+            input,
+            "वधू",
+            vec![Step::new(
+                Rule::VarnaVinyasNiyam("3(ग)(आ)-PS-Saisanik-वधू"),
+                "शैक्षणिक व्याकरणमा तत्सम 'वधू' को वकार कायम रहन्छ",
+                input,
+                "वधू",
+            )],
+        ));
+    }
     if let Some(output) = normalize_ps_sanskrit_va_to_ba(input, kosha) {
         return Some(Prakriya::corrected(
             input,
