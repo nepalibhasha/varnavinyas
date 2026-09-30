@@ -59,7 +59,8 @@ fn token_segments<'a>(
 }
 
 fn has_whitespace_gap(text: &str, left: (&str, usize, usize), right: (&str, usize, usize)) -> bool {
-    text[left.2..right.1].chars().any(char::is_whitespace)
+    let gap = &text[left.2..right.1];
+    !gap.is_empty() && gap.chars().all(char::is_whitespace)
 }
 
 pub(crate) fn add_padayog_padabiyog_diagnostics(

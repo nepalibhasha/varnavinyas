@@ -1,4 +1,6 @@
-use varnavinyas_parikshak::{CheckOptions, OrthographyMode, check_text_with_options, check_word};
+use varnavinyas_parikshak::{
+    CheckOptions, DiagnosticCategory, OrthographyMode, check_text_with_options, check_word,
+};
 use varnavinyas_prakriya::{DiagnosticKind, derive};
 
 #[test]
@@ -128,5 +130,49 @@ fn reviewed_vadhu_conflict_is_an_error_in_both_modes() {
         assert_eq!(diagnostics.len(), 1);
         assert_eq!(diagnostics[0].correction, "वधू");
         assert_eq!(diagnostics[0].kind, DiagnosticKind::Error);
+    }
+}
+
+#[test]
+fn word_joining_preserves_intervening_punctuation() {
+    for mode in [
+        OrthographyMode::AcademyStrict,
+        OrthographyMode::CommonEditorial,
+    ] {
+        for text in [
+            "तीर्थ, व्रत, सत्सङ्ग",
+            "आख्यान साहित्य; कथा",
+            "राम, सँग",
+            "राम; को",
+            "राम — सँग",
+        ] {
+            let diagnostics = check_text_with_options(
+                text,
+                CheckOptions {
+                    orthography_mode: mode,
+                    ..CheckOptions::default()
+                },
+            );
+            assert!(
+                !diagnostics
+                    .iter()
+                    .any(|d| d.category == DiagnosticCategory::ShuddhaTable
+                        && d.incorrect.chars().any(|c| matches!(c, ',' | ';' | '—'))),
+                "{text}: {diagnostics:?}"
+            );
+        }
+        for text in ["राम सँग", "राम  सँग", "राम\tसँग"] {
+            let diagnostics = check_text_with_options(
+                text,
+                CheckOptions {
+                    orthography_mode: mode,
+                    ..CheckOptions::default()
+                },
+            );
+            assert!(
+                diagnostics.iter().any(|d| d.correction == "रामसँग"),
+                "{text}: {diagnostics:?}"
+            );
+        }
     }
 }
