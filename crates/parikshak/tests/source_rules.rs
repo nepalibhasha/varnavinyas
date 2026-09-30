@@ -2,6 +2,55 @@ use varnavinyas_parikshak::{CheckOptions, OrthographyMode, check_text_with_optio
 use varnavinyas_prakriya::{DiagnosticKind, derive};
 
 #[test]
+fn reviewed_final_ii_classes_are_errors_in_both_modes_and_keep_valid_forms_clean() {
+    let data = include_str!("../../../data/rule_inventories/final_ii_semantic_classes.tsv");
+    for row in data.lines().skip(1) {
+        let correct = row.split('\t').next().unwrap();
+        let wrong = format!("{}ि", correct.strip_suffix('ी').unwrap());
+        let expected = derive(&wrong);
+        let word = check_word(&wrong).expect(&wrong);
+        assert_eq!(word.correction, correct, "{wrong}");
+        assert_eq!(word.rule, expected.steps[0].rule, "{wrong}");
+        for mode in [
+            OrthographyMode::AcademyStrict,
+            OrthographyMode::CommonEditorial,
+        ] {
+            let options = CheckOptions {
+                orthography_mode: mode,
+                ..CheckOptions::default()
+            };
+            let text = format!("🙂 {wrong}।");
+            let diagnostics = check_text_with_options(&text, options);
+            assert_eq!(diagnostics.len(), 1, "{text}: {diagnostics:?}");
+            let d = &diagnostics[0];
+            assert_eq!(d.correction, correct);
+            assert_eq!(d.rule, word.rule);
+            assert_eq!(d.kind, DiagnosticKind::Error);
+            assert_eq!(&text[d.span.0..d.span.1], wrong);
+            assert!(
+                check_text_with_options(correct, options).is_empty(),
+                "{correct}"
+            );
+        }
+        assert!(
+            check_word(correct).is_none(),
+            "{correct}: {:?}",
+            check_word(correct)
+        );
+    }
+    for word in [
+        "फर्सीको",
+        "गाडीमा",
+        "कोदालीले",
+        "गोरीलाई",
+        "कागतीहरू",
+        "गाडीकोपनि",
+    ] {
+        assert!(check_word(word).is_none(), "{word}: {:?}", check_word(word));
+    }
+}
+
+#[test]
 fn whole_word_correction_survives_a_speculative_suffix_stack() {
     let expected = derive("मीलेको");
     assert_eq!(expected.output, "मिलेको");

@@ -251,7 +251,8 @@ pub(super) mod final_classes {
     }
 
     pub(crate) fn is_known_correct_final_dirgha(input: &str) -> bool {
-        if is_ps_final_dirgha_exception(input)
+        if super::super::final_ii_classes::lookup(input).is_some()
+            || is_ps_final_dirgha_exception(input)
             || is_profession_jati_thar_dirgha(input)
             || is_vidhyarthak_or_feminine_verb_dirgha(input)
         {

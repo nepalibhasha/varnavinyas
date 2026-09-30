@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { applyTextContext, originPresentation } from '../js/inspection-context.js';
-import { wrapRuleTooltip } from '../js/rules-data.js';
+import { getRuleSummary, wrapRuleTooltip } from '../js/rules-data.js';
 
 const raw = { word: 'आवाजमा', is_correct: false, correction: 'आबाजमा',
   rule_notes: [{ rule: 'raw rule', explanation: 'raw explanation' }], alternate_rule_notes: [] };
@@ -74,6 +74,13 @@ test('accepted reference context has neither an error claim nor a self-correctio
   setReferenceContext({ incorrect: 'भाउजु', correction: 'भाउजू', categoryCode: 'HrasvaDirgha' });
   assert.match(referenceHost.innerHTML, /यो सुधार किन सुझाइयो/);
   assert.match(referenceHost.innerHTML, /reference-context-arrow/);
+});
+
+test('reviewed semantic-class citations open the final-dirgha reference with bounded coverage', () => {
+  for (const code of ['3(क)(ऊ)-4', '3(क)(ऊ)-6', 'PS-Saisanik-ह्रस्वदीर्घ-(थ)']) {
+    assert.match(wrapRuleTooltip('ह्रस्व/दीर्घ स्वर नियम', 'HrasvaDirgha', { ruleCode: code }), /data-target="ka-uu"/);
+    assert.match(getRuleSummary(code, 'HrasvaDirgha'), /सूचीकृत स्त्रीलिङ्गी विशेषण र निर्जीव नाम/);
+  }
 });
 
 test('origin badges distinguish missing evidence, inference, and documented origin', () => {

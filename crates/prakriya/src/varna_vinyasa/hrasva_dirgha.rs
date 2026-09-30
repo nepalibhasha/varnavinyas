@@ -1,5 +1,6 @@
 mod a;
 mod aa;
+mod final_ii_classes;
 #[path = "hrasva_dirgha/helpers.rs"]
 mod helpers;
 mod i;
@@ -45,14 +46,20 @@ pub use u::{
 };
 pub use uu::{
     SPEC_DIRGHA_ENDINGS, SPEC_FINAL_ADJECTIVE_DIRGHA, SPEC_FINAL_II_SUFFIX_DIRGHA,
-    SPEC_FINAL_VATI_VI_DIRGHA, SPEC_KOSHA_BACKED, kosha_backed_dirgha_correction,
-    rule_dirgha_endings, rule_final_adjective_dirgha, rule_final_ii_suffix_dirgha,
-    rule_final_vati_vi_dirgha,
+    SPEC_FINAL_VATI_VI_DIRGHA, SPEC_KOSHA_BACKED, SPEC_REVIEWED_FINAL_DIRGHA,
+    kosha_backed_dirgha_correction, rule_dirgha_endings, rule_final_adjective_dirgha,
+    rule_final_ii_suffix_dirgha, rule_final_vati_vi_dirgha, rule_reviewed_final_dirgha,
 };
 
 /// Explanations for accepted forms, using the same lexical classes as correction.
 /// Keep this conservative: an ending alone does not establish grammatical class.
 pub(crate) fn accepted_form_note(word: &str) -> Option<crate::Explanation> {
+    if let Some(entry) = final_ii_classes::lookup(word) {
+        return Some(crate::Explanation::new(
+            crate::Rule::VarnaVinyasNiyam(entry.rule_code),
+            entry.explanation,
+        ));
+    }
     if ps_final_u::is_reviewed_example(word) {
         return Some(crate::Explanation::new(
             crate::Rule::VarnaVinyasNiyam(ps_final_u::RULE_CODE),

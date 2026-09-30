@@ -141,7 +141,9 @@ Implemented highlights:
 Known gaps:
 
 - `(क)(अ)-8/-9`, `(क)(आ)-7/-8`, and `(क)(इ)-8` need stronger verb-context support.
-- `(क)(ऊ)-4/-6/-10` need stronger POS or semantic metadata.
+- `(क)(ऊ)-4/-6` now have reviewed source-example coverage; generalizing beyond
+  those examples still needs stronger POS or semantic metadata. `(क)(ऊ)-10`
+  still needs grammatical context.
 - Some numbered classes still rely on conservative attested-family logic rather than full derivational analysis.
 
 The PS-Saisanik tatsam final-उ `(छ)` examples are an exact reviewed inventory
@@ -149,6 +151,14 @@ in `data/rule_inventories/ps_final_u_hrasva.tsv`. They correct forms such as
 `प्रभू -> प्रभु`, `साधू -> साधु`, and `श्रद्धालू -> श्रद्धालु`, and explain the
 accepted short-vowel forms. This does not shorten arbitrary ऊ-ending words;
 imperatives and long-vowel neighbors retain their existing guards.
+
+`data/rule_inventories/final_ii_semantic_classes.tsv` records 29 unique printed
+examples for Notice `3(क)(ऊ)-4` (feminine adjectives), `-6` (inanimate nouns),
+and PS hrasva/dirgha `(थ)` (inanimate nouns). The exact source class supplies
+both the correction citation and accepted-form explanation, including missed
+forms `चुच्चि -> चुच्ची` and `फर्सि -> फर्सी`. Broad adjective/dictionary fallbacks
+back off for these examples. This is a reviewed semantic inventory, not a
+classifier that infers gender or animacy from the final vowel or raw POS tags.
 
 ### Section 3 `(ख)` Chandrabindu / Shirbindu / Panchham
 

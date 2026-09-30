@@ -12,14 +12,16 @@ use varnavinyas_shabda::{Origin, classify};
 // - 1  implemented in `rule_final_ii_suffix_dirgha`
 // - 2  implemented conservatively in `rule_final_vati_vi_dirgha`
 // - 3  implemented in `rule_dirgha_endings` and `rule_kinship_tadbhav`
-// - 4  TODO: स्त्रीलिङ्गी विशेषण
+// - 4  reviewed source examples in `rule_reviewed_final_dirgha`
+//      TODO: generalize beyond reviewed examples with semantic evidence.
 //      Blocker: current lexicon/POS data do not reliably separate feminine
 //      adjectives from noun/adjective homographs. Academy examples like गोरी,
 //      काली, सानी, मोटी are inconsistently tagged (some adjective, some noun,
 //      some derived forms), so a systematic rule here would currently overlap
 //      too much with the broader final-dirgha adjective/feminine classes.
 // - 5  implemented/shared in `rule_dirgha_endings`, `final_dirgha_class_for`
-// - 6  TODO: ईकारान्त निर्जीव नाम
+// - 6  reviewed source examples in `rule_reviewed_final_dirgha`
+//      TODO: generalize beyond reviewed examples with semantic evidence.
 //      Blocker: current morphology/lexicon layers do not expose a reliable
 //      animate-vs-inanimate distinction, so a systematic implementation would
 //      overreach without extra semantic metadata.
@@ -42,6 +44,31 @@ pub const SPEC_FINAL_II_SUFFIX_DIRGHA: RuleSpec = RuleSpec {
     citation: Rule::VarnaVinyasNiyam("3(क)(ऊ)-1"),
     examples: &[("योगि", "योगी"), ("त्यागि", "त्यागी")],
 };
+
+pub const SPEC_REVIEWED_FINAL_DIRGHA: RuleSpec = RuleSpec {
+    id: "hd-reviewed-final-dirgha",
+    category: RuleCategory::HrasvaDirgha,
+    kind: DiagnosticKind::Error,
+    priority: 238,
+    citation: Rule::VarnaVinyasNiyam("3(क)(ऊ)-4,6"),
+    examples: &[("चुच्चि", "चुच्ची"), ("फर्सि", "फर्सी")],
+};
+
+pub fn rule_reviewed_final_dirgha(input: &str) -> Option<Prakriya> {
+    let base = input.strip_suffix('ि')?;
+    let candidate = format!("{base}ी");
+    let entry = super::final_ii_classes::lookup(&candidate)?;
+    Some(Prakriya::corrected(
+        input,
+        entry.word,
+        vec![Step::new(
+            Rule::VarnaVinyasNiyam(entry.rule_code),
+            entry.explanation,
+            input,
+            entry.word,
+        )],
+    ))
+}
 
 pub const SPEC_FINAL_VATI_VI_DIRGHA: RuleSpec = RuleSpec {
     id: "hd-final-vati-vi-dirgha",
@@ -138,7 +165,7 @@ pub fn rule_final_adjective_dirgha(input: &str) -> Option<Prakriya> {
         return None;
     }
 
-    if rule_final_ii_suffix_dirgha(input).is_some() {
+    if rule_final_ii_suffix_dirgha(input).is_some() || rule_reviewed_final_dirgha(input).is_some() {
         return None;
     }
 
@@ -169,6 +196,9 @@ pub fn rule_final_adjective_dirgha(input: &str) -> Option<Prakriya> {
 }
 
 pub fn rule_dirgha_endings(input: &str) -> Option<Prakriya> {
+    if rule_reviewed_final_dirgha(input).is_some() {
+        return None;
+    }
     // The pronoun class supplies the applicable reason. Its final ी does not
     // establish a feminine noun or gerund. Independently evidenced suffix
     // and adjective senses are still collected by their own rules.
@@ -496,5 +526,6 @@ fn has_specific_final_dirgha_rule(input: &str, expected_output: &str) -> bool {
         .into_iter()
         .chain(super::rule_kinship_tadbhav(input))
         .chain(super::rule_pronoun_vowel_length(input))
+        .chain(rule_reviewed_final_dirgha(input))
         .any(|p| p.output == expected_output)
 }

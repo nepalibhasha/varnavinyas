@@ -56,7 +56,7 @@ but production decisions remain in code and reviewed inventories.
 
 ## Numbered Coverage And Dependencies
 
-Reviewed 2026-09-29 against both local source extracts and current code. A
+Reviewed 2026-09-30 against both local source extracts and current code. A
 registered function or passing example does not establish complete coverage
 of a grammatical class. "Guarded" below means implemented for supported
 lexical/morphological families, with generalization still bounded by evidence.
@@ -75,7 +75,8 @@ lexical/morphological families, with generalization still bounded by evidence.
 | Notice `3(क)(इ)-8` | General नु/छु verb class deferred | Verbal context, including imperative contrasts |
 | Notice `3(क)(ई)-1,2`, `(उ)-1,2` | Guarded tatsam/prefix/suffix preservation | Origin and derivation evidence |
 | Notice `3(क)(ऊ)-1..3,5,7..9,11..16` | Guarded final-dirgha families; ई derivations use a reviewed inventory | Wider lexical/derivational coverage |
-| Notice `3(क)(ऊ)-4,6,10` | Some attested examples; class generalization deferred | Gender, animacy, adjective and verb evidence |
+| Notice `3(क)(ऊ)-4,6`, PS hrasva/dirgha `(थ)` | 29 unique reviewed feminine-adjective and inanimate-noun examples; specific corrections and accepted-form explanations | Expansion requires reviewed semantic evidence; endings alone do not prove gender or animacy |
+| Notice `3(क)(ऊ)-10` | Some attested examples; class generalization deferred | Verb and grammatical-context evidence |
 | Notice `3(घ)` पदयोग `1,5..8,10,11` | Explicit examples exist; generalized forms remain TODOs | Prefixes, compound ranking, reduplication, coordination, verb complexes and semantic inventories |
 | Notice `3(घ)` पदवियोग `1,5,8,11..13` | Explicit examples exist; broad splitting remains deferred | Syntax, verb complexes, classifier/name inventories; baseline “each word separate” is not an independent rewrite |
 | PS abbreviation hrasva/dirgha `(छ)` | Compact dotted initials protected in spelling and punctuation, in both modes | Normalizing joined/dotted abbreviation vowels and broader spaced-chain recognition remain open |

@@ -261,6 +261,7 @@ mod tests {
             "hd-medial-avyaya-hrasva",
             "hd-medial-onomatopoeic-hrasva",
             "hd-final-ii-suffix-dirgha",
+            "hd-reviewed-final-dirgha",
             "hd-final-vati-vi-dirgha",
             "hd-final-adjective-dirgha",
             "hd-dirgha-endings",

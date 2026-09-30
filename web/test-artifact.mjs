@@ -72,4 +72,28 @@ for (const mode of ['academy-strict', 'common-editorial']) {
 }
 assert.ok(wasm.analyze_word_value('प्रभु').rule_notes
   .some(note => note.rule_code === '3(क)(इ)-PS-Saisanik-(छ)'));
+// Semantic classes come from reviewed source rows, not a vowel/POS guess.
+const semanticInventory = await readFile(new URL('../data/rule_inventories/final_ii_semantic_classes.tsv', import.meta.url), 'utf8');
+for (const row of semanticInventory.trim().split('\n').slice(1)) {
+  const [correct, semanticClass] = row.split('\t');
+  const code = { feminine_adjective: '3(क)(ऊ)-4', inanimate_noun: '3(क)(ऊ)-6',
+    ps_inanimate_noun: 'PS-Saisanik-ह्रस्वदीर्घ-(थ)' }[semanticClass];
+  const wrong = correct.slice(0, -1) + 'ि';
+  assert.equal(wasm.derive_value(wrong).output, correct);
+  assert.ok(wasm.analyze_word_value(correct).rule_notes.some(note => note.rule_code === code));
+  for (const mode of ['academy-strict', 'common-editorial']) {
+    const text = `🙂 ${wrong}।`;
+    const diagnostics = wasm.check_text_value_with_options(text, false, mode);
+    assert.equal(diagnostics.length, 1, text);
+    assert.equal(diagnostics[0].correction, correct);
+    assert.equal(diagnostics[0].rule_code, code);
+    assert.equal(diagnostics[0].kind, 'Error');
+    const bytes = new TextEncoder().encode(text);
+    assert.equal(new TextDecoder().decode(bytes.slice(diagnostics[0].span_start, diagnostics[0].span_end)), wrong);
+    assert.deepEqual(wasm.check_text_value_with_options(correct, false, mode), [], correct);
+  }
+}
+for (const word of ['माथि', 'नाति', 'समिति', 'गाडीमा', 'फर्सीको']) {
+  assert.deepEqual(wasm.check_text_value(word, false), [], word);
+}
 console.log(`Browser artifact ${manifest.artifact_version} (${manifest.git_sha}): runtime and origin presentation checks passed.`);

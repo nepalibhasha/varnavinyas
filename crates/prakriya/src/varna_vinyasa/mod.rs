@@ -132,6 +132,10 @@ fn ka_rules() -> Vec<PatternRule> {
             apply: hrasva_dirgha::rule_final_ii_suffix_dirgha,
         },
         PatternRule {
+            spec: hrasva_dirgha::SPEC_REVIEWED_FINAL_DIRGHA,
+            apply: hrasva_dirgha::rule_reviewed_final_dirgha,
+        },
+        PatternRule {
             spec: hrasva_dirgha::SPEC_FINAL_VATI_VI_DIRGHA,
             apply: hrasva_dirgha::rule_final_vati_vi_dirgha,
         },
