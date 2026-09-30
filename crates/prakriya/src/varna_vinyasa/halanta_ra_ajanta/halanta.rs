@@ -3,6 +3,7 @@ use crate::model::rule::Rule;
 use crate::model::rule_spec::{DiagnosticKind, RuleCategory, RuleSpec};
 use crate::model::step::Step;
 use varnavinyas_kosha::kosha;
+use varnavinyas_kosha::part_of_speech::is_noun;
 use varnavinyas_shabda::{Origin, classify};
 
 pub const SPEC_HALANTA: RuleSpec = RuleSpec {
@@ -48,6 +49,11 @@ pub(super) fn rule_halanta_required(input: &str) -> Option<Prakriya> {
     ];
     for (wrong_suffix, correct_suffix, rule_citation) in VERB_SUFFIXES {
         if let Some(stem) = input.strip_suffix(wrong_suffix) {
+            // A nonempty lexical noun is not a finite verb merely because its
+            // last syllables resemble छन् (छनछन). Preserve bare छन -> छन्.
+            if !stem.is_empty() && lex.lookup(input).is_some_and(|entry| is_noun(entry.pos)) {
+                continue;
+            }
             // नन alone also ends nouns such as गजानन and प्रजनन.
             // The negative plural verb ending is दैनन (गर्दैनन → गर्दैनन्).
             if *wrong_suffix == "नन" && !input.ends_with("दैनन") {

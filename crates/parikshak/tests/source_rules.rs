@@ -305,3 +305,35 @@ fn initial_o_rule_preserves_distinct_u_verbs() {
         }
     }
 }
+
+#[test]
+fn finite_halanta_endings_do_not_rewrite_lexical_nouns() {
+    for mode in [
+        OrthographyMode::AcademyStrict,
+        OrthographyMode::CommonEditorial,
+    ] {
+        let options = CheckOptions {
+            orthography_mode: mode,
+            ..CheckOptions::default()
+        };
+        for word in ["छनछन", "प्रजनन", "गजानन", "छन्"] {
+            assert!(derive(word).is_correct, "{word}");
+            assert!(
+                !check_text_with_options(word, options)
+                    .iter()
+                    .any(|d| d.kind == DiagnosticKind::Error),
+                "{word}"
+            );
+        }
+        for (wrong, correct) in [("छन", "छन्"), ("गर्छन", "गर्छन्"), ("गर्दैनन", "गर्दैनन्")]
+        {
+            assert_eq!(derive(wrong).output, correct);
+            assert!(
+                check_text_with_options(wrong, options)
+                    .iter()
+                    .any(|d| d.correction == correct),
+                "{wrong}"
+            );
+        }
+    }
+}
