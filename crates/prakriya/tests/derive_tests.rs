@@ -645,12 +645,12 @@ fn o8_ga_u_ksha_1_citation() {
 }
 
 #[test]
-fn o8_ga_uu_3_gya_to_gyaana_citation() {
+fn o8_ga_uu_1_gya_to_gyaana_citation() {
     let p = rule_gya_gyan("अग्यान").expect("expected gya/gyan correction");
     assert_eq!(p.output, "अज्ञान");
     assert!(
-        has_varna_niyam_code(&p, "3(ग)(ऊ)-3"),
-        "Expected 3(ग)(ऊ)-3 citation, got: {:?}",
+        has_varna_niyam_code(&p, "3(ग)(ऊ)-1"),
+        "Expected 3(ग)(ऊ)-1 citation, got: {:?}",
         p.steps
     );
 }

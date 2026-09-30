@@ -337,3 +337,41 @@ fn finite_halanta_endings_do_not_rewrite_lexical_nouns() {
         }
     }
 }
+
+#[test]
+fn gya_corrections_require_a_sanskrit_target_and_cite_its_rule() {
+    for mode in [
+        OrthographyMode::AcademyStrict,
+        OrthographyMode::CommonEditorial,
+    ] {
+        let options = CheckOptions {
+            orthography_mode: mode,
+            ..CheckOptions::default()
+        };
+        for (wrong, correct) in [("यग्य", "यज्ञ"), ("ग्यान", "ज्ञान"), ("अग्यान", "अज्ञान")]
+        {
+            let p = derive(wrong);
+            assert_eq!(p.output, correct);
+            assert!(matches!(
+                p.steps[0].rule,
+                varnavinyas_prakriya::Rule::VarnaVinyasNiyam("3(ग)(ऊ)-1")
+            ));
+            assert!(
+                check_text_with_options(wrong, options)
+                    .iter()
+                    .any(|d| d.correction == correct),
+                "{wrong}"
+            );
+        }
+        for word in ["ग्यारेज", "ग्यारेन्टी", "ग्यास", "यज्ञ", "ज्ञान"]
+        {
+            assert!(derive(word).is_correct, "{word}");
+            assert!(
+                !check_text_with_options(word, options)
+                    .iter()
+                    .any(|d| d.kind == DiagnosticKind::Error),
+                "{word}"
+            );
+        }
+    }
+}
