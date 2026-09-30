@@ -45,6 +45,11 @@ fn parse_inventory(data: &str) -> Vec<Entry<'_>> {
                 "PS-Saisanik-ह्रस्वदीर्घ-(थ)",
                 "शैक्षणिक व्याकरण (थ): सूचीकृत निर्जीव वस्तुबोधक नाममा अन्त्यको ईकार दीर्घ हुन्छ",
             ),
+            "ps_animate_noun" => (
+                "PS-Saisanik-ह्रस्वदीर्घ-(थ)-सजीव",
+                "PS-Saisanik-ह्रस्वदीर्घ-(थ)-सजीव",
+                "शैक्षणिक व्याकरण (थ): सूचीकृत सजीव नामका अन्त्यमा ईकार दीर्घ हुन्छ",
+            ),
             _ => panic!("unknown semantic class: {line}"),
         };
         assert!(
@@ -70,7 +75,7 @@ mod tests {
 
     #[test]
     fn all_source_examples_have_reviewed_semantic_evidence() {
-        assert_eq!(parse_inventory(DATA).len(), 29);
+        assert_eq!(parse_inventory(DATA).len(), 33);
         assert_eq!(lookup("गोरी").unwrap().rule_code, "3(क)(ऊ)-4");
         assert_eq!(lookup("फर्सी").unwrap().rule_code, "3(क)(ऊ)-6");
         assert_eq!(

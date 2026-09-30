@@ -152,9 +152,9 @@ in `data/rule_inventories/ps_final_u_hrasva.tsv`. They correct forms such as
 accepted short-vowel forms. This does not shorten arbitrary ऊ-ending words;
 imperatives and long-vowel neighbors retain their existing guards.
 
-`data/rule_inventories/final_ii_semantic_classes.tsv` records 29 unique printed
+`data/rule_inventories/final_ii_semantic_classes.tsv` records 33 unique printed
 examples for Notice `3(क)(ऊ)-4` (feminine adjectives), `-6` (inanimate nouns),
-and PS hrasva/dirgha `(थ)` (inanimate nouns). The exact source class supplies
+and PS hrasva/dirgha `(थ)` (inanimate nouns and its four listed animate nouns). The exact source class supplies
 both the correction citation and accepted-form explanation, including missed
 forms `चुच्चि -> चुच्ची` and `फर्सि -> फर्सी`. Broad adjective/dictionary fallbacks
 back off for these examples. This is a reviewed semantic inventory, not a

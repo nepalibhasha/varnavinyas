@@ -487,3 +487,37 @@ fn reviewed_short_vowel_targets_are_not_hidden_by_alias_headwords() {
         }
     }
 }
+
+#[test]
+fn reviewed_animate_noun_endings_survive_case_reattachment() {
+    for mode in [
+        OrthographyMode::AcademyStrict,
+        OrthographyMode::CommonEditorial,
+    ] {
+        let options = CheckOptions {
+            orthography_mode: mode,
+            ..CheckOptions::default()
+        };
+        for (wrong, correct) in [
+            ("हात्तिको", "हात्तीको"),
+            ("हात्तिलाई", "हात्तीलाई"),
+            ("खसिको", "खसीको"),
+            ("जोगिको", "जोगीको"),
+        ] {
+            assert_eq!(check_word(wrong).unwrap().correction, correct, "{wrong}");
+            let text = format!("🙂 {wrong}।");
+            let ds = check_text_with_options(&text, options);
+            let d = ds.iter().find(|d| d.incorrect == wrong).expect(wrong);
+            assert_eq!(d.correction, correct);
+            assert_eq!(d.kind, DiagnosticKind::Error);
+            assert_eq!(&text[d.span.0..d.span.1], wrong);
+            assert!(
+                check_text_with_options(correct, options).is_empty(),
+                "{correct}"
+            );
+        }
+        for word in ["पति", "रति", "गति", "कवि"] {
+            assert!(derive(word).is_correct, "{word}");
+        }
+    }
+}
