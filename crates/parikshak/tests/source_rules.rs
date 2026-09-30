@@ -461,3 +461,29 @@ fn ya_e_rules_cover_participles_and_pronoun_derivatives() {
         }
     }
 }
+
+#[test]
+fn reviewed_short_vowel_targets_are_not_hidden_by_alias_headwords() {
+    for mode in [
+        OrthographyMode::AcademyStrict,
+        OrthographyMode::CommonEditorial,
+    ] {
+        let options = CheckOptions {
+            orthography_mode: mode,
+            ..CheckOptions::default()
+        };
+        for (wrong, correct) in [("ठूलो", "ठुलो"), ("सीप", "सिप")] {
+            assert_eq!(derive(wrong).output, correct, "{wrong}");
+            let ds = check_text_with_options(wrong, options);
+            assert!(
+                ds.iter()
+                    .any(|d| d.correction == correct && d.kind == DiagnosticKind::Error),
+                "{wrong}: {ds:?}"
+            );
+        }
+        for word in ["ठुलो", "सिप", "तीन", "जून", "फूल", "औषधी"]
+        {
+            assert!(derive(word).is_correct, "{word}");
+        }
+    }
+}

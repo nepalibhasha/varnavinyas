@@ -5,14 +5,14 @@ use crate::model::rule_spec::{DiagnosticKind, RuleCategory, RuleSpec};
 use crate::model::step::Step;
 use varnavinyas_shabda::{Origin, classify, decompose};
 
-fn exact_headword_supported(word: &str) -> bool {
+fn rule_protected_input(word: &str) -> bool {
     let lex = varnavinyas_kosha::kosha();
-    lex.lookup(word).is_some()
+    lex.is_rule_protected(word)
 }
 
 fn lexically_supported(word: &str) -> bool {
     let lex = varnavinyas_kosha::kosha();
-    lex.contains(word) || lex.lookup(word).is_some()
+    lex.contains(word) || lex.is_rule_protected(word)
 }
 
 // -----------------------------------------------------------------------------
@@ -164,7 +164,7 @@ pub fn rule_prefix_hrasva(input: &str) -> Option<Prakriya> {
         ("सू", "सु"),
     ];
 
-    if exact_headword_supported(input) {
+    if rule_protected_input(input) {
         return None;
     }
     for &(wrong, correct) in PREFIX_PATTERNS {
@@ -223,7 +223,7 @@ pub fn rule_dvi_tri_hrasva(input: &str) -> Option<Prakriya> {
 }
 
 pub fn rule_initial_name_hrasva(input: &str) -> Option<Prakriya> {
-    if exact_headword_supported(input) {
+    if rule_protected_input(input) {
         return None;
     }
 
@@ -263,7 +263,7 @@ pub fn rule_initial_name_hrasva(input: &str) -> Option<Prakriya> {
 }
 
 pub fn rule_initial_aagantuk_hrasva(input: &str) -> Option<Prakriya> {
-    if exact_headword_supported(input) {
+    if rule_protected_input(input) {
         return None;
     }
 
@@ -514,7 +514,7 @@ pub fn rule_pronoun_vowel_length(input: &str) -> Option<Prakriya> {
 }
 
 pub fn rule_initial_adjective_hrasva(input: &str) -> Option<Prakriya> {
-    if exact_headword_supported(input) {
+    if rule_protected_input(input) {
         return None;
     }
 
@@ -536,7 +536,7 @@ pub fn rule_initial_adjective_hrasva(input: &str) -> Option<Prakriya> {
 }
 
 pub fn rule_initial_number_hrasva(input: &str) -> Option<Prakriya> {
-    if exact_headword_supported(input) {
+    if rule_protected_input(input) {
         return None;
     }
 
@@ -558,7 +558,7 @@ pub fn rule_initial_number_hrasva(input: &str) -> Option<Prakriya> {
 }
 
 pub fn rule_initial_avyaya_hrasva(input: &str) -> Option<Prakriya> {
-    if exact_headword_supported(input) {
+    if rule_protected_input(input) {
         return None;
     }
 
@@ -583,7 +583,7 @@ pub fn rule_initial_avyaya_hrasva(input: &str) -> Option<Prakriya> {
 }
 
 pub fn rule_initial_onomatopoeic_hrasva(input: &str) -> Option<Prakriya> {
-    if exact_headword_supported(input) {
+    if rule_protected_input(input) {
         return None;
     }
 

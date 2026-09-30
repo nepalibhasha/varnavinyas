@@ -6,3 +6,5 @@ word	tier	reason	source	review_status
 कैंची	canonical	Source-listed spelling must remain accepted alongside the dictionary headword कैँची; nasal normalization must not override the reviewed example.	Notices-3(क)(ऊ)-6	reviewed
 ग्यान	attested_nonstandard	Colloquial redirect to ज्ञान is attested but must not suppress the Sanskrit ज्ञ rule or become a correction target.	Notices-3(ग)(ऊ)-1	reviewed
 तेता	attested_nonstandard	Colloquial redirect to त्यता must not suppress the source-listed pronoun derivative with य.	Notices-3(ग)(इ)-य-1	reviewed
+ठूलो	attested_nonstandard	The reviewed तद्भव form ठुलो must not be suppressed by the attested long-vowel alias.	Notices-3(क)(अ)-12	reviewed
+सीप	attested_nonstandard	Dictionary redirect to सिप is attested but must not suppress the reviewed तद्भव short-vowel form.	Notices-3(क)(अ)-12	reviewed
