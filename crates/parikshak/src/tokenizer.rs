@@ -448,6 +448,7 @@ fn has_devanagari(s: &str) -> bool {
 }
 
 fn is_devanagari_word_text(s: &str) -> bool {
+    let s = varnavinyas_akshar::orthographic_lookup_form(s);
     !s.is_empty()
         && s.chars()
             .all(|c| ('\u{0900}'..='\u{097F}').contains(&c) && !is_punctuation(c))

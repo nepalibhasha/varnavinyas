@@ -11,7 +11,7 @@ pub use consonant::{
 pub use devanagari::{
     CharType, DevanagariChar, classify, is_halanta, is_matra, is_svar, is_vyanjan,
 };
-pub use normalize::normalize;
+pub use normalize::{normalize, orthographic_lookup_form};
 pub use syllable::{Akshara, split_aksharas};
 pub use vowel::{
     SvarType, dirgha_to_hrasva, hrasva_to_dirgha, matra_to_svar, svar_to_matra, svar_type,

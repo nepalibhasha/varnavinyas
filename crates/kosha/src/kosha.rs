@@ -1,6 +1,7 @@
 #[cfg(any(test, feature = "test-seam"))]
 use std::cell::RefCell;
 use std::sync::LazyLock;
+use varnavinyas_akshar::orthographic_lookup_form;
 
 use fst::{Set, Streamer};
 
@@ -82,6 +83,9 @@ pub struct Kosha {
     fst: Set<Vec<u8>>,
     /// Sorted full-word forms for nearby suggestion heuristics.
     words: Vec<String>,
+    /// Lookup keys for spellings stored with Devanagari shaping controls.
+    word_aliases: Vec<String>,
+    headword_aliases: Vec<(String, usize)>,
     /// Sorted headword entries for binary-search metadata lookup.
     headwords: Vec<WordEntry>,
     /// Sorted reviewed lexicon quality overrides.
@@ -103,9 +107,13 @@ impl Kosha {
 
         let headwords = parse_headwords(HEADWORDS_DATA);
         let overrides = parse_lexicon_overrides(LEXICON_OVERRIDES_DATA);
+        let word_aliases = word_lookup_aliases(&words);
+        let headword_aliases = headword_lookup_aliases(&headwords);
         Kosha {
             fst,
             words,
+            word_aliases,
+            headword_aliases,
             headwords,
             overrides,
         }
@@ -120,9 +128,13 @@ impl Kosha {
         let words = words_from_fst(&fst);
         let headwords = parse_headwords(headwords_data);
         let overrides = parse_lexicon_overrides(LEXICON_OVERRIDES_DATA);
+        let word_aliases = word_lookup_aliases(&words);
+        let headword_aliases = headword_lookup_aliases(&headwords);
         Kosha {
             fst,
             words,
+            word_aliases,
+            headword_aliases,
             headwords,
             overrides,
         }
@@ -130,7 +142,15 @@ impl Kosha {
 
     /// Check if a word exists in the lexicon.
     pub fn contains(&self, word: &str) -> bool {
-        self.fst.contains(word)
+        if self.fst.contains(word) {
+            return true;
+        }
+        let key = orthographic_lookup_form(word);
+        (matches!(key, std::borrow::Cow::Owned(_)) && self.fst.contains(key.as_ref()))
+            || self
+                .word_aliases
+                .binary_search_by(|alias| alias.as_str().cmp(key.as_ref()))
+                .is_ok()
     }
 
     /// Find one near-match candidate by character-level edit distance.
@@ -178,14 +198,31 @@ impl Kosha {
     /// Look up headword metadata (POS tags).
     /// Returns `None` if the word is not a known headword.
     pub fn lookup(&self, word: &str) -> Option<&WordEntry> {
-        self.headwords
-            .binary_search_by(|entry| entry.word.as_bytes().cmp(word.as_bytes()))
+        // Preserve source metadata and prefer an exact spelling when available.
+        if let Ok(idx) = self
+            .headwords
+            .binary_search_by(|entry| entry.word.cmp(word))
+        {
+            return Some(&self.headwords[idx]);
+        }
+        let key = orthographic_lookup_form(word);
+        if matches!(key, std::borrow::Cow::Owned(_)) {
+            if let Ok(idx) = self
+                .headwords
+                .binary_search_by(|entry| entry.word.cmp(key.as_ref()))
+            {
+                return Some(&self.headwords[idx]);
+            }
+        }
+        self.headword_aliases
+            .binary_search_by(|(alias, _)| alias.as_str().cmp(key.as_ref()))
             .ok()
-            .map(|idx| &self.headwords[idx])
+            .map(|idx| &self.headwords[self.headword_aliases[idx].1])
     }
 
     /// Look up a reviewed lexicon quality override.
     pub fn override_for(&self, word: &str) -> Option<&LexiconOverride> {
+        let word = orthographic_lookup_form(word);
         self.overrides
             .binary_search_by(|entry| entry.word.as_bytes().cmp(word.as_bytes()))
             .ok()
@@ -270,6 +307,33 @@ fn words_from_fst(fst: &Set<Vec<u8>>) -> Vec<String> {
 }
 
 /// Parse headword metadata from TSV text.
+fn word_lookup_aliases(words: &[String]) -> Vec<String> {
+    let mut aliases = words
+        .iter()
+        .filter_map(|word| match orthographic_lookup_form(word) {
+            std::borrow::Cow::Owned(key) => Some(key),
+            std::borrow::Cow::Borrowed(_) => None,
+        })
+        .collect::<Vec<_>>();
+    aliases.sort();
+    aliases.dedup();
+    aliases
+}
+
+fn headword_lookup_aliases(headwords: &[WordEntry]) -> Vec<(String, usize)> {
+    let mut aliases = headwords
+        .iter()
+        .enumerate()
+        .filter_map(|(idx, entry)| match orthographic_lookup_form(entry.word) {
+            std::borrow::Cow::Owned(key) => Some((key, idx)),
+            std::borrow::Cow::Borrowed(_) => None,
+        })
+        .collect::<Vec<_>>();
+    aliases.sort();
+    aliases.dedup_by(|right, left| right.0 == left.0);
+    aliases
+}
+
 fn parse_headwords(headwords_data: &'static str) -> Vec<WordEntry> {
     let mut headwords: Vec<WordEntry> = headwords_data
         .lines()
@@ -504,5 +568,27 @@ mod tests {
         assert_eq!(k.lexicon_tier("ओठे"), Some(LexiconTier::NonCorrectionTarget));
         assert!(!k.is_correction_target("ओठे"));
         assert!(k.is_correction_target("नेपाल"));
+    }
+}
+
+#[cfg(test)]
+mod shaping_lookup_tests {
+    use super::Kosha;
+
+    #[test]
+    fn shaping_aliases_work_in_both_directions_without_changing_metadata() {
+        let lex =
+            Kosha::from_static_data("अकर्‍या\nपुर्याउने\nसम्‍झाउने\n", "अकर्‍या\tविशेषण\nपुर्याउने\tक्रिया\n");
+        for word in ["अकर्‍या", "अकर्या", "पुर्‍याउने", "पुर्याउने", "सम्‍झाउने", "सम्झाउने"]
+        {
+            assert!(lex.contains(word), "{word}");
+        }
+        assert_eq!(lex.lookup("अकर्या").unwrap().word, "अकर्‍या");
+        assert_eq!(lex.lookup("अकर्‍या").unwrap().pos, "विशेषण");
+        assert_eq!(lex.lookup("पुर्‍याउने").unwrap().pos, "क्रिया");
+        assert!(!lex.contains("पुर्याऊने"));
+        assert!(!lex.contains("अकर‍्या"));
+        assert!(!lex.is_rule_protected("ग्‍यान"));
+        assert!(!lex.is_correction_target("ग्‍यान"));
     }
 }

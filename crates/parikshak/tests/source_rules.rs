@@ -631,3 +631,36 @@ fn final_i_rules_preserve_case_endings_and_supported_converbs() {
         assert_eq!(derive("आलू").output, "आलु");
     }
 }
+
+#[test]
+fn devanagari_shaping_controls_preserve_spelling_and_source_spans() {
+    for mode in [
+        OrthographyMode::AcademyStrict,
+        OrthographyMode::CommonEditorial,
+    ] {
+        let options = CheckOptions {
+            orthography_mode: mode,
+            ..CheckOptions::default()
+        };
+        for word in ["पुर्‍याउने", "जगत्‌का", "टुप्‍पो", "शक्‌ति", "गुरुसँग"]
+        {
+            assert!(check_word(word).is_none(), "{word}: {:?}", check_word(word));
+            assert!(
+                check_text_with_options(word, options).is_empty(),
+                "{word}: {:?}",
+                check_text_with_options(word, options)
+            );
+            assert!(derive(word).is_correct, "{word}");
+        }
+        let wrong = "अग्‍यान";
+        let text = format!("👩‍💻 {wrong} पुर्‍याउने।");
+        let ds = check_text_with_options(&text, options);
+        assert_eq!(ds.len(), 1, "{ds:?}");
+        assert_eq!(ds[0].incorrect, wrong);
+        assert_eq!(ds[0].correction, "अज्ञान");
+        assert_eq!(&text[ds[0].span.0..ds[0].span.1], wrong);
+        assert_eq!(check_word(wrong).unwrap().span, (0, wrong.len()));
+        assert_eq!(derive(wrong).steps[0].before, wrong);
+        assert!(varnavinyas_parikshak::tokenize(text.as_str())[1].is_devanagari_word());
+    }
+}

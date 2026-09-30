@@ -10,6 +10,7 @@ description = "FST-based Nepali lexicon for word validation and metadata lookup"
 test-seam = []
 
 [dependencies]
+varnavinyas-akshar = { workspace = true }
 fst = { workspace = true }
 thiserror = { workspace = true }
 varnavinyas-types = { workspace = true }

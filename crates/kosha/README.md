@@ -87,3 +87,10 @@ let _origin = lex.origin_of("नेपाल");
 ## Status
 
 Core foundational data crate.
+
+Devanagari ZWJ/ZWNJ controls after consonant + virama are ignored in lookup
+keys. Both stored and queried spellings support that comparison; source
+headwords and their metadata retain the original spelling. Other scripts,
+emoji, and controls outside those sequences are preserved. The checker keeps
+UTF-8 spans in the original text, and does not suggest removing valid shaping
+controls as a spelling correction.

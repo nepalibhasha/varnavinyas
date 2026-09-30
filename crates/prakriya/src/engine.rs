@@ -34,6 +34,17 @@ pub fn collect_rule_hits(input: &str) -> Vec<RuleHit> {
         return Vec::new();
     }
 
+    if let std::borrow::Cow::Owned(lookup) = varnavinyas_akshar::orthographic_lookup_form(input) {
+        let mut hits = collect_rule_hits(&lookup);
+        for hit in &mut hits {
+            hit.prakriya.input = input.to_string();
+            if let Some(first) = hit.prakriya.steps.first_mut() {
+                first.before = input.to_string();
+            }
+        }
+        return hits;
+    }
+
     let mut hits = Vec::new();
     if let Some(hit) = try_correction_table_hit(input) {
         hits.push(hit);

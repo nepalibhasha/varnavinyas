@@ -87,6 +87,14 @@ pub fn check_word(word: &str) -> Option<Diagnostic> {
 
 /// Check a single word with runtime options.
 pub fn check_word_with_options(word: &str, options: CheckOptions) -> Option<Diagnostic> {
+    if let std::borrow::Cow::Owned(lookup) = varnavinyas_akshar::orthographic_lookup_form(word) {
+        return check_word_with_options(&lookup, options).map(|mut diagnostic| {
+            diagnostic.span = (0, word.len());
+            diagnostic.incorrect = word.to_string();
+            diagnostic
+        });
+    }
+
     if matches!(word, "नं") {
         return None;
     }
