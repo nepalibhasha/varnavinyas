@@ -205,7 +205,11 @@ Known gaps:
 
 ### Section 3 `(च)` Lipi-Specific Notes
 
-No complete dedicated subsection module exists yet. Related behavior is scattered across table/rule handling and should not be expanded without a clearer source-backed scope.
+This subsection primarily describes glyph forms, conjunct writing, डिको and
+three-tier script layout. Textual conjunct inspection belongs to `akshar`;
+handwriting and font layout belong to rendering/teaching. It does not require
+a dedicated automatic spelling-rule module. Meaning-dependent pairs such as
+फूल/फुल likewise remain accepted until context supports a choice.
 
 ## Correction Table Audit
 

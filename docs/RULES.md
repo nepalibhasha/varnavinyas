@@ -38,7 +38,7 @@ but production decisions remain in code and reviewed inventories.
 | Section 3 `(ग)` | श/ष/स, ऋ/रि, ब/व, य/ए, क्ष/छ्य, ज्ञ/gya families | `crates/prakriya/src/varna_vinyasa/ustai_ucharan_varnaharu.rs` and submodules | Partial |
 | Section 3 `(घ)` | पदयोग/पदवियोग | `crates/parikshak/src/checker/padayog.rs`, `padayog_rules.rs`, and phrase-specific checker passes | Partial / active |
 | Section 3 `(ङ)` | हलन्त/अजन्त | `crates/prakriya/src/varna_vinyasa/halanta_ra_ajanta.rs` and submodules | Partial / expanded |
-| Section 3 `(च)` | लिपिगत विशिष्टता and related notes | Scattered/partial handling; no full dedicated module yet | Missing / partial |
+| Section 3 `(च)` | Glyph forms, conjunct writing, डिको and three-tier script layout | Textual conjunct inspection in `akshar`; handwriting/font layout belongs to rendering and teaching | Outside automatic spelling correction |
 | Section 4 | शुद्ध-अशुद्ध table | `crates/prakriya/src/correction_table.rs` plus rule-backed exceptions | Active, not a pure table mirror |
 | Section 5 | punctuation and formatting | `crates/lekhya/src/punctuation.rs`, integrated through `parikshak` | Stable |
 | `PS-Saisanik` section 7 | तिर्यक् रूपको प्रयोग | `crates/parikshak/src/checker/tiryak.rs` | Partial / active |
@@ -53,6 +53,65 @@ but production decisions remain in code and reviewed inventories.
 - The Section 3 `(क)(ऊ)-1` ई-suffix explanation requires reviewed derivational evidence in `data/rule_inventories/ii_suffix_derivatives.tsv`. Mechanical suffix stripping alone does not establish the rule's applicability; pronouns retain their specific vowel-length rule.
 - Section 4 is not simply a lexicon lookup. `correction_table.rs` currently contains 81 entries: 38 Section 4-style entries, 42 rule-backed holdouts, and 1 documented stopgap. See `crates/prakriya/README.md`.
 - `तिर्यक्`, comparison spacing, institutional/title splits, and similar school-grammar phrase behavior should be first-class checker rules, not correction-table growth.
+
+## Numbered Coverage And Dependencies
+
+Reviewed 2026-09-29 against both local source extracts and current code. A
+registered function or passing example does not establish complete coverage
+of a grammatical class. "Guarded" below means implemented for supported
+lexical/morphological families, with generalization still bounded by evidence.
+
+| Source subrules | Current scope | Remaining dependency |
+|---|---|---|
+| Notice `3(क)(अ)-1..7,10,11` | Guarded initial vowel families | Broader reviewed examples and counterexamples |
+| Notice `3(क)(अ)-8,9` | General verb/dhatu classification deferred | Reliable verb roots and inflection evidence |
+| Notice `3(क)(अ)-12` | Explicit corrections plus guarded tadbhav fallback; semantic pairs preserved | Context for meaning-dependent pairs such as फूल/फुल |
+| Notice `3(क)(अ)-13` | Supported नु/एली derivative families | Additional validated derivations |
+| Notice `3(क)(आ)-1,3..6,9,10` | Guarded medial vowel families | Broader reviewed class membership |
+| Notice `3(क)(आ)-2` | Partial suffix-family coverage | Derivational evidence and suffix exceptions |
+| Notice `3(क)(आ)-7,8` | General verb/passive-voice rules deferred | Verb and voice analysis |
+| Notice `3(क)(इ)-1..5,7,9` | Guarded final-hrasva families | Reviewed exceptions and lexical classes |
+| Notice `3(क)(इ)-6` | Partial case-marker coverage | Stronger attachment/context validation |
+| Notice `3(क)(इ)-8` | General नु/छु verb class deferred | Verbal context, including imperative contrasts |
+| Notice `3(क)(ई)-1,2`, `(उ)-1,2` | Guarded tatsam/prefix/suffix preservation | Origin and derivation evidence |
+| Notice `3(क)(ऊ)-1..3,5,7..9,11..16` | Guarded final-dirgha families; ई derivations use a reviewed inventory | Wider lexical/derivational coverage |
+| Notice `3(क)(ऊ)-4,6,10` | Some attested examples; class generalization deferred | Gender, animacy, adjective and verb evidence |
+| Notice `3(घ)` पदयोग `1,5..8,10,11` | Explicit examples exist; generalized forms remain TODOs | Prefixes, compound ranking, reduplication, coordination, verb complexes and semantic inventories |
+| Notice `3(घ)` पदवियोग `1,5,8,11..13` | Explicit examples exist; broad splitting remains deferred | Syntax, verb complexes, classifier/name inventories; baseline “each word separate” is not an independent rewrite |
+| PS abbreviation hrasva/dirgha `(छ)` | Compact dotted initials protected in spelling and punctuation, in both modes | Normalizing joined/dotted abbreviation vowels and broader spaced-chain recognition remain open |
+| PS tatsam final-उ `(छ)` | All 15 printed examples are reviewed exact targets, with correction and accepted-form explanations | Expansion requires reviewed source evidence; no blanket ऊ-shortening |
+| Notice `3(ङ)`, PS halanta/ajanta | Reviewed examples and loan families; ambiguous bare verbs retained | Context to distinguish bare roots/imperatives and productive verb forms |
+| Notice Section 4 phrase/sentence examples | Selected phrase corrections and optional suggestions | Syntax and meaning; word-table coverage does not imply sentence grammar coverage |
+| Notice Section 5 | Mechanical scanner checks and abbreviation guards | Syntactic punctuation placement is not modeled |
+
+The vowel rows account for the source's numbered classes; the other rows record
+the principal remaining boundaries, not an exhaustive certification of every
+printed example. Keep source wording, implementation guards, positive examples,
+and nearest valid counterexamples together when closing a row.
+
+Immediate engineering work is not blocked by the missing grammatical model:
+source inventories, regression fixtures and consumer tests can grow safely.
+Three low-confidence source readings still require a better scan: Notice
+पदयोग-6 झैझगडा/झैँझगडा, the PS तद्भव मिठो parenthetical मिष्ट/मिष्ठ, and PS
+`४(ख)` ह्वार्त. Only those readings are blocked. Joined-future common-editorial
+treatment also needs a product policy decision; the current checker continues
+to require separate forms in both modes.
+
+## Evaluation Evidence
+
+The curated checker gold set contains 97 word entries and 13 paragraph entries.
+Every word now must receive an expected replacement and a cited explanation;
+both correct-form false-positive tests and corpus snapshots remain separate
+gates. This is fixture coverage, not a percentage of all Academy rules.
+
+Sandhi currently recovers 8 of 10 expected pairs. The two named gaps are
+अत्याचार and विद्यार्थी; every other expected pair is required individually.
+Samasa has three fixtures, with the मह/महा pair for महोत्सव explicitly under
+review and the two confirmed pairs/types required. Morphology has 22 fixtures.
+The seven grammar sentences require only two positive samasa hints; case and
+agreement examples still do not require their intended grammar detections.
+The unlabeled headword census measures split activity, not a false-positive rate.
+See `crates/eval/README.md` for limits and the remaining evaluation work.
 
 ## Example Rule Shape
 

@@ -1,6 +1,6 @@
 # Backlog
 
-Last reviewed: 2026-07-03
+Last reviewed: 2026-09-29
 
 This backlog is aligned against:
 
@@ -24,7 +24,7 @@ The source policy remains: prefer explicit Academy rules, prefer `PS-Saisanik...
 ## Current Implementation Snapshot
 
 - Core utilities (`akshar`, `lipi`, `types`) are stable.
-- `kosha` is stable and uses compile-time lexical assets: ~207k surface forms and ~132k headwords.
+- `kosha` uses compile-time lexical assets; the current census reads 130,881 headword rows. Raw attestation is not a prescriptive correction verdict.
 - `prakriya` is active and owns token-level orthography under `src/varna_vinyasa/`.
 - `parikshak` is active and owns the production text checker, phrase/context passes, and stable diagnostic category codes.
 - `lekhya` punctuation diagnostics are stable.
@@ -33,6 +33,22 @@ The source policy remains: prefer explicit Academy rules, prefer `PS-Saisanik...
 - No new user-facing diagnostic category codes were added by the arbitration, lexicon-tier, or ajanta-inventory work.
 
 ## Near-Term Priorities
+
+Completed in the September source audit:
+
+- Compact dotted abbreviations retain long-vowel initials and their dots,
+  including fragments at EOF/newline; actual browser WASM tests cover both modes.
+- Whole-word corrections precede speculative suffix detachment, with safe target
+  validation and valid case/particle-stack regressions. Checker gold now requires
+  all 97 expected word corrections and explanations.
+- All 15 PS tatsam final-उ `(छ)` examples have a reviewed TSV inventory and
+  accepted-form explanations; the existing वधू policy now has an exact rule.
+- Sandhi and samasa gates require currently covered pairs/types individually.
+  Named misses and the महोत्सव pair review remain visible.
+
+The source-indexed scope/dependency ledger is in `RULES.md`. Its context-dependent
+rows are dependencies for generalization, not blockers to reviewed inventory or
+fixture work. Joined/dotted abbreviation vowel normalization remains open.
 
 ### 1. Section 3(क) Hrasva/Dirgha Closure
 
@@ -58,8 +74,8 @@ Focus on the rule gaps explicitly marked in `crates/prakriya/src/varna_vinyasa/h
 `पदयोग/पदवियोग` is now the highest-risk expansion area because it is context-sensitive and the two source documents have known policy differences.
 
 - [ ] Pause broad new phrase-family expansion until existing generalized passes have stronger eval coverage.
-- [ ] Re-audit unresolved policy-sensitive families:
-  - `सरह`: notice-backed join evidence, not explicit in current `PS-Saisanik` split family
+- [ ] Expand evaluated policy-sensitive families without reopening resolved policy implicitly:
+  - `सरह`: resolved Notice-default join; broader inventory/ranking remains open
   - `थरी`: notice-backed classifier split with a legacy explicit rewrite for `सयथरी -> सय थरी`; generalized classifier handling remains deferred and `थरी` is not explicit in the current `PS-Saisanik` extract
   - broader `पदयोग-२` suffix inventory beyond current conservative `ज्यू` handling
   - broad `पदवियोग-१` baseline “each word separate” principle
@@ -90,7 +106,7 @@ Keep `crates/prakriya/src/correction_table.rs` from becoming a second rule engin
 - [ ] Section 3(ग): harden exception handling for `श/ष/स`, `ब/व`, `य/ए`, `ऋ/रि`, `क्ष/छ्य`, and `ज्ञ/ग्या/ग्याँ` so rule fallbacks do not flag valid inflected or derivational forms.
 - [ ] Section 3(ङ): continue halanta/ajanta context handling for ambiguous imperative-like forms and productive verb paradigms; PS loanword-ajanta example coverage is implemented through `data/rule_inventories/ajanta_halanta.tsv`, but broad origin-gated generalization remains deferred.
 - [ ] Section 5: keep punctuation stable, but add broader positive/negative examples from the notice document for quote, slash, abbreviation, hyphen, ellipsis, and spacing behavior.
-- [ ] Section 3(च): decide whether lipi-specific guidance needs a dedicated module and crate-level coverage note or should remain scattered across existing utilities.
+- [x] Section 3(च): document glyph/font/handwriting scope separately from automatic spelling correction; textual conjunct inspection belongs to `akshar`.
 
 ### 5. Evaluation And Fixture Coverage
 
@@ -108,7 +124,8 @@ Keep `crates/prakriya/src/correction_table.rs` from becoming a second rule engin
 - [ ] Keep web rule data aligned with Rust diagnostic categories whenever rule coverage changes.
 - [ ] Re-check WASM bundle size after rule/data changes; optimize only if bundle growth becomes a real release blocker.
 - [ ] Expand Python wheel platform coverage; Linux wheel releases and import/API smoke checks already run on `python-artifact-v*` tags. Package-index publishing is separate.
-- [ ] Expose origin provenance through Python/C/UniFFI classification APIs; their four-way compatibility enum cannot distinguish unknown from documented origin.
+- [x] Expose additive origin-provenance APIs through Python/UniFFI and CLI while preserving the four-way compatibility enum. iOS/Android generated bindings share the UniFFI API.
+- [ ] Add an additive origin-provenance API to the C binding; its compatibility classifier still returns only the four-way enum.
 - [ ] Keep the browser artifact versioning workflow aligned with downstream consumers.
 
 ## Done / Superseded From Previous Backlog

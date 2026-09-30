@@ -27,6 +27,24 @@ const EXPECTED_SPLITS: &[(&str, &str, &str)] = &[
     ("नरेन्द्र", "नर", "इन्द्र"),
 ];
 
+// Named reconstruction gaps, not permission to lose any currently found pair.
+// Keep the expected pairs visible in the recall denominator. Improvements may
+// close these gaps without updating a percentage floor.
+const KNOWN_SPLIT_GAPS: &[(&str, &str, &str, &str)] = &[
+    (
+        "अत्याचार",
+        "अति",
+        "आचार",
+        "यण् reconstruction does not recover the long-आ right component",
+    ),
+    (
+        "विद्यार्थी",
+        "विद्या",
+        "अर्थी",
+        "morphology-first splitting removes final ई before recovering अर्थी",
+    ),
+];
+
 /// Words that must NOT produce any sandhi split.
 const NO_SPLIT_EXPECTED: &[&str] = &[
     "राम",   // name (2 aksharas, atomic)
@@ -55,6 +73,9 @@ fn pipeline_split(word: &str) -> Vec<(String, String)> {
 
 #[test]
 fn known_correct_splits_found() {
+    for &(word, left, right, reason) in KNOWN_SPLIT_GAPS {
+        assert!(EXPECTED_SPLITS.contains(&(word, left, right)) && !reason.is_empty());
+    }
     let mut found = 0;
     let mut missed = Vec::new();
 
@@ -77,13 +98,20 @@ fn known_correct_splits_found() {
     }
 
     println!("\nKnown splits: {}/{} found", found, EXPECTED_SPLITS.len());
-    // Note: misses are due to splitter reconstruction coverage, not the guard.
-    // The 3-akshara guard + 2-akshara per-part filter is working correctly.
-    // Track this count to detect regressions as we improve reconstruction.
+    let regressions: Vec<_> = missed
+        .iter()
+        .filter(|(word, left, right, _)| {
+            !KNOWN_SPLIT_GAPS
+                .iter()
+                .any(|(gap_word, gap_left, gap_right, _)| {
+                    word == gap_word && left == gap_left && right == gap_right
+                })
+        })
+        .collect();
     assert!(
-        found >= 3,
-        "Regression: fewer known splits found than baseline (3): {:?}",
-        missed
+        regressions.is_empty(),
+        "Previously covered sandhi pairs regressed: {:?}",
+        regressions
     );
 }
 
@@ -131,6 +159,7 @@ fn lexicalized_words_have_no_safe_split() {
 
 #[test]
 fn headword_sandhi_census() {
+    // This unlabeled corpus measures split activity, not false-positive rate.
     let lex = kosha();
 
     // We'll read headwords directly from the data

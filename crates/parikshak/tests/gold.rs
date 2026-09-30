@@ -85,9 +85,8 @@ fn gold_correct_forms_no_false_positives() {
     );
 }
 
-/// Gold incorrect forms must be detected. Enforced floor is 90%; current
-/// implementation achieves 100%. Any regression below the floor is a bug
-/// in either the correction table or pattern rules.
+/// Every gold word must receive an expected correction and a rule explanation.
+/// A diagnostic with a wrong replacement is not a successful detection.
 #[test]
 fn gold_incorrect_forms_detected() {
     let data = load_gold();
@@ -99,26 +98,40 @@ fn gold_incorrect_forms_detected() {
 
     for entry in &all_entries {
         match check_word(&entry.incorrect) {
-            Some(_) => detected += 1,
+            Some(diag)
+                if entry
+                    .correct
+                    .split('/')
+                    .any(|correct| correct == diag.correction)
+                    && diag.rule.code() != "unknown"
+                    && !diag.explanation.is_empty() =>
+            {
+                detected += 1
+            }
+            Some(diag) => missed.push(format!(
+                "  {} → expected {}, got {} ({})",
+                entry.incorrect,
+                entry.correct,
+                diag.correction,
+                diag.rule.code()
+            )),
             None => missed.push(format!("  {} → {}", entry.incorrect, entry.correct)),
         }
     }
 
-    let detection_rate = detected as f64 / total as f64;
     assert!(
-        detection_rate >= 0.90,
-        "Detection rate {:.1}% ({}/{}) is below 90% threshold.\nMissed:\n{}",
-        detection_rate * 100.0,
+        total > 0 && missed.is_empty(),
+        "Gold corrections ({}/{}) must all match with a cited explanation.\nMissed:\n{}",
         detected,
         total,
         missed.join("\n")
     );
 
     eprintln!(
-        "Gold detection: {}/{} ({:.1}%)",
+        "Gold exact corrections: {}/{} ({:.1}%)",
         detected,
         total,
-        detection_rate * 100.0
+        detected as f64 / total as f64 * 100.0
     );
 }
 

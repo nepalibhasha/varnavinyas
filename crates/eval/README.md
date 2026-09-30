@@ -18,7 +18,7 @@ Unlike regular unit tests, this crate is about behavior quality and dataset-back
 
 - `sandhi_eval.rs`
   - known split recall
-  - false-positive guard on headword census
+  - split-activity budget on an unlabeled headword census
 - `samasa_eval.rs`
   - expected compound pair and type checks
 - `morph_eval.rs`
@@ -47,7 +47,32 @@ To inspect sandhi quality specifically:
 cargo test -p varnavinyas-eval --test sandhi_eval -- --nocapture
 ```
 
-That run is meant to answer a focused question such as: “Are recent sandhi changes still recovering known splits without causing too many false positives?”
+That run measures known-pair recall and how often the headword corpus produces
+splits. The corpus has no per-word correctness labels, so its split rate is not
+a measured false-positive rate. Negative fixtures provide a separate, limited
+false-positive check.
+
+## Current Gates And Known Gaps
+
+- Checker gold: all 97 word entries require an expected correction and a cited
+  explanation; correct-form and 13 paragraph fixtures are checked separately.
+- Sandhi: all currently covered expected pairs are required individually.
+  अत्याचार (long-आ reconstruction) and विद्यार्थी (morphology-first removal of
+  final ई) remain named gaps in the 10-pair recall denominator. A generic
+  three-of-ten floor no longer allows covered examples to regress.
+- Samasa: both confirmed pairs and their types are required. The third fixture,
+  महोत्सव, explicitly records its मह/महा disagreement in `pair_review`; review
+  linguistic evidence before changing the fixture or promoting a different split.
+- Morphology: 22 curated examples pass; this is not comprehensive paradigm coverage.
+- Grammar: seven sentences include only two required positive results, both
+  `samasa-heuristic`. `रामले गयो।` and `रामको किताबहरु हराए।` still have disabled
+  expected grammar detections. Orthographic corrections on those sentences do
+  not establish grammar accuracy.
+
+Next, add source-backed positive/near-negative pairs for the deferred verb and
+gender classes, phrase boundaries, and enabled case/agreement rules. A new gap
+must have an explicit review reason; broad percentage thresholds must not hide
+regressions in previously covered examples.
 
 ## Design Notes
 

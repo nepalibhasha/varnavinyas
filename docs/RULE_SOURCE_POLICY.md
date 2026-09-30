@@ -1,6 +1,6 @@
 # Rule Source Policy
 
-> **Last reviewed**: 2026-07-03
+> **Last reviewed**: 2026-09-29
 
 This project treats the two source markdowns under `docs/` as normative linguistic references.
 

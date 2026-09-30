@@ -17,6 +17,7 @@ struct SamasaEntry {
     left: String,
     right: String,
     expected_type: String,
+    pair_review: Option<String>,
 }
 
 #[test]
@@ -28,10 +29,21 @@ fn samasa_gold_pair_and_type_coverage() {
     let mut pair_found = 0usize;
     let mut type_matched = 0usize;
     let mut misses: Vec<String> = Vec::new();
+    let mut regressions = Vec::new();
+    let mut confirmed = 0;
 
     println!("\n=== Samasa Gold Evaluation ===");
 
     for entry in &gold.samasa {
+        if let Some(reason) = &entry.pair_review {
+            assert_eq!(
+                entry.word, "महोत्सव",
+                "new pair reviews need an explicit audit"
+            );
+            assert!(!reason.trim().is_empty());
+        } else {
+            confirmed += 1;
+        }
         let expected_type = parse_type(&entry.expected_type)
             .unwrap_or_else(|| panic!("unknown samasa type '{}'", entry.expected_type));
 
@@ -49,6 +61,10 @@ fn samasa_gold_pair_and_type_coverage() {
                     entry.word, entry.left, entry.right, c.samasa_type
                 );
             } else {
+                regressions.push(format!(
+                    "{}: expected type {:?}, got {:?}",
+                    entry.word, expected_type, c.samasa_type
+                ));
                 println!(
                     "  ~ {} → pair found, type {:?} (expected {:?})",
                     entry.word, c.samasa_type, expected_type
@@ -70,6 +86,11 @@ fn samasa_gold_pair_and_type_coverage() {
                 entry.word, entry.left, entry.right, summary
             );
             misses.push(entry.word.clone());
+            if let Some(reason) = &entry.pair_review {
+                println!("    Pair under review: {reason}");
+            } else {
+                regressions.push(format!("{}: missing confirmed pair", entry.word));
+            }
         }
     }
 
@@ -92,17 +113,13 @@ fn samasa_gold_pair_and_type_coverage() {
         type_accuracy_on_found * 100.0
     );
 
-    // MVP thresholds: ensure useful split recall while allowing heuristic type drift.
+    // Every confirmed pair and every found pair's type is a regression gate.
+    // Report the reviewed disagreement without calling it language coverage.
     assert!(
-        pair_recall >= 0.66,
-        "Pair recall too low ({:.1}%). Misses: {:?}",
-        pair_recall * 100.0,
+        confirmed >= 2 && regressions.is_empty(),
+        "Confirmed samasa cases regressed: {:?}; all missing pairs: {:?}",
+        regressions,
         misses
-    );
-    assert!(
-        type_accuracy_on_found >= 0.33,
-        "Type accuracy too low ({:.1}%)",
-        type_accuracy_on_found * 100.0
     );
 }
 

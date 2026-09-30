@@ -14,6 +14,7 @@ left = "मह"
 right = "उत्सव"
 expected_type = "Karmadharaya"
 notes = "Adjectival/intensifier left component with noun right component."
+pair_review = "Legacy fixture expects मह; the safe splitter returns महा. Verify the full lexical stem before changing the fixture or promoting a different split."
 
 [[samasa]]
 word = "एकचक्र"
