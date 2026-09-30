@@ -97,9 +97,12 @@ if the consumer reserializes it.
 `evaluation/evaluate.swift` and `evaluation/Evaluate.kt` run these fixtures
 through the generated bindings, followed by the eight origin cases in
 `fixtures/origins.json`. Both command-line harnesses take diagnostic and origin
-fixture paths as their first and second arguments. Kotlin's JVM harness uses `org.json` (available
-on Android, supplied separately for the host JVM). In an app test target, adapt
-the harness to read the bundled fixture resource rather than command-line args.
+fixture paths as their first and second arguments. Kotlin's harness uses
+`org.json` (available on Android, supplied separately for the host JVM). The repository harness compares JSON recursively without
+`JSONArray.similar()`, which is absent from Android's platform API. The v0.1.2
+ZIP contains the earlier JVM-only comparison; use the current
+`release/Evaluate.kt` when adapting that package for an Android test target.
+In an app test target, adapt the harness to read the bundled fixture resource rather than command-line args.
 
 Release workflows execute the fixtures through generated Swift/Kotlin bindings
 against the host native library. iOS additionally type-checks the generated

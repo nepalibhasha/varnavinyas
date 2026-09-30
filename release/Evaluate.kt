@@ -3,7 +3,26 @@ import org.json.JSONArray
 import org.json.JSONObject
 import uniffi.varnavinyas_bindings_uniffi.*
 
+// Android's platform org.json lacks JSONArray.similar(). Compare recursively
+// so the same harness runs on both Android and the host JVM.
+fun equivalentJson(actual: Any?, expected: Any?): Boolean = when {
+    actual is Number && expected is Number ->
+        kotlin.math.abs(actual.toDouble() - expected.toDouble()) < 1e-6
+    actual is JSONObject && expected is JSONObject -> {
+        val keys = actual.keys().asSequence().toSet()
+        keys == expected.keys().asSequence().toSet() &&
+            keys.all { equivalentJson(actual.get(it), expected.get(it)) }
+    }
+    actual is JSONArray && expected is JSONArray ->
+        actual.length() == expected.length() &&
+            (0 until actual.length()).all { equivalentJson(actual.get(it), expected.get(it)) }
+    else -> actual == expected
+}
+
 fun main(args: Array<String>) {
+    check(equivalentJson(JSONObject("{\"a\":1,\"b\":[null,2]}"), JSONObject("{\"b\":[null,2.0],\"a\":1.0}")))
+    check(!equivalentJson(JSONArray("[1,2]"), JSONArray("[2,1]")))
+    check(!equivalentJson(JSONObject("{\"a\":1}"), JSONObject("{\"a\":1,\"b\":2}")))
     val cases = JSONObject(File(args[0]).readText()).getJSONArray("cases")
     for (index in 0 until cases.length()) {
         val entry = cases.getJSONObject(index)
@@ -12,7 +31,7 @@ fun main(args: Array<String>) {
             OrthographyMode.ACADEMY_STRICT else OrthographyMode.COMMON_EDITORIAL
         val actual = JSONArray(checkTextWithAllOptions(entry.getString("text"),
             options.getBoolean("grammar"), PunctuationMode.STRICT, mode, false))
-        check(actual.similar(entry.getJSONArray("expected_diagnostics"))) { "Fixture failed: ${entry.getString("id")}" }
+        check(equivalentJson(actual, entry.getJSONArray("expected_diagnostics"))) { "Fixture failed: ${entry.getString("id")}" }
     }
     println("Kotlin generated bindings: ${cases.length()} shared diagnostic fixtures passed")
     val originCases = JSONObject(File(args[1]).readText()).getJSONArray("cases")

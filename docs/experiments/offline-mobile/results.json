@@ -1,0 +1,117 @@
+{
+  "date": "2026-09-28",
+  "source_commit": "bfdc8cd0605b4a2c6dd0a1071bfa28a9d4b55875",
+  "artifact_version": "v0.1.2",
+  "manifest_payloads_verified": true,
+  "host": "Intel iMac, macOS 15.7.9; busy shared host",
+  "timing_method": {
+    "includes": "native call, binding conversion, diagnostic JSON decode",
+    "excludes": "process launch",
+    "warm_samples": 20,
+    "median": "upper middle sample (index 10)",
+    "p95": "nearest rank (index 18)",
+    "physical_device_measurement": false
+  },
+  "platforms": {
+    "ios": {
+      "runtime": "iOS 18.5 iPhone 16 Pro simulator, x86_64",
+      "runtime_native_artifact": "published v0.1.2",
+      "network": "Harness makes no network requests; simulator connectivity not blocked",
+      "generated_binding_fixtures": {
+        "diagnostics": 16,
+        "origins": 8
+      },
+      "adapter_checks": 8,
+      "json_comparison_regressions": 0,
+      "cold_check_ms": 1011.139809,
+      "warm": [
+        {
+          "utf8_bytes": 64,
+          "median_ms": 14.891727,
+          "p95_ms": 34.101751
+        },
+        {
+          "utf8_bytes": 1920,
+          "median_ms": 665.945448,
+          "p95_ms": 784.777558
+        },
+        {
+          "utf8_bytes": 19200,
+          "median_ms": 2896.094848,
+          "p95_ms": 6668.439877
+        }
+      ],
+      "log": [
+        "cold_check_ms=1011.139809",
+        "Swift generated bindings: 16 shared diagnostic fixtures passed",
+        "Swift generated bindings: 8 shared origin fixtures passed",
+        "offline_adapter_checks=8 passed",
+        "utf8_bytes=64 median_ms=14.891727 p95_ms=34.101751",
+        "utf8_bytes=1920 median_ms=665.945448 p95_ms=784.777558",
+        "utf8_bytes=19200 median_ms=2896.094848 p95_ms=6668.439877"
+      ]
+    },
+    "android": {
+      "runtime": "Android API 36 Medium Phone emulator, x86_64; ART app_process",
+      "runtime_native_artifact": "published v0.1.2",
+      "network": "Airplane mode 1, Wi-Fi disabled, empty ip route",
+      "generated_binding_fixtures": {
+        "diagnostics": 16,
+        "origins": 8
+      },
+      "adapter_checks": 8,
+      "json_comparison_regressions": 3,
+      "cold_check_ms": 2652.312482,
+      "warm": [
+        {
+          "utf8_bytes": 64,
+          "median_ms": 12.686635,
+          "p95_ms": 25.379799
+        },
+        {
+          "utf8_bytes": 1920,
+          "median_ms": 271.093992,
+          "p95_ms": 338.977038
+        },
+        {
+          "utf8_bytes": 19200,
+          "median_ms": 3486.515237,
+          "p95_ms": 5460.155777
+        }
+      ],
+      "log": [
+        "cold_check_ms=2652.312482",
+        "Kotlin generated bindings: 16 shared diagnostic fixtures passed",
+        "Kotlin generated bindings: 8 shared origin fixtures passed",
+        "offline_adapter_checks=8 passed",
+        "utf8_bytes=64 median_ms=12.686635 p95_ms=25.379799",
+        "utf8_bytes=1920 median_ms=271.093992 p95_ms=338.977038",
+        "utf8_bytes=19200 median_ms=3486.515237 p95_ms=5460.155777"
+      ]
+    }
+  },
+  "android_library_sizes": [
+    {
+      "abi": "arm64-v8a",
+      "raw_bytes": 10233800,
+      "gzip6_bytes": 2469990
+    },
+    {
+      "abi": "armeabi-v7a",
+      "raw_bytes": 9686528,
+      "gzip6_bytes": 2386226
+    },
+    {
+      "abi": "x86_64",
+      "raw_bytes": 10208368,
+      "gzip6_bytes": 2477439
+    }
+  ],
+  "supplemental_regressions": [
+    {
+      "name": "Swift exact UTF-8 snapshot comparison for canonically equivalent strings",
+      "runtime": "host Swift; actual OfflineSession.swift compiled with generated Swift bindings",
+      "passed": true
+    }
+  ]
+}
