@@ -375,3 +375,44 @@ fn gya_corrections_require_a_sanskrit_target_and_cite_its_rule() {
         }
     }
 }
+
+#[test]
+fn ri_corrections_validate_the_target_origin() {
+    for mode in [
+        OrthographyMode::AcademyStrict,
+        OrthographyMode::CommonEditorial,
+    ] {
+        let options = CheckOptions {
+            orthography_mode: mode,
+            ..CheckOptions::default()
+        };
+        for (wrong, correct) in [("द्रिष्टि", "दृष्टि"), ("क्रिति", "कृति"), ("रिषि", "ऋषि")]
+        {
+            assert_eq!(derive(wrong).output, correct, "{wrong}");
+            assert!(
+                check_text_with_options(wrong, options)
+                    .iter()
+                    .any(|d| d.correction == correct),
+                "{wrong}"
+            );
+        }
+        for word in [
+            "क्रिया",
+            "गिरि",
+            "अरि",
+            "रिक्त",
+            "रित्तो",
+            "रिबन",
+            "रिस",
+            "दृष्टि",
+        ] {
+            assert!(derive(word).is_correct, "{word}");
+            assert!(
+                !check_text_with_options(word, options)
+                    .iter()
+                    .any(|d| d.kind == DiagnosticKind::Error),
+                "{word}"
+            );
+        }
+    }
+}
