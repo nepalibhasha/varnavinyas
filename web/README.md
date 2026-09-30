@@ -118,6 +118,10 @@ orthography_mode)` when the manifest advertises that capability.
 - `checkText(..., { orthographyMode: "common-editorial" })` downgrades only
   reviewed common-vs-strict orthographic forms to non-blocking variants. See
   `../docs/INTEGRATION_NOTES.md`.
+- Bulk correction, corrected-text preview, and copy apply only visible, high-confidence
+  errors. Variants, ambiguous analyses, and punctuation style suggestions require an
+  individual choice; enabling the corresponding strict mode makes its errors eligible
+  for bulk correction. Correction actions reject offsets from an outdated text snapshot.
 - The editor passes its contextual result to the inspector. Corrections and severity
   follow the current checking policy; isolated word analysis supplies linguistic
   structure and compatible explanatory notes. Text edits and policy changes dismiss

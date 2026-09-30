@@ -8,6 +8,7 @@ import { checkText } from './wasm-bridge.js';
 import { debounce, escapeHtml, CATEGORY_COLORS, CATEGORY_LABELS } from './utils.js';
 import { wrapRuleTooltip, getRuleSummary } from './rules-data.js';
 import { initInspector, showInspector, hideInspector, isInspectorActive } from './inspector.js';
+import { applyCorrections, canApplyDiagnostic, canBulkApplyDiagnostic } from './corrections.js';
 
 let diagnostics = [];
 let lastCheckedText = null;
@@ -146,7 +147,7 @@ function isInformationalDiagnostic(diag) {
 }
 
 function isApplyableDiagnostic(diag) {
-  return diag.incorrect !== diag.correction && !isInformationalDiagnostic(diag);
+  return canApplyDiagnostic(diag);
 }
 
 function isHeuristicDiagnostic(diag) {
@@ -278,7 +279,7 @@ function getActiveVisiblePosition() {
 }
 
 function isHardDiagnostic(d) {
-  return !isHeuristicDiagnostic(d);
+  return canBulkApplyDiagnostic(d, { punctuationStrict: isPunctuationStrictEnabled() });
 }
 
 function runCheck() {
@@ -324,7 +325,6 @@ function runCheck() {
 function renderReviewToolbar() {
   const visible = getVisibleDiagnosticsWithIndex();
   const hardVisible = visible.filter(({ d }) => isHardDiagnostic(d));
-  const applyableVisible = visible.filter(({ d }) => isApplyableDiagnostic(d));
   const activePos = getActiveVisiblePosition();
 
   if (reviewProgress) {
@@ -335,8 +335,8 @@ function renderReviewToolbar() {
   if (reviewPrevBtn) reviewPrevBtn.disabled = visible.length <= 1;
   if (reviewNextBtn) reviewNextBtn.disabled = visible.length <= 1;
   if (applyHardBtn) applyHardBtn.disabled = hardVisible.length === 0;
-  if (copyCorrectedBtn) copyCorrectedBtn.disabled = applyableVisible.length === 0;
-  if (togglePreviewBtn) togglePreviewBtn.disabled = applyableVisible.length === 0;
+  if (copyCorrectedBtn) copyCorrectedBtn.disabled = hardVisible.length === 0;
+  if (togglePreviewBtn) togglePreviewBtn.disabled = hardVisible.length === 0;
 }
 
 function togglePreviewPanel() {
@@ -347,7 +347,7 @@ function togglePreviewPanel() {
 function renderPreviewPanel() {
   if (!previewPanel) return;
   const visible = getVisibleDiagnosticsWithIndex().map(({ d }) => d);
-  const corrected = buildCorrectedText({ hardOnly: false });
+  const corrected = buildCorrectedText();
   const original = editorInput.value;
 
   if (visible.length === 0 || !previewOpen) {
@@ -359,13 +359,13 @@ function renderPreviewPanel() {
     return;
   }
 
-  const changedCount = visible.filter(isApplyableDiagnostic).length;
+  const changedCount = visible.filter(isHardDiagnostic).length;
   previewPanel.hidden = false;
   previewPanel.innerHTML = `
     <div class="preview-head">
       <div>
         <div class="preview-title">सच्याइएको पाठको पूर्वावलोकन</div>
-        <div class="preview-note">${changedCount} वटा लागू सुधार, अहिले देखिएका नियमहरूका आधारमा</div>
+        <div class="preview-note">${changedCount} वटा त्रुटि सुधार; वैकल्पिक सुझाव आफैँ छान्नुहोस्</div>
       </div>
       <button class="btn btn-sm" id="preview-close-btn">बन्द गर्नुहोस्</button>
     </div>
@@ -415,27 +415,20 @@ function goToNextDiagnostic() {
   goToDiagnosticByVisiblePosition(activePos < 0 ? 0 : activePos + 1);
 }
 
-function buildCorrectedText({ hardOnly = false } = {}) {
+function buildCorrectedText() {
   const applicable = getVisibleDiagnosticsWithIndex()
     .map(({ d }) => d)
-    .filter(isApplyableDiagnostic)
-    .filter((d) => !hardOnly || isHardDiagnostic(d))
-    .sort((a, b) => b.charStart - a.charStart);
-
-  let text = editorInput.value;
-  for (const d of applicable) {
-    text = text.slice(0, d.charStart) + d.correction + text.slice(d.charEnd);
-  }
-  return text;
+    .filter(isHardDiagnostic);
+  return applyCorrections(editorInput.value, lastCheckedText, applicable);
 }
 
 function applyHardErrors() {
-  editorInput.value = buildCorrectedText({ hardOnly: true });
+  editorInput.value = buildCorrectedText();
   runCheck();
 }
 
 async function copyCorrectedText() {
-  const corrected = buildCorrectedText({ hardOnly: false });
+  const corrected = buildCorrectedText();
   try {
     await navigator.clipboard.writeText(corrected);
     if (copyCorrectedBtn) {
@@ -586,7 +579,7 @@ function renderDiagnostics() {
   if (visibleSuggestionCount > 0) countParts.push(`${visibleSuggestionCount} शैली सुझाव`);
   if (visibleInfoCount > 0) countParts.push(`${visibleInfoCount} जानकारी`);
   errorCount.textContent = countParts.join(', ');
-  fixAllBtn.disabled = !visibleDiagnostics.some(isApplyableDiagnostic);
+  fixAllBtn.disabled = !visibleDiagnostics.some(isHardDiagnostic);
 
   if (diagnostics.length === 0) {
     diagnosticsList.innerHTML =
@@ -1011,6 +1004,10 @@ function restoreDiagnosticsPanel() {
  */
 function handleInspectorFix(start, end, correction) {
   const text = editorInput.value;
+  if (text !== lastCheckedText) {
+    runCheck();
+    return;
+  }
   editorInput.value = text.slice(0, start) + correction + text.slice(end);
   hideMobileDiagOverlay();
   restoreDiagnosticsPanel();
@@ -1031,8 +1028,7 @@ function fixOne(index) {
   const d = diagnostics[index];
   if (!isApplyableDiagnostic(d)) return;
   const text = editorInput.value;
-  editorInput.value =
-    text.slice(0, d.charStart) + d.correction + text.slice(d.charEnd);
+  editorInput.value = applyCorrections(text, lastCheckedText, [d]);
   runCheck();
 }
 
@@ -1051,9 +1047,9 @@ function dismissOne(index) {
 }
 
 /**
- * Fix all visible diagnostics, applying in reverse offset order.
+ * Fix all visible clear errors; optional suggestions remain individual choices.
  */
 function fixAll() {
-  editorInput.value = buildCorrectedText({ hardOnly: false });
+  editorInput.value = buildCorrectedText();
   runCheck();
 }
