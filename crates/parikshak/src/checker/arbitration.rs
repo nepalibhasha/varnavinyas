@@ -748,17 +748,14 @@ mod tests {
     }
 
     #[test]
-    fn live_padayog_emitters_supply_inventory_evidence() {
+    fn live_padayog_emitters_distinguish_structural_and_inventory_evidence() {
         let diagnostics = crate::check_text("रामनै चिकित्सक हो। नेपालसरकार गलत हो।");
 
         let nipat = diagnostics
             .iter()
             .find(|diagnostic| diagnostic.incorrect == "रामनै")
             .expect("expected live nipat padayog diagnostic");
-        assert_eq!(
-            Candidate::new(nipat).specificity,
-            Specificity::CuratedInventory
-        );
+        assert_eq!(Candidate::new(nipat).specificity, Specificity::Generalized);
 
         let institutional = diagnostics
             .iter()

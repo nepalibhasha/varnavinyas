@@ -26,7 +26,8 @@ and uses `DiagnosticEvidence` directly as specificity.
 Evidence is assigned by the producing pass, never parsed from human-readable
 explanations. Word-level emission retains correction-table provenance from the
 `RuleHit`, even when its outward citation names a broad orthography rule.
-Inventory-backed particle splits rank below exact whole-word corrections:
+Generalized particle suffix splits rank below reviewed inventories and exact
+whole-word corrections:
 `सम्धिनि` becomes `सम्धिनी`, rather than `सम्धि नि`.
 
 Rust callers constructing `Diagnostic` must supply `evidence`. Binding and JSON

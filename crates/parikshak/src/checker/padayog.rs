@@ -671,7 +671,8 @@ fn add_generalized_saishanik_gari_split(
         let Some(left) = token.strip_suffix("गरी") else {
             continue;
         };
-        if left.is_empty() {
+        // A lexical noun (पगरी, नगरी) is not a manner phrase.
+        if left.is_empty() || candidate_is_authoritative_headword(token) {
             continue;
         }
 
@@ -1650,7 +1651,9 @@ fn add_generalized_padabiyog_vibhakti_split(
                 None
             }
         } else if let Some(prefix) = seg.strip_suffix("कामा") {
-            if prefix.chars().count() >= 1 {
+            // Require a supported host for the first case ending; the का
+            // in ढोका or the participle भएका is not a second विभक्ति.
+            if candidate_is_authoritative_headword(prefix) {
                 Some(format!("{prefix}का मा"))
             } else {
                 None

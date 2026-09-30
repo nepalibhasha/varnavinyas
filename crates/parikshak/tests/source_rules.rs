@@ -176,3 +176,50 @@ fn word_joining_preserves_intervening_punctuation() {
         }
     }
 }
+
+#[test]
+fn suffix_splits_require_evidence_and_preserve_whole_word_corrections() {
+    for mode in [
+        OrthographyMode::AcademyStrict,
+        OrthographyMode::CommonEditorial,
+    ] {
+        let options = CheckOptions {
+            orthography_mode: mode,
+            ..CheckOptions::default()
+        };
+        for word in ["नापो", "टुप्पो", "झुप्पो", "पगरी", "नगरी", "ढोकामा", "भएकामा"]
+        {
+            let diagnostics = check_text_with_options(word, options);
+            assert!(
+                !diagnostics.iter().any(|d| d.correction.contains(' ')),
+                "{word}: {diagnostics:?}"
+            );
+        }
+        for (wrong, correct) in [("गित", "गीत"), ("बहिनि", "बहिनी")]
+        {
+            assert_eq!(check_word(wrong).unwrap().correction, correct);
+            let text = format!("🙂 {wrong}।");
+            let diagnostics = check_text_with_options(&text, options);
+            let d = diagnostics
+                .iter()
+                .find(|d| d.incorrect == wrong)
+                .expect(wrong);
+            assert_eq!(d.correction, correct);
+            assert_eq!(&text[d.span.0..d.span.1], wrong);
+        }
+        for (wrong, correct) in [
+            ("ऊनि", "ऊ नि"),
+            ("रामपो", "राम पो"),
+            ("रामत", "राम त"),
+            ("बुझिनेगरी", "बुझिने गरी"),
+            ("ढिलोगरी", "ढिलो गरी"),
+            ("रामकामा", "रामका मा"),
+        ] {
+            let ds = check_text_with_options(wrong, options);
+            assert!(
+                ds.iter().any(|d| d.correction == correct),
+                "{wrong}: {ds:?}"
+            );
+        }
+    }
+}

@@ -8,6 +8,7 @@ use crate::diagnostic::{Diagnostic, DiagnosticCategory};
 use crate::tokenizer::{AnalyzedToken, should_prefer_whole_word_over_short_nipat_split};
 
 use super::common::is_word_boundary;
+use super::padayog_rules::PADAYOG_PADABIYOG_RULES;
 
 const WORD_BOUND_NIPAT_SPLIT_TOKENS: &[&str] = &["चाहिँ", "झैँ", "नै", "पो", "नि", "त", "ल"];
 const SENTENCE_BOUND_NIPAT_REFERENCE_TOKENS: &[&str] = &[
@@ -114,7 +115,7 @@ fn add_word_bound_nipat_split(
     blocked_spans: &mut HashSet<(usize, usize)>,
     diagnostics: &mut Vec<Diagnostic>,
 ) -> bool {
-    if has_tatsam_padanta_halanta_restoration(token) {
+    if kosha().is_rule_protected(token) || has_tatsam_padanta_halanta_restoration(token) {
         return false;
     }
 
@@ -231,8 +232,19 @@ fn push_nipat_diagnostic(
         return false;
     }
 
+    // Exact source examples retain their authority even when a word-level
+    // candidate has already blocked the fixed-phrase pass (ऊनि -> ऊ नि).
+    let evidence = if PADAYOG_PADABIYOG_RULES
+        .iter()
+        .flat_map(|rule| rule.rewrites)
+        .any(|rewrite| rewrite.incorrect == token && rewrite.correct == correction)
+    {
+        crate::DiagnosticEvidence::Exact
+    } else {
+        crate::DiagnosticEvidence::Generalized
+    };
     diagnostics.push(Diagnostic {
-        evidence: crate::DiagnosticEvidence::CuratedInventory,
+        evidence,
         span,
         incorrect: token.to_string(),
         correction,

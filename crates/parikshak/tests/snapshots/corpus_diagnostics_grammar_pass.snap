@@ -113,8 +113,7 @@
 108	span=2733-2820	kind=Error	category=ShuddhaTable	rule=VarnaVinyasNiyam("3(घ)")	confidence=0.89	incorrect=अख्तियारदुरुपयोगअनुसन्धानआयोग	correction=अख्तियार दुरुपयोग अनुसन्धान आयोग	explanation=शैक्षणिक व्याकरण पदवियोग (ट): दुईभन्दा बढी शब्दबाट बनेका समस्त शब्द पदवियोग गरी लेखिन्छन् ।	alternates=
 109	span=2825-2891	kind=Error	category=ShuddhaTable	rule=VarnaVinyasNiyam("3(घ)")	confidence=0.89	incorrect=नेपालप्रज्ञाप्रतिष्ठान	correction=नेपाल प्रज्ञा-प्रतिष्ठान	explanation=शैक्षणिक व्याकरण पदवियोग (ट): दुईभन्दा बढी शब्दबाट बनेका समस्त शब्द पदवियोग गरी लेखिन्छन् ।	alternates=
 
-## case=gold-correct mode=default bytes=2940 diagnostics=1
-000	span=876-894	kind=Error	category=ShuddhaTable	rule=VarnaVinyasNiyam("3(घ)")	confidence=0.90	incorrect=भएकामा	correction=भएका मा	explanation=पदयोग/पदवियोग [3(घ)-पदवियोग-३ | लागि/निम्ति/दोहोरो विभक्ति छुट्याएर]: जोडिएर आएको पद छुट्याएर लेख्नुपर्छ	alternates=
+## case=gold-correct mode=default bytes=2940 diagnostics=0
 
 ## case=grammar-fixtures mode=grammar bytes=316 diagnostics=4
 000	span=0-24	kind=Variant	category=Sandhi	rule=Vyakaran("samasa-heuristic")	confidence=0.82	incorrect=सूर्योदय	correction=सूर्य + उदय	explanation=समास सम्भावना (Tatpurusha): सूर्य को उदय	alternates=

@@ -287,6 +287,12 @@ const V_4_NIPAT_SPLIT: &[PhraseRewrite] = &[
         correct: "भन त",
         explanation: "निपात छुट्याएर लेख्नुपर्छ",
     },
+    // PS पदवियोग (च) explicitly distinguishes ऊ नि from the pronoun उनी.
+    PhraseRewrite {
+        incorrect: "ऊनि",
+        correct: "ऊ नि",
+        explanation: "शैक्षणिक व्याकरण पदवियोग (च): ऊ नि जान्छ",
+    },
     PhraseRewrite {
         incorrect: "आऊनि",
         correct: "आऊ नि",
