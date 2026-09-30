@@ -15,7 +15,8 @@ use varnavinyas_shabda::{Origin, classify};
 // - 5  implemented/shared in `rule_final_hrasva_endings`
 // - 6  partial/shared in `rule_final_hrasva_endings`
 // - 7  implemented/shared in `rule_final_hrasva_endings`
-// - 8  TODO: 'नु'/'छु' प्रत्यय भएका क्रियापद (single-word context too ambiguous)
+// - 8  partial in `verb_forms::rule_verb_hrasva` for -नुपर्ने;
+//      TODO: remaining 'नु'/'छु' forms and context-dependent bare नू
 // - 9  implemented/shared in `rule_final_hrasva_endings`
 // -----------------------------------------------------------------------------
 pub const SPEC_KINSHIP: RuleSpec = RuleSpec {

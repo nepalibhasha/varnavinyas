@@ -521,3 +521,57 @@ fn reviewed_animate_noun_endings_survive_case_reattachment() {
         }
     }
 }
+
+#[test]
+fn supported_verb_vowels_use_the_numbered_rules() {
+    for mode in [
+        OrthographyMode::AcademyStrict,
+        OrthographyMode::CommonEditorial,
+    ] {
+        let options = CheckOptions {
+            orthography_mode: mode,
+            ..CheckOptions::default()
+        };
+        for (wrong, correct, code) in [
+            ("कीन्ने", "किन्ने", "3(क)(अ)-9"),
+            ("सून्ने", "सुन्ने", "3(क)(अ)-9"),
+            ("लीने", "लिने", "3(क)(अ)-9"),
+            ("खेलीने", "खेलिने", "3(क)(आ)-8"),
+            ("लिनूपर्ने", "लिनुपर्ने", "3(क)(इ)-8"),
+            ("दिनूपर्ने", "दिनुपर्ने", "3(क)(इ)-8"),
+        ] {
+            let p = derive(wrong);
+            assert_eq!(p.output, correct, "{wrong}");
+            assert!(
+                matches!(p.steps[0].rule, varnavinyas_prakriya::Rule::VarnaVinyasNiyam(found) if found == code),
+                "{wrong}: {:?}",
+                p.steps
+            );
+            let ds = check_text_with_options(wrong, options);
+            assert!(
+                ds.iter()
+                    .any(|d| d.correction == correct && d.kind == DiagnosticKind::Error),
+                "{wrong}: {ds:?}"
+            );
+            let hits = varnavinyas_prakriya::collect_rule_hits(wrong);
+            assert_eq!(hits[0].prakriya.output, correct);
+            assert!(
+                !hits
+                    .iter()
+                    .any(|h| h.spec_id == Some("hd-tadbhav") && h.prakriya.output == correct)
+            );
+        }
+        for word in [
+            "खेलिने",
+            "लिनुपर्ने",
+            "दिनुपर्ने",
+            "पढ्नू",
+            "जानू",
+            "जननी",
+            "रानी",
+            "भक्तिनी",
+        ] {
+            assert!(derive(word).is_correct, "{word}: {:?}", derive(word));
+        }
+    }
+}

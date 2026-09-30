@@ -26,7 +26,8 @@ fn lexically_supported(word: &str) -> bool {
 // - 6  implemented in `rule_initial_adjective_hrasva`
 // - 7  implemented in `rule_initial_number_hrasva`
 // - 8  TODO: धातुहरू
-// - 9  TODO: क्रियापदहरू
+// - 9  partial in `verb_forms::rule_verb_hrasva` over supported infinitives;
+//      TODO: remaining finite verb paradigms
 // - 10 implemented in `rule_initial_avyaya_hrasva`
 // - 11 implemented in `rule_initial_onomatopoeic_hrasva`
 // - 12 implemented/shared in `rule_tadbhav_hrasva` and `rule_kinship_tadbhav`

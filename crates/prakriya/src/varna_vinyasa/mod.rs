@@ -96,6 +96,10 @@ fn ka_rules() -> Vec<PatternRule> {
             apply: hrasva_dirgha::rule_medial_adjective_hrasva,
         },
         PatternRule {
+            spec: hrasva_dirgha::SPEC_VERB_HRASVA,
+            apply: hrasva_dirgha::rule_verb_hrasva,
+        },
+        PatternRule {
             spec: hrasva_dirgha::SPEC_MEDIAL_AVYAYA_HRASVA,
             apply: hrasva_dirgha::rule_medial_avyaya_hrasva,
         },

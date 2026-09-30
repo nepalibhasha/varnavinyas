@@ -140,7 +140,10 @@ Implemented highlights:
 
 Known gaps:
 
-- `(क)(अ)-8/-9`, `(क)(आ)-7/-8`, and `(क)(इ)-8` need stronger verb-context support.
+- `(क)(अ)-9`, `(क)(आ)-8`, and `(क)(इ)-8` now cover supported infinitive
+  families, passive इ forms, and joined `नुपर्ने` forms. Broader finite paradigms
+  and `(क)(अ)-8`/`(क)(आ)-7` still need stronger verb evidence. Bare imperatives
+  such as `पढ्नू` and `जानू` retain the school grammar’s long vowel.
 - `(क)(ऊ)-4/-6` now have reviewed source-example coverage; generalizing beyond
   those examples still needs stronger POS or semantic metadata. `(क)(ऊ)-10`
   still needs grammatical context.

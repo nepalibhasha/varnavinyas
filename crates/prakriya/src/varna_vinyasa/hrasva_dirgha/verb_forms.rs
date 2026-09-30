@@ -1,0 +1,117 @@
+//! Conservative verb evidence for the numbered vowel rules.
+use super::helpers::hrasva_helpers;
+use crate::{DiagnosticKind, Prakriya, Rule, RuleCategory, RuleSpec, Step};
+use varnavinyas_kosha::kosha;
+
+pub const SPEC_VERB_HRASVA: RuleSpec = RuleSpec {
+    id: "hd-verb-hrasva",
+    category: RuleCategory::HrasvaDirgha,
+    kind: DiagnosticKind::Error,
+    priority: 224,
+    citation: Rule::VarnaVinyasNiyam("3(क)(अ)-9/3(क)(आ)-8/3(क)(इ)-8"),
+    examples: &[("कीन्ने", "किन्ने"), ("खेलीने", "खेलिने"), ("लिनूपर्ने", "लिनुपर्ने")],
+};
+
+fn is_infinitive(word: &str) -> bool {
+    let lex = kosha();
+    word.ends_with("नु")
+        && lex.is_correction_target(word)
+        && lex
+            .lookup(word)
+            .is_some_and(|entry| entry.pos.contains("क्रिया"))
+}
+
+pub(super) fn has_supported_infinitive(stem: &str) -> bool {
+    if stem.is_empty() {
+        return false;
+    }
+    [
+        format!("{stem}नु"),
+        format!("{stem}्नु"),
+        format!("{stem}उनु"),
+        format!("{stem}इनु"),
+    ]
+    .iter()
+    .any(|candidate| is_infinitive(candidate))
+}
+
+fn has_supported_verb_form(word: &str) -> bool {
+    is_infinitive(word)
+        || ["ने", "न", "े", "दा", "दै"].iter().any(|ending| {
+            word.strip_suffix(ending)
+                .is_some_and(has_supported_infinitive)
+        })
+}
+
+pub fn rule_verb_hrasva(input: &str) -> Option<Prakriya> {
+    let lex = kosha();
+    if lex.is_rule_protected(input) {
+        return None;
+    }
+    if let Some(output) = hrasva_helpers::initial_dirgha_to_hrasva(input) {
+        if has_supported_verb_form(&output) {
+            return correction(
+                input,
+                &output,
+                "3(क)(अ)-9",
+                "क्रियापदको सुरुको इकार/उकार ह्रस्व हुन्छ",
+            );
+        }
+    }
+    // 3(क)(आ)-8: the passive इ/ि is short. The root must independently
+    // support an infinitive; merely ending in ीने does not establish a verb.
+    for (wrong, right) in [
+        ("ीनु", "िनु"),
+        ("ीने", "िने"),
+        ("ीन", "िन"),
+        ("ीन्छ", "िन्छ"),
+        ("ीयो", "ियो"),
+    ] {
+        if let Some(stem) = input.strip_suffix(wrong) {
+            let output = format!("{stem}{right}");
+            if has_supported_infinitive(stem) && lex.is_correction_target(&output) {
+                return correction(
+                    input,
+                    &output,
+                    "3(क)(आ)-8",
+                    "कर्म वा भाववाच्यका क्रियापदमा इकार ह्रस्व हुन्छ",
+                );
+            }
+        }
+    }
+    // Bare पढ्नू/जानू are valid imperatives under the school grammar (म).
+    // A joined obligation participle uses the infinitive नु, not imperative नू.
+    if let Some(infinitive) = input.strip_suffix("पर्ने") {
+        if let Some(stem) = infinitive.strip_suffix("नू") {
+            let canonical = format!("{stem}नु");
+            let output = format!("{canonical}पर्ने");
+            if is_infinitive(&canonical) && lex.is_correction_target(&output) {
+                return correction(
+                    input,
+                    &output,
+                    "3(क)(इ)-8",
+                    "नु प्रत्यय भएको क्रियापदमा उकार ह्रस्व हुन्छ; पर्ने जोडिँदा पनि नु कायम रहन्छ",
+                );
+            }
+        }
+    }
+    None
+}
+
+fn correction(
+    input: &str,
+    output: &str,
+    code: &'static str,
+    explanation: &str,
+) -> Option<Prakriya> {
+    Some(Prakriya::corrected(
+        input,
+        output,
+        vec![Step::new(
+            Rule::VarnaVinyasNiyam(code),
+            explanation,
+            input,
+            output,
+        )],
+    ))
+}

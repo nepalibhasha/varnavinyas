@@ -15,7 +15,8 @@ use varnavinyas_shabda::{Origin, classify, decompose};
 // - 5  implemented in `rule_medial_aagantuk_name_hrasva`
 // - 6  implemented in `rule_medial_adjective_hrasva`
 // - 7  TODO: क्रियापद
-// - 8  TODO: कर्म वा भाव वाच्यका क्रियापद
+// - 8  partial in `verb_forms::rule_verb_hrasva` over supported roots;
+//      TODO: remaining passive conjugations
 // - 9  implemented in `rule_medial_avyaya_hrasva`
 // - 10 implemented in `rule_medial_onomatopoeic_hrasva`
 // - PS `(ठ)` अपवाद implemented in `rule_ps_iya_hrasva_exceptions`
