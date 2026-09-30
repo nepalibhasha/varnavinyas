@@ -270,3 +270,38 @@ fn nasal_rules_keep_native_suffixes_and_require_supported_targets() {
         }
     }
 }
+
+#[test]
+fn initial_o_rule_preserves_distinct_u_verbs() {
+    for mode in [
+        OrthographyMode::AcademyStrict,
+        OrthographyMode::CommonEditorial,
+    ] {
+        let options = CheckOptions {
+            orthography_mode: mode,
+            ..CheckOptions::default()
+        };
+        for word in [
+            "उड्ने",
+            "उड्न",
+            "उडे",
+            "उर्लने",
+            "उर्लन",
+            "उड्दै",
+            "उड्नु",
+            "ओड्ने",
+            "ओर्लने",
+        ] {
+            assert!(derive(word).is_correct, "{word}: {:?}", derive(word));
+            assert!(
+                !check_text_with_options(word, options)
+                    .iter()
+                    .any(|d| d.kind == DiagnosticKind::Error),
+                "{word}"
+            );
+        }
+        for (wrong, correct) in [("औज", "ओज"), ("औम्", "ओम्")] {
+            assert_eq!(derive(wrong).output, correct);
+        }
+    }
+}

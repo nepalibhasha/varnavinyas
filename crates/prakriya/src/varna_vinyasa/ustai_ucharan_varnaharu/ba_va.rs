@@ -102,8 +102,7 @@ pub fn rule_ba_va(input: &str) -> Option<Prakriya> {
     }
     if input.starts_with('उ') {
         let output = input.replacen('उ', "ओ", 1);
-        if kosha.is_correction_target(&output) && !is_supported_u_initial_e_verb_form(input, kosha)
-        {
+        if kosha.is_correction_target(&output) && !is_supported_u_initial_verb_form(input, kosha) {
             let citation = if output.starts_with("ओज") || output.starts_with("ओम्") {
                 "3(ग)(आ)-ओ-3"
             } else {
@@ -410,17 +409,28 @@ fn supported_form(output: &str, kosha: &Kosha) -> bool {
     kosha.is_correction_target(output)
 }
 
-fn is_supported_u_initial_e_verb_form(input: &str, kosha: &Kosha) -> bool {
-    let Some(stem) = input.strip_suffix("े") else {
-        return false;
-    };
-    if !stem.starts_with('उ') || stem.chars().count() < 2 {
-        return false;
+fn is_supported_u_initial_verb_form(input: &str, kosha: &Kosha) -> bool {
+    // उड्नु/ओड्नु and उर्लनु/ओर्लनु are different verbs. An attested ओ
+    // candidate alone does not justify rewriting a supported उ verb form.
+    for ending in ["ने", "न", "े", "दै", "दा", "यो", "छन्", "छ"] {
+        let Some(stem) = input.strip_suffix(ending) else {
+            continue;
+        };
+        if !stem.starts_with('उ') || stem.chars().count() < 2 {
+            continue;
+        }
+        if [format!("{stem}्नु"), format!("{stem}नु")]
+            .iter()
+            .any(|candidate| {
+                kosha
+                    .lookup(candidate)
+                    .is_some_and(|entry| entry.pos.contains("क्रिया"))
+            })
+        {
+            return true;
+        }
     }
-
-    [format!("{stem}्नु"), format!("{stem}नु")]
-        .iter()
-        .any(|candidate| supported_form(candidate, kosha))
+    false
 }
 
 #[cfg(test)]
