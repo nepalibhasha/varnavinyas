@@ -188,7 +188,14 @@ pub fn check_text_with_options(text: &str, options: CheckOptions) -> Vec<Diagnos
     // Word-level checks (suffix-aware: checks stem, spans full token)
     let tokens = tokenize_analyzed(text);
     let lex = kosha();
+    let abbreviations = varnavinyas_lekhya::dotted_abbreviation_spans(text);
     for token in &tokens {
+        if abbreviations
+            .iter()
+            .any(|&(start, end)| start <= token.start && token.end <= end)
+        {
+            continue;
+        }
         // If the full token (stem+suffix) is a known word, skip correction.
         // e.g. "संसदमा" = संसद + मा — the stem "संसद" triggers a halanta rule,
         // but the agglutinative form "संसदमा" is a valid word in the lexicon.

@@ -43,4 +43,16 @@ assert.equal((pronoun.alternate_reasons || []).length, 0);
 const variant = wasm.check_text_value_with_options('संघीय', false, 'common-editorial')
   .find(diagnostic => diagnostic.incorrect === 'संघीय');
 assert.equal(variant.kind, 'Variant');
+// Exercise source-approved abbreviations through the actual browser WASM
+// exports, including UTF-8 spans and both downstream orthography modes.
+for (const mode of ['academy-strict', 'common-editorial']) {
+  for (const text of ['बी.बी.सी.', 'सी.डी.ओ.\nनेपाल',
+    'बी.बी.सी. समाचार प्रसारण गर्छ।', 'एस.एल.सी. परीक्षा भयो।', '🙂 ‘बी.बी.सी.’ समाचार']) {
+    assert.deepEqual(wasm.check_text_value_with_options(text, false, mode), [], text);
+  }
+  const nearby = wasm.check_text_value_with_options('हामि बी.बी.सी. समाचार पढ्छौँ.', false, mode);
+  assert.ok(nearby.some(d => d.incorrect === 'हामि' && d.correction === 'हामी'));
+  assert.ok(nearby.some(d => d.incorrect === '.' && d.correction === '।'));
+  assert.ok(!nearby.some(d => d.incorrect === 'सी'));
+}
 console.log(`Browser artifact ${manifest.artifact_version} (${manifest.git_sha}): runtime and origin presentation checks passed.`);

@@ -16,6 +16,7 @@ It is responsible for:
 ## Main API
 
 - `check_punctuation(&str)` -> returns `LekhyaDiagnostic` entries with spans, found text, expected text, and rule text
+- `dotted_abbreviation_spans(&str)` -> UTF-8 byte spans for compact Devanagari initial chains, shared with the text checker
 
 ## Example
 
@@ -31,6 +32,7 @@ assert_eq!(diagnostics[0].expected, "।");
 
 - `lekhya` is intentionally separate from `prakriya` because punctuation rules operate on running text, not isolated word forms.
 - It should remain deterministic and explicit about what is a hard violation versus editorial normalization.
+- Compact dotted abbreviations such as `बी.बी.सी.` and `सी.डी.ओ.` retain their dots, including at EOF or a line break. PS-Saisanik hrasva/dirgha `(छ)` preserves their long vowels; `parikshak` uses the same spans to avoid checking each initial as an ordinary word. This guard does not normalize abbreviation vowels or recognize all spaced initial chains.
 
 ## Used By
 

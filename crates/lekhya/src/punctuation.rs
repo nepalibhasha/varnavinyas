@@ -156,6 +156,7 @@ fn is_spacing_exempt_follower(c: char) -> bool {
 /// end of input or followed by whitespace/newline (i.e., sentence-final position).
 /// Periods after ASCII/Latin text (abbreviations like "Dr.", "U.N.") are ignored.
 fn check_period_as_sentence_end(text: &str, diagnostics: &mut Vec<LekhyaDiagnostic>) {
+    let abbreviations = crate::dotted_abbreviation_spans(text);
     let bytes = text.as_bytes();
     let mut i = 0;
     while i < bytes.len() {
@@ -169,6 +170,9 @@ fn check_period_as_sentence_end(text: &str, diagnostics: &mut Vec<LekhyaDiagnost
             if has_devanagari_before {
                 if is_numbered_list_marker_period(text, period_start)
                     || is_contact_metadata_line_period(text, period_start)
+                    || abbreviations
+                        .iter()
+                        .any(|&(start, end)| start <= period_start && period_start < end)
                 {
                     i = period_end;
                     continue;
@@ -185,8 +189,9 @@ fn check_period_as_sentence_end(text: &str, diagnostics: &mut Vec<LekhyaDiagnost
                 let is_newline = matches!(next_char, Some(b'\n' | b'\r'));
                 let is_space = matches!(next_char, Some(b' '));
 
-                // Case 1: End of sentence/text (EOF or Newline). ALWAYS an error (should be ।).
-                // Even if it's an abbreviation, a sentence must end with ।.
+                // Case 1: End of sentence/text (EOF or Newline). Compact
+                // abbreviation dots were excluded above, including fragments
+                // at EOF; do not replace their last initial's dot with ।.
                 if is_eof || is_newline {
                     // Check exclusion for ellipsis handled separately
                     let is_part_of_ellipsis = (period_start >= 2
