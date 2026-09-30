@@ -148,6 +148,10 @@ fn ka_rules() -> Vec<PatternRule> {
             apply: hrasva_dirgha::rule_final_adjective_dirgha,
         },
         PatternRule {
+            spec: hrasva_dirgha::SPEC_FINAL_I_VERB_DIRGHA,
+            apply: hrasva_dirgha::rule_final_i_verb_dirgha,
+        },
+        PatternRule {
             spec: hrasva_dirgha::SPEC_DIRGHA_ENDINGS,
             apply: hrasva_dirgha::rule_dirgha_endings,
         },

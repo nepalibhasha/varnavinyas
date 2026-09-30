@@ -9,7 +9,9 @@ mod ps_final_u;
 mod u;
 mod uu;
 mod verb_forms;
-pub use verb_forms::{SPEC_VERB_HRASVA, rule_verb_hrasva};
+pub use verb_forms::{
+    SPEC_FINAL_I_VERB_DIRGHA, SPEC_VERB_HRASVA, rule_final_i_verb_dirgha, rule_verb_hrasva,
+};
 
 // Academy source:
 // docs/Notices-pages-77-99.md

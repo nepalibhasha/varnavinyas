@@ -146,7 +146,7 @@ Known gaps:
   such as `पढ्नू` and `जानू` retain the school grammar’s long vowel.
 - `(क)(ऊ)-4/-6` now have reviewed source-example coverage; generalizing beyond
   those examples still needs stronger POS or semantic metadata. `(क)(ऊ)-10`
-  still needs grammatical context.
+  still needs grammatical context when both spellings are valid lexical words.
 - Some numbered classes still rely on conservative attested-family logic rather than full derivational analysis.
 
 The PS-Saisanik tatsam final-उ `(छ)` examples are an exact reviewed inventory
@@ -169,7 +169,10 @@ Final ई is also valid in the school grammar's feminine predicates `(ब)` and
 The explicit nominal example `गराई -> गराइ` retains its word-level default.
 Short nouns such as `मिलाइ`, `कमाइ`, and `पढाइ` cannot be diagnosed as verb
 misspellings without grammatical context; spelling alone does not resolve that
-ambiguity. The long case ending `लाई`, including `मलाई`, is preserved.
+ambiguity. Unsupported short verb spellings such as `दिइ` and `नभइ` are
+corrected using supported infinitive evidence under PS `(ब)/(भ)`; attested
+nouns/adverbs `भइ`, `पारि`, and `लेखि` retain their own meanings. The long case
+ending `लाई`, including `मलाई`, is preserved.
 
 ### Section 3 `(ख)` Chandrabindu / Shirbindu / Panchham
 

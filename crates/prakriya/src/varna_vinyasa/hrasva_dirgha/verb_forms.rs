@@ -132,3 +132,48 @@ pub(super) fn is_supported_i_verb_form(word: &str) -> bool {
     }
     positive(word) || word.strip_prefix('न').is_some_and(positive)
 }
+
+pub const SPEC_FINAL_I_VERB_DIRGHA: RuleSpec = RuleSpec {
+    id: "hd-final-i-verb-dirgha",
+    category: RuleCategory::HrasvaDirgha,
+    kind: DiagnosticKind::Error,
+    priority: 239,
+    citation: Rule::VarnaVinyasNiyam("PS-Saisanik-ह्रस्वदीर्घ-(ब)/(भ)"),
+    examples: &[("दिइ", "दिई"), ("नभइ", "नभई")],
+};
+
+/// Without sentence parsing, correct only unsupported short spellings. Known
+/// nouns/adverbs such as भइ, मिलाइ, पारि and लेखि retain their own meanings.
+pub fn rule_final_i_verb_dirgha(input: &str) -> Option<Prakriya> {
+    let lex = kosha();
+    if lex.is_rule_protected(input) {
+        return None;
+    }
+    let output = if let Some(stem) = input.strip_suffix('ि') {
+        format!("{stem}ी")
+    } else if let Some(stem) = input.strip_suffix('इ') {
+        format!("{stem}ई")
+    } else {
+        return None;
+    };
+    if !lex.is_correction_target(&output) || !is_supported_i_verb_form(&output) {
+        return None;
+    }
+    // Existing numbered final-vowel rules retain their reason when they
+    // already recover this form, rather than gaining a duplicate fallback.
+    if super::rule_reviewed_final_dirgha(input).is_some_and(|hit| hit.output == output)
+        || super::rule_pronoun_vowel_length(input).is_some_and(|hit| hit.output == output)
+        || super::rule_final_ii_suffix_dirgha(input).is_some_and(|hit| hit.output == output)
+        || super::rule_final_adjective_dirgha(input).is_some_and(|hit| hit.output == output)
+        || super::rule_final_vati_vi_dirgha(input).is_some_and(|hit| hit.output == output)
+        || super::rule_dirgha_endings(input).is_some_and(|hit| hit.output == output)
+    {
+        return None;
+    }
+    correction(
+        input,
+        &output,
+        "PS-Saisanik-ह्रस्वदीर्घ-(ब)/(भ)",
+        "शैक्षणिक व्याकरण (ब)/(भ): स्त्रीलिङ्गी समापक क्रिया र एरको सट्टा आउने कृदन्तको अन्त्यमा ईकार दीर्घ हुन्छ",
+    )
+}

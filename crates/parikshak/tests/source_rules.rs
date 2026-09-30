@@ -1,7 +1,7 @@
 use varnavinyas_parikshak::{
     CheckOptions, DiagnosticCategory, OrthographyMode, check_text_with_options, check_word,
 };
-use varnavinyas_prakriya::{DiagnosticKind, derive};
+use varnavinyas_prakriya::{DiagnosticKind, collect_rule_hits, derive};
 
 #[test]
 fn reviewed_final_ii_classes_are_errors_in_both_modes_and_keep_valid_forms_clean() {
@@ -662,5 +662,69 @@ fn devanagari_shaping_controls_preserve_spelling_and_source_spans() {
         assert_eq!(check_word(wrong).unwrap().span, (0, wrong.len()));
         assert_eq!(derive(wrong).steps[0].before, wrong);
         assert!(varnavinyas_parikshak::tokenize(text.as_str())[1].is_devanagari_word());
+    }
+}
+
+#[test]
+fn final_i_verb_recovery_preserves_independent_short_lexemes() {
+    for mode in [
+        OrthographyMode::AcademyStrict,
+        OrthographyMode::CommonEditorial,
+    ] {
+        let options = CheckOptions {
+            orthography_mode: mode,
+            ..CheckOptions::default()
+        };
+        for (wrong, correct) in [("दिइ", "दिई"), ("नभइ", "नभई")] {
+            assert_eq!(derive(wrong).output, correct, "{wrong}");
+            let hits = collect_rule_hits(wrong);
+            assert_eq!(hits[0].prakriya.output, correct, "{wrong}: {hits:?}");
+            assert_eq!(
+                hits.iter()
+                    .filter(|hit| hit.spec_id == Some("hd-final-i-verb-dirgha"))
+                    .count(),
+                1,
+                "{wrong}: {hits:?}"
+            );
+            assert!(
+                !hits.iter().any(|hit| hit.spec_id == Some("hd-tadbhav")),
+                "redundant fallback for {wrong}: {hits:?}"
+            );
+            assert_eq!(check_word(wrong).unwrap().correction, correct, "{wrong}");
+            let ds = check_text_with_options(wrong, options);
+            assert!(
+                ds.iter()
+                    .any(|d| d.correction == correct && d.kind == DiagnosticKind::Error),
+                "{wrong}: {ds:?}"
+            );
+        }
+        for (wrong, correct) in [("पढि", "पढी"), ("भनि", "भनी")] {
+            let hits = collect_rule_hits(wrong);
+            assert_eq!(derive(wrong).output, correct, "{wrong}: {hits:?}");
+            assert!(
+                !hits
+                    .iter()
+                    .any(|hit| hit.spec_id == Some("hd-final-i-verb-dirgha")),
+                "numbered rule already owns {wrong}: {hits:?}"
+            );
+        }
+        for word in [
+            "भइ",
+            "मिलाइ",
+            "पकाइ",
+            "लगाइ",
+            "बनाइ",
+            "पारि",
+            "लेखि",
+            "गति",
+            "पति",
+            "कति",
+            "दिई",
+            "नभई",
+        ] {
+            assert!(derive(word).is_correct, "{word}: {:?}", derive(word));
+        }
+        let ds = check_text_with_options("तिम्रा लेखि उनी मरेबराबरै भए", options);
+        assert!(!ds.iter().any(|d| d.incorrect == "लेखि"), "{ds:?}");
     }
 }
