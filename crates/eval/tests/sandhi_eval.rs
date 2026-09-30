@@ -1,8 +1,8 @@
 //! Sandhi split evaluation against all headwords.
 //!
 //! Tests the morphology-first sandhi pipeline:
-//! 1. Strip agglutinative suffixes via shabda::decompose()
-//! 2. Attempt sandhi splitting on the morphological root
+//! 1. Recover a conservative stem via shabda::best_analysis(), as in the inspector
+//! 2. Attempt sandhi splitting on that supported root (or the original word)
 //! 3. Guard: roots < 3 aksharas are skipped (atomic stems)
 //! 4. Guard: each split part must have >= 2 aksharas
 //!
@@ -11,7 +11,7 @@
 use varnavinyas_akshar::split_aksharas;
 use varnavinyas_kosha::kosha;
 use varnavinyas_sandhi::{split as sandhi_split, split_best as sandhi_split_best};
-use varnavinyas_shabda::decompose;
+use varnavinyas_shabda::best_analysis;
 
 /// Known correct sandhi splits (word → expected left + right).
 const EXPECTED_SPLITS: &[(&str, &str, &str)] = &[
@@ -26,16 +26,6 @@ const EXPECTED_SPLITS: &[(&str, &str, &str)] = &[
     ("महोत्सव", "मह", "उत्सव"),
     ("नरेन्द्र", "नर", "इन्द्र"),
 ];
-
-// Named reconstruction gaps, not permission to lose any currently found pair.
-// Keep the expected pairs visible in the recall denominator. Improvements may
-// close these gaps without updating a percentage floor.
-const KNOWN_SPLIT_GAPS: &[(&str, &str, &str, &str)] = &[(
-    "विद्यार्थी",
-    "विद्या",
-    "अर्थी",
-    "morphology-first splitting removes final ई before recovering अर्थी",
-)];
 
 /// Words that must NOT produce any sandhi split.
 const NO_SPLIT_EXPECTED: &[&str] = &[
@@ -55,19 +45,36 @@ const NO_SAFE_SPLIT_EXPECTED: &[&str] = &["नेपाली", "नेपाल
 
 /// Run sandhi split using the morphology-first pipeline.
 fn pipeline_split(word: &str) -> Vec<(String, String)> {
-    let morph = decompose(word);
-    let root = &morph.root;
-    sandhi_split(root)
+    let root = supported_root(word);
+    sandhi_split(&root)
         .into_iter()
         .map(|c| (c.left, c.right))
         .collect()
 }
 
+fn supported_root(word: &str) -> String {
+    best_analysis(word)
+        .map(|analysis| analysis.root)
+        .unwrap_or_else(|| word.to_string())
+}
+
+#[test]
+fn supported_root_preserves_lexical_vowels_and_detaches_outer_case_markers() {
+    for word in ["विद्यार्थी", "फर्सी", "कखगघङी"] {
+        assert_eq!(supported_root(word), word);
+    }
+    assert_eq!(supported_root("विद्यार्थीको"), "विद्यार्थी");
+    assert_eq!(supported_root("रामसँग"), "राम");
+    assert!(
+        pipeline_split("विद्यार्थीको")
+            .iter()
+            .any(|(l, r)| l == "विद्या" && r == "अर्थी")
+    );
+    assert!(pipeline_split("कखगघङी").is_empty());
+}
+
 #[test]
 fn known_correct_splits_found() {
-    for &(word, left, right, reason) in KNOWN_SPLIT_GAPS {
-        assert!(EXPECTED_SPLITS.contains(&(word, left, right)) && !reason.is_empty());
-    }
     let mut found = 0;
     let mut missed = Vec::new();
 
@@ -90,20 +97,10 @@ fn known_correct_splits_found() {
     }
 
     println!("\nKnown splits: {}/{} found", found, EXPECTED_SPLITS.len());
-    let regressions: Vec<_> = missed
-        .iter()
-        .filter(|(word, left, right, _)| {
-            !KNOWN_SPLIT_GAPS
-                .iter()
-                .any(|(gap_word, gap_left, gap_right, _)| {
-                    word == gap_word && left == gap_left && right == gap_right
-                })
-        })
-        .collect();
     assert!(
-        regressions.is_empty(),
-        "Previously covered sandhi pairs regressed: {:?}",
-        regressions
+        missed.is_empty(),
+        "Expected sandhi pairs missing: {:?}",
+        missed
     );
 }
 
@@ -176,9 +173,8 @@ fn headword_sandhi_census() {
             continue;
         }
 
-        let morph = decompose(word);
-        let root = &morph.root;
-        let results: Vec<(String, String)> = sandhi_split(root)
+        let root = supported_root(word);
+        let results: Vec<(String, String)> = sandhi_split(&root)
             .into_iter()
             .map(|c| (c.left, c.right))
             .collect();

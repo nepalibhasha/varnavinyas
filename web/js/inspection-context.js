@@ -1,5 +1,11 @@
 import { ORIGIN_LABELS } from './utils.js';
 
+/** A legacy decomposition must agree with the conservative stem analysis. */
+export function morphologySupportedByAffix(affix, morphology) {
+  return Boolean(affix && morphology && morphology.root
+    && (morphology.root === affix.root || morphology.root === affix.stem));
+}
+
 /** Reconcile isolated word analysis with the editor's contextual checker result. */
 export function applyTextContext(analysis, context) {
   if (!context) return analysis;

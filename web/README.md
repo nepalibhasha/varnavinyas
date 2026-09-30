@@ -127,6 +127,11 @@ orthography_mode)` when the manifest advertises that capability.
   structure and compatible explanatory notes. Text edits and policy changes dismiss
   stale inspector content.
 - Rule links resolve `rule_code`, retaining `rule` as their readable label.
+- The conservative affix analysis chooses the root used for compound inspection.
+  Legacy morphology is shown only when its root agrees with that supported root
+  or stem; a mechanically removed vowel does not prove a derivation. Thus
+  `फर्सी` keeps its source-backed spelling explanation, and `विद्यार्थी` keeps
+  the full `विद्या + अर्थी` compound without an unsupported `विद्यार्थ + ई` claim.
 - Rule citations are rendered through `wrapRuleTooltip(...)` in `js/rules-data.js`.
 
 ## Common Issues

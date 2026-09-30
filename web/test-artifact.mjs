@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { originPresentation } from './js/inspection-context.js';
+import { morphologySupportedByAffix, originPresentation } from './js/inspection-context.js';
 
 const directory = path.resolve(process.argv[2] || 'web/dist/varnavinyas-browser-artifact');
 const manifest = JSON.parse(await readFile(path.join(directory, 'manifest.json'), 'utf8'));
@@ -105,4 +105,11 @@ for (const [surface, left, right] of [['अत्याचार', 'अति', 
   assert.equal(wasm.sandhi_apply_value(candidate.left, candidate.right).output, surface);
 }
 assert.deepEqual(wasm.sandhi_split_value('नेपाल'), []);
+for (const word of ['फर्सी', 'विद्यार्थी', 'कखगघङी']) {
+  assert.equal(morphologySupportedByAffix(wasm.best_affix_analysis_value(word), wasm.decompose_word_value(word)), false, word);
+}
+const studentStem = wasm.best_affix_analysis_value('विद्यार्थी').root;
+assert.equal(studentStem, 'विद्यार्थी');
+assert.ok(wasm.sandhi_split_value(studentStem).some(c => c.left === 'विद्या' && c.right === 'अर्थी'));
+assert.equal(morphologySupportedByAffix(wasm.best_affix_analysis_value('रामको'), wasm.decompose_word_value('रामको')), true);
 console.log(`Browser artifact ${manifest.artifact_version} (${manifest.git_sha}): runtime and origin presentation checks passed.`);

@@ -14,7 +14,7 @@ import {
 } from './wasm-bridge.js';
 import { escapeHtml } from './utils.js';
 import { wrapRuleTooltip } from './rules-data.js';
-import { applyTextContext, originPresentation } from './inspection-context.js';
+import { applyTextContext, morphologySupportedByAffix, originPresentation } from './inspection-context.js';
 
 /** Feature flag for word inspector. Set to false to disable. */
 const FEATURE_WORD_INSPECTOR = true;
@@ -322,6 +322,7 @@ function buildStructureViewModel(word) {
   const showAffix = hasOuterAffixes(affix);
   const showMorphology = Boolean(
     morph
+      && morphologySupportedByAffix(affix, morph)
       && ((morph.prefixes && morph.prefixes.length > 0)
         || (morph.suffixes && morph.suffixes.length > 0))
       && !isDuplicateMorphology(affix, morph)

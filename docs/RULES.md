@@ -105,11 +105,15 @@ Every word now must receive an expected replacement and a cited explanation;
 both correct-form false-positive tests and corpus snapshots remain separate
 gates. This is fixture coverage, not a percentage of all Academy rules.
 
-Sandhi currently recovers 9 of 10 expected pairs. The named gap is विद्यार्थी
-(the morphology-first eval pipeline strips its final ई); every other expected
-pair is required individually. यण् forward/reverse encoding now preserves the
+Sandhi's conservative-stem eval pipeline now recovers all 10 expected pairs,
+and each pair is required individually. It uses `shabda::best_analysis`, matching
+the inspector, instead of letting legacy `decompose` strip the final ई in
+विद्यार्थी. This is pipeline alignment, not a new linguistic splitting rule.
+यण् forward/reverse encoding now preserves the
 right member's vowel sign, recovering अत्याचार as अति + आचार with lexical
 and exact forward-verification guards intact.
+The inspector suppresses legacy morphology that disagrees with the supported
+stem, while retaining supported outer affixes and compound explanations.
 Samasa has three fixtures, with the मह/महा pair for महोत्सव explicitly under
 review and the two confirmed pairs/types required. Morphology has 22 fixtures.
 The seven grammar sentences require only two positive samasa hints; case and

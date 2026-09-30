@@ -1,10 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { applyTextContext, originPresentation } from '../js/inspection-context.js';
+import { applyTextContext, morphologySupportedByAffix, originPresentation } from '../js/inspection-context.js';
 import { getRuleSummary, wrapRuleTooltip } from '../js/rules-data.js';
 
 const raw = { word: 'आवाजमा', is_correct: false, correction: 'आबाजमा',
   rule_notes: [{ rule: 'raw rule', explanation: 'raw explanation' }], alternate_rule_notes: [] };
+
+test('legacy morphology cannot override the supported stem, including lexical coincidences', () => {
+  assert.equal(morphologySupportedByAffix({ root: 'फर्सी', stem: 'फर्सी' }, { root: 'फर्स', suffixes: ['ई'] }), false);
+  assert.equal(morphologySupportedByAffix({ root: 'विद्यार्थी' }, { root: 'विद्यार्थ', suffixes: ['ई'] }), false);
+  assert.equal(morphologySupportedByAffix(null, { root: 'कखगघङ', suffixes: ['ई'] }), false);
+  assert.equal(morphologySupportedByAffix({ root: 'राम' }, { root: 'राम', suffixes: ['को'] }), true);
+  assert.equal(morphologySupportedByAffix({ root: 'शासन', stem: 'अनुशासन' }, { root: 'अनुशासन', suffixes: ['मा'] }), true);
+});
 
 test('contextual acceptance removes isolated corrections and corrective notes', () => {
   const shown = applyTextContext(raw, { available: true, diagnostic: null });

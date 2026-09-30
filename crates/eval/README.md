@@ -57,9 +57,11 @@ false-positive check.
 - Checker gold: all 97 word entries require an expected correction and a cited
   explanation; correct-form and 13 paragraph fixtures are checked separately.
 - Sandhi: all currently covered expected pairs are required individually.
-  अत्याचार now round-trips as अति + आचार. विद्यार्थी (morphology-first removal
-  of final ई) remains the named gap in the 10-pair recall denominator. A generic
-  three-of-ten floor no longer allows covered examples to regress.
+  अत्याचार now round-trips as अति + आचार. The pipeline uses `best_analysis`
+  for a supported root, matching the inspector, so विद्यार्थी retains its ई
+  and splits as विद्या + अर्थी. All ten pairs are now required; there are no
+  named exemptions or generic three-of-ten floor. The legacy `decompose` API
+  remains available; its speculative roots are not the eval's supported stems.
 - Samasa: both confirmed pairs and their types are required. The third fixture,
   महोत्सव, explicitly records its मह/महा disagreement in `pair_review`; review
   linguistic evidence before changing the fixture or promoting a different split.
