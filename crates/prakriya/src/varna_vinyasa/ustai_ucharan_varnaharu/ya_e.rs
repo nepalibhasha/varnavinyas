@@ -8,6 +8,46 @@ use varnavinyas_kosha::kosha;
 // 3(ग)(इ) 'ए' र 'य' को प्रयोग
 // -----------------------------------------------------------------------------
 pub fn rule_ya_e(input: &str) -> Option<Prakriya> {
+    let kosha = kosha();
+    if kosha.is_rule_protected(input) {
+        return None;
+    }
+    // 3(ग)(इ)-ए-2: participial endings occur inside a word, not just
+    // at its first character. Require the exact canonical surface as evidence.
+    for (wrong, right) in [("येर", "एर"), ("येको", "एको"), ("येका", "एका"), ("येकी", "एकी")]
+    {
+        if let Some(stem) = input.strip_suffix(wrong) {
+            let output = format!("{stem}{right}");
+            if !stem.is_empty() && kosha.is_correction_target(&output) {
+                return Some(Prakriya::corrected(
+                    input,
+                    &output,
+                    vec![Step::new(
+                        Rule::VarnaVinyasNiyam("3(ग)(इ)-ए-2"),
+                        "एर र एको/एका/एकी प्रत्यय लागेका कृदन्त शब्दमा ए प्रयोग हुन्छ",
+                        input,
+                        &output,
+                    )],
+                ));
+            }
+        }
+    }
+    // Source-listed pronoun derivatives retain य even within the initial cluster.
+    for (wrong, right) in [("तेहाँ", "त्यहाँ"), ("तेता", "त्यता"), ("एहाँ", "यहाँ")]
+    {
+        if input == wrong && kosha.is_correction_target(right) {
+            return Some(Prakriya::corrected(
+                input,
+                right,
+                vec![Step::new(
+                    Rule::VarnaVinyasNiyam("3(ग)(इ)-य-1"),
+                    "सर्वनाम र सर्वनामबाट बनेका शब्दमा य प्रयोग हुन्छ",
+                    input,
+                    right,
+                )],
+            ));
+        }
+    }
     let chars: Vec<char> = input.chars().collect();
     if chars.is_empty() {
         return None;
@@ -17,10 +57,6 @@ pub fn rule_ya_e(input: &str) -> Option<Prakriya> {
         'य' => 'ए',
         _ => return None,
     };
-    let kosha = kosha();
-    if kosha.contains(input) {
-        return None;
-    }
     let mut swapped = chars;
     swapped[0] = swap_char;
     let candidate: String = swapped.into_iter().collect();

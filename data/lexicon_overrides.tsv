@@ -5,3 +5,4 @@ word	tier	reason	source	review_status
 पुर्वेली	canonical	Authoritative gold form produced by the reviewed -एली rule; the refreshed lexicon also materializes पुर्बेली as a headword.	docs/tests/gold.toml#hrasva_dirgha	reviewed
 कैंची	canonical	Source-listed spelling must remain accepted alongside the dictionary headword कैँची; nasal normalization must not override the reviewed example.	Notices-3(क)(ऊ)-6	reviewed
 ग्यान	attested_nonstandard	Colloquial redirect to ज्ञान is attested but must not suppress the Sanskrit ज्ञ rule or become a correction target.	Notices-3(ग)(ऊ)-1	reviewed
+तेता	attested_nonstandard	Colloquial redirect to त्यता must not suppress the source-listed pronoun derivative with य.	Notices-3(ग)(इ)-य-1	reviewed

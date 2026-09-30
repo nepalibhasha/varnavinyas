@@ -416,3 +416,48 @@ fn ri_corrections_validate_the_target_origin() {
         }
     }
 }
+
+#[test]
+fn ya_e_rules_cover_participles_and_pronoun_derivatives() {
+    for mode in [
+        OrthographyMode::AcademyStrict,
+        OrthographyMode::CommonEditorial,
+    ] {
+        let options = CheckOptions {
+            orthography_mode: mode,
+            ..CheckOptions::default()
+        };
+        for (wrong, correct) in [
+            ("लियेको", "लिएको"),
+            ("दियेको", "दिएको"),
+            ("तेहाँ", "त्यहाँ"),
+            ("तेता", "त्यता"),
+        ] {
+            assert_eq!(derive(wrong).output, correct, "{wrong}");
+            assert!(
+                check_text_with_options(wrong, options)
+                    .iter()
+                    .any(|d| d.correction == correct),
+                "{wrong}"
+            );
+        }
+        for word in [
+            "भयको",
+            "आयका",
+            "छायाको",
+            "लिएको",
+            "दिएको",
+            "त्यहाँ",
+            "एकड",
+            "यज्ञ",
+        ] {
+            assert!(derive(word).is_correct, "{word}");
+            assert!(
+                !check_text_with_options(word, options)
+                    .iter()
+                    .any(|d| d.kind == DiagnosticKind::Error),
+                "{word}"
+            );
+        }
+    }
+}
