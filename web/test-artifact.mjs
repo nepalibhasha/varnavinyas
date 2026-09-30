@@ -77,7 +77,8 @@ const semanticInventory = await readFile(new URL('../data/rule_inventories/final
 for (const row of semanticInventory.trim().split('\n').slice(1)) {
   const [correct, semanticClass] = row.split('\t');
   const code = { feminine_adjective: '3(क)(ऊ)-4', inanimate_noun: '3(क)(ऊ)-6',
-    ps_inanimate_noun: 'PS-Saisanik-ह्रस्वदीर्घ-(थ)' }[semanticClass];
+    ps_inanimate_noun: 'PS-Saisanik-ह्रस्वदीर्घ-(थ)',
+    ps_animate_noun: 'PS-Saisanik-ह्रस्वदीर्घ-(थ)-सजीव' }[semanticClass];
   const wrong = correct.slice(0, -1) + 'ि';
   assert.equal(wasm.derive_value(wrong).output, correct);
   assert.ok(wasm.analyze_word_value(correct).rule_notes.some(note => note.rule_code === code));
