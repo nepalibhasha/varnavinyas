@@ -88,6 +88,13 @@ Tags matching `python-artifact-v*` trigger
 `.github/workflows/release-python-artifact.yml`, which builds and uploads a
 wheel to GitHub Releases. This does not publish to PyPI.
 
+Version 0.1.3 preserves the existing Python API and updates spelling and
+contextual reading behavior. Selected `Ambiguous` suggestions can appear with
+grammar heuristics disabled; display their explanations and require individual
+review instead of bulk correction. See the [coordinated release
+notes](../../docs/releases/native-v0.1.3.md) and [Integration
+Notes](../../docs/INTEGRATION_NOTES.md).
+
 `shabda.classify()` retains the four-way best-effort `Origin` enum. For
 explanations, use the additive v0.1.2 API:
 

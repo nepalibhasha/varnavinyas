@@ -73,7 +73,7 @@ jobs:
           name: Python Artifact ${{ steps.version.outputs.artifact_version }}
           draft: true
           generate_release_notes: true
-          body_path: docs/releases/native-v0.1.2.md
+          body_path: docs/releases/native-${{ steps.version.outputs.artifact_version }}.md
           files: |
             dist/*.whl
             dist/*.zip

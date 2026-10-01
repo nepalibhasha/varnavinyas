@@ -1,6 +1,6 @@
 # Offline Mobile Evaluation
 
-iOS and Android evaluation ZIPs in the v0.1.2 release set come from the same
+iOS and Android evaluation ZIPs in the v0.1.3 release set come from the same
 Git commit as the Python and CLI releases. Compare `source_commit` and
 `fixtures.sha256` and `origin_fixtures.sha256` in each `manifest.json` before evaluating. Every payload file
 has a SHA-256 checksum in the manifest. The manifest is not a signature.
@@ -65,8 +65,8 @@ return JSON diagnostic strings with the same fields and semantics:
   omitted. Ignore unfamiliar fields for forward compatibility.
 - `grammar` enables heuristic diagnostics; it is off by default. In evaluation
   and production, make the option explicit rather than silently changing it.
-- Current source builds include selected converb context suggestions independently
-  of `grammar`; these changes are not in the published v0.1.2 ZIPs. For example,
+- Starting with v0.1.3, selected converb context suggestions are available
+  independently of `grammar`. For example,
   `पत्रहरूलाई लेखि पठाइन्` offers `लेखी` as an
   `Ambiguous` reading in both orthography modes. Display the conditional
   explanation and require an individual choice; never bulk-apply it as an

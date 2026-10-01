@@ -70,6 +70,8 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           name: Browser Artifact ${{ steps.version.outputs.artifact_version }}
+          draft: true
           generate_release_notes: true
+          body_path: docs/releases/browser-${{ steps.version.outputs.artifact_version }}.md
           files: |
             web/dist/varnavinyas-browser-artifact-${{ steps.version.outputs.artifact_version }}.zip

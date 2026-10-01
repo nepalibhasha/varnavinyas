@@ -70,6 +70,27 @@ existing `kind` field:
 - Treat `Error` as blocking.
 - Treat `Variant` as non-blocking unless the user explicitly wants suggestions
   to fail a check.
+- Treat `Ambiguous` as a conditional reading requiring individual review. Keep
+  it out of bulk correction and retain its explanation; a nonempty `correction`
+  does not establish an error.
+
+Starting with browser v0.1.6 and native v0.1.3, bounded converb contexts can emit
+`Ambiguous` with grammar heuristics disabled. For example,
+`पत्रहरूलाई लेखि पठाइन्` offers `लेखी` if the intended meaning is “having
+written”; the independent short noun/adverb reading remains valid. These
+suggestions behave the same in both orthography modes. Known short forms are
+preserved by isolated word checks, and possession, punctuation, quotes or line
+boundaries do not establish the required context. This is bounded grammatical
+evidence, not general sentence disambiguation.
+
+When upgrading, use one source commit across browser, Python, CLI and mobile
+artifacts. Compare native manifests' `source_commit` with the browser manifest's
+`git_sha`; compare the diagnostic and origin fixture hashes across native
+packages. Rebuild consumer assets and regenerate any precomputed sample
+diagnostics. Install generated Swift/Kotlin bindings with their matching native
+libraries, preserve orthography-mode selection, and test UTF-8 span conversion
+with emoji and repeated words. API signatures, diagnostic schema and default
+orthography policy are unchanged in this release set.
 
 The common-editorial boundary is curated, not frequency-based. Adding a future
 variant requires:
