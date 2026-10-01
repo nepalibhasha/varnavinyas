@@ -101,6 +101,7 @@ cat > "$ARTIFACT_DIR/manifest.json" <<EOF
   "entry_wasm": "pkg/varnavinyas_bindings_wasm_bg.wasm",
   "build_info": "build-info.json",
   "capabilities": {
+    "affix_segment_kinds": ["prefix", "plural_marker", "case_marker", "particle", "postposition", "comparison_marker"],
     "offline": true,
     "typed_diagnostics": true,
     "diagnostic_schema_version": 1,

@@ -114,6 +114,8 @@ pub enum PyAffixKind {
     PluralMarker,
     CaseMarker,
     Particle,
+    Postposition,
+    ComparisonMarker,
 }
 
 impl From<AffixKind> for PyAffixKind {
@@ -123,6 +125,8 @@ impl From<AffixKind> for PyAffixKind {
             AffixKind::PluralMarker => PyAffixKind::PluralMarker,
             AffixKind::CaseMarker => PyAffixKind::CaseMarker,
             AffixKind::Particle => PyAffixKind::Particle,
+            AffixKind::Postposition => PyAffixKind::Postposition,
+            AffixKind::ComparisonMarker => PyAffixKind::ComparisonMarker,
         }
     }
 }

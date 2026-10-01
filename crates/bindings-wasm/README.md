@@ -162,3 +162,8 @@ artifact integration requirements.
 identify a supported main linking form and auxiliary with both dictionary lemmas.
 For example, `खोजिरहेको` gives `खोजि + रहेको`, `खोज्नु`, and `रहनु`. See
 [the bounded analysis contract](../../docs/INTEGRATION_NOTES.md#progressive-verb-constructions).
+
+Affix segment `kind` also supports `postposition` (`घरसम्म`) and
+`comparison_marker` (`मानिससरह`). Reviewed postpositions previously used
+`case_marker`; exhaustive role handlers should adopt the
+[relational suffix contract](../../docs/INTEGRATION_NOTES.md#relational-suffix-roles-and-joining).

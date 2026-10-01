@@ -33,6 +33,12 @@ fn main() {
             "🙂 उर्लिरहेको ओर्लिरहेको उडिरहेको",
             true,
         ),
+        ("relational-suffix-join", "🙂 मानिस सरह घर सम्म", false),
+        (
+            "relational-suffix-guard",
+            "मानिसको सरह घरको सम्म मानिस जस्तै",
+            true,
+        ),
     ] {
         for (mode, orthography) in [
             ("academy-strict", OrthographyMode::AcademyStrict),

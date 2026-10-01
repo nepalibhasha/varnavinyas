@@ -57,6 +57,9 @@ assert (progressive.auxiliary_form, progressive.auxiliary_lemma) == ("रहे�
 assert progressive.surface == "खोजिरहेको" and not progressive.negative
 assert v.shabda.analyze_progressive("झझझिरहेकी") is None
 assert v.parikshak.check_word("खोजिरहेको") is None
+assert v.shabda.best_analysis("मानिससरह").suffix_segments[0].kind == v.shabda.AffixKind.ComparisonMarker
+assert v.shabda.best_analysis("घरसम्म").suffix_segments[0].kind == v.shabda.AffixKind.Postposition
+assert v.shabda.best_analysis("घरको").suffix_segments[0].kind == v.shabda.AffixKind.CaseMarker
 with open(sys.argv[1], encoding="utf-8") as fixture_file:
     cases = json.load(fixture_file)["cases"]
 for case in cases:

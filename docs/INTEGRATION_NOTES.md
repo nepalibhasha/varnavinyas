@@ -153,7 +153,7 @@ Python exposes `shabda.analyze_progressive()` returning a read-only
 the browser manifest advertises `progressive_verb_analysis`. C offers
 `varnavinyas_analyze_progressive()` returning owned JSON (free it with
 `varnavinyas_free_string`), JSON `null` for unsupported forms, and a null pointer
-for invalid input. Existing signatures, enums, and diagnostic fields are unchanged.
+for invalid input. Existing signatures and diagnostic fields are unchanged.
 
 This is a bounded analysis: it checks the short linking vowel
 `ि/इ` and independently attested verb infinitives, supports an optional negative
@@ -164,3 +164,27 @@ arbitrary auxiliary chains. Analyze the stem from the outer affix API before req
 progressive analysis of a suffixed word. No analysis is not proof of a spelling
 error. These changes require rebuilt browser/native artifacts to reach consumers;
 generated Swift/Kotlin code must match its new native library.
+
+## Relational suffix roles and joining
+
+The affix analysis distinguishes reviewed postpositions (`सम्म`, `सँग`, `सँगै`,
+`तिर`, `भित्र`) from case markers such as `को` and `ले`. Comparison use of `सरह`
+has its own role: `मानिससरह` has host `मानिस` and comparison marker `सरह`;
+`घरसम्म` has host `घर` and postposition `सम्म`. These are surface analyses,
+not claims that every joined word is a compound. The reviewed inventory is
+`data/rule_inventories/relational_suffixes.tsv`.
+
+Rust and Python append `AffixKind::Postposition` and `AffixKind::ComparisonMarker`
+without changing existing members. WASM affix segments can now carry
+`kind: "postposition"` or `kind: "comparison_marker"`; previously reviewed
+postpositions were reported as `case_marker`. Consumers that exhaustively match
+affix roles need to handle both new values. UniFFI and C do not expose this affix
+enum; their checker diagnostic schema remains unchanged.
+The browser manifest lists the supported roles in `capabilities.affix_segment_kinds`.
+
+The checker generalizes `मानिस सरह -> मानिससरह` using noun headword evidence
+and `घर सम्म -> घरसम्म` using authoritative host evidence. It avoids joining
+case-bearing hosts such as `मानिसको सरह` and `घरको सम्म`, or unsupported hosts.
+The Notice's 3(घ)-पदयोग-११ supports `सरह`; school grammar 5(अ)(ख) supports
+`सम्म`. The school grammar's separate `जस्तो/जस्तै/जत्रो/जसरी` family is
+preserved. Both orthography modes and grammar settings use these joining rules.

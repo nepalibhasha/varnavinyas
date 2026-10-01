@@ -12,6 +12,8 @@ pub enum AffixKind {
     PluralMarker,
     CaseMarker,
     Particle,
+    Postposition,
+    ComparisonMarker,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -303,7 +305,8 @@ fn collect_suffix_group_analyses(
         for rest in suffix_rest_candidates(current, suffix) {
             suffixes.push(AffixSegment {
                 text: suffix.to_string(),
-                kind: SUPPORT_SUFFIX_GROUPS[group_index].kind,
+                kind: crate::relational_suffixes::suffix_kind(suffix)
+                    .unwrap_or(SUPPORT_SUFFIX_GROUPS[group_index].kind),
             });
             if SUPPORT_SUFFIX_GROUPS[group_index].repeatable {
                 collect_suffix_group_analyses(

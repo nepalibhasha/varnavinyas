@@ -76,7 +76,7 @@ Current conflict resolutions
   - `सरह` appears in `Notices-pages-77-99.md` with the older join-style comparison family.
   - `PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md` does not currently list `सरह` in the explicit split family (`जस्तो/जस्तै/जत्रो/जसरी` only).
   - current policy: keep the Notice-default join behavior for `सरह`; do not fold it into the `PS-Saisanik` split comparison rule unless a future source explicitly adds it there.
-  - current implementation: `crates/parikshak/src/checker/padayog_rules.rs` (`बुद्धि सरह -> बुद्धिसरह`), pinned by `sarah_join_rule_still_applies`.
+  - current implementation: the literal `बुद्धि सरह -> बुद्धिसरह` rule in `crates/parikshak/src/checker/padayog_rules.rs` remains pinned by `sarah_join_rule_still_applies`; `padayog.rs` generalizes joining to noun headwords while excluding case-bearing or unsupported hosts. `relational_suffixes_have_distinct_roles_and_generalized_joining` covers both modes and grammar settings.
 - honorific `ज्यू` vs `ज्यु`
   - `PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md` explicitly uses `ज्यू`
   - current policy: `ज्यू` is the preferred honorific suffix form for generalized `पदयोग-२` joining

@@ -504,6 +504,8 @@ fn affix_kind_to_string(kind: varnavinyas_shabda::AffixKind) -> String {
         varnavinyas_shabda::AffixKind::PluralMarker => "plural_marker".into(),
         varnavinyas_shabda::AffixKind::CaseMarker => "case_marker".into(),
         varnavinyas_shabda::AffixKind::Particle => "particle".into(),
+        varnavinyas_shabda::AffixKind::Postposition => "postposition".into(),
+        varnavinyas_shabda::AffixKind::ComparisonMarker => "comparison_marker".into(),
     }
 }
 
@@ -696,7 +698,7 @@ mod tests {
         );
         assert_eq!(
             parsed["suffix_segments"][0]["kind"].as_str(),
-            Some("case_marker")
+            Some("postposition")
         );
         assert_eq!(
             parsed["suffix_segments"][1]["kind"].as_str(),

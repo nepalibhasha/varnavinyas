@@ -665,6 +665,104 @@
         "punctuation_mode": "strict"
       },
       "text": "🙂 उर्लिरहेको ओर्लिरहेको उडिरहेको"
+    },
+    {
+      "expected_diagnostics": [
+        {
+          "category": "शुद्ध-अशुद्ध",
+          "category_code": "ShuddhaTable",
+          "confidence": 0.92,
+          "correction": "मानिससरह",
+          "explanation": "पदयोग/पदवियोग [3(घ)-पदयोग-११ | सरह तुलना पद जोडेर लेख्नुपर्छ]: नामसँग तुलना जनाउने सरह जोडेर लेख्नुपर्छ",
+          "incorrect": "मानिस सरह",
+          "kind": "Error",
+          "rule": "पदयोग/पदवियोग नियम",
+          "rule_code": "3(घ)",
+          "span_end": 30,
+          "span_start": 5
+        },
+        {
+          "category": "शुद्ध-अशुद्ध",
+          "category_code": "ShuddhaTable",
+          "confidence": 0.94,
+          "correction": "घरसम्म",
+          "explanation": "पदयोग/पदवियोग [3(घ)-पदयोग-४ | नामयोगी जोडेर लेख्नुपर्छ]: भित्री जोडाइ मिलाएर नामयोगी पद क्रमशः जोडेर लेख्नुपर्छ",
+          "incorrect": "घर सम्म",
+          "kind": "Error",
+          "rule": "पदयोग/पदवियोग नियम",
+          "rule_code": "3(घ)",
+          "span_end": 50,
+          "span_start": 31
+        }
+      ],
+      "id": "relational-suffix-join-academy-strict",
+      "options": {
+        "grammar": false,
+        "include_noop_heuristics": false,
+        "orthography_mode": "academy-strict",
+        "punctuation_mode": "strict"
+      },
+      "text": "🙂 मानिस सरह घर सम्म"
+    },
+    {
+      "expected_diagnostics": [
+        {
+          "category": "शुद्ध-अशुद्ध",
+          "category_code": "ShuddhaTable",
+          "confidence": 0.92,
+          "correction": "मानिससरह",
+          "explanation": "पदयोग/पदवियोग [3(घ)-पदयोग-११ | सरह तुलना पद जोडेर लेख्नुपर्छ]: नामसँग तुलना जनाउने सरह जोडेर लेख्नुपर्छ",
+          "incorrect": "मानिस सरह",
+          "kind": "Error",
+          "rule": "पदयोग/पदवियोग नियम",
+          "rule_code": "3(घ)",
+          "span_end": 30,
+          "span_start": 5
+        },
+        {
+          "category": "शुद्ध-अशुद्ध",
+          "category_code": "ShuddhaTable",
+          "confidence": 0.94,
+          "correction": "घरसम्म",
+          "explanation": "पदयोग/पदवियोग [3(घ)-पदयोग-४ | नामयोगी जोडेर लेख्नुपर्छ]: भित्री जोडाइ मिलाएर नामयोगी पद क्रमशः जोडेर लेख्नुपर्छ",
+          "incorrect": "घर सम्म",
+          "kind": "Error",
+          "rule": "पदयोग/पदवियोग नियम",
+          "rule_code": "3(घ)",
+          "span_end": 50,
+          "span_start": 31
+        }
+      ],
+      "id": "relational-suffix-join-common-editorial",
+      "options": {
+        "grammar": false,
+        "include_noop_heuristics": false,
+        "orthography_mode": "common-editorial",
+        "punctuation_mode": "strict"
+      },
+      "text": "🙂 मानिस सरह घर सम्म"
+    },
+    {
+      "expected_diagnostics": [],
+      "id": "relational-suffix-guard-academy-strict",
+      "options": {
+        "grammar": true,
+        "include_noop_heuristics": false,
+        "orthography_mode": "academy-strict",
+        "punctuation_mode": "strict"
+      },
+      "text": "मानिसको सरह घरको सम्म मानिस जस्तै"
+    },
+    {
+      "expected_diagnostics": [],
+      "id": "relational-suffix-guard-common-editorial",
+      "options": {
+        "grammar": true,
+        "include_noop_heuristics": false,
+        "orthography_mode": "common-editorial",
+        "punctuation_mode": "strict"
+      },
+      "text": "मानिसको सरह घरको सम्म मानिस जस्तै"
     }
   ],
   "diagnostic_schema_version": 1,

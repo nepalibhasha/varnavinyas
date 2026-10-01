@@ -27,6 +27,8 @@ const NAMAYOGI_TOKENS: &[&str] = &[
     "बाहेक",
     "अन्तर्गत",
     "बमोजिम",
+    // PS-Saisanik 5(अ)(ख): घरसम्म; bare hosts join, case-bearing hosts do not.
+    "सम्म",
 ];
 const PADABIYOG_VIBHAKTI_NAMAYOGI_SPLIT_TOKENS: &[&str] =
     &["अगाडि", "पछाडि", "माथि", "समेत", "भन्दा", "लागि", "निम्ति"];
@@ -118,7 +120,7 @@ pub(crate) fn add_generalized_padayog_padabiyog_diagnostics(
     add_generalized_padayog_subrule_8_milit_kriyapad_join(text, blocked_spans, diagnostics);
     add_generalized_padayog_subrule_9_samyogak_join(text, tokens, blocked_spans, diagnostics);
     add_generalized_padayog_subrule_10_ota_varga_sambandhi_join(text, blocked_spans, diagnostics);
-    add_generalized_padayog_subrule_11_sarah_join(text, blocked_spans, diagnostics);
+    add_generalized_padayog_subrule_11_sarah_join(text, tokens, blocked_spans, diagnostics);
 
     add_generalized_padabiyog_subrule_1_every_word_split(text, blocked_spans, diagnostics);
     add_generalized_padabiyog_subrule_2_vibhakti_pachhi_namayogi_split(
@@ -250,11 +252,60 @@ fn add_generalized_padayog_subrule_10_ota_varga_sambandhi_join(
 }
 
 fn add_generalized_padayog_subrule_11_sarah_join(
-    _text: &str,
-    _blocked_spans: &mut HashSet<(usize, usize)>,
-    _diagnostics: &mut Vec<Diagnostic>,
+    text: &str,
+    tokens: &[AnalyzedToken],
+    blocked_spans: &mut HashSet<(usize, usize)>,
+    diagnostics: &mut Vec<Diagnostic>,
 ) {
-    // TODO(3(घ)-पदयोग-११): generalized 'सरह' joining needs a safe comparison-particle inventory.
+    // Notice 3(घ)-पदयोग-११ applies to comparison use of सरह. The school
+    // grammar's separate जस्तो/जस्तै/जत्रो/जसरी family is unchanged. Require
+    // a whole noun headword; an inflected or merely guessed host is insufficient.
+    let segments = token_segments(text, tokens).collect::<Vec<_>>();
+    for pair in segments.windows(2) {
+        let (left, lstart, _) = pair[0];
+        let (right, _, rend) = pair[1];
+        if right != "सरह"
+            || !has_whitespace_gap(text, pair[0], pair[1])
+            || !is_devanagari_word(left)
+            || !candidate_is_name_like(left)
+        {
+            continue;
+        }
+        let Some(correction) = normalize_joined_word(&format!("{left}{right}")) else {
+            continue;
+        };
+        let span = (lstart, rend);
+        if blocked_spans.contains(&span) || overlaps_existing_span(diagnostics, span) {
+            continue;
+        }
+        diagnostics.push(Diagnostic {
+            evidence: crate::DiagnosticEvidence::Generalized,
+            span,
+            incorrect: text[lstart..rend].to_string(),
+            correction,
+            rule: Rule::VarnaVinyasNiyam("3(घ)"),
+            explanation: "पदयोग/पदवियोग [3(घ)-पदयोग-११ | सरह तुलना पद जोडेर लेख्नुपर्छ]: नामसँग तुलना जनाउने सरह जोडेर लेख्नुपर्छ".to_string(),
+            category: DiagnosticCategory::ShuddhaTable,
+            kind: DiagnosticKind::Error,
+            confidence: 0.92,
+            alternate_reasons: Vec::new(),
+        });
+        blocked_spans.insert(span);
+    }
+}
+
+fn has_outer_case_marker(word: &str) -> bool {
+    // A noun headword such as काका or सीमा must not become case-bearing
+    // merely because its final letters also spell a possible case marker.
+    if candidate_is_name_like(word) {
+        return false;
+    }
+    varnavinyas_shabda::best_analysis(word).is_some_and(|analysis| {
+        analysis
+            .suffix_segments
+            .iter()
+            .any(|suffix| suffix.kind == varnavinyas_shabda::AffixKind::CaseMarker)
+    })
 }
 
 fn add_generalized_padabiyog_subrule_1_every_word_split(
@@ -1307,6 +1358,9 @@ fn add_generalized_padayog_layered_join(
             };
             correction
         } else if starts_with_namayogi(right) {
+            if right.starts_with("सम्म") && has_outer_case_marker(left) {
+                continue;
+            }
             if !candidate_is_authoritative_headword(left) {
                 continue;
             }
@@ -1386,6 +1440,9 @@ fn add_generalized_padayog_layered_join(
             Some(inner) if starts_with_namayogi(&inner) => inner,
             _ => continue,
         };
+        if inner.starts_with("सम्म") && has_outer_case_marker(left) {
+            continue;
+        }
 
         let Some(correction) = normalize_joined_word(&format!("{left}{inner}")) else {
             continue;
@@ -1584,6 +1641,9 @@ fn add_generalized_padayog_namayogi_join(
             continue;
         }
         if !NAMAYOGI_TOKENS.contains(&right) {
+            continue;
+        }
+        if right == "सम्म" && has_outer_case_marker(left) {
             continue;
         }
         if !candidate_is_authoritative_headword(left) {

@@ -1,6 +1,7 @@
 mod morphology;
 mod origin;
 mod progressive;
+mod relational_suffixes;
 pub mod tables;
 
 pub use morphology::{

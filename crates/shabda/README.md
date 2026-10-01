@@ -74,3 +74,9 @@ dictionary lemma `खोज्नु`, the auxiliary form `रहेको`, and
 Supported regular progressive participles also provide independent base evidence
 for outer affix analysis. This bounded analysis is not full conjugation or
 sentence agreement; see [Integration Notes](../../docs/INTEGRATION_NOTES.md#progressive-verb-constructions).
+
+Reviewed relational suffixes have distinct `AffixKind` roles:
+`घरसम्म` gives `घर + सम्म` with `Postposition`; `मानिससरह` gives
+`मानिस + सरह` with `ComparisonMarker`. `घरको` still uses `CaseMarker`.
+The source-backed inventory lives in `data/rule_inventories/relational_suffixes.tsv`;
+the legacy `tables::CASE_MARKERS` lookup retains its mixed surface-suffix inventory.

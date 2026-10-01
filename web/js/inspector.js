@@ -33,7 +33,7 @@ const SANDHI_TYPE_CLASS = {
   ConsonantSandhi: 'sandhi-type-consonant',
 };
 
-/** Case markers (postpositions) — matches Rust tables::CASE_MARKERS */
+/** Legacy mixed suffix lookup; reviewed relational roles take precedence below. */
 const CASE_MARKERS = new Set([
   '\u0926\u094D\u0935\u093E\u0930\u093E', '\u092D\u093F\u0924\u094D\u0930', '\u0926\u0947\u0916\u093F',
   '\u0938\u0901\u0917\u0948', '\u0938\u092E\u094D\u092E',
@@ -60,6 +60,10 @@ const PARTICLES = new Set([
  * Classify a suffix and return { cssClass, label }.
  */
 function classifySuffix(s) {
+  if (s === 'सरह') return { cssClass: 'morpheme-suffix', label: 'तुलना पद' };
+  if (['भित्र', 'सँगै', 'सम्म', 'सँग', 'तिर'].includes(s)) {
+    return { cssClass: 'morpheme-suffix', label: 'नामयोगी' };
+  }
   if (CASE_MARKERS.has(s)) return { cssClass: 'morpheme-case', label: '\u0935\u093F\u092D\u0915\u094D\u0924\u093F' };
   if (PLURAL_MARKERS.has(s)) return { cssClass: 'morpheme-plural', label: '\u092C\u0939\u0941\u0935\u091A\u0928' };
   if (PARTICLES.has(s)) return { cssClass: 'morpheme-particle', label: '\u0928\u093F\u092A\u093E\u0924' };
@@ -70,6 +74,8 @@ function classifyAffixSegment(segment) {
   const kind = segment?.kind || '';
   if (kind === 'prefix') return { cssClass: 'morpheme-prefix', label: '\u0909\u092A\u0938\u0930\u094D\u0917' };
   if (kind === 'case_marker') return { cssClass: 'morpheme-case', label: '\u0935\u093F\u092D\u0915\u094D\u0924\u093F' };
+  if (kind === 'postposition') return { cssClass: 'morpheme-suffix', label: 'नामयोगी' };
+  if (kind === 'comparison_marker') return { cssClass: 'morpheme-suffix', label: 'तुलना पद' };
   if (kind === 'plural_marker') return { cssClass: 'morpheme-plural', label: '\u092C\u0939\u0941\u0935\u091A\u0928' };
   if (kind === 'particle') return { cssClass: 'morpheme-particle', label: '\u0928\u093F\u092A\u093E\u0924' };
   return { cssClass: 'morpheme-suffix', label: '\u0905\u0935\u092F\u0935' };

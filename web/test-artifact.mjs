@@ -13,6 +13,8 @@ const manifest = JSON.parse(await readFile(path.join(directory, 'manifest.json')
 const info = JSON.parse(await readFile(path.join(directory, manifest.build_info), 'utf8'));
 assert.equal(manifest.git_sha, info.git_sha);
 assert.equal(manifest.artifact_api_version, 1);
+assert.deepEqual(manifest.capabilities.affix_segment_kinds,
+  ['prefix', 'plural_marker', 'case_marker', 'particle', 'postposition', 'comparison_marker']);
 assert.equal(manifest.capabilities.word_analysis_origin_provenance, true);
 assert.deepEqual(manifest.capabilities.word_analysis_origin_sources,
   ['kosha', 'override', 'heuristic', 'unknown']);
@@ -57,6 +59,9 @@ for (const word of ['झझझिरहेकी', 'मइरहेको', 'ख
 }
 assert.equal(wasm.best_affix_analysis_value('खोजिरहेकाले').stem, 'खोजिरहेका');
 assert.deepEqual(wasm.best_affix_analysis_value('खोजिरहेकाले').suffixes, ['ले']);
+assert.equal(wasm.best_affix_analysis_value('मानिससरह').suffix_segments[0].kind, 'comparison_marker');
+assert.equal(wasm.best_affix_analysis_value('घरसम्म').suffix_segments[0].kind, 'postposition');
+assert.equal(wasm.best_affix_analysis_value('घरको').suffix_segments[0].kind, 'case_marker');
 // Public compound analysis needs reviewed formation evidence, not lexical coincidence.
 for (const word of ['सवारीमा', 'दशकमा', 'आयात', 'आर्थिक', 'विकास', 'यातायात',
   'व्यवस्थापन', 'रिसाइकल', 'आधारमा', 'छलफल', 'विवरण', 'सबैलाई']) {

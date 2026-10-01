@@ -180,6 +180,10 @@ Known gaps:
 - `3(घ)-पदयोग-१,५,६,७,८,१०,११` need stronger morphology, compound ranking, sentence context, or curated semantic inventories before broad generalization.
 - `3(घ)-पदवियोग-१,५,८,११,१२,१३` remain broad/context-sensitive and are not safe as standalone rewrites.
 - `सरह` remains notice-only evidence in the local sources and is not part of the current `PS-Saisanik` comparison override.
+  Joining now generalizes beyond the literal `बुद्धि सरह` example to dictionary-backed
+  noun hosts such as `मानिस सरह`. School-backed `सम्म` joins authoritative bare
+  hosts such as `घर सम्म`. Case-bearing hosts and unsupported hosts are guarded;
+  this does not join arbitrary noun phrases or verb constructions.
 - `थरी` remains notice-backed only in the current local source set.
 - Most token-window passes now work across attached punctuation because they share tokenizer spans; exact literal phrase rewrites may still need punctuation-specific coverage.
 - Broader `PS-Saisanik` inventories need wider regression coverage before broad expansion.

@@ -531,6 +531,77 @@ fn progressive_analysis_preserves_internal_endings_and_only_detaches_outer_affix
 }
 
 #[test]
+fn relational_suffixes_have_distinct_roles_and_generalized_joining() {
+    use varnavinyas_shabda::AffixKind;
+    for (word, root, suffix, kind) in [
+        ("मानिससरह", "मानिस", "सरह", AffixKind::ComparisonMarker),
+        ("शिक्षकसरह", "शिक्षक", "सरह", AffixKind::ComparisonMarker),
+        ("घरसम्म", "घर", "सम्म", AffixKind::Postposition),
+        ("समयसम्म", "समय", "सम्म", AffixKind::Postposition),
+        ("घरसँग", "घर", "सँग", AffixKind::Postposition),
+        ("घरको", "घर", "को", AffixKind::CaseMarker),
+    ] {
+        let analysis = varnavinyas_shabda::best_analysis(word).unwrap();
+        assert_eq!(analysis.root, root, "{word}");
+        assert_eq!(analysis.suffix_segments[0].text, suffix, "{word}");
+        assert_eq!(analysis.suffix_segments[0].kind, kind, "{word}");
+    }
+    for orthography_mode in [
+        OrthographyMode::AcademyStrict,
+        OrthographyMode::CommonEditorial,
+    ] {
+        for grammar in [false, true] {
+            let options = CheckOptions {
+                orthography_mode,
+                grammar,
+                ..Default::default()
+            };
+            for (input, output) in [
+                ("मानिस सरह", "मानिससरह"),
+                ("शिक्षक सरह", "शिक्षकसरह"),
+                ("राजा सरह", "राजासरह"),
+                ("विद्यार्थी सरह", "विद्यार्थीसरह"),
+                ("घर सम्म", "घरसम्म"),
+                ("नेपाल सम्म", "नेपालसम्म"),
+                ("समय सम्म", "समयसम्म"),
+                ("काका सम्म", "काकासम्म"),
+                ("सीमा सम्म", "सीमासम्म"),
+            ] {
+                let diagnostics = check_text_with_options(input, options);
+                assert!(
+                    diagnostics
+                        .iter()
+                        .any(|d| d.incorrect == input && d.correction == output),
+                    "{input}: {diagnostics:?}"
+                );
+                assert!(
+                    check_text_with_options(output, options).is_empty(),
+                    "{output}"
+                );
+            }
+            for text in [
+                "घरको सम्म",
+                "मानिसको सरह",
+                "उसको सम्म",
+                "यसको सम्मपनि",
+                "घरको सम्म पनि",
+            ] {
+                assert!(check_text_with_options(text, options).is_empty(), "{text}");
+            }
+            for text in ["झझझ सरह", "झझझ सम्म"] {
+                assert!(
+                    check_text_with_options(text, options)
+                        .iter()
+                        .all(|d| d.incorrect != text),
+                    "An unsupported host must not trigger joining: {text}"
+                );
+            }
+            assert!(check_text_with_options("मानिस जस्तै", options).is_empty());
+        }
+    }
+}
+
+#[test]
 fn punctuation_boundaries_do_not_merge_words_into_false_suggestions() {
     let diags = check_text("नेकपा (माओवादी केन्द्र)को बैठक");
     assert!(

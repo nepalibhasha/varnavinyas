@@ -137,3 +137,8 @@ artifact integration requirements.
 `auxiliary_form="रहेको"`, and `auxiliary_lemma="रहनु"`, or `None` outside the
 supported family. Existing Python APIs are unchanged. See
 [the analysis contract](../../docs/INTEGRATION_NOTES.md#progressive-verb-constructions).
+
+Affix segments additionally distinguish `AffixKind.Postposition` (`घरसम्म`)
+and `AffixKind.ComparisonMarker` (`मानिससरह`). Existing enum members are
+preserved; reviewed postpositions previously returned `CaseMarker`. Update
+exhaustive role handlers using the [relational suffix contract](../../docs/INTEGRATION_NOTES.md#relational-suffix-roles-and-joining).

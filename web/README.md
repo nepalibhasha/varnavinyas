@@ -147,6 +147,12 @@ origin tag as evidence that a word is देशज.
 
 ## Compound information
 
+The inspector separately shows supported progressive verbs (`खोजि + रहेको`,
+with lemmas `खोज्नु` and `रहनु`), postpositions (`घर + सम्म`), and comparison
+markers (`मानिस + सरह`). These informational structures are not spelling edits.
+See the [integration contracts](../docs/INTEGRATION_NOTES.md#progressive-verb-constructions)
+for bounded evidence and the new affix-role values.
+
 The checker and inspector show reviewed compound interpretations only. Outer
 suffixes remain separate, for example सूर्य + उदय + मा. Structural information
 is labeled बनोट, has no correction arrow or accuracy percentage, and cannot be

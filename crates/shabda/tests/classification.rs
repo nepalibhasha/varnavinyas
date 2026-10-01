@@ -281,12 +281,12 @@ fn analyze_affixes_returns_structured_candidates() {
 }
 
 #[test]
-fn supported_analysis_allows_case_plus_particle_after_headword() {
-    let analysis = best_analysis("रामसम्मपनि").expect("case+particle stack should analyze");
+fn supported_analysis_allows_postposition_plus_particle_after_headword() {
+    let analysis = best_analysis("रामसम्मपनि").expect("postposition+particle stack should analyze");
     assert_eq!(analysis.stem, "राम");
     assert_eq!(analysis.root, "राम");
     assert_eq!(analysis.suffixes, vec!["सम्म", "पनि"]);
-    assert_eq!(analysis.suffix_segments[0].kind, AffixKind::CaseMarker);
+    assert_eq!(analysis.suffix_segments[0].kind, AffixKind::Postposition);
     assert_eq!(analysis.suffix_segments[1].kind, AffixKind::Particle);
 }
 

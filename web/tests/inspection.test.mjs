@@ -6,6 +6,16 @@ import { getReferenceTargetForRule, getRuleSummary, RULES_SECTIONS, wrapRuleTool
 const raw = { word: 'आवाजमा', is_correct: false, correction: 'आबाजमा',
   rule_notes: [{ rule: 'raw rule', explanation: 'raw explanation' }], alternate_rule_notes: [] };
 
+test('joining reference explains reviewed relational roles and guarded hosts', () => {
+  const target = RULES_SECTIONS.flatMap(s => s.referenceTargets || []).find(t => t.id === 'padayog');
+  assert.match(target.summary, /सरह.*३\(घ\)-११/);
+  assert.match(target.summary, /सम्म.*५\(अ\)\(ख\)/);
+  assert.match(target.summary, /घरको सम्म र मानिसको सरह/);
+  assert.match(target.summary, /जस्तो\/जस्तै\/जत्रो\/जसरी/);
+  assert.ok(target.examples.includes('घर सम्म -> घरसम्म'));
+  assert.ok(target.examples.includes('मानिस सरह -> मानिससरह'));
+});
+
 test('legacy morphology cannot override the supported stem, including lexical coincidences', () => {
   assert.equal(morphologySupportedByAffix({ root: 'फर्सी', stem: 'फर्सी' }, { root: 'फर्स', suffixes: ['ई'] }), false);
   assert.equal(morphologySupportedByAffix({ root: 'विद्यार्थी' }, { root: 'विद्यार्थ', suffixes: ['ई'] }), false);
