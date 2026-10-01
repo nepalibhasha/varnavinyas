@@ -114,10 +114,12 @@ right member's vowel sign, recovering अत्याचार as अति + �
 and exact forward-verification guards intact.
 The inspector suppresses legacy morphology that disagrees with the supported
 stem, while retaining supported outer affixes and compound explanations.
-Samasa has three fixtures, with the मह/महा pair for महोत्सव explicitly under
-review and the two confirmed pairs/types required. Morphology has 22 fixtures.
-The seven grammar sentences require only two positive samasa hints; case and
-agreement examples still do not require their intended grammar detections.
+Samasa requires five reviewed winning pairs/types/vigraha and rejects fourteen
+unsupported interpretations. महोत्सव uses महा + उत्सव after dictionary review.
+The public analyzer uses the sourced `samasa.tsv` inventory; POS and spelling
+round trips alone are insufficient. Morphology has 22 fixtures. The fourteen
+grammar sentences include negative compound cases and an inflected-compound
+case; case/agreement examples still do not require their intended detections.
 The unlabeled headword census measures split activity, not a false-positive rate.
 See `crates/eval/README.md` for limits and the remaining evaluation work.
 

@@ -54,3 +54,28 @@ expect_variant_or_ambiguous_max = 1
 text = "धेरै मानिस आए।"
 expect_variant_or_ambiguous_min = 0
 expect_variant_or_ambiguous_max = 0
+
+# rule_too_broad: supported stems/suffixes and prefix derivations are not samasa.
+[[sentence]]
+text = "सवारीमा आयात र विकास सम्बन्धी आर्थिक विवरण छ।"
+expect_variant_or_ambiguous_min = 0
+expect_variant_or_ambiguous_max = 0
+expected_rule_codes = []
+
+[[sentence]]
+text = "दशकमा यातायात र व्यवस्थापनबारे छलफल भयो।"
+expect_variant_or_ambiguous_min = 0
+expect_variant_or_ambiguous_max = 0
+expected_rule_codes = []
+
+[[sentence]]
+text = "रिसाइकल"
+expect_variant_or_ambiguous_min = 0
+expect_variant_or_ambiguous_max = 0
+expected_rule_codes = []
+
+[[sentence]]
+text = "सूर्योदयमा मापदण्डको पूर्वाधार"
+expect_variant_or_ambiguous_min = 3
+expect_variant_or_ambiguous_max = 3
+expected_rule_codes = ["samasa-heuristic"]

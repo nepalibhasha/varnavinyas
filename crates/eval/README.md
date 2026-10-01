@@ -20,7 +20,8 @@ Unlike regular unit tests, this crate is about behavior quality and dataset-back
   - known split recall
   - split-activity budget on an unlabeled headword census
 - `samasa_eval.rs`
-  - expected compound pair and type checks
+  - reviewed winning compound pair, type and vigraha checks
+  - negative evidence cases
 - `morph_eval.rs`
   - morphology expectations against curated fixtures
 - `grammar_eval.rs`
@@ -62,12 +63,13 @@ false-positive check.
   and splits as विद्या + अर्थी. All ten pairs are now required; there are no
   named exemptions or generic three-of-ten floor. The legacy `decompose` API
   remains available; its speculative roots are not the eval's supported stems.
-- Samasa: both confirmed pairs and their types are required. The third fixture,
-  महोत्सव, explicitly records its मह/महा disagreement in `pair_review`; review
-  linguistic evidence before changing the fixture or promoting a different split.
+- Samasa: five reviewed winning pairs, types and vigraha are required, alongside
+  fourteen negative evidence cases. महोत्सव uses महा + उत्सव after dictionary
+  review. The public analyzer requires reviewed formation evidence; raw sandhi
+  remains exploratory. These fixtures do not measure general compound recall.
 - Morphology: 22 curated examples pass; this is not comprehensive paradigm coverage.
-- Grammar: seven sentences include only two required positive results, both
-  `samasa-heuristic`. `रामले गयो।` and `रामको किताबहरु हराए।` still have disabled
+- Grammar: fourteen sentences include negative compound cases, supported outer
+  inflections and the existing contextual converb suggestion. `रामले गयो।` and `रामको किताबहरु हराए।` still have disabled
   expected grammar detections. Orthographic corrections on those sentences do
   not establish grammar accuracy.
 

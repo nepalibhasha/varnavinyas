@@ -1,64 +1,35 @@
 # varnavinyas-samasa
 
-Compound analysis layer for identifying likely samasa interpretations.
+Conservative compound interpretations for public orthography tools.
 
-## What This Crate Owns
+`analyze_compound(word)` returns reviewed interpretations of an uninflected word
+with the existing `left`, `right`, `samasa_type`, `score`, and `vigraha` fields.
+An empty result means that no supported interpretation is available; it does not
+mean that the word is misspelled or has no historical derivation.
 
-This crate analyzes a word as a possible compound and proposes ranked interpretations of its members.
+## Evidence and scope
 
-It is responsible for:
+`data/rule_inventories/samasa.tsv` supplies the reviewed word, members, type,
+vigraha, source and review status. Parser tests reject missing provenance,
+unreviewed/duplicate rows and self-repeating members. Lexical lookup and exact
+forward composition also validate every pair. Dictionary membership, a sandhi
+round trip, numeral membership or POS labels alone cannot establish samasa.
 
-- taking possible split candidates
-- validating them against lexical presence
-- assigning a provisional samasa type
-- returning ranked candidate analyses
+The initial reviewed inventory has five interpretations: सूर्योदय, महोत्सव,
+एकचक्र (the numeral reading), पूर्वाधार and मापदण्ड. महोत्सव uses महा + उत्सव,
+matching the dictionaries' large-festival meaning. पूर्वाधार uses the
+adjectival पहिलेको sense of पूर्व, rather than a fabricated पूर्व को आधार.
+This is bounded coverage, not a general compound parser or contextual sense
+selection. Growing coverage requires reviewed evidence for each interpretation.
 
-Conceptually, this crate sits on top of `sandhi` and `kosha`.
+`score` retains legacy ranking weights for these interpretations; it is not a
+calibrated probability and should not be presented as an accuracy percentage.
+Types and vigraha describe a supported reading, not every possible use of a word.
 
-## Main API
+Prefix/suffix derivations belong to morphology, rather than automatic samasa
+classification. `sandhi::split` and `split_best_for_compound` remain exploratory
+spelling-boundary APIs; their candidates are not proof of a compound relationship.
+The checker analyzes the supported stem and explicitly preserves outer suffixes
+in informational output, for example सूर्योदयमा → सूर्य + उदय + मा.
 
-- `analyze_compound(&str)` -> returns ranked `SamasaCandidate` values
-
-Each candidate currently includes:
-
-- `left`
-- `right`
-- `samasa_type`
-- `score`
-- `vigraha`
-
-## Example
-
-```rust
-use varnavinyas_samasa::analyze_compound;
-
-let candidates = analyze_compound("अत्यधिक");
-
-if let Some(top) = candidates.first() {
-    let _pair = (&top.left, &top.right);
-    let _score = top.score;
-}
-```
-
-The goal is to produce ranked compound interpretations that higher-level tools can inspect, not to force a single answer in every case.
-
-## Depends On
-
-- `varnavinyas-sandhi`
-- `varnavinyas-kosha`
-
-## Design Notes
-
-- This crate is currently a heuristic analyzer, not a formal grammatical proof engine.
-- Ranking is useful for hinting, but scores should be interpreted as plausibility, not certainty.
-- It uses sandhi's compound-analysis selector (`split_best_for_compound`) rather than the strict public-safe selector, so valid compounds are retained without reopening common lexicalized false positives.
-
-## Current Limits
-
-- It inherits over-generation from reverse sandhi splitting.
-- Many candidate classifications are still shallow lexical heuristics.
-- It is not yet strong enough to declare one split “the correct one” in all cases.
-
-## Status
-
-MVP compound analyzer with useful ranking, but not yet authoritative disambiguation.
+See [consumer guidance](../../docs/COMPOUND_ANALYSIS.md).

@@ -122,3 +122,12 @@ In v0.1.1, `check_text_with_options` preserves the v0.1.0 positional order
 Use the keyword-only `orthography_mode="common_editorial"` to request reviewed
 editorial variants. Omitting it keeps Academy-strict behavior. See
 [coordinated release notes](../../docs/releases/native-v0.1.1.md).
+
+## Compound information
+
+Compound hints require reviewed formation evidence and preserve outer suffixes.
+`samasa-heuristic` is informational; never apply its structural `correction`
+string to text or present its ranking weight as an accuracy percentage. Public
+signatures and diagnostic fields are unchanged. See the
+[compound-analysis contract](../../docs/COMPOUND_ANALYSIS.md) for behavior and
+artifact integration requirements.

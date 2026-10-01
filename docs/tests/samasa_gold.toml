@@ -1,24 +1,96 @@
-# Initial samasa gold set (MVP)
-# This file is intentionally small and high-confidence; expand in Phase 4.
+# Source-reviewed interpretations; a negative means no supported samasa analysis,
+# not a spelling error or proof that the word has no historical derivation.
 
 [[samasa]]
 word = "सूर्योदय"
 left = "सूर्य"
 right = "उदय"
 expected_type = "Tatpurusha"
-notes = "Canonical compound often analyzed as tatpurusha."
+vigraha = "सूर्य को उदय"
 
 [[samasa]]
 word = "महोत्सव"
-left = "मह"
+left = "महा"
 right = "उत्सव"
 expected_type = "Karmadharaya"
-notes = "Adjectival/intensifier left component with noun right component."
-pair_review = "Legacy fixture expects मह; the safe splitter returns महा. Verify the full lexical stem before changing the fixture or promoting a different split."
+vigraha = "महा उत्सव"
+notes = "Brihat/Pragya define महोत्सव as a large उत्सव and महा as large; मह is not the reviewed member."
 
 [[samasa]]
 word = "एकचक्र"
 left = "एक"
 right = "चक्र"
 expected_type = "Dvigu"
-notes = "Numeral-led compound pattern for dvigu heuristic evaluation."
+vigraha = "एक वटा चक्र"
+notes = "Pragya's एउटा चक्र reading; not a claim about every adjectival or proper-name reading."
+
+[[samasa]]
+word = "पूर्वाधार"
+left = "पूर्व"
+right = "आधार"
+expected_type = "Karmadharaya"
+vigraha = "पहिलेको आवश्यक आधार"
+notes = "Dictionary's पहिलेको sense of पूर्व modifies आधार; do not fabricate पूर्व को आधार."
+
+[[samasa]]
+word = "मापदण्ड"
+left = "माप"
+right = "दण्ड"
+expected_type = "Tatpurusha"
+vigraha = "मापन गर्ने साधन"
+notes = "Pragya explicitly supplies [माप+दण्ड] and its meaning."
+
+[[not_samasa]]
+word = "सवारीमा"
+notes = "सवारी + मा; lexical coincidence सवा + रीमा."
+
+[[not_samasa]]
+word = "दशकमा"
+notes = "दशक + मा; कमा means comma, not a compound member here."
+
+[[not_samasa]]
+word = "आयात"
+notes = "Reject आ + the unchanged surface."
+
+[[not_samasa]]
+word = "आर्थिक"
+notes = "Academy gives अर्थ + इक with आदिवृद्धि."
+
+[[not_samasa]]
+word = "विकास"
+notes = "Academy identifies वि prefix; not वि को कास."
+
+[[not_samasa]]
+word = "यातायात"
+notes = "No reviewed pair/type; POS alone cannot establish याता + आयात as कर्मधारय."
+
+[[not_samasa]]
+word = "व्यवस्थापन"
+notes = "Mechanical वि + अवस्थापन is not reviewed samasa evidence."
+
+[[not_samasa]]
+word = "रिसाइकल"
+notes = "No reviewed compound formation from रिसाइ and कल."
+
+[[not_samasa]]
+word = "आधारमा"
+notes = "आधार + मा, not आधा + रमा."
+
+[[not_samasa]]
+word = "छलफल"
+notes = "Lexical presence alone cannot justify छल को फल."
+
+[[not_samasa]]
+word = "विवरण"
+notes = "Prefix-derived candidates do not establish तत्पुरुष."
+
+[[not_samasa]]
+word = "सबैलाई"
+notes = "सबै + लाई is outer morphology."
+
+[[not_samasa]]
+word = "नेपाली"
+
+[[not_samasa]]
+word = "धार्मिक"
+notes = "धर्म + इक with आदिवृद्धि."

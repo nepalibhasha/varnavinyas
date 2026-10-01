@@ -527,6 +527,78 @@
         "punctuation_mode": "strict"
       },
       "text": "पत्रको लेखि पठाइन्।"
+    },
+    {
+      "expected_diagnostics": [],
+      "id": "grammar-no-spurious-compounds-academy-strict",
+      "options": {
+        "grammar": true,
+        "include_noop_heuristics": false,
+        "orthography_mode": "academy-strict",
+        "punctuation_mode": "strict"
+      },
+      "text": "सवारीमा आयात विकास यातायात आर्थिक दशकमा व्यवस्थापन रिसाइकल"
+    },
+    {
+      "expected_diagnostics": [],
+      "id": "grammar-no-spurious-compounds-common-editorial",
+      "options": {
+        "grammar": true,
+        "include_noop_heuristics": false,
+        "orthography_mode": "common-editorial",
+        "punctuation_mode": "strict"
+      },
+      "text": "सवारीमा आयात विकास यातायात आर्थिक दशकमा व्यवस्थापन रिसाइकल"
+    },
+    {
+      "expected_diagnostics": [
+        {
+          "category": "सन्धि",
+          "category_code": "Sandhi",
+          "confidence": 0.82,
+          "correction": "सूर्य + उदय + मा",
+          "explanation": "समास सम्भावना (Tatpurusha): सूर्य को उदय; बाहिरी प्रत्यय/निपात: मा",
+          "incorrect": "सूर्योदयमा",
+          "kind": "Variant",
+          "rule": "व्याकरण नियम",
+          "rule_code": "samasa-heuristic",
+          "span_end": 35,
+          "span_start": 5
+        }
+      ],
+      "id": "grammar-inflected-compound-academy-strict",
+      "options": {
+        "grammar": true,
+        "include_noop_heuristics": false,
+        "orthography_mode": "academy-strict",
+        "punctuation_mode": "strict"
+      },
+      "text": "🙂 सूर्योदयमा"
+    },
+    {
+      "expected_diagnostics": [
+        {
+          "category": "सन्धि",
+          "category_code": "Sandhi",
+          "confidence": 0.82,
+          "correction": "सूर्य + उदय + मा",
+          "explanation": "समास सम्भावना (Tatpurusha): सूर्य को उदय; बाहिरी प्रत्यय/निपात: मा",
+          "incorrect": "सूर्योदयमा",
+          "kind": "Variant",
+          "rule": "व्याकरण नियम",
+          "rule_code": "samasa-heuristic",
+          "span_end": 35,
+          "span_start": 5
+        }
+      ],
+      "id": "grammar-inflected-compound-common-editorial",
+      "options": {
+        "grammar": true,
+        "include_noop_heuristics": false,
+        "orthography_mode": "common-editorial",
+        "punctuation_mode": "strict"
+      },
+      "text": "🙂 सूर्योदयमा"
     }
   ],
   "diagnostic_schema_version": 1,

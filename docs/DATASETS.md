@@ -30,15 +30,15 @@ CI regression gate
 
 ### Current Fixture Counts
 
-As of 2026-07-03:
+Compound and grammar counts updated 2026-10-01; other counts retain their original audit:
 
 | File | Records |
 |---|---:|
 | `docs/tests/gold.toml` | 110 total records, including 47 `[[shuddha_table]]` records and 8 `[[halanta]]` records |
 | `docs/tests/needs_review.toml` | 21 records |
-| `docs/tests/grammar_sentences.toml` | 7 records |
+| `docs/tests/grammar_sentences.toml` | 14 records |
 | `docs/tests/morph_gold.toml` | 22 records |
-| `docs/tests/samasa_gold.toml` | 3 records |
+| `docs/tests/samasa_gold.toml` | 5 positive and 14 negative records |
 
 ## Evaluation & Corpus Datasets
 

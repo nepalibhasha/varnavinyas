@@ -1,8 +1,8 @@
-use varnavinyas_akshar::split_aksharas;
-use varnavinyas_kosha::part_of_speech::{is_adjective, is_avyaya, is_noun};
-use varnavinyas_kosha::{WordEntry, kosha};
+mod inventory;
 
-/// Initial samasa taxonomy for MVP.
+use varnavinyas_kosha::kosha;
+
+/// Samasa taxonomy for reviewed interpretations, not automatic POS inference.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SamasaType {
     Tatpurusha,
@@ -14,7 +14,7 @@ pub enum SamasaType {
     Unknown,
 }
 
-/// Ranked compound interpretation candidate.
+/// A reviewed compound interpretation. `score` is a ranking weight, not a probability.
 #[derive(Debug, Clone, PartialEq)]
 pub struct SamasaCandidate {
     pub left: String,
@@ -24,159 +24,49 @@ pub struct SamasaCandidate {
     pub vigraha: String,
 }
 
-/// Analyze a word as potential samasa.
+/// Return supported samasa interpretations of an uninflected word.
 ///
-/// MVP behavior:
-/// - generate candidates from sandhi split
-/// - add direct lexical boundary candidates (for compounds with no explicit sandhi mutation)
-/// - assign heuristic samasa type + score
-/// - return ranked candidates
+/// Two dictionary entries and a forward sandhi round trip establish only a
+/// possible spelling boundary. Public analysis additionally requires reviewed
+/// evidence for this word's members, grammatical relationship and vigraha.
+/// An empty result means no supported analysis, not that the word is incorrect.
+/// Prefix/suffix derivations belong to morphology; raw reverse-sandhi candidates
+/// remain available through `varnavinyas_sandhi::split` for exploration.
 pub fn analyze_compound(word: &str) -> Vec<SamasaCandidate> {
-    if word.is_empty() {
+    let Some(entry) = inventory::lookup(word) else {
+        return Vec::new();
+    };
+    let lex = kosha();
+    if lex.lookup(entry.left).is_none() || lex.lookup(entry.right).is_none() {
+        return Vec::new();
+    }
+    let direct_join = format!("{}{}", entry.left, entry.right) == word;
+    if !direct_join
+        && !varnavinyas_sandhi::apply_all(entry.left, entry.right)
+            .iter()
+            .any(|result| result.output == word)
+    {
         return Vec::new();
     }
 
-    let lex = kosha();
-    let mut out = Vec::new();
-
-    // Strategy 1: best sandhi-backed candidate for compound analysis.
-    if let Some(candidate) = varnavinyas_sandhi::split_best_for_compound(word) {
-        push_candidate(&mut out, &candidate.left, &candidate.right, 0.0);
-    }
-
-    // Strategy 2: direct lexical boundary scan.
-    // Useful for compounds like एकचक्र where no sandhi mutation is needed.
-    for (i, _) in word.char_indices().skip(1) {
-        let (left, right) = word.split_at(i);
-        if !lex.contains(left) || !lex.contains(right) {
-            continue;
-        }
-        // Avoid noisy tiny fragments except numerals used in dvigu.
-        if split_aksharas(left).len() < 2 && !is_numeral(left) {
-            continue;
-        }
-        if split_aksharas(right).len() < 2 {
-            continue;
-        }
-        push_candidate(&mut out, left, right, -0.05);
-    }
-
-    out.sort_by(|a, b| {
-        b.score
-            .total_cmp(&a.score)
-            .then_with(|| a.left.cmp(&b.left))
-            .then_with(|| a.right.cmp(&b.right))
-    });
-    out.dedup_by(|a, b| a.left == b.left && a.right == b.right && a.samasa_type == b.samasa_type);
-    out
-}
-
-fn push_candidate(out: &mut Vec<SamasaCandidate>, left: &str, right: &str, score_adjust: f32) {
-    let lex = kosha();
-    if !lex.contains(left) || !lex.contains(right) {
-        return;
-    }
-
-    let left_entry = lex.lookup(left);
-    let right_entry = lex.lookup(right);
-    let (samasa_type, base_score) = classify_candidate(left, right, left_entry, right_entry);
-    let score = (base_score + score_adjust).clamp(0.0, 1.0);
-    let vigraha = make_vigraha(left, right, samasa_type);
-
-    out.push(SamasaCandidate {
-        left: left.to_string(),
-        right: right.to_string(),
-        samasa_type,
-        score,
-        vigraha,
-    });
-}
-
-fn classify_candidate(
-    left: &str,
-    right: &str,
-    left_entry: Option<&WordEntry>,
-    right_entry: Option<&WordEntry>,
-) -> (SamasaType, f32) {
-    let left_pos = left_entry.map(|e| e.pos).unwrap_or("");
-    let right_pos = right_entry.map(|e| e.pos).unwrap_or("");
-
-    // Dvigu: numeral-led compounds.
-    if is_numeral(left) {
-        return (SamasaType::Dvigu, 0.92);
-    }
-
-    // Avyayibhava: indeclinable (अव्यय) leading component.
-    if is_avyaya(left_pos) {
-        return (SamasaType::Avyayibhava, 0.86);
-    }
-
-    // Karmadharaya: adjective + noun.
-    if (is_adjective(left_pos) || is_adjectival_prefix(left)) && is_noun(right_pos) {
-        return (SamasaType::Karmadharaya, 0.84);
-    }
-
-    // Bahuvrihi (weak MVP signal): adjective + adjective.
-    if is_adjective(left_pos) && is_adjective(right_pos) {
-        return (SamasaType::Bahuvrihi, 0.74);
-    }
-
-    // Dvandva only for known coordinative pairs in MVP.
-    if is_known_dvandva_pair(left, right) {
-        return (SamasaType::Dvandva, 0.8);
-    }
-
-    // Noun + noun defaults to tatpurusha in MVP.
-    if is_noun(left_pos) && is_noun(right_pos) {
-        return (SamasaType::Tatpurusha, 0.82);
-    }
-
-    // Default for lexically plausible split is Tatpurusha in MVP.
-    if left_entry.is_some() && right_entry.is_some() {
-        return (SamasaType::Tatpurusha, 0.78);
-    }
-
-    (SamasaType::Unknown, 0.5)
-}
-
-fn make_vigraha(left: &str, right: &str, t: SamasaType) -> String {
-    match t {
-        SamasaType::Tatpurusha => format!("{left} को {right}"),
-        SamasaType::Karmadharaya => format!("{left} {right}"),
-        SamasaType::Dvigu => format!("{left} वटा {right}"),
-        SamasaType::Bahuvrihi => format!("{left} {right} भएको"),
-        SamasaType::Dvandva => format!("{left} र {right}"),
-        SamasaType::Avyayibhava => format!("{left} {right}"),
-        SamasaType::Unknown => format!("{left}+{right}"),
-    }
-}
-
-fn is_numeral(s: &str) -> bool {
-    matches!(
-        s,
-        "एक" | "द्वि"
-            | "त्रि"
-            | "चतुर"
-            | "चतु"
-            | "पञ्च"
-            | "षड"
-            | "षट"
-            | "सप्त"
-            | "अष्ट"
-            | "नव"
-            | "दश"
-    )
-}
-
-fn is_adjectival_prefix(s: &str) -> bool {
-    matches!(s, "मह" | "सु")
-}
-
-fn is_known_dvandva_pair(left: &str, right: &str) -> bool {
-    matches!(
-        (left, right),
-        ("राम", "लक्ष्मण") | ("माता", "पिता") | ("दिन", "रात") | ("सुख", "दुःख")
-    )
+    // Retain legacy ranking weights for supported interpretations. These are
+    // deliberately not statistical confidence estimates.
+    let base_score: f32 = match entry.samasa_type {
+        SamasaType::Tatpurusha => 0.82,
+        SamasaType::Karmadharaya => 0.84,
+        SamasaType::Dvigu => 0.92,
+        SamasaType::Bahuvrihi => 0.74,
+        SamasaType::Dvandva => 0.80,
+        SamasaType::Avyayibhava => 0.86,
+        SamasaType::Unknown => 0.50,
+    };
+    vec![SamasaCandidate {
+        left: entry.left.to_string(),
+        right: entry.right.to_string(),
+        samasa_type: entry.samasa_type,
+        score: base_score - if direct_join { 0.05 } else { 0.0 },
+        vigraha: entry.vigraha.to_string(),
+    }]
 }
 
 #[cfg(test)]
@@ -184,91 +74,43 @@ mod tests {
     use super::*;
 
     #[test]
-    fn classify_dvigu_from_numeral() {
-        let (t, score) = classify_candidate("एक", "चक्र", None, None);
-        assert_eq!(t, SamasaType::Dvigu);
-        assert!(score > 0.9);
+    fn reviewed_pairs_are_the_only_winners_and_have_explicit_vigraha() {
+        for (word, left, right, samasa_type) in [
+            ("सूर्योदय", "सूर्य", "उदय", SamasaType::Tatpurusha),
+            ("महोत्सव", "महा", "उत्सव", SamasaType::Karmadharaya),
+            ("एकचक्र", "एक", "चक्र", SamasaType::Dvigu),
+            ("पूर्वाधार", "पूर्व", "आधार", SamasaType::Karmadharaya),
+            ("मापदण्ड", "माप", "दण्ड", SamasaType::Tatpurusha),
+        ] {
+            let candidates = analyze_compound(word);
+            assert_eq!(candidates.len(), 1, "{word}: {candidates:?}");
+            let top = &candidates[0];
+            assert_eq!((top.left.as_str(), top.right.as_str()), (left, right));
+            assert_eq!(top.samasa_type, samasa_type, "{word}");
+            assert!(!top.vigraha.is_empty(), "{word}");
+        }
     }
 
     #[test]
-    fn classify_avyayibhava_from_pos() {
-        let left = WordEntry {
-            word: "उपरि",
-            pos: "अव्य.",
-        };
-        let right = WordEntry {
-            word: "भाग",
-            pos: "ना.",
-        };
-        let (t, _) = classify_candidate("उपरि", "भाग", Some(&left), Some(&right));
-        assert_eq!(t, SamasaType::Avyayibhava);
-    }
-
-    #[test]
-    fn classify_karmadharaya_from_adj_noun() {
-        let left = WordEntry {
-            word: "मह",
-            pos: "वि.",
-        };
-        let right = WordEntry {
-            word: "उत्सव",
-            pos: "ना.",
-        };
-        let (t, _) = classify_candidate("मह", "उत्सव", Some(&left), Some(&right));
-        assert_eq!(t, SamasaType::Karmadharaya);
-    }
-
-    #[test]
-    fn classify_bahuvrihi_from_adj_adj() {
-        let left = WordEntry {
-            word: "नील",
-            pos: "वि.",
-        };
-        let right = WordEntry {
-            word: "कण्ठ",
-            pos: "वि.",
-        };
-        let (t, _) = classify_candidate("नील", "कण्ठ", Some(&left), Some(&right));
-        assert_eq!(t, SamasaType::Bahuvrihi);
-    }
-
-    #[test]
-    fn classify_dvandva_for_known_pair() {
-        let left = WordEntry {
-            word: "राम",
-            pos: "ना.",
-        };
-        let right = WordEntry {
-            word: "लक्ष्मण",
-            pos: "ना.",
-        };
-        let (t, _) = classify_candidate("राम", "लक्ष्मण", Some(&left), Some(&right));
-        assert_eq!(t, SamasaType::Dvandva);
-    }
-
-    #[test]
-    fn analyze_compound_returns_ranked_candidates() {
-        let candidates = analyze_compound("सूर्योदय");
-        assert!(!candidates.is_empty());
-        assert!(candidates.windows(2).all(|w| w[0].score >= w[1].score));
-    }
-
-    #[test]
-    fn analyze_compound_direct_split_fallback() {
-        let candidates = analyze_compound("एकचक्र");
-        assert!(
-            candidates
-                .iter()
-                .any(|c| c.left == "एक" && c.right == "चक्र")
-        );
-    }
-
-    #[test]
-    fn analyze_compound_skips_lexicalized_non_compound_word() {
-        let candidates = analyze_compound("नेपाली");
-        assert!(
-            candidates.is_empty(),
-            "Expected no compound analysis for lexicalized word नेपाली, got {candidates:?}"
-        );
+    fn lexical_coincidences_and_derivations_are_not_compound_evidence() {
+        for word in [
+            "सवारीमा",
+            "दशकमा",
+            "आयात",
+            "आर्थिक",
+            "विकास",
+            "यातायात",
+            "व्यवस्थापन",
+            "रिसाइकल",
+            "आधारमा",
+            "छलफल",
+            "विवरण",
+            "सबैलाई",
+            "नेपाली",
+            "धार्मिक",
+            "",
+        ] {
+            assert!(analyze_compound(word).is_empty(), "{word}");
+        }
     }
 }

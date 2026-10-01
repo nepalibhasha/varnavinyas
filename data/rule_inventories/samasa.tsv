@@ -1,0 +1,6 @@
+word	left	right	samasa_type	vigraha	source	review_status
+सूर्योदय	सूर्य	उदय	Tatpurusha	सूर्य को उदय	Brihat/Pragya:सूर्योदय;docs/tests/samasa_gold.toml	reviewed
+महोत्सव	महा	उत्सव	Karmadharaya	महा उत्सव	Brihat/Pragya:महोत्सव,महा,उत्सव (ठुलो उत्सव;महा=ठुलो)	reviewed
+एकचक्र	एक	चक्र	Dvigu	एक वटा चक्र	Pragya:एकचक्र (एउटा चक्र reading);docs/tests/samasa_gold.toml	reviewed
+पूर्वाधार	पूर्व	आधार	Karmadharaya	पहिलेको आवश्यक आधार	Brihat/Pragya:पूर्वाधार;Pragya:पूर्व (पहिलेको),आधार	reviewed
+मापदण्ड	माप	दण्ड	Tatpurusha	मापन गर्ने साधन	Pragya:मापदण्ड [माप+दण्ड]	reviewed

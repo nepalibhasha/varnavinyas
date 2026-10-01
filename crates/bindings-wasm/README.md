@@ -148,3 +148,12 @@ The fields are unchanged; `unknown` is an additional string value.
 The lower-level `decompose_word_value().origin` remains a best-effort category;
 use word analysis for origin badges. See [Integration Notes](../../docs/INTEGRATION_NOTES.md)
 for provenance, context-dependent verb forms, and conservative morphology.
+
+## Compound information
+
+Compound hints require reviewed formation evidence and preserve outer suffixes.
+`samasa-heuristic` is informational; never apply its structural `correction`
+string to text or present its ranking weight as an accuracy percentage. Public
+signatures and diagnostic fields are unchanged. See the
+[compound-analysis contract](../../docs/COMPOUND_ANALYSIS.md) for behavior and
+artifact integration requirements.

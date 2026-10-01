@@ -16,6 +16,12 @@ fn main() {
         ("converb-inflected-object", "पत्रहरूलाई लेखि पठाइन्।", true),
         ("converb-adverb-reading", "तिम्रा लेखि उनी मरेबराबरै भए।", false),
         ("converb-genitive-guard", "पत्रको लेखि पठाइन्।", false),
+        (
+            "grammar-no-spurious-compounds",
+            "सवारीमा आयात विकास यातायात आर्थिक दशकमा व्यवस्थापन रिसाइकल",
+            true,
+        ),
+        ("grammar-inflected-compound", "🙂 सूर्योदयमा", true),
     ] {
         for (mode, orthography) in [
             ("academy-strict", OrthographyMode::AcademyStrict),

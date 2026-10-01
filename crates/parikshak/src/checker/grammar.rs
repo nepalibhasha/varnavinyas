@@ -121,21 +121,27 @@ pub(crate) fn add_grammar_diagnostics(
             }
         }
 
-        let candidates = varnavinyas_samasa::analyze_compound(&full);
+        // Outer case/particle suffixes are not compound members. Respect the
+        // conservative stem already established by the shared affix analyzer.
+        let candidates = varnavinyas_samasa::analyze_compound(&token.stem);
         if let Some(top) = candidates.first() {
             if top.score >= 0.75 {
+                let mut composition = format!("{} + {}", top.left, top.right);
+                let mut explanation =
+                    format!("समास सम्भावना ({:?}): {}", top.samasa_type, top.vigraha);
+                if let Some(suffix) = &token.suffix {
+                    composition.push_str(&format!(" + {suffix}"));
+                    explanation.push_str(&format!("; बाहिरी प्रत्यय/निपात: {suffix}"));
+                }
                 push_best_grammar_variant(
                     diagnostics,
                     Diagnostic {
                         evidence: crate::DiagnosticEvidence::Heuristic,
                         span,
                         incorrect: full.clone(),
-                        correction: format!("{} + {}", top.left, top.right),
+                        correction: composition,
                         rule: Rule::Vyakaran("samasa-heuristic"),
-                        explanation: format!(
-                            "समास सम्भावना ({:?}): {}",
-                            top.samasa_type, top.vigraha
-                        ),
+                        explanation,
                         category: DiagnosticCategory::Sandhi,
                         kind: DiagnosticKind::Variant,
                         confidence: top.score.min(0.9),

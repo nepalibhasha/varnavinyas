@@ -399,3 +399,46 @@ fn no_args_shows_help() {
         .code(2)
         .stderr(predicate::str::contains("Usage"));
 }
+
+#[test]
+fn grammar_compounds_reject_coincidences_and_preserve_outer_suffixes() {
+    for mode in ["academy-strict", "common-editorial"] {
+        let output = cmd()
+            .args([
+                "check",
+                "--grammar",
+                "--format",
+                "json",
+                "--orthography-mode",
+                mode,
+            ])
+            .write_stdin("सवारीमा आयात विकास यातायात आर्थिक दशकमा व्यवस्थापन रिसाइकल")
+            .assert()
+            .success()
+            .get_output()
+            .stdout
+            .clone();
+        let diagnostics: serde_json::Value = serde_json::from_slice(&output).unwrap();
+        assert!(diagnostics.as_array().unwrap().is_empty(), "{diagnostics}");
+        let output = cmd()
+            .args([
+                "check",
+                "--grammar",
+                "--format",
+                "json",
+                "--orthography-mode",
+                mode,
+            ])
+            .write_stdin("🙂 सूर्योदयमा")
+            .assert()
+            .success()
+            .get_output()
+            .stdout
+            .clone();
+        let diagnostics: serde_json::Value = serde_json::from_slice(&output).unwrap();
+        assert_eq!(diagnostics.as_array().unwrap().len(), 1);
+        assert_eq!(diagnostics[0]["correction"], "सूर्य + उदय + मा");
+        assert_eq!(diagnostics[0]["kind"], "Variant");
+        assert_eq!(diagnostics[0]["rule_code"], "samasa-heuristic");
+    }
+}

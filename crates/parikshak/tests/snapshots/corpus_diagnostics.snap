@@ -115,7 +115,7 @@
 
 ## case=gold-correct mode=default bytes=2940 diagnostics=0
 
-## case=grammar-fixtures mode=grammar bytes=468 diagnostics=3
+## case=grammar-fixtures mode=grammar bytes=810 diagnostics=3
 000	span=13-25	kind=Ambiguous	category=HrasvaDirgha	rule=VarnaVinyasNiyam("PS-Saisanik-ह\u{94d}रस\u{94d}वदीर\u{94d}घ-(भ)-context-क\u{943}दन\u{94d}त")	confidence=0.72	incorrect=लेखि	correction=लेखी	explanation=शैक्षणिक व्याकरण (भ): यहाँ 'लेख्नु' को एर-अर्थक क्रिया प्रयोग भएको हो भने 'लेखी' लेखिन्छ। 'लेखि' को नाम वा अव्यय अर्थमा ह्रस्व नै सही हुन्छ; अभिप्राय हेरेर मात्र सुधार गर्नुहोस्	alternates=
 001	span=332-356	kind=Error	category=HrasvaDirgha	rule=VarnaVinyasNiyam("3(क)(ऊ)")	confidence=1.00	incorrect=किताबहरु	correction=किताबहरू	explanation=शब्दको अन्त्यमा दीर्घ ऊ आवश्यक (शब्दकोश प्रमाणित)	alternates=
 002	span=389-413	kind=Error	category=HrasvaDirgha	rule=VarnaVinyasNiyam("3(क)(ऊ)")	confidence=1.00	incorrect=किताबहरु	correction=किताबहरू	explanation=शब्दको अन्त्यमा दीर्घ ऊ आवश्यक (शब्दकोश प्रमाणित)	alternates=

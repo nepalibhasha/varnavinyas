@@ -115,7 +115,8 @@ Keep `crates/prakriya/src/correction_table.rs` from becoming a second rule engin
 - [ ] Decide whether to promote, keep suppressed, or remove disabled low-confidence grammar expectations:
   - `ergative-le-intransitive`
   - `genitive-mismatch-plural`
-- [ ] Expand `docs/tests/samasa_gold.toml`; it currently has only 3 compound-analysis fixtures.
+- [ ] Expand reviewed compound evidence beyond the initial five interpretations;
+  `docs/tests/samasa_gold.toml` now gates five winners and fourteen negative cases.
 - [ ] Expand `docs/tests/morph_gold.toml` beyond the initial MVP morphology set.
 - [ ] Add source-alignment tests that sample each numbered Academy subsection, not only known correction examples.
 

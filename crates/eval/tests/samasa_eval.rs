@@ -1,14 +1,11 @@
-//! Samasa analyzer evaluation against curated samasa_gold.toml.
-//!
-//! Run:
-//! `cargo test -p varnavinyas-eval --test samasa_eval -- --nocapture`
-
+//! Reviewed compound winners and negative evidence cases.
 use serde::Deserialize;
-use varnavinyas_samasa::{SamasaType, analyze_compound};
+use varnavinyas_samasa::analyze_compound;
 
 #[derive(Debug, Deserialize)]
 struct SamasaGold {
     samasa: Vec<SamasaEntry>,
+    not_samasa: Vec<NegativeEntry>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -17,121 +14,55 @@ struct SamasaEntry {
     left: String,
     right: String,
     expected_type: String,
-    pair_review: Option<String>,
+    vigraha: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct NegativeEntry {
+    word: String,
 }
 
 #[test]
-fn samasa_gold_pair_and_type_coverage() {
-    let data = include_str!("../../../docs/tests/samasa_gold.toml");
-    let gold: SamasaGold = toml::from_str(data).expect("samasa_gold.toml must parse");
-
-    let total = gold.samasa.len();
-    let mut pair_found = 0usize;
-    let mut type_matched = 0usize;
-    let mut misses: Vec<String> = Vec::new();
-    let mut regressions = Vec::new();
-    let mut confirmed = 0;
-
-    println!("\n=== Samasa Gold Evaluation ===");
-
+fn samasa_gold_winners_and_negative_cases() {
+    let gold: SamasaGold = toml::from_str(include_str!("../../../docs/tests/samasa_gold.toml"))
+        .expect("samasa_gold.toml must parse");
+    assert!(!gold.samasa.is_empty() && !gold.not_samasa.is_empty());
     for entry in &gold.samasa {
-        if let Some(reason) = &entry.pair_review {
-            assert_eq!(
-                entry.word, "महोत्सव",
-                "new pair reviews need an explicit audit"
-            );
-            assert!(!reason.trim().is_empty());
-        } else {
-            confirmed += 1;
-        }
-        let expected_type = parse_type(&entry.expected_type)
-            .unwrap_or_else(|| panic!("unknown samasa type '{}'", entry.expected_type));
-
         let candidates = analyze_compound(&entry.word);
-        let pair = candidates
-            .iter()
-            .find(|c| c.left == entry.left && c.right == entry.right);
-
-        if let Some(c) = pair {
-            pair_found += 1;
-            if c.samasa_type == expected_type {
-                type_matched += 1;
-                println!(
-                    "  ✓ {} → {} + {} [{:?}]",
-                    entry.word, entry.left, entry.right, c.samasa_type
-                );
-            } else {
-                regressions.push(format!(
-                    "{}: expected type {:?}, got {:?}",
-                    entry.word, expected_type, c.samasa_type
-                ));
-                println!(
-                    "  ~ {} → pair found, type {:?} (expected {:?})",
-                    entry.word, c.samasa_type, expected_type
-                );
-            }
-        } else {
-            let summary = if candidates.is_empty() {
-                "[]".to_string()
-            } else {
-                candidates
-                    .iter()
-                    .take(3)
-                    .map(|c| format!("{}+{}:{:?}", c.left, c.right, c.samasa_type))
-                    .collect::<Vec<_>>()
-                    .join(" | ")
-            };
-            println!(
-                "  ✗ {} → missing expected pair {} + {} (got: {})",
-                entry.word, entry.left, entry.right, summary
-            );
-            misses.push(entry.word.clone());
-            if let Some(reason) = &entry.pair_review {
-                println!("    Pair under review: {reason}");
-            } else {
-                regressions.push(format!("{}: missing confirmed pair", entry.word));
-            }
-        }
+        let winner = candidates
+            .first()
+            .unwrap_or_else(|| panic!("{}: no supported compound", entry.word));
+        assert_eq!(winner.left, entry.left, "{}: wrong winner", entry.word);
+        assert_eq!(winner.right, entry.right, "{}: wrong winner", entry.word);
+        assert_eq!(
+            format!("{:?}", winner.samasa_type),
+            entry.expected_type,
+            "{}",
+            entry.word
+        );
+        assert_eq!(winner.vigraha, entry.vigraha, "{}", entry.word);
+        assert_eq!(
+            candidates.len(),
+            1,
+            "{}: unreviewed alternatives",
+            entry.word
+        );
+        println!(
+            "✓ {} → {} + {} [{:?}]",
+            entry.word, winner.left, winner.right, winner.samasa_type
+        );
     }
-
-    let pair_recall = pair_found as f64 / total as f64;
-    let type_accuracy_on_found = if pair_found == 0 {
-        0.0
-    } else {
-        type_matched as f64 / pair_found as f64
-    };
-
-    println!("\nTotal:                {}", total);
-    println!(
-        "Expected pair found:  {} ({:.1}%)",
-        pair_found,
-        pair_recall * 100.0
-    );
-    println!(
-        "Type match (on found): {} ({:.1}%)",
-        type_matched,
-        type_accuracy_on_found * 100.0
-    );
-
-    // Every confirmed pair and every found pair's type is a regression gate.
-    // Report the reviewed disagreement without calling it language coverage.
-    assert!(
-        confirmed >= 2 && regressions.is_empty(),
-        "Confirmed samasa cases regressed: {:?}; all missing pairs: {:?}",
-        regressions,
-        misses
-    );
-}
-
-fn parse_type(s: &str) -> Option<SamasaType> {
-    match s {
-        "Tatpurusha" => Some(SamasaType::Tatpurusha),
-        "Karmadharaya" => Some(SamasaType::Karmadharaya),
-        "Dvigu" => Some(SamasaType::Dvigu),
-        "Bahuvrihi" => Some(SamasaType::Bahuvrihi),
-        "Dvandva" => Some(SamasaType::Dvandva),
-        "Avyayibhava" => Some(SamasaType::Avyayibhava),
-        "Unknown" => Some(SamasaType::Unknown),
-        _ => None,
+    for entry in &gold.not_samasa {
+        let candidates = analyze_compound(&entry.word);
+        assert!(
+            candidates.is_empty(),
+            "{}: unsupported compound {candidates:?}",
+            entry.word
+        );
     }
+    println!(
+        "{} reviewed winners; {} negative evidence cases",
+        gold.samasa.len(),
+        gold.not_samasa.len()
+    );
 }
