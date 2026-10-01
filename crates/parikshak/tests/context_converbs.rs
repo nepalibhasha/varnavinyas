@@ -186,3 +186,54 @@ fn converb_candidates_coexist_with_final_predicate_and_word_errors() {
         }
     }
 }
+
+#[test]
+fn writing_converb_recognizes_inflected_following_verbs_without_claiming_certainty() {
+    for verb in [
+        "पठायो",
+        "पठाइन्",
+        "पठाइयो",
+        "पठाएँ",
+        "पठाएको",
+        "पठाउँछ",
+        "पठाउँदै",
+        "पठाउने",
+        "पठाउनुभयो",
+        "नपठाउने",
+    ] {
+        let text = format!("🙂 चिठी लेखि {verb}।");
+        for options in options() {
+            let diagnostics = check_text_with_options(&text, options);
+            let hits: Vec<_> = diagnostics
+                .iter()
+                .filter(|d| d.incorrect == "लेखि")
+                .collect();
+            assert_eq!(hits.len(), 1, "{text}: {diagnostics:?}");
+            assert_eq!(hits[0].correction, "लेखी");
+            assert_eq!(hits[0].kind, DiagnosticKind::Ambiguous);
+            assert_eq!(&text[hits[0].span.0..hits[0].span.1], "लेखि");
+            assert!(
+                !check_text_with_options(&text.replace("लेखि", "लेखी"), options)
+                    .iter()
+                    .any(|d| d.incorrect == "लेखी")
+            );
+        }
+    }
+    for text in [
+        "चिठी लेखि पठतयो।",
+        "चिठी लेखि पढाइ।",
+        "मेरो लेखि पठाइन्।",
+        "चिठी लेखि, पठाइन्।",
+        "चिठी लेखि\nपठाइन्।",
+        "चिठी ‘लेखि’ पठाइन्।",
+    ] {
+        for options in options() {
+            assert!(
+                !check_text_with_options(text, options)
+                    .iter()
+                    .any(|d| d.incorrect == "लेखि"),
+                "{text}"
+            );
+        }
+    }
+}

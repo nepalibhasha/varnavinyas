@@ -18,6 +18,7 @@ struct Entry<'a> {
     infinitive: &'a str,
     left: Vec<Vec<&'a str>>,
     right: Vec<Vec<&'a str>>,
+    right_infinitives: Vec<&'a str>,
     kind: DiagnosticKind,
 }
 
@@ -25,19 +26,21 @@ fn parse_inventory(data: &str) -> Vec<Entry<'_>> {
     let mut lines = data.lines();
     assert_eq!(
         lines.next(),
-        Some("short\tlong\tinfinitive\tleft_contexts\tright_contexts\tkind\tsource\treview_status")
+        Some(
+            "short\tlong\tinfinitive\tleft_contexts\tright_contexts\tright_infinitives\tkind\tsource\treview_status"
+        )
     );
     let mut entries: Vec<Entry<'_>> = Vec::new();
     for line in lines.filter(|line| !line.trim().is_empty()) {
         let f: Vec<_> = line.split('\t').collect();
-        assert_eq!(f.len(), 8, "invalid converb row: {line}");
+        assert_eq!(f.len(), 9, "invalid converb row: {line}");
         assert!(
             f.iter().all(|field| !field.is_empty()),
             "missing field: {line}"
         );
-        assert_eq!(f[7], "reviewed", "unreviewed frame: {line}");
+        assert_eq!(f[8], "reviewed", "unreviewed frame: {line}");
         assert!(
-            f[6].split(';').any(|source| source == SOURCE),
+            f[7].split(';').any(|source| source == SOURCE),
             "missing rule source: {line}"
         );
         let stem = f[0]
@@ -57,7 +60,19 @@ fn parse_inventory(data: &str) -> Vec<Entry<'_>> {
             infinitive: f[2],
             left: parse_phrases(f[3]),
             right: parse_phrases(f[4]),
-            kind: match f[5] {
+            right_infinitives: if f[5] == "-" {
+                Vec::new()
+            } else {
+                f[5].split('|')
+                    .inspect(|lemma| {
+                        assert!(
+                            lemma.ends_with("ाउनु"),
+                            "unsupported right verb family: {line}"
+                        );
+                    })
+                    .collect()
+            },
+            kind: match f[6] {
                 "error" => DiagnosticKind::Error,
                 "ambiguous" => DiagnosticKind::Ambiguous,
                 _ => panic!("unknown converb kind: {line}"),
@@ -142,6 +157,16 @@ pub(super) fn candidates(
             idx + 1 + words.len() <= sentence.end_token
                 && phrase_matches(text, tokens, idx + 1, words)
                 && horizontal_gap(text, &tokens[idx], &tokens[idx + 1])
+        }) || tokens.get(idx + 1).is_some_and(|next| {
+            idx + 1 < sentence.end_token
+                && horizontal_gap(text, &tokens[idx], next)
+                && entry.right_infinitives.iter().any(|infinitive| {
+                    varnavinyas_vyakaran::verb_evidence::form_for_infinitive(
+                        &next.surface(),
+                        infinitive,
+                    )
+                    .is_some()
+                })
         });
         if !left_match || !right_match {
             continue;
@@ -191,6 +216,12 @@ mod tests {
             assert!(part_of_speech::is_verb(
                 kosha().lookup(entry.infinitive).unwrap().pos
             ));
+            for lemma in entry.right_infinitives {
+                assert!(
+                    varnavinyas_vyakaran::verb_evidence::form_for_infinitive(lemma, lemma)
+                        .is_some()
+                );
+            }
         }
     }
 
@@ -202,6 +233,7 @@ mod tests {
             DATA.replace("पारी", "पारु"),
             DATA.replace("पूरा|", "|"),
             DATA.replace("\terror\t", "\tautomatic\t"),
+            DATA.replace("पठाउनु", "लेख्नु"),
             format!("{DATA}{}\n", DATA.lines().nth(1).unwrap()),
         ] {
             assert!(std::panic::catch_unwind(|| parse_inventory(&data)).is_err());

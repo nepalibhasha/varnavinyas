@@ -1,8 +1,8 @@
-short	long	infinitive	left_contexts	right_contexts	kind	source	review_status
-पारि	पारी	पार्नु	पूरा|वृत्ताकार	बनाइएको|घर फर्कियो|फर्कियो|राख्यो|राखेर|अगाडि बढ्यो	error	PS-Saisanik-ह्रस्वदीर्घ-(भ);Brihat:पारि;Pragya:पारि	reviewed
-मिलाइ	मिलाई	मिलाउनु	विषय|मिति|मिति आदि|कुरा	लेखिएको|लेखेर|राख्यो|नाफा खाने	ambiguous	PS-Saisanik-ह्रस्वदीर्घ-(भ);Brihat:मिलाइ;Pragya:मिलाइ	reviewed
-पकाइ	पकाई	पकाउनु	रस|घिउमा|खाना	बाक्लो बनाइएको|पागमा डुबाएर|खायो|खाएर|खानुभयो	ambiguous	PS-Saisanik-ह्रस्वदीर्घ-(भ);Brihat:पकाइ;Pragya:पकाइ	reviewed
-लगाइ	लगाई	लगाउनु	बोटबिरुवा|टिको	गरिने|दिएर|गयो|गए|हिँड्यो	ambiguous	PS-Saisanik-ह्रस्वदीर्घ-(भ);Brihat:लगाइ;Pragya:लगाइ	reviewed
-बनाइ	बनाई	बनाउनु	वातावरण|घुमर्किएको|खाना	स्वास्थ्योपचार गर्ने|घिउमा पकाएर|राख्यो|राखेर	ambiguous	PS-Saisanik-ह्रस्वदीर्घ-(भ);Brihat:बनाइ;Pragya:बनाइ	reviewed
-भइ	भई	हुनु	निश्चिन्त|मिलित	समय बिताई|दबिएको|बस्यो|बस्नु	ambiguous	PS-Saisanik-ह्रस्वदीर्घ-(भ);Brihat:भइ;Pragya:भइ	reviewed
-लेखि	लेखी	लेख्नु	रोहबरमा|लिन|चिठी|पत्र	हस्ताक्षर गरिएको|पठाइने|पठायो|पठाएर|दियो	ambiguous	PS-Saisanik-ह्रस्वदीर्घ-(भ);Brihat:लेखि;Pragya:लेखि	reviewed
+short	long	infinitive	left_contexts	right_contexts	right_infinitives	kind	source	review_status
+पारि	पारी	पार्नु	पूरा|वृत्ताकार	बनाइएको|घर फर्कियो|फर्कियो|राख्यो|राखेर|अगाडि बढ्यो	-	error	PS-Saisanik-ह्रस्वदीर्घ-(भ);Brihat:पारि;Pragya:पारि	reviewed
+मिलाइ	मिलाई	मिलाउनु	विषय|मिति|मिति आदि|कुरा	लेखिएको|लेखेर|राख्यो|नाफा खाने	-	ambiguous	PS-Saisanik-ह्रस्वदीर्घ-(भ);Brihat:मिलाइ;Pragya:मिलाइ	reviewed
+पकाइ	पकाई	पकाउनु	रस|घिउमा|खाना	बाक्लो बनाइएको|पागमा डुबाएर|खायो|खाएर|खानुभयो	-	ambiguous	PS-Saisanik-ह्रस्वदीर्घ-(भ);Brihat:पकाइ;Pragya:पकाइ	reviewed
+लगाइ	लगाई	लगाउनु	बोटबिरुवा|टिको	गरिने|दिएर|गयो|गए|हिँड्यो	-	ambiguous	PS-Saisanik-ह्रस्वदीर्घ-(भ);Brihat:लगाइ;Pragya:लगाइ	reviewed
+बनाइ	बनाई	बनाउनु	वातावरण|घुमर्किएको|खाना	स्वास्थ्योपचार गर्ने|घिउमा पकाएर|राख्यो|राखेर	-	ambiguous	PS-Saisanik-ह्रस्वदीर्घ-(भ);Brihat:बनाइ;Pragya:बनाइ	reviewed
+भइ	भई	हुनु	निश्चिन्त|मिलित	समय बिताई|दबिएको|बस्यो|बस्नु	-	ambiguous	PS-Saisanik-ह्रस्वदीर्घ-(भ);Brihat:भइ;Pragya:भइ	reviewed
+लेखि	लेखी	लेख्नु	रोहबरमा|लिन|चिठी|पत्र	हस्ताक्षर गरिएको|पठाइने|पठायो|पठाएर|दियो	पठाउनु	ambiguous	PS-Saisanik-ह्रस्वदीर्घ-(भ);Brihat:लेखि;Pragya:लेखि	reviewed

@@ -25,6 +25,13 @@ The crate defines:
 
 - `StubAnalyzer` -> explicit placeholder that returns `NotImplemented`
 - `RuleBasedAnalyzer` -> feature-gated MVP implementation
+- `verb_evidence::form_for_infinitive` -> lightweight, lexically supported
+  readings behind `verb-evidence`, independent of the full MVP analyzer.
+  It recognizes reviewed regular आउनु inflections (for example
+  `पठाइन्`, `पठाइयो`, `पठाउँछ` from `पठाउनु`) and one negative न prefix.
+  Endings are source-reviewed in `data/rule_inventories/regular_aaunu_verb_forms.tsv`.
+  This is evidence for a possible reading, not a unique sentence role,
+  gender/agreement decision or spelling correction.
 
 ## Example
 
@@ -40,7 +47,8 @@ That example shows the current state honestly: the abstraction is in place, but 
 
 ## Used By
 
-- optional grammar-pass logic in `varnavinyas-parikshak`
+- always-on contextual verb evidence and optional grammar-pass logic in
+  `varnavinyas-parikshak`
 - future deeper linguistic analysis paths
 
 ## Current Limits

@@ -1,5 +1,8 @@
 use thiserror::Error;
 
+#[cfg(feature = "verb-evidence")]
+pub mod verb_evidence;
+
 /// Error type for vyakaran operations.
 #[derive(Debug, Error)]
 pub enum VyakaranError {

@@ -7,7 +7,8 @@ repository.workspace = true
 description = "Morphological analysis for Nepali"
 
 [features]
-vyakaran-mvp = ["dep:varnavinyas-kosha", "dep:varnavinyas-shabda"]
+verb-evidence = ["dep:varnavinyas-kosha"]
+vyakaran-mvp = ["verb-evidence", "dep:varnavinyas-shabda"]
 
 [dependencies]
 thiserror = { workspace = true }

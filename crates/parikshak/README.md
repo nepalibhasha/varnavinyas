@@ -80,7 +80,8 @@ Typical full-text behavior:
 - `varnavinyas-prakriya`
 - `varnavinyas-lekhya`
 - `varnavinyas-kosha`
-- optionally `varnavinyas-vyakaran` and `varnavinyas-samasa` in heuristic paths
+- `varnavinyas-vyakaran` for lightweight verb evidence; its full MVP analyzer
+  and `varnavinyas-samasa` remain optional in grammar heuristic paths
 
 ## Design Notes
 
@@ -130,6 +131,13 @@ must not treat these as definite errors or include them in automatic bulk
 correction. `यसको मिलाइ राम्रो छ` and `तिम्रा लेखि ...` receive no such hint.
 Unlisted contexts are left alone; this inventory is intentionally bounded,
 not a complete parser or a general gender/agreement checker.
+
+The following predicate may also be identified by a reviewed infinitive
+family through `vyakaran::verb_evidence`: `चिठी लेखि पठाइन्`,
+`चिठी लेखि पठाइयो` and `चिठी लेखि पठाउँछ` retain the same conditional
+`लेखी` suggestion as `चिठी लेखि पठायो`. A suffix by itself is insufficient:
+the infinitive must independently be a safe, dictionary-supported verb.
+Irregular and unreviewed families are left to the explicit frames.
 
 ### Section 3 `(घ)` Padayog / Padabiyog
 

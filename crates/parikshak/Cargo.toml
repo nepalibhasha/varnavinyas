@@ -10,7 +10,7 @@ description = "Nepali spell-check pipeline composing kosha, prakriya, and lekhya
 oblique-forms = []
 nipat-tokenization = []
 vocative-tokenization = []
-grammar-pass = ["dep:varnavinyas-vyakaran", "dep:varnavinyas-samasa", "varnavinyas-vyakaran/vyakaran-mvp"]
+grammar-pass = ["dep:varnavinyas-samasa", "varnavinyas-vyakaran/vyakaran-mvp"]
 
 [dependencies]
 varnavinyas-akshar = { workspace = true }
@@ -18,7 +18,7 @@ varnavinyas-kosha = { workspace = true }
 varnavinyas-shabda = { workspace = true }
 varnavinyas-prakriya = { workspace = true }
 varnavinyas-lekhya = { workspace = true }
-varnavinyas-vyakaran = { workspace = true, optional = true }
+varnavinyas-vyakaran = { workspace = true, features = ["verb-evidence"] }
 varnavinyas-samasa = { workspace = true, optional = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
