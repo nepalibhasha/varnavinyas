@@ -237,3 +237,58 @@ fn writing_converb_recognizes_inflected_following_verbs_without_claiming_certain
         }
     }
 }
+
+#[test]
+fn reviewed_writing_objects_keep_their_reading_under_plural_and_object_case() {
+    for object in ["चिठीलाई", "चिठीहरू", "पत्रलाई", "पत्रहरू", "पत्रहरूलाई"]
+    {
+        for options in options() {
+            let text = format!("🙂 {object} लेखि पठाइन्।");
+            let diagnostics = check_text_with_options(&text, options);
+            let hits: Vec<_> = diagnostics
+                .iter()
+                .filter(|d| d.incorrect == "लेखि")
+                .collect();
+            assert_eq!(hits.len(), 1, "{text}: {diagnostics:?}");
+            assert_eq!(hits[0].correction, "लेखी");
+            assert_eq!(hits[0].kind, DiagnosticKind::Ambiguous);
+            assert_eq!(&text[hits[0].span.0..hits[0].span.1], "लेखि");
+            assert!(
+                !check_text_with_options(&text.replace("लेखि", "लेखी"), options)
+                    .iter()
+                    .any(|d| d.incorrect == "लेखी")
+            );
+        }
+    }
+    for object in [
+        "पत्रको",
+        "पत्रका",
+        "पत्रकी",
+        "पत्रहरूका",
+        "पत्रमा",
+        "पत्रसँग",
+        "पत्रलाईको",
+        "तिम्रा",
+        "अनपत्रलाई",
+        "कखगहरूलाई",
+    ] {
+        for options in options() {
+            let text = format!("{object} लेखि पठाइन्।");
+            assert!(
+                !check_text_with_options(&text, options)
+                    .iter()
+                    .any(|d| d.incorrect == "लेखि"),
+                "{text}"
+            );
+        }
+    }
+    for text in ["पत्रलाई, लेखि पठाइन्।", "पत्रहरूलाई\nलेखि पठाइन्।"]
+    {
+        assert!(
+            !check_text_with_options(text, CheckOptions::default())
+                .iter()
+                .any(|d| d.incorrect == "लेखि"),
+            "{text}"
+        );
+    }
+}

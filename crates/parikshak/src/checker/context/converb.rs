@@ -19,6 +19,7 @@ struct Entry<'a> {
     left: Vec<Vec<&'a str>>,
     right: Vec<Vec<&'a str>>,
     right_infinitives: Vec<&'a str>,
+    object_lemmas: Vec<&'a str>,
     kind: DiagnosticKind,
 }
 
@@ -27,20 +28,20 @@ fn parse_inventory(data: &str) -> Vec<Entry<'_>> {
     assert_eq!(
         lines.next(),
         Some(
-            "short\tlong\tinfinitive\tleft_contexts\tright_contexts\tright_infinitives\tkind\tsource\treview_status"
+            "short\tlong\tinfinitive\tleft_contexts\tright_contexts\tright_infinitives\tobject_lemmas\tkind\tsource\treview_status"
         )
     );
     let mut entries: Vec<Entry<'_>> = Vec::new();
     for line in lines.filter(|line| !line.trim().is_empty()) {
         let f: Vec<_> = line.split('\t').collect();
-        assert_eq!(f.len(), 9, "invalid converb row: {line}");
+        assert_eq!(f.len(), 10, "invalid converb row: {line}");
         assert!(
             f.iter().all(|field| !field.is_empty()),
             "missing field: {line}"
         );
-        assert_eq!(f[8], "reviewed", "unreviewed frame: {line}");
+        assert_eq!(f[9], "reviewed", "unreviewed frame: {line}");
         assert!(
-            f[7].split(';').any(|source| source == SOURCE),
+            f[8].split(';').any(|source| source == SOURCE),
             "missing rule source: {line}"
         );
         let stem = f[0]
@@ -72,7 +73,21 @@ fn parse_inventory(data: &str) -> Vec<Entry<'_>> {
                     })
                     .collect()
             },
-            kind: match f[6] {
+            object_lemmas: if f[6] == "-" {
+                Vec::new()
+            } else {
+                f[6].split('|')
+                    .inspect(|lemma| {
+                        assert!(
+                            f[8].split(';')
+                                .any(|source| source == format!("Brihat:{lemma}")
+                                    || source == format!("Pragya:{lemma}")),
+                            "missing object noun provenance: {line}"
+                        );
+                    })
+                    .collect()
+            },
+            kind: match f[7] {
                 "error" => DiagnosticKind::Error,
                 "ambiguous" => DiagnosticKind::Ambiguous,
                 _ => panic!("unknown converb kind: {line}"),
@@ -124,6 +139,42 @@ fn horizontal_gap(text: &str, left: &AnalyzedToken, right: &AnalyzedToken) -> bo
         })
 }
 
+/// A reviewed object noun may carry plural and/or accusative/dative लाई.
+/// Genitives and other case/particle stacks do not establish this reading.
+/// Inventory noun evidence also covers entries with missing dictionary POS;
+/// lexical membership alone is never used to assign an arbitrary noun role.
+fn inflected_object_matches(surface: &str, entry: &Entry<'_>) -> bool {
+    use varnavinyas_shabda::{AffixKind, analyze_affixes};
+
+    if !entry
+        .object_lemmas
+        .iter()
+        .any(|lemma| surface.starts_with(lemma))
+    {
+        return false;
+    }
+    analyze_affixes(surface).iter().any(|analysis| {
+        if !analysis.prefixes.is_empty()
+            || analysis.root != analysis.stem
+            || !entry.object_lemmas.contains(&analysis.stem.as_str())
+            || !kosha().is_correction_target(&analysis.stem)
+        {
+            return false;
+        }
+        let is_plural = |suffix: &varnavinyas_shabda::AffixSegment| {
+            suffix.kind == AffixKind::PluralMarker && suffix.text == "हरू"
+        };
+        let is_object_case = |suffix: &varnavinyas_shabda::AffixSegment| {
+            suffix.kind == AffixKind::CaseMarker && suffix.text == "लाई"
+        };
+        match analysis.suffix_segments.as_slice() {
+            [suffix] => is_plural(suffix) || is_object_case(suffix),
+            [plural, case] => is_plural(plural) && is_object_case(case),
+            _ => false,
+        }
+    })
+}
+
 pub(super) fn candidates(
     text: &str,
     tokens: &[AnalyzedToken],
@@ -152,7 +203,9 @@ pub(super) fn candidates(
                     && phrase_matches(text, tokens, start, words)
                     && horizontal_gap(text, &tokens[idx - 1], &tokens[idx])
             })
-        });
+        }) || idx > sentence.start_token
+            && horizontal_gap(text, &tokens[idx - 1], &tokens[idx])
+            && inflected_object_matches(&tokens[idx - 1].surface(), entry);
         let right_match = entry.right.iter().any(|words| {
             idx + 1 + words.len() <= sentence.end_token
                 && phrase_matches(text, tokens, idx + 1, words)
@@ -222,6 +275,14 @@ mod tests {
                         .is_some()
                 );
             }
+            for lemma in entry.object_lemmas {
+                assert!(kosha().is_correction_target(lemma));
+                let pos = kosha().lookup(lemma).unwrap().pos;
+                assert!(
+                    pos.is_empty() || part_of_speech::is_noun(pos),
+                    "{lemma}: {pos}"
+                );
+            }
         }
     }
 
@@ -234,6 +295,7 @@ mod tests {
             DATA.replace("पूरा|", "|"),
             DATA.replace("\terror\t", "\tautomatic\t"),
             DATA.replace("पठाउनु", "लेख्नु"),
+            DATA.replace("Pragya:चिठी", "missing-noun-source"),
             format!("{DATA}{}\n", DATA.lines().nth(1).unwrap()),
         ] {
             assert!(std::panic::catch_unwind(|| parse_inventory(&data)).is_err());

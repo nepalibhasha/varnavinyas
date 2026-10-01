@@ -139,6 +139,13 @@ family through `vyakaran::verb_evidence`: `चिठी लेखि पठा�
 the infinitive must independently be a safe, dictionary-supported verb.
 Irregular and unreviewed families are left to the explicit frames.
 
+Reviewed writing-object nouns `चिठी` and `पत्र` may carry plural `हरू`,
+object marking `लाई`, or both: `पत्रहरूलाई लेखि पठाइन्` offers the same
+review suggestion. This uses supported suffix analysis plus explicit noun
+provenance, including dictionary entries whose POS metadata is missing.
+It does not reinterpret genitives (`पत्रको`, `तिम्रा`), locatives or arbitrary
+suffix stacks as objects. Diagnostic spans still cover only `लेखि`.
+
 ### Section 3 `(घ)` Padayog / Padabiyog
 
 Owned by:
