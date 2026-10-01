@@ -9,6 +9,7 @@ import { debounce, escapeHtml, CATEGORY_COLORS, CATEGORY_LABELS } from './utils.
 import { wrapRuleTooltip, getRuleSummary } from './rules-data.js';
 import { initInspector, showInspector, hideInspector, isInspectorActive } from './inspector.js';
 import { applyCorrections, canApplyDiagnostic, canBulkApplyDiagnostic } from './corrections.js';
+import { renderDiagnosticComposition } from './diagnostic-presentation.js';
 
 let diagnostics = [];
 let lastCheckedText = null;
@@ -502,7 +503,7 @@ function renderGrammarCoverage() {
       <span class="grammar-coverage-chip">
         ${escapeHtml(getHeuristicRuleLabel(code))}
         <span class="grammar-coverage-count">${stats.count}</span>
-        <span class="grammar-coverage-avg">${avg}%</span>
+        ${code !== "samasa-heuristic" ? `<span class="grammar-coverage-avg">${avg}%</span>` : ""}
       </span>`;
     })
     .join("");
@@ -603,21 +604,7 @@ function renderDiagnostics() {
         : "";
       const isInfo = isInformationalDiagnostic(d);
       const hasChange = isApplyableDiagnostic(d);
-      const correctionRow = isInfo
-        ? `<div class="diag-correction diag-analysis-row">
-          <span class="diag-source">${escapeHtml(d.incorrect)}</span>
-          <span class="diag-arrow">\u2192</span>
-          <span class="diag-analysis">${escapeHtml(d.correction)}</span>
-        </div>`
-        : hasChange
-        ? `<div class="diag-correction">
-          <span class="diag-incorrect">${escapeHtml(d.incorrect)}</span>
-          <span class="diag-arrow">\u2192</span>
-          <span class="diag-correct">${escapeHtml(d.correction)}</span>
-        </div>`
-        : `<div class="diag-correction">
-          <span class="diag-incorrect">${escapeHtml(d.incorrect)}</span>
-        </div>`;
+      const correctionRow = renderDiagnosticComposition(d);
       const fixButton = hasChange
         ? `<button class="btn btn-sm btn-primary diag-fix" data-index="${i}">\u0938\u091A\u094D\u092F\u093E\u0909\u0928\u0941\u0939\u094B\u0938\u094D</button>`
         : "";
@@ -628,7 +615,7 @@ function renderDiagnostics() {
         <div class="diag-meta">
           <span class="diag-badge" data-category="${code}">${escapeHtml(label)}</span>
           ${kindLabel ? `<span class="diag-kind-chip diag-kind-${kindClass}">${escapeHtml(kindLabel)}</span>` : ""}
-          ${confidence < 100 ? `<span class="diag-confidence">${confidence}%</span>` : ''}
+          ${!isInfo && confidence < 100 ? `<span class="diag-confidence">${confidence}%</span>` : ''}
         </div>
         ${correctionRow}
         ${guidanceBlock}
@@ -761,7 +748,6 @@ function showMobileDiagOverlay(d, idx) {
   hideInspector();
   const visible = getVisibleDiagnosticsWithIndex();
   const visiblePos = visible.findIndex(({ index }) => index === idx);
-  const isInfo = isInformationalDiagnostic(d);
   const hasChange = isApplyableDiagnostic(d);
   const label = primaryCategoryLabel(d);
   const code = escapeHtml(d.category_code);
@@ -778,20 +764,7 @@ function showMobileDiagOverlay(d, idx) {
       <span class="mobile-diag-progress">${visiblePos >= 0 ? `${visiblePos + 1} / ${visible.length}` : ''}</span>
       <button class="mobile-diag-dismiss" aria-label="Close">&times;</button>
     </div>
-    ${isInfo
-      ? `<div class="diag-correction diag-analysis-row">
-          <span class="diag-source">${escapeHtml(d.incorrect)}</span>
-          <span class="diag-arrow">\u2192</span>
-          <span class="diag-analysis">${escapeHtml(d.correction)}</span>
-        </div>`
-      : hasChange
-      ? `<div class="diag-correction">
-          <span class="diag-incorrect">${escapeHtml(d.incorrect)}</span>
-          <span class="diag-arrow">\u2192</span>
-          <span class="diag-correct">${escapeHtml(d.correction)}</span>
-        </div>`
-      : `<div class="diag-correction"><span class="diag-incorrect">${escapeHtml(d.incorrect)}</span></div>`
-    }
+    ${renderDiagnosticComposition(d)}
     ${guidanceBlock}
     <div class="diag-explanation">${escapeHtml(d.explanation)}</div>
     <div class="diag-rule">${wrapRuleTooltip(d.rule, d.category_code, {

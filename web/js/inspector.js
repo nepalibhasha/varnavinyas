@@ -14,7 +14,7 @@ import {
 } from './wasm-bridge.js';
 import { escapeHtml } from './utils.js';
 import { wrapRuleTooltip } from './rules-data.js';
-import { applyTextContext, morphologySupportedByAffix, originPresentation } from './inspection-context.js';
+import { applyTextContext, morphologySupportedByAffix, originPresentation, sandhiSupportedByCompound } from './inspection-context.js';
 
 /** Feature flag for word inspector. Set to false to disable. */
 const FEATURE_WORD_INSPECTOR = true;
@@ -445,7 +445,7 @@ function renderCompoundSection(baseWord, sourceWord = null) {
 function renderSandhiSection(word) {
   try {
     const r = sandhiSplitBestForCompound(word);
-    if (!r) return '';
+    if (!sandhiSupportedByCompound(r, analyzeCompound(word))) return '';
 
     const typeLabel = SANDHI_TYPE_LABELS[r.sandhi_type] || r.sandhi_type;
     const typeClass = SANDHI_TYPE_CLASS[r.sandhi_type] || '';

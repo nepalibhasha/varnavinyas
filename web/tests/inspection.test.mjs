@@ -130,3 +130,13 @@ test('origin badges distinguish missing evidence, inference, and documented orig
   assert.equal(originPresentation({ origin: 'tatsam', origin_source: 'kosha' }).label, 'तत्सम');
   assert.equal(originPresentation({ origin: 'tadbhav', origin_source: 'override' }).label, 'तद्भव');
 });
+
+test('inspector sandhi rows need matching reviewed compound members, not a spelling score', async () => {
+  const { sandhiSupportedByCompound } = await import('../js/inspection-context.js');
+  assert.equal(sandhiSupportedByCompound({ left: 'वि', right: 'कास', confidence: 0.9 }, []), false);
+  assert.equal(sandhiSupportedByCompound({ left: 'याता', right: 'आयात' }, []), false);
+  const compounds = [{ left: 'सूर्य', right: 'उदय' }];
+  assert.equal(sandhiSupportedByCompound({ left: 'सूर्य', right: 'उदय' }, compounds), true);
+  assert.equal(sandhiSupportedByCompound({ left: 'सूर्या', right: 'उदय' }, compounds), false);
+  assert.equal(sandhiSupportedByCompound(null, compounds), false);
+});

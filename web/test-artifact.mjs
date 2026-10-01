@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { morphologySupportedByAffix, originPresentation } from './js/inspection-context.js';
+import { morphologySupportedByAffix, originPresentation, sandhiSupportedByCompound } from './js/inspection-context.js';
 import { applyCorrections, canBulkApplyDiagnostic } from './js/corrections.js';
 import { getReferenceTargetForRule } from './js/rules-data.js';
 
@@ -32,6 +32,33 @@ for (const fixture of sharedFixtures.cases) {
   for (const diagnostic of actual.filter(d => d.kind === 'Ambiguous')) {
     assert.equal(canBulkApplyDiagnostic(diagnostic), false, fixture.id);
   }
+}
+// Public compound analysis needs reviewed formation evidence, not lexical coincidence.
+for (const word of ['सवारीमा', 'दशकमा', 'आयात', 'आर्थिक', 'विकास', 'यातायात',
+  'व्यवस्थापन', 'रिसाइकल', 'आधारमा', 'छलफल', 'विवरण', 'सबैलाई']) {
+  const compounds = wasm.analyze_compound_value(word);
+  assert.deepEqual(compounds, [], word);
+  assert.deepEqual(JSON.parse(wasm.analyze_compound(word)), compounds, word);
+  assert.equal(sandhiSupportedByCompound(wasm.sandhi_split_best_for_compound_value(word), compounds), false, word);
+  for (const mode of ['academy-strict', 'common-editorial']) {
+    for (const text of [word, `🙂 ${word} सम्बन्धी जानकारी उपलब्ध छ।`]) {
+      assert.ok(!wasm.check_text_value_with_options(text, true, mode)
+        .some(d => d.rule_code === 'samasa-heuristic'), text);
+    }
+  }
+}
+for (const [word, left, right] of [['सूर्योदय', 'सूर्य', 'उदय'],
+  ['महोत्सव', 'महा', 'उत्सव'], ['पूर्वाधार', 'पूर्व', 'आधार'],
+  ['मापदण्ड', 'माप', 'दण्ड'], ['एकचक्र', 'एक', 'चक्र']]) {
+  const compounds = wasm.analyze_compound_value(word);
+  assert.equal(compounds.length, 1, word);
+  assert.equal(compounds[0].left, left, word);
+  assert.equal(compounds[0].right, right, word);
+  const split = wasm.sandhi_split_best_for_compound_value(word);
+  if (split) assert.equal(sandhiSupportedByCompound(split, compounds), true, word);
+}
+for (const word of ['आयात', 'आर्थिक', 'आधार', 'आचार', 'आकाश']) {
+  assert.ok(wasm.sandhi_split_value(word).every(c => c.left !== word && c.right !== word), word);
 }
 // Exercise contextual reading, UTF-8 spans and actual bulk policy together.
 const converbRule = 'PS-Saisanik-ह्रस्वदीर्घ-(भ)-context-कृदन्त';

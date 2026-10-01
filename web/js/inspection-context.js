@@ -48,3 +48,9 @@ export function originPresentation(analysis) {
   return { label, cssClass: `origin-${analysis.origin}`,
     explanation: analysis.origin_source === 'kosha' ? 'शब्दकोशको उत्पत्ति सूचनामा आधारित।' : 'समीक्षा गरिएको उत्पत्ति सूचनामा आधारित।' };
 }
+
+/** A reconstructed spelling boundary needs reviewed compound evidence for display. */
+export function sandhiSupportedByCompound(split, compounds) {
+  return Boolean(split && compounds?.some(candidate =>
+    candidate.left === split.left && candidate.right === split.right));
+}

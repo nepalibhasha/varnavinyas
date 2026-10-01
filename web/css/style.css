@@ -739,9 +739,21 @@ body {
 
 .diag-analysis-row {
   display: flex;
+  flex-direction: column;
+  align-items: start;
+  gap: 0.2rem;
+}
+
+.diag-analysis-details {
+  display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 0.2rem;
+  gap: 0.4rem;
+}
+
+.diag-analysis-label {
+  color: var(--color-text-secondary);
+  font-size: 0.8em;
 }
 
 .diag-source {
@@ -750,7 +762,7 @@ body {
 }
 
 .diag-analysis {
-  color: var(--color-success);
+  color: var(--color-text-primary);
   font-weight: 600;
 }
 

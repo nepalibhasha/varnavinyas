@@ -144,3 +144,12 @@ orthography_mode)` when the manifest advertises that capability.
 Origin badges distinguish documented (`kosha` / `override`), inferred
 (`heuristic`), and unknown (`unknown`) origins. They never treat a missing
 origin tag as evidence that a word is देशज.
+
+## Compound information
+
+The checker and inspector show reviewed compound interpretations only. Outer
+suffixes remain separate, for example सूर्य + उदय + मा. Structural information
+is labeled बनोट, has no correction arrow or accuracy percentage, and cannot be
+applied as a text edit. Inspector sandhi rows must agree with a reviewed compound
+pair; raw sandhi candidates remain available through the exploratory APIs. See
+[consumer guidance](../docs/COMPOUND_ANALYSIS.md).
