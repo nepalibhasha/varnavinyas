@@ -63,6 +63,31 @@ fn classify_text_labels_unknown_inferred_and_documented() {
 // ── check subcommand ────────────────────────────────────────────
 
 #[test]
+fn contextual_converb_suggestions_preserve_kind_and_do_not_exit_as_errors() {
+    for mode in ["academy-strict", "common-editorial"] {
+        let output = cmd()
+            .args(["check", "--format", "json", "--orthography-mode", mode])
+            .write_stdin("🙂 पत्रहरूलाई लेखि पठाइन्।")
+            .assert()
+            .success()
+            .get_output()
+            .stdout
+            .clone();
+        let actual: serde_json::Value = serde_json::from_slice(&output).unwrap();
+        let diagnostics = actual.as_array().unwrap();
+        assert_eq!(diagnostics.len(), 1);
+        assert_eq!(diagnostics[0]["kind"], "Ambiguous");
+        assert_eq!(diagnostics[0]["incorrect"], "लेखि");
+        assert_eq!(diagnostics[0]["correction"], "लेखी");
+        assert_eq!(diagnostics[0]["category_code"], "HrasvaDirgha");
+        assert_eq!(
+            diagnostics[0]["rule_code"],
+            "PS-Saisanik-ह्रस्वदीर्घ-(भ)-context-कृदन्त"
+        );
+    }
+}
+
+#[test]
 fn check_stdin_with_errors_exits_1() {
     cmd()
         .arg("check")

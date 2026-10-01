@@ -65,6 +65,13 @@ return JSON diagnostic strings with the same fields and semantics:
   omitted. Ignore unfamiliar fields for forward compatibility.
 - `grammar` enables heuristic diagnostics; it is off by default. In evaluation
   and production, make the option explicit rather than silently changing it.
+- Current source builds include selected converb context suggestions independently
+  of `grammar`; these changes are not in the published v0.1.2 ZIPs. For example,
+  `पत्रहरूलाई लेखि पठाइन्` offers `लेखी` as an
+  `Ambiguous` reading in both orthography modes. Display the conditional
+  explanation and require an individual choice; never bulk-apply it as an
+  error. Inflected following verbs are supported only for reviewed families.
+  Genitives such as `पत्रको` do not establish the writing-object reading.
 - `classify` preserves its four-way compatibility enum. Its fallback Deshaj
   does not prove origin. Use `classifyWithProvenance` for explanations.
 

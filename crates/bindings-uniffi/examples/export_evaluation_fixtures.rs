@@ -12,6 +12,10 @@ fn main() {
         ("alternate-reasons", "भौतीक", false),
         ("grammar", "सूर्योदय भयो।", true),
         ("punctuation", "नेपाल , राम्रो", false),
+        ("converb-inflected-predicate", "🙂 चिठी लेखि पठाइयो।", false),
+        ("converb-inflected-object", "पत्रहरूलाई लेखि पठाइन्।", true),
+        ("converb-adverb-reading", "तिम्रा लेखि उनी मरेबराबरै भए।", false),
+        ("converb-genitive-guard", "पत्रको लेखि पठाइन्।", false),
     ] {
         for (mode, orthography) in [
             ("academy-strict", OrthographyMode::AcademyStrict),

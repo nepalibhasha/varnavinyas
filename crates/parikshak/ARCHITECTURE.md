@@ -130,6 +130,12 @@ passes in the same pipeline.
 - `checker/grammar.rs`
   Owns optional grammar-aware heuristics behind the feature gate.
 
+- `checker/context/converb.rs`
+  Owns bounded converb constructions. It combines reviewed noun/phrase
+  evidence, `shabda` suffix analysis and lightweight `vyakaran` verb evidence.
+  This path is always available; the full `vyakaran-mvp` analyzer stays behind
+  `grammar-pass`. A possible verb reading does not establish a definite error.
+
 - `tokenizer.rs`
   Owns practical tokenization and suffix-aware token analysis.
 

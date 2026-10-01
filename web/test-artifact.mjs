@@ -19,6 +19,20 @@ assert.deepEqual(manifest.capabilities.word_analysis_origin_sources,
 
 const wasm = await import(pathToFileURL(path.join(directory, manifest.entry_js)));
 wasm.initSync({ module: await readFile(path.join(directory, manifest.entry_wasm)) });
+// The same diagnostic payload is consumed by Python and generated mobile bindings.
+const sharedFixtures = JSON.parse(await readFile(new URL('../docs/tests/mobile_diagnostics.json', import.meta.url), 'utf8'));
+const normalizeFixture = value => Array.isArray(value) ? value.map(normalizeFixture)
+  : value && typeof value === 'object' ? Object.fromEntries(Object.entries(value)
+    .map(([key, item]) => [key, normalizeFixture(item)]))
+  : typeof value === 'number' ? Math.round(value * 1e6) / 1e6 : value;
+for (const fixture of sharedFixtures.cases) {
+  const actual = wasm.check_text_value_with_options(fixture.text, fixture.options.grammar,
+    fixture.options.orthography_mode);
+  assert.deepEqual(normalizeFixture(actual), normalizeFixture(fixture.expected_diagnostics), fixture.id);
+  for (const diagnostic of actual.filter(d => d.kind === 'Ambiguous')) {
+    assert.equal(canBulkApplyDiagnostic(diagnostic), false, fixture.id);
+  }
+}
 // Exercise contextual reading, UTF-8 spans and actual bulk policy together.
 const converbRule = 'PS-Saisanik-ह्रस्वदीर्घ-(भ)-context-कृदन्त';
 for (const mode of ['academy-strict', 'common-editorial']) {
@@ -32,6 +46,8 @@ for (const mode of ['academy-strict', 'common-editorial']) {
       ['खाना बनाइ राख्यो।', 'बनाइ', 'बनाई', 'Ambiguous'],
       ['निश्चिन्त भइ समय बिताई बस्नु', 'भइ', 'भई', 'Ambiguous'],
       ['🙂 चिठी लेखि पठायो।', 'लेखि', 'लेखी', 'Ambiguous'],
+      ['🙂 पत्रहरूलाई लेखि पठाइन्।', 'लेखि', 'लेखी', 'Ambiguous'],
+      ['चिठी लेखि पठाउँछ।', 'लेखि', 'लेखी', 'Ambiguous'],
     ]) {
       const diagnostic = wasm.check_text_value_with_options(text, grammar, mode)
         .find(d => d.incorrect === short);

@@ -109,6 +109,7 @@ test('feminine predicate and converb citations open their own explanation with l
     assert.match(summary, /खोला पारि बस्छ/);
     assert.match(summary, /यो निश्चित त्रुटि होइन/);
     assert.match(summary, /सबै सच्याउने कार्यले यसलाई बदल्दैन/);
+    assert.match(summary, /पत्रहरूलाई लेखि पठाइन्/);
   }
   setReferenceContext({ incorrect: 'नभइ', correction: 'नभई', categoryCode: 'HrasvaDirgha',
     targetId: 'saishanik-final-i-verbs', rule: 'PS-Saisanik-ह्रस्वदीर्घ-(ब)/(भ)' });

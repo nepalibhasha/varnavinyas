@@ -383,6 +383,150 @@
         "punctuation_mode": "strict"
       },
       "text": "नेपाल , राम्रो"
+    },
+    {
+      "expected_diagnostics": [
+        {
+          "category": "ह्रस्व/दीर्घ",
+          "category_code": "HrasvaDirgha",
+          "confidence": 0.72,
+          "correction": "लेखी",
+          "explanation": "शैक्षणिक व्याकरण (भ): यहाँ 'लेख्नु' को एर-अर्थक क्रिया प्रयोग भएको हो भने 'लेखी' लेखिन्छ। 'लेखि' को नाम वा अव्यय अर्थमा ह्रस्व नै सही हुन्छ; अभिप्राय हेरेर मात्र सुधार गर्नुहोस्",
+          "incorrect": "लेखि",
+          "kind": "Ambiguous",
+          "rule": "वर्णविन्यास नियम",
+          "rule_code": "PS-Saisanik-ह्रस्वदीर्घ-(भ)-context-कृदन्त",
+          "span_end": 30,
+          "span_start": 18
+        }
+      ],
+      "id": "converb-inflected-predicate-academy-strict",
+      "options": {
+        "grammar": false,
+        "include_noop_heuristics": false,
+        "orthography_mode": "academy-strict",
+        "punctuation_mode": "strict"
+      },
+      "text": "🙂 चिठी लेखि पठाइयो।"
+    },
+    {
+      "expected_diagnostics": [
+        {
+          "category": "ह्रस्व/दीर्घ",
+          "category_code": "HrasvaDirgha",
+          "confidence": 0.72,
+          "correction": "लेखी",
+          "explanation": "शैक्षणिक व्याकरण (भ): यहाँ 'लेख्नु' को एर-अर्थक क्रिया प्रयोग भएको हो भने 'लेखी' लेखिन्छ। 'लेखि' को नाम वा अव्यय अर्थमा ह्रस्व नै सही हुन्छ; अभिप्राय हेरेर मात्र सुधार गर्नुहोस्",
+          "incorrect": "लेखि",
+          "kind": "Ambiguous",
+          "rule": "वर्णविन्यास नियम",
+          "rule_code": "PS-Saisanik-ह्रस्वदीर्घ-(भ)-context-कृदन्त",
+          "span_end": 30,
+          "span_start": 18
+        }
+      ],
+      "id": "converb-inflected-predicate-common-editorial",
+      "options": {
+        "grammar": false,
+        "include_noop_heuristics": false,
+        "orthography_mode": "common-editorial",
+        "punctuation_mode": "strict"
+      },
+      "text": "🙂 चिठी लेखि पठाइयो।"
+    },
+    {
+      "expected_diagnostics": [
+        {
+          "category": "ह्रस्व/दीर्घ",
+          "category_code": "HrasvaDirgha",
+          "confidence": 0.72,
+          "correction": "लेखी",
+          "explanation": "शैक्षणिक व्याकरण (भ): यहाँ 'लेख्नु' को एर-अर्थक क्रिया प्रयोग भएको हो भने 'लेखी' लेखिन्छ। 'लेखि' को नाम वा अव्यय अर्थमा ह्रस्व नै सही हुन्छ; अभिप्राय हेरेर मात्र सुधार गर्नुहोस्",
+          "incorrect": "लेखि",
+          "kind": "Ambiguous",
+          "rule": "वर्णविन्यास नियम",
+          "rule_code": "PS-Saisanik-ह्रस्वदीर्घ-(भ)-context-कृदन्त",
+          "span_end": 43,
+          "span_start": 31
+        }
+      ],
+      "id": "converb-inflected-object-academy-strict",
+      "options": {
+        "grammar": true,
+        "include_noop_heuristics": false,
+        "orthography_mode": "academy-strict",
+        "punctuation_mode": "strict"
+      },
+      "text": "पत्रहरूलाई लेखि पठाइन्।"
+    },
+    {
+      "expected_diagnostics": [
+        {
+          "category": "ह्रस्व/दीर्घ",
+          "category_code": "HrasvaDirgha",
+          "confidence": 0.72,
+          "correction": "लेखी",
+          "explanation": "शैक्षणिक व्याकरण (भ): यहाँ 'लेख्नु' को एर-अर्थक क्रिया प्रयोग भएको हो भने 'लेखी' लेखिन्छ। 'लेखि' को नाम वा अव्यय अर्थमा ह्रस्व नै सही हुन्छ; अभिप्राय हेरेर मात्र सुधार गर्नुहोस्",
+          "incorrect": "लेखि",
+          "kind": "Ambiguous",
+          "rule": "वर्णविन्यास नियम",
+          "rule_code": "PS-Saisanik-ह्रस्वदीर्घ-(भ)-context-कृदन्त",
+          "span_end": 43,
+          "span_start": 31
+        }
+      ],
+      "id": "converb-inflected-object-common-editorial",
+      "options": {
+        "grammar": true,
+        "include_noop_heuristics": false,
+        "orthography_mode": "common-editorial",
+        "punctuation_mode": "strict"
+      },
+      "text": "पत्रहरूलाई लेखि पठाइन्।"
+    },
+    {
+      "expected_diagnostics": [],
+      "id": "converb-adverb-reading-academy-strict",
+      "options": {
+        "grammar": false,
+        "include_noop_heuristics": false,
+        "orthography_mode": "academy-strict",
+        "punctuation_mode": "strict"
+      },
+      "text": "तिम्रा लेखि उनी मरेबराबरै भए।"
+    },
+    {
+      "expected_diagnostics": [],
+      "id": "converb-adverb-reading-common-editorial",
+      "options": {
+        "grammar": false,
+        "include_noop_heuristics": false,
+        "orthography_mode": "common-editorial",
+        "punctuation_mode": "strict"
+      },
+      "text": "तिम्रा लेखि उनी मरेबराबरै भए।"
+    },
+    {
+      "expected_diagnostics": [],
+      "id": "converb-genitive-guard-academy-strict",
+      "options": {
+        "grammar": false,
+        "include_noop_heuristics": false,
+        "orthography_mode": "academy-strict",
+        "punctuation_mode": "strict"
+      },
+      "text": "पत्रको लेखि पठाइन्।"
+    },
+    {
+      "expected_diagnostics": [],
+      "id": "converb-genitive-guard-common-editorial",
+      "options": {
+        "grammar": false,
+        "include_noop_heuristics": false,
+        "orthography_mode": "common-editorial",
+        "punctuation_mode": "strict"
+      },
+      "text": "पत्रको लेखि पठाइन्।"
     }
   ],
   "diagnostic_schema_version": 1,
