@@ -61,6 +61,11 @@ pub fn is_adverb(pos: &str) -> bool {
     )
 }
 
+pub fn is_verb(pos: &str) -> bool {
+    outside_brackets_has_any(pos, &["क्रिया"])
+        || (outside_brackets_has_any(pos, &["क्रि.", "क्रि"]) && !is_adverb(pos))
+}
+
 pub fn is_namayogi(pos: &str) -> bool {
     outside_brackets_has_any(
         pos,
@@ -113,5 +118,17 @@ mod tests {
         assert!(!is_adjective("क्रियाविशेषण"));
         assert!(!is_adjective("ना.वि."));
         assert!(!is_noun("विशेषण [सं. नामन्]"));
+    }
+
+    #[test]
+    fn verb_evidence_excludes_adverbs_and_etymology() {
+        for pos in ["सकर्मक क्रिया [सं.]", "प्रेरणार्थक क्रिया", "अकर्मक क्रि."]
+        {
+            assert!(is_verb(pos), "{pos}");
+        }
+        for pos in ["क्रियाविशेषण", "क्रि.वि.", "क्रि. यो.", "नाम [क्रिया]"]
+        {
+            assert!(!is_verb(pos), "{pos}");
+        }
     }
 }

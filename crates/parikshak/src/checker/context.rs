@@ -8,6 +8,8 @@ use crate::tokenizer::AnalyzedToken;
 
 use super::arbitration::overlaps_existing_span;
 
+mod converb;
+
 #[derive(Debug, Clone, Copy)]
 struct SentenceSpan {
     start_token: usize,
@@ -17,12 +19,14 @@ struct SentenceSpan {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ContextRoleHint {
     FinalPredicate,
+    Converb,
 }
 
 impl ContextRoleHint {
     fn rank(self) -> u8 {
         match self {
             Self::FinalPredicate => 1,
+            Self::Converb => 1,
         }
     }
 }
@@ -38,12 +42,13 @@ struct ContextCandidate {
     kind: DiagnosticKind,
     confidence: f32,
     role_hint: ContextRoleHint,
+    evidence: crate::DiagnosticEvidence,
 }
 
 impl From<ContextCandidate> for Diagnostic {
     fn from(candidate: ContextCandidate) -> Self {
         Diagnostic {
-            evidence: crate::DiagnosticEvidence::CuratedInventory,
+            evidence: candidate.evidence,
             span: candidate.span,
             incorrect: candidate.incorrect,
             correction: candidate.correction,
@@ -130,7 +135,7 @@ fn sentence_context_candidates(
     tokens: &[AnalyzedToken],
     sentence: SentenceSpan,
 ) -> Vec<ContextCandidate> {
-    let mut out = Vec::new();
+    let mut out = converb::candidates(text, tokens, sentence);
 
     if let Some(candidate) = phrase_backed_final_hos_candidate(text, tokens, sentence) {
         out.push(candidate);
@@ -174,6 +179,7 @@ fn phrase_backed_final_hos_candidate(
         kind: DiagnosticKind::Error,
         confidence: 0.97,
         role_hint: ContextRoleHint::FinalPredicate,
+        evidence: crate::DiagnosticEvidence::CuratedInventory,
     })
 }
 
@@ -205,6 +211,7 @@ fn structural_final_hos_candidate(
         kind: DiagnosticKind::Error,
         confidence: 0.89,
         role_hint: ContextRoleHint::FinalPredicate,
+        evidence: crate::DiagnosticEvidence::CuratedInventory,
     })
 }
 

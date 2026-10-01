@@ -33,6 +33,12 @@ whole-word corrections:
 Rust callers constructing `Diagnostic` must supply `evidence`. Binding and JSON
 DTOs intentionally omit this arbitration field; their payloads are unchanged.
 
+Contextual final-i converb frames use the source-cited rule code
+`PS-Saisanik-ह्रस्वदीर्घ-(भ)-context-कृदन्त`. The `-context-` marker assigns
+them to the context pass. Reviewed corrective frames carry curated-inventory
+evidence and retain the pass-local overlap guard; they do not replace an
+existing whole-word or padayog diagnostic on that span.
+
 ## Precedence
 
 The resolver encodes this precedence for padayog overlaps and duplicate

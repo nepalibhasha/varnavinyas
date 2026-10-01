@@ -107,6 +107,21 @@ lexical target; an unsupported suffix rewrite must not override a supported
 case-marker/particle stack. This preserves `मीलेको -> मिलेको` without changing
 valid `रामकोपनि` or `संसदमा`. Text diagnostics cover the original full token.
 
+### Contextual final-i converbs
+
+The always-on context pass recognizes selected constructions under
+`PS-Saisanik-ह्रस्वदीर्घ-(भ)`; it does not perform general grammatical parsing.
+For example, `काम पूरा पारि घर फर्कियो` suggests `पारी`, while
+`राम खोला पारि बस्छ` and isolated `check_word("पारि")` remain unchanged.
+
+Frames live in `data/rule_inventories/context_converbs.tsv`, with mandatory
+source and review status. Both neighboring phrases must match within the same
+sentence using horizontal whitespace only. Punctuation, quotations, line
+breaks, and dictionary sense numbers cannot bridge a frame. A supported verb
+infinitive and safe correction target provide independent lexical checks.
+This behavior is shared by both orthography modes and does not require the
+optional `grammar-pass` feature or runtime grammar flag.
+
 ### Section 3 `(घ)` Padayog / Padabiyog
 
 Owned by:
