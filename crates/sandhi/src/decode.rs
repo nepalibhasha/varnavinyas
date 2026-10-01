@@ -39,6 +39,12 @@ pub fn split(word: &str) -> Vec<SandhiCandidate> {
     }
 
     out.retain(|candidate| {
+        // A vowel merge can mechanically prepend आ without changing the word
+        // (आ + आयात -> आयात). Round-trip spelling is not evidence of a split
+        // when either supposed member is already the entire surface.
+        if candidate.left == word || candidate.right == word {
+            return false;
+        }
         if !valid_split_parts(&candidate.left, &candidate.right) {
             return false;
         }

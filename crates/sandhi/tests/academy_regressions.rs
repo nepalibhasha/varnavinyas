@@ -80,3 +80,25 @@ fn known_compound_is_available_for_compound_analysis() {
         split("नेपाली")
     );
 }
+
+#[test]
+fn reverse_splits_do_not_reuse_the_entire_surface_as_a_member() {
+    for word in ["आयात", "आर्थिक", "आधार", "आचार", "आकाश"]
+    {
+        assert!(
+            split(word)
+                .iter()
+                .all(|candidate| candidate.left != word && candidate.right != word),
+            "{word}: self-repeating reconstruction {:?}",
+            split(word)
+        );
+    }
+    for (word, left, right) in [
+        ("सूर्योदय", "सूर्य", "उदय"),
+        ("पूर्वाधार", "पूर्व", "आधार"),
+        ("महोत्सव", "महा", "उत्सव"),
+    ] {
+        let best = split_best_for_compound(word).expect("genuine sandhi must remain available");
+        assert_eq!((best.left.as_str(), best.right.as_str()), (left, right));
+    }
+}
