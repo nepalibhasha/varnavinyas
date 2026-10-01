@@ -20,6 +20,7 @@ for (const file of manifest.files) {
 assert.ok(names.has(manifest.fixtures.path));
 assert.equal(manifest.files.find(f => f.path === manifest.fixtures.path).sha256, manifest.fixtures.sha256);
 assert.ok(names.has(manifest.origin_fixtures.path));
+assert.ok(names.has('COMPOUND_ANALYSIS.md'));
 assert.equal(manifest.files.find(f => f.path === manifest.origin_fixtures.path).sha256, manifest.origin_fixtures.sha256);
 assert.equal(manifest.origin_classification.provenance_available, true);
 assert.equal(manifest.origin_classification.unknown_origin, null);

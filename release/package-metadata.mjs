@@ -21,6 +21,7 @@ for (const [source, destination] of [
   ['docs/tests/origin_classification.json', 'fixtures/origins.json'],
   ['docs/MOBILE_EVALUATION.md', 'MOBILE_EVALUATION.md'],
   ['docs/INTEGRATION_NOTES.md', 'INTEGRATION_NOTES.md'],
+  ['docs/COMPOUND_ANALYSIS.md', 'COMPOUND_ANALYSIS.md'],
   [`docs/releases/native-${version}.md`, 'RELEASE_NOTES.md'],
   ['LICENSE-MIT', 'LICENSE-MIT'], ['LICENSE-APACHE', 'LICENSE-APACHE'],
 ]) {

@@ -1,5 +1,14 @@
 # Integration Notes
 
+## Current release set
+
+Browser v0.1.7 and Python/CLI/iOS/Android v0.1.4 share one source commit.
+The [release notes](releases/native-v0.1.4.md) describe corrected compound,
+spacing, and progressive-verb behavior. Existing checker calls and diagnostic
+fields remain available; progressive analysis is additive, and Python/WASM
+affix-role consumers must handle the new postposition and comparison roles.
+Upgrade generated mobile bindings with their matching native libraries.
+
 ## Word Analysis and Explanations
 
 Use `analyze_word_value` (or its JSON-string equivalent `analyze_word`) when

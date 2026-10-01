@@ -40,7 +40,7 @@ packages from the same source commit. A web-only rebuild using an older WASM
 artifact will retain the old engine behavior. Publish new immutable versions;
 do not replace existing release tags/assets. Upgrade offline mobile libraries
 and their matching generated bindings together, and refresh manifests/checksums
-and the shared fixtures. The diagnostic fixtures now include 28 cases, including
+and the shared fixtures. The diagnostic fixtures now include 42 cases, including
 unsupported compounds and an inflected compound with an emoji before its span.
 
 The Varnavinyas web presentation also changes; downstream UIs should follow the
