@@ -112,6 +112,7 @@ Current conflict resolutions
 - `परराष्ट्र मन्त्रालय` / `नेपाल सरकार`-type institutional phrases
   - `PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md` explicitly keeps many such institutional/topic phrases split even when joined compounds are attested in raw lexicon assets
   - current policy: prefer the `PS-Saisanik...` split behavior for the implemented institutional/title inventories
+  - institutional spacing requires a reviewed complete pair from 5(आ)(ख), recorded in `data/rule_inventories/institutional_spacing.tsv`. A possible noun+noun decomposition or a member such as `सेवा`/`व्यवस्था` alone does not establish an error. Thus `समाजसेवा` follows the explicit school prescription, while `वायुसेवा`, `जनसेवा`, and `राज्यव्यवस्था` are not blanket-split. Outer case suffixes are retained on the final member.
   - current implementation: `crates/parikshak/src/checker/padayog.rs`
 - `प्रधान मन्त्री` / `शुभ कामना` / `कीर्ति पुर`-type one-meaning compounds
   - `PS-Saisanik-Vyakaran-Varnavinyas-Page-327-349.md` explicitly joins one-meaning place names and two-word one-meaning compounds

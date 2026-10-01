@@ -167,6 +167,11 @@ Implemented highlights:
 - middle-name joins
 - conservative one-meaning compound joins
 - institutional/topic/title phrase splits
+  - institutional/topic corrections require reviewed complete pairs from school
+    grammar 5(आ)(ख), in `data/rule_inventories/institutional_spacing.tsv`.
+    Decomposable words such as `वायुसेवा` and `जनसेवा` remain clean; explicit
+    prescriptions such as `समाजसेवा -> समाज सेवा` retain precedence over raw
+    lexicon membership. The final member keeps its outer case suffix.
 - meaningful reduplication splits
 - nominal-verb splits
 - `... गरी` splits

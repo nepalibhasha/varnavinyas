@@ -188,3 +188,15 @@ case-bearing hosts such as `मानिसको सरह` and `घरको �
 The Notice's 3(घ)-पदयोग-११ supports `सरह`; school grammar 5(अ)(ख) supports
 `सम्म`. The school grammar's separate `जस्तो/जस्तै/जत्रो/जसरी` family is
 preserved. Both orthography modes and grammar settings use these joining rules.
+
+## Spacing prescriptions versus word structure
+
+The school institutional/topic-spacing rule requires a reviewed complete pair
+from 5(आ)(ख). Merely decomposing a word into two known nouns is not a correction.
+`वायुसेवा`, `वायुसेवाको`, `जनसेवा`, and `राज्यव्यवस्था` no longer produce
+blanket splits. Explicit prescriptions such as `नेपालसरकार -> नेपाल सरकार`
+and `समाजसेवा -> समाज सेवा` remain spelling/spacing errors in the main checker,
+independent of the optional grammar toggle. The source pairs live in
+`data/rule_inventories/institutional_spacing.tsv`; their outer case suffixes stay
+on the final member. Diagnostic fields, kinds, and stable category codes are
+unchanged. Rebuild checker artifacts to deliver this fix to downstream clients.

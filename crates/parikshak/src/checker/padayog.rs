@@ -34,7 +34,9 @@ const PADABIYOG_VIBHAKTI_NAMAYOGI_SPLIT_TOKENS: &[&str] =
     &["अगाडि", "पछाडि", "माथि", "समेत", "भन्दा", "लागि", "निम्ति"];
 const COMPARISON_SPLIT_TOKENS: &[&str] = &["जस्तो", "जस्तै", "जत्रो", "जसरी"];
 const NAMIK_KRIYA_SPLIT_TOKENS: &[&str] = &["पाउनु", "गर्नु", "पर्नु", "फाल्नु"];
-const INSTITUTIONAL_SPLIT_TOKENS: &[&str] = &[
+// Semantic exclusion for name joining only. A member noun alone does not
+// authorize splitting a compound; institutional_phrases owns that evidence.
+const INSTITUTIONAL_NAME_TAILS: &[&str] = &[
     "मन्त्रालय",
     "सरकार",
     "विभाग",
@@ -851,7 +853,7 @@ fn add_generalized_saishanik_middle_name_join(
             continue;
         }
         if TITLE_NAME_SPLIT_TOKENS.contains(&right)
-            || INSTITUTIONAL_SPLIT_TOKENS.contains(&right)
+            || INSTITUTIONAL_NAME_TAILS.contains(&right)
             || MULTIWORD_SAMASA_FINAL_TOKENS.contains(&right)
         {
             continue;
@@ -958,11 +960,11 @@ fn add_generalized_saishanik_institutional_split(
             continue;
         }
 
-        for &suffix in INSTITUTIONAL_SPLIT_TOKENS {
-            let Some((left, right)) = split_compound_suffix(token, suffix) else {
+        for pair in super::institutional_phrases::phrases() {
+            let Some((left, right)) = split_compound_suffix(token, pair.right) else {
                 continue;
             };
-            if !candidate_is_authoritative_headword(left) || !candidate_is_supported(right) {
+            if left != pair.left {
                 continue;
             }
 

@@ -1528,6 +1528,45 @@ fn saishanik_ekarthi_joins_apply_conservatively() {
 }
 
 #[test]
+fn institutional_spacing_needs_reviewed_pairs_not_a_possible_decomposition() {
+    for orthography_mode in [
+        OrthographyMode::AcademyStrict,
+        OrthographyMode::CommonEditorial,
+    ] {
+        for grammar in [false, true] {
+            let options = CheckOptions {
+                orthography_mode,
+                grammar,
+                ..Default::default()
+            };
+            for word in ["वायुसेवा", "जनसेवा", "लोकसेवा", "राज्यव्यवस्था"]
+            {
+                for suffix in ["", "को", "ले", "मा"] {
+                    let form = format!("{word}{suffix}");
+                    assert!(check_text_with_options(&form, options).is_empty(), "{form}");
+                }
+            }
+            let inventory =
+                include_str!("../../../data/rule_inventories/institutional_spacing.tsv");
+            for row in inventory.lines().skip(1) {
+                let fields: Vec<_> = row.split('\t').collect();
+                for suffix in ["", "को", "ले"] {
+                    let input = format!("{}{}{suffix}", fields[0], fields[1]);
+                    let output = format!("{} {}{suffix}", fields[0], fields[1]);
+                    let diagnostics = check_text_with_options(&input, options);
+                    assert!(
+                        diagnostics
+                            .iter()
+                            .any(|d| d.incorrect == input && d.correction == output),
+                        "{input}: {diagnostics:?}"
+                    );
+                }
+            }
+        }
+    }
+}
+
+#[test]
 fn saishanik_institutional_phrase_splits_apply() {
     let diags = check_text("नेपालसरकार र परराष्ट्रमन्त्रालयले विज्ञप्ति जारी गरे।");
     for (incorrect, correction_prefix) in [

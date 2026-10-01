@@ -39,6 +39,12 @@ fn main() {
             "मानिसको सरह घरको सम्म मानिस जस्तै",
             true,
         ),
+        (
+            "lexical-compound-spacing",
+            "🙂 वायुसेवा वायुसेवाको वायुसेवाले जनसेवा राज्यव्यवस्था",
+            true,
+        ),
+        ("reviewed-institutional-spacing", "नेपालसरकार समाजसेवा", false),
     ] {
         for (mode, orthography) in [
             ("academy-strict", OrthographyMode::AcademyStrict),

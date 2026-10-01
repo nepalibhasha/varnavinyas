@@ -16,6 +16,7 @@ mod common;
 mod context;
 #[cfg(feature = "grammar-pass")]
 mod grammar;
+mod institutional_phrases;
 mod orthography_variants;
 mod padayog;
 mod padayog_rules;

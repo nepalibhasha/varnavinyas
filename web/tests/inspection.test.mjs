@@ -16,6 +16,13 @@ test('joining reference explains reviewed relational roles and guarded hosts', (
   assert.ok(target.examples.includes('मानिस सरह -> मानिससरह'));
 });
 
+test('institutional spacing reference distinguishes prescriptions from decomposition', () => {
+  const target = RULES_SECTIONS.flatMap(s => s.referenceTargets || []).find(t => t.id === 'saishanik-padabiyog-kha-institution');
+  assert.match(target.summary, /५\(आ\)\(ख\).*समीक्षित सूची/);
+  assert.match(target.summary, /वायुसेवा, जनसेवा र राज्यव्यवस्था स्वतः छुट्याइँदैनन्/);
+  assert.match(target.summary, /बनोटको जानकारी र पदवियोगको सुधार फरक/);
+});
+
 test('legacy morphology cannot override the supported stem, including lexical coincidences', () => {
   assert.equal(morphologySupportedByAffix({ root: 'फर्सी', stem: 'फर्सी' }, { root: 'फर्स', suffixes: ['ई'] }), false);
   assert.equal(morphologySupportedByAffix({ root: 'विद्यार्थी' }, { root: 'विद्यार्थ', suffixes: ['ई'] }), false);

@@ -763,6 +763,104 @@
         "punctuation_mode": "strict"
       },
       "text": "मानिसको सरह घरको सम्म मानिस जस्तै"
+    },
+    {
+      "expected_diagnostics": [],
+      "id": "lexical-compound-spacing-academy-strict",
+      "options": {
+        "grammar": true,
+        "include_noop_heuristics": false,
+        "orthography_mode": "academy-strict",
+        "punctuation_mode": "strict"
+      },
+      "text": "🙂 वायुसेवा वायुसेवाको वायुसेवाले जनसेवा राज्यव्यवस्था"
+    },
+    {
+      "expected_diagnostics": [],
+      "id": "lexical-compound-spacing-common-editorial",
+      "options": {
+        "grammar": true,
+        "include_noop_heuristics": false,
+        "orthography_mode": "common-editorial",
+        "punctuation_mode": "strict"
+      },
+      "text": "🙂 वायुसेवा वायुसेवाको वायुसेवाले जनसेवा राज्यव्यवस्था"
+    },
+    {
+      "expected_diagnostics": [
+        {
+          "category": "शुद्ध-अशुद्ध",
+          "category_code": "ShuddhaTable",
+          "confidence": 0.89,
+          "correction": "नेपाल सरकार",
+          "explanation": "शैक्षणिक व्याकरण पदवियोग (ख): समास भए पनि यस्ता संस्थागत/विषयगत पदहरू अलग डिकामा लेखिन्छन् ।",
+          "incorrect": "नेपालसरकार",
+          "kind": "Error",
+          "rule": "पदयोग/पदवियोग नियम",
+          "rule_code": "3(घ)",
+          "span_end": 30,
+          "span_start": 0
+        },
+        {
+          "category": "शुद्ध-अशुद्ध",
+          "category_code": "ShuddhaTable",
+          "confidence": 0.89,
+          "correction": "समाज सेवा",
+          "explanation": "शैक्षणिक व्याकरण पदवियोग (ख): समास भए पनि यस्ता संस्थागत/विषयगत पदहरू अलग डिकामा लेखिन्छन् ।",
+          "incorrect": "समाजसेवा",
+          "kind": "Error",
+          "rule": "पदयोग/पदवियोग नियम",
+          "rule_code": "3(घ)",
+          "span_end": 55,
+          "span_start": 31
+        }
+      ],
+      "id": "reviewed-institutional-spacing-academy-strict",
+      "options": {
+        "grammar": false,
+        "include_noop_heuristics": false,
+        "orthography_mode": "academy-strict",
+        "punctuation_mode": "strict"
+      },
+      "text": "नेपालसरकार समाजसेवा"
+    },
+    {
+      "expected_diagnostics": [
+        {
+          "category": "शुद्ध-अशुद्ध",
+          "category_code": "ShuddhaTable",
+          "confidence": 0.89,
+          "correction": "नेपाल सरकार",
+          "explanation": "शैक्षणिक व्याकरण पदवियोग (ख): समास भए पनि यस्ता संस्थागत/विषयगत पदहरू अलग डिकामा लेखिन्छन् ।",
+          "incorrect": "नेपालसरकार",
+          "kind": "Error",
+          "rule": "पदयोग/पदवियोग नियम",
+          "rule_code": "3(घ)",
+          "span_end": 30,
+          "span_start": 0
+        },
+        {
+          "category": "शुद्ध-अशुद्ध",
+          "category_code": "ShuddhaTable",
+          "confidence": 0.89,
+          "correction": "समाज सेवा",
+          "explanation": "शैक्षणिक व्याकरण पदवियोग (ख): समास भए पनि यस्ता संस्थागत/विषयगत पदहरू अलग डिकामा लेखिन्छन् ।",
+          "incorrect": "समाजसेवा",
+          "kind": "Error",
+          "rule": "पदयोग/पदवियोग नियम",
+          "rule_code": "3(घ)",
+          "span_end": 55,
+          "span_start": 31
+        }
+      ],
+      "id": "reviewed-institutional-spacing-common-editorial",
+      "options": {
+        "grammar": false,
+        "include_noop_heuristics": false,
+        "orthography_mode": "common-editorial",
+        "punctuation_mode": "strict"
+      },
+      "text": "नेपालसरकार समाजसेवा"
     }
   ],
   "diagnostic_schema_version": 1,
