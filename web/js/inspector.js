@@ -7,12 +7,14 @@
 import {
   analyzeCompound,
   analyzeWord,
+  analyzeProgressive,
   bestAffixAnalysis,
   deriveWord,
   decomposeWord,
   sandhiSplitBestForCompound,
 } from './wasm-bridge.js';
 import { escapeHtml } from './utils.js';
+import { renderProgressiveAnalysis } from './progressive-presentation.js';
 import { wrapRuleTooltip } from './rules-data.js';
 import { applyTextContext, morphologySupportedByAffix, originPresentation, sandhiSupportedByCompound } from './inspection-context.js';
 
@@ -152,6 +154,7 @@ export function showInspector(word, start, end, options = {}) {
   const structure = buildStructureViewModel(word);
   html += renderAffixStructureSection(structure.affix);
   html += renderMorphologySection(structure.morphology);
+  html += renderProgressiveAnalysis(structure.progressive);
 
   // --- Compound depth on recovered base/root ---
   html += renderCompoundSection(structure.baseWord, structure.compoundSourceLabel);
@@ -318,10 +321,17 @@ function isDuplicateMorphology(affix, morph) {
 function buildStructureViewModel(word) {
   const affix = safeBestAffixAnalysis(word);
   const morph = safeDecomposeWord(word);
+  let progressive = null;
+  try {
+    progressive = analyzeProgressive(affix?.stem || word);
+  } catch {
+    // Older or unavailable analysis must not promote a legacy decomposition.
+  }
   const baseWord = affix?.root || affix?.stem || morph?.root || word;
   const showAffix = hasOuterAffixes(affix);
   const showMorphology = Boolean(
     morph
+      && !progressive
       && morphologySupportedByAffix(affix, morph)
       && ((morph.prefixes && morph.prefixes.length > 0)
         || (morph.suffixes && morph.suffixes.length > 0))
@@ -332,6 +342,7 @@ function buildStructureViewModel(word) {
   return {
     affix: showAffix ? affix : null,
     morphology: showMorphology ? morph : null,
+    progressive,
     baseWord,
     compoundSourceLabel,
   };

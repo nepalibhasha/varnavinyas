@@ -20,6 +20,16 @@ fun equivalentJson(actual: Any?, expected: Any?): Boolean = when {
 }
 
 fun main(args: Array<String>) {
+    for ((word, form, lemma) in listOf(Triple("खोजिरहेको", "खोजि", "खोज्नु"),
+        Triple("गइरहेकी", "गइ", "जानु"), Triple("भइरहेका", "भइ", "हुनु"),
+        Triple("दिइरहेको", "दिइ", "दिनु"))) {
+        val reading = analyzeProgressive(word)!!
+        check(reading.mainForm == form && reading.mainLemma == lemma)
+        check(reading.auxiliaryLemma == "रहनु")
+        check(reading.mainForm + reading.auxiliaryForm == word)
+    }
+    check(analyzeProgressive("झझझिरहेकी") == null)
+    println("Kotlin generated bindings: progressive analysis checks passed")
     check(equivalentJson(JSONObject("{\"a\":1,\"b\":[null,2]}"), JSONObject("{\"b\":[null,2.0],\"a\":1.0}")))
     check(!equivalentJson(JSONArray("[1,2]"), JSONArray("[2,1]")))
     check(!equivalentJson(JSONObject("{\"a\":1}"), JSONObject("{\"a\":1,\"b\":2}")))

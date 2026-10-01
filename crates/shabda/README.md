@@ -68,3 +68,9 @@ Prefix analyses require root evidence independent of prefixed whole words.
 A word such as सङ्घीय cannot prove the proposed root घीय. Attested case or
 particle siblings remain usable for productive inflections whose bare stem is
 missing from the lexicon (for example मच्छिन्द्रनाथको).
+
+`analyze_progressive("खोजिरहेको")` preserves the linking form `खोजि`, its
+dictionary lemma `खोज्नु`, the auxiliary form `रहेको`, and its lemma `रहनु`.
+Supported regular progressive participles also provide independent base evidence
+for outer affix analysis. This bounded analysis is not full conjugation or
+sentence agreement; see [Integration Notes](../../docs/INTEGRATION_NOTES.md#progressive-verb-constructions).

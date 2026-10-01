@@ -36,6 +36,8 @@ check_text_value
 check_text_value_with_options
 check_word_value
 analyze_word_value
+analyze_progressive
+analyze_progressive_value
 best_affix_analysis_value
 decompose_word_value
 sandhi_split_value
@@ -103,6 +105,7 @@ cat > "$ARTIFACT_DIR/manifest.json" <<EOF
     "typed_diagnostics": true,
     "diagnostic_schema_version": 1,
     "word_analysis_origin_provenance": true,
+    "progressive_verb_analysis": true,
     "word_analysis_origin_sources": ["kosha", "override", "heuristic", "unknown"],
     "check_text_value_default_orthography_mode": "academy-strict",
     "check_text_value_with_options": true,
@@ -116,6 +119,8 @@ cat > "$ARTIFACT_DIR/manifest.json" <<EOF
     "check_text_value_with_options",
     "check_word_value",
     "analyze_word_value",
+    "analyze_progressive",
+    "analyze_progressive_value",
     "best_affix_analysis_value",
     "decompose_word_value",
     "sandhi_split_value",

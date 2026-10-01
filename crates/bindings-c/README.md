@@ -94,3 +94,8 @@ string to text or present its ranking weight as an accuracy percentage. Public
 signatures and diagnostic fields are unchanged. See the
 [compound-analysis contract](../../docs/COMPOUND_ANALYSIS.md) for behavior and
 artifact integration requirements.
+
+`varnavinyas_analyze_progressive` returns owned JSON identifying a supported main
+linking form and auxiliary with dictionary lemmas, or JSON `null` when unsupported.
+Free it with `varnavinyas_free_string`. Null/invalid UTF-8 input returns a null
+pointer. See [the analysis contract](../../docs/INTEGRATION_NOTES.md#progressive-verb-constructions).

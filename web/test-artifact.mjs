@@ -33,6 +33,28 @@ for (const fixture of sharedFixtures.cases) {
     assert.equal(canBulkApplyDiagnostic(diagnostic), false, fixture.id);
   }
 }
+// Progressive participles preserve main/auxiliary evidence and internal endings.
+for (const [word, main, lemma, auxiliary] of [
+  ['खोजिरहेको', 'खोजि', 'खोज्नु', 'रहेको'],
+  ['खोजिरहेकी', 'खोजि', 'खोज्नु', 'रहेकी'],
+  ['खोजिरहेका', 'खोजि', 'खोज्नु', 'रहेका'],
+  ['खाइरहेको', 'खाइ', 'खानु', 'रहेको'],
+]) {
+  const analysis = wasm.analyze_progressive_value(word);
+  assert.equal(analysis.main_form, main);
+  assert.equal(analysis.main_lemma, lemma);
+  assert.equal(analysis.auxiliary_form, auxiliary);
+  assert.equal(analysis.auxiliary_lemma, 'रहनु');
+  assert.equal(analysis.negative, false);
+  assert.deepEqual(JSON.parse(wasm.analyze_progressive(word)), analysis);
+  assert.equal(wasm.check_word_value(word), null, word);
+  assert.deepEqual(wasm.best_affix_analysis_value(word).suffixes, [], word);
+}
+for (const word of ['झझझिरहेकी', 'मइरहेको', 'खोजीरहेको', 'खोजिरहनेको']) {
+  assert.equal(wasm.analyze_progressive_value(word), null, word);
+}
+assert.equal(wasm.best_affix_analysis_value('खोजिरहेकाले').stem, 'खोजिरहेका');
+assert.deepEqual(wasm.best_affix_analysis_value('खोजिरहेकाले').suffixes, ['ले']);
 // Public compound analysis needs reviewed formation evidence, not lexical coincidence.
 for (const word of ['सवारीमा', 'दशकमा', 'आयात', 'आर्थिक', 'विकास', 'यातायात',
   'व्यवस्थापन', 'रिसाइकल', 'आधारमा', 'छलफल', 'विवरण', 'सबैलाई']) {

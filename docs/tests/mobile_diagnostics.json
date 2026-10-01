@@ -599,6 +599,50 @@
         "punctuation_mode": "strict"
       },
       "text": "🙂 सूर्योदयमा"
+    },
+    {
+      "expected_diagnostics": [],
+      "id": "progressive-participles-academy-strict",
+      "options": {
+        "grammar": false,
+        "include_noop_heuristics": false,
+        "orthography_mode": "academy-strict",
+        "punctuation_mode": "strict"
+      },
+      "text": "🙂 खोजिरहेको खोजिरहेकी खोजिरहेका"
+    },
+    {
+      "expected_diagnostics": [],
+      "id": "progressive-participles-common-editorial",
+      "options": {
+        "grammar": false,
+        "include_noop_heuristics": false,
+        "orthography_mode": "common-editorial",
+        "punctuation_mode": "strict"
+      },
+      "text": "🙂 खोजिरहेको खोजिरहेकी खोजिरहेका"
+    },
+    {
+      "expected_diagnostics": [],
+      "id": "progressive-context-academy-strict",
+      "options": {
+        "grammar": true,
+        "include_noop_heuristics": false,
+        "orthography_mode": "academy-strict",
+        "punctuation_mode": "strict"
+      },
+      "text": "म काम खोजिरहेको छु।"
+    },
+    {
+      "expected_diagnostics": [],
+      "id": "progressive-context-common-editorial",
+      "options": {
+        "grammar": true,
+        "include_noop_heuristics": false,
+        "orthography_mode": "common-editorial",
+        "punctuation_mode": "strict"
+      },
+      "text": "म काम खोजिरहेको छु।"
     }
   ],
   "diagnostic_schema_version": 1,

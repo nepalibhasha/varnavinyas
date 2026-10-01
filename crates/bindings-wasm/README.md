@@ -157,3 +157,8 @@ string to text or present its ranking weight as an accuracy percentage. Public
 signatures and diagnostic fields are unchanged. See the
 [compound-analysis contract](../../docs/COMPOUND_ANALYSIS.md) for behavior and
 artifact integration requirements.
+
+`analyze_progressive` (JSON) and `analyze_progressive_value` (typed object/null)
+identify a supported main linking form and auxiliary with both dictionary lemmas.
+For example, `खोजिरहेको` gives `खोजि + रहेको`, `खोज्नु`, and `रहनु`. See
+[the bounded analysis contract](../../docs/INTEGRATION_NOTES.md#progressive-verb-constructions).

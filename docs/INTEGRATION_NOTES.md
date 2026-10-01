@@ -129,3 +129,38 @@ backward-compatible default API and uses `academy-strict`. Downstream clients
 that need explicit policy selection should use
 `check_text_value_with_options(text, grammar, orthography_mode)` when
 `manifest.json` advertises the capability.
+
+## Progressive verb constructions
+
+The checker accepts regular progressive participles supported by dictionary verb
+lemmas before guessing case suffixes. `खोजिरहेको`, `खोजिरहेकी`, and `खोजिरहेका`
+must not become `खोजिरहनेको/की/का`. The same behavior applies with grammar on or
+off, in both orthography modes, and through every checker binding. Outer
+inflections such as `खोजिरहेकाले` retain the progressive base and a separate `ले`.
+Rule-backed spelling corrections still take precedence.
+
+The additive `shabda::analyze_progressive()` API returns a supported reading or
+`None`, with `surface`, `main_form`, `main_lemma`, `auxiliary_form`,
+`auxiliary_lemma`, and `negative`. For `खोजिरहेको`, the surface parts are
+`खोजि + रहेको`; their lemmas are `खोज्नु` and `रहनु`. `खोजि` is a linking form,
+not a dictionary lemma; `को` is internal to the participle here, not a genitive
+case marker. The inspector presents this as verb construction information.
+
+Python exposes `shabda.analyze_progressive()` returning a read-only
+`ProgressiveAnalysis` or `None`. Generated Swift/Kotlin bindings expose
+`analyzeProgressive()` with an optional record. WASM offers JSON
+`analyze_progressive()` and typed `analyze_progressive_value()`;
+the browser manifest advertises `progressive_verb_analysis`. C offers
+`varnavinyas_analyze_progressive()` returning owned JSON (free it with
+`varnavinyas_free_string`), JSON `null` for unsupported forms, and a null pointer
+for invalid input. Existing signatures, enums, and diagnostic fields are unchanged.
+
+This is a bounded analysis: it checks the short linking vowel
+`ि/इ` and independently attested verb infinitives, supports an optional negative
+`न`. Reviewed irregular linking forms `गइ -> जानु` and `भइ -> हुनु` are kept in
+`data/rule_inventories/verb_linking_forms.tsv` with source evidence and parser
+checks. It does not infer sentence agreement, tense, other irregular stems, or
+arbitrary auxiliary chains. Analyze the stem from the outer affix API before requesting
+progressive analysis of a suffixed word. No analysis is not proof of a spelling
+error. These changes require rebuilt browser/native artifacts to reach consumers;
+generated Swift/Kotlin code must match its new native library.

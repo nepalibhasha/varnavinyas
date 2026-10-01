@@ -22,6 +22,12 @@ fn main() {
             true,
         ),
         ("grammar-inflected-compound", "🙂 सूर्योदयमा", true),
+        (
+            "progressive-participles",
+            "🙂 खोजिरहेको खोजिरहेकी खोजिरहेका",
+            false,
+        ),
+        ("progressive-context", "म काम खोजिरहेको छु।", true),
     ] {
         for (mode, orthography) in [
             ("academy-strict", OrthographyMode::AcademyStrict),

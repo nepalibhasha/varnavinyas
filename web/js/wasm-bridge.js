@@ -15,6 +15,8 @@ import init, {
   derive_value,
   analyze_word,
   analyze_word_value,
+  analyze_progressive,
+  analyze_progressive_value,
   best_affix_analysis,
   best_affix_analysis_value,
   decompose_word,
@@ -139,6 +141,15 @@ export function analyzeWord(word) {
     return analyze_word_value(word);
   } catch (_err) {
     return JSON.parse(analyze_word(word));
+  }
+}
+
+/** Main linking form and auxiliary with dictionary verb lemmas, or null. */
+export function analyzeProgressive(word) {
+  try {
+    return analyze_progressive_value(word);
+  } catch (_err) {
+    return JSON.parse(analyze_progressive(word));
   }
 }
 

@@ -67,6 +67,29 @@ pub fn classify_with_provenance(word: String) -> OriginDecision {
     }
 }
 
+/// Dictionary-backed reading of the main verb and रहनु auxiliary.
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
+pub struct ProgressiveAnalysis {
+    pub surface: String,
+    pub main_form: String,
+    pub main_lemma: String,
+    pub auxiliary_form: String,
+    pub auxiliary_lemma: String,
+    pub negative: bool,
+}
+
+#[uniffi::export]
+pub fn analyze_progressive(word: String) -> Option<ProgressiveAnalysis> {
+    varnavinyas_shabda::analyze_progressive(&word).map(|analysis| ProgressiveAnalysis {
+        surface: analysis.surface,
+        main_form: analysis.main_form,
+        main_lemma: analysis.main_lemma,
+        auxiliary_form: analysis.auxiliary_form,
+        auxiliary_lemma: analysis.auxiliary_lemma,
+        negative: analysis.negative,
+    })
+}
+
 /// Runtime punctuation classification mode for diagnostics.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
 pub enum PunctuationMode {
@@ -179,6 +202,18 @@ pub fn classify(word: String) -> Origin {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn progressive_analysis_preserves_both_verbs() {
+        let analysis = analyze_progressive("खोजिरहेको".into()).unwrap();
+        assert_eq!(analysis.main_form, "खोजि");
+        assert_eq!(analysis.main_lemma, "खोज्नु");
+        assert_eq!(analysis.auxiliary_form, "रहेको");
+        assert_eq!(analysis.auxiliary_lemma, "रहनु");
+        assert!(!analysis.negative);
+        assert!(analyze_progressive("झझझिरहेकी".into()).is_none());
+        assert_eq!(check_word("खोजिरहेको".into()), "null");
+    }
 
     #[test]
     fn check_text_returns_valid_json() {

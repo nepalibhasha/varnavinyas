@@ -2,6 +2,16 @@ import Foundation
 
 @main struct Evaluation {
     static func main() throws {
+        for (word, form, lemma) in [("खोजिरहेको", "खोजि", "खोज्नु"),
+            ("गइरहेकी", "गइ", "जानु"), ("भइरहेका", "भइ", "हुनु"),
+            ("दिइरहेको", "दिइ", "दिनु")] {
+            let reading = analyzeProgressive(word: word)!
+            precondition(reading.mainForm == form && reading.mainLemma == lemma)
+            precondition(reading.auxiliaryLemma == "रहनु")
+            precondition(reading.mainForm + reading.auxiliaryForm == word)
+        }
+        precondition(analyzeProgressive(word: "झझझिरहेकी") == nil)
+        print("Swift generated bindings: progressive analysis checks passed")
         let data = try Data(contentsOf: URL(fileURLWithPath: CommandLine.arguments[1]))
         let fixtures = try JSONSerialization.jsonObject(with: data) as! [String: Any]
         let cases = fixtures["cases"] as! [[String: Any]]

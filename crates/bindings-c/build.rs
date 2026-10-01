@@ -52,6 +52,8 @@ char *varnavinyas_check_text_with_all_options(const char *text,
 
 char *varnavinyas_check_word(const char *word);
 
+char *varnavinyas_analyze_progressive(const char *word);
+
 char *varnavinyas_transliterate(const char *input, int from, int to);
 
 Origin varnavinyas_classify(const char *word);

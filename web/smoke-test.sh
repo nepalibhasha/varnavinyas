@@ -43,7 +43,7 @@ fi
 # --- 2. WASM JS exports the expected functions ---
 echo "[2] WASM JS exports"
 CORE_EXPORTS="check_text check_text_with_all_options check_word transliterate derive"
-TYPED_EXPORTS="check_text_value check_text_value_with_options check_word_value derive_value analyze_word_value best_affix_analysis_value decompose_word_value analyze_compound_value sandhi_apply_value sandhi_split_value sandhi_split_best_for_compound_value"
+TYPED_EXPORTS="check_text_value check_text_value_with_options check_word_value derive_value analyze_word_value analyze_progressive_value best_affix_analysis_value decompose_word_value analyze_compound_value sandhi_apply_value sandhi_split_value sandhi_split_best_for_compound_value"
 
 missing_exports() {
   local exports="$1"
@@ -222,6 +222,7 @@ serve_check "js/checker.js" "checker.js"
 serve_check "js/corrections.js" "corrections.js"
 serve_check "js/diagnostic-presentation.js" "diagnostic-presentation.js"
 serve_check "js/inspection-context.js" "inspection-context.js"
+serve_check "js/progressive-presentation.js" "progressive-presentation.js"
 serve_check "js/inspector.js" "inspector.js"
 serve_check "js/reference.js" "reference.js"
 serve_check "js/rules-data.js" "rules-data.js"

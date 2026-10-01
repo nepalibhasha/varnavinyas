@@ -1,5 +1,6 @@
 mod morphology;
 mod origin;
+mod progressive;
 pub mod tables;
 
 pub use morphology::{
@@ -10,6 +11,7 @@ pub use morphology::{
 pub use origin::{
     Origin, OriginDecision, OriginSource, classify, classify_with_provenance, source_language,
 };
+pub use progressive::{ProgressiveAnalysis, analyze_progressive, has_supported_progressive_form};
 
 /// Error type for shabda operations.
 #[derive(Debug, thiserror::Error)]

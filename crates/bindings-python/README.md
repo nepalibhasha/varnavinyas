@@ -131,3 +131,9 @@ string to text or present its ranking weight as an accuracy percentage. Public
 signatures and diagnostic fields are unchanged. See the
 [compound-analysis contract](../../docs/COMPOUND_ANALYSIS.md) for behavior and
 artifact integration requirements.
+
+`shabda.analyze_progressive("खोजिरहेको")` returns a read-only
+`ProgressiveAnalysis` with `main_form="खोजि"`, `main_lemma="खोज्नु"`,
+`auxiliary_form="रहेको"`, and `auxiliary_lemma="रहनु"`, or `None` outside the
+supported family. Existing Python APIs are unchanged. See
+[the analysis contract](../../docs/INTEGRATION_NOTES.md#progressive-verb-constructions).

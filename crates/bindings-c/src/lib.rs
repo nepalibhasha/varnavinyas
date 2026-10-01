@@ -75,6 +75,23 @@ fn parse_orthography_mode(value: c_int) -> Option<varnavinyas_parikshak::Orthogr
     }
 }
 
+/// Return a progressive verb reading as JSON, or the JSON string `null`.
+/// The caller must free the returned pointer with `varnavinyas_free_string`.
+/// Returns NULL for null or invalid UTF-8 input.
+///
+/// # Safety
+/// `word` must be a valid null-terminated C string or null.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn varnavinyas_analyze_progressive(word: *const c_char) -> *mut c_char {
+    let Some(word) = (unsafe { cstr_to_str(word) }) else {
+        return std::ptr::null_mut();
+    };
+    string_to_c(
+        serde_json::to_string(&varnavinyas_shabda::analyze_progressive(word))
+            .unwrap_or_else(|_| "null".to_string()),
+    )
+}
+
 /// Check text for spelling and punctuation issues.
 ///
 /// Returns a JSON array of diagnostics as a C string.
@@ -269,6 +286,34 @@ pub extern "C" fn varnavinyas_version() -> *mut c_char {
 mod tests {
     use super::*;
     use std::ffi::CString;
+
+    #[test]
+    fn progressive_analysis_handles_supported_unknown_and_invalid_input() {
+        for (word, supported) in [("खोजिरहेको", true), ("झझझिरहेकी", false)]
+        {
+            let input = CString::new(word).unwrap();
+            unsafe {
+                let result = varnavinyas_analyze_progressive(input.as_ptr());
+                assert!(!result.is_null());
+                let parsed: serde_json::Value =
+                    serde_json::from_str(CStr::from_ptr(result).to_str().unwrap()).unwrap();
+                if supported {
+                    assert_eq!(parsed["main_form"], "खोजि");
+                    assert_eq!(parsed["main_lemma"], "खोज्नु");
+                    assert_eq!(parsed["auxiliary_form"], "रहेको");
+                    assert_eq!(parsed["auxiliary_lemma"], "रहनु");
+                } else {
+                    assert!(parsed.is_null());
+                }
+                varnavinyas_free_string(result);
+            }
+        }
+        unsafe {
+            assert!(varnavinyas_analyze_progressive(std::ptr::null()).is_null());
+            let invalid = [0xffu8, 0];
+            assert!(varnavinyas_analyze_progressive(invalid.as_ptr().cast()).is_null());
+        }
+    }
 
     #[test]
     fn check_text_returns_valid_json() {

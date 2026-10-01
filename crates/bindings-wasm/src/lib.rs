@@ -158,6 +158,23 @@ pub fn analyze_word_value(word: &str) -> Result<JsValue, JsError> {
         .map_err(|e| JsError::new(&format!("failed to serialize analysis: {e}")))
 }
 
+/// Identify a regular progressive construction, or return JSON null.
+#[wasm_bindgen]
+pub fn analyze_progressive(word: &str) -> String {
+    serde_json::to_string(&varnavinyas_shabda::analyze_progressive(word))
+        .unwrap_or_else(|_| "null".to_string())
+}
+
+/// Typed counterpart to analyze_progressive.
+#[wasm_bindgen]
+pub fn analyze_progressive_value(word: &str) -> Result<JsValue, JsError> {
+    match varnavinyas_shabda::analyze_progressive(word) {
+        Some(analysis) => serde_wasm_bindgen::to_value(&analysis)
+            .map_err(|e| JsError::new(&format!("failed to serialize progressive analysis: {e}"))),
+        None => Ok(JsValue::NULL),
+    }
+}
+
 /// A morpheme decomposition result serialized for JavaScript consumers.
 #[derive(Serialize, Tsify)]
 #[tsify(into_wasm_abi)]

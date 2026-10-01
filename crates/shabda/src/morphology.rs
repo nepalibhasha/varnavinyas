@@ -68,11 +68,12 @@ fn lexical_support(word: &str, lex: &Kosha) -> LexicalSupport {
 struct BaseSupport {
     lexical: LexicalSupport,
     suffixed_sibling: bool,
+    progressive_verb: bool,
 }
 
 impl BaseSupport {
     fn is_supported(self) -> bool {
-        self.lexical.is_exact() || self.suffixed_sibling
+        self.lexical.is_exact() || self.suffixed_sibling || self.progressive_verb
     }
 }
 
@@ -98,6 +99,7 @@ fn base_support(word: &str, lex: &Kosha) -> BaseSupport {
     BaseSupport {
         lexical: lexical_support(word, lex),
         suffixed_sibling: has_attested_suffixed_sibling(word, lex),
+        progressive_verb: crate::has_supported_progressive_form(word),
     }
 }
 
@@ -223,7 +225,9 @@ fn collect_prefixed_analyses(
         analyses, seen, surface, stem, current, prefixes, suffixes, support,
     );
 
-    if prefix_depth >= MAX_PREFIX_DEPTH {
+    // A progressive's linking form is verbal, not a Sanskrit prefix (परि),
+    // and its internal auxiliary ending must remain part of the base.
+    if support.progressive_verb || prefix_depth >= MAX_PREFIX_DEPTH {
         return;
     }
 
@@ -278,7 +282,10 @@ fn collect_suffix_group_analyses(
         lex,
     );
 
-    if group_index >= SUPPORT_SUFFIX_GROUPS.len() || suffixes.len() >= MAX_SUFFIX_DEPTH {
+    if crate::has_supported_progressive_form(current)
+        || group_index >= SUPPORT_SUFFIX_GROUPS.len()
+        || suffixes.len() >= MAX_SUFFIX_DEPTH
+    {
         return;
     }
 

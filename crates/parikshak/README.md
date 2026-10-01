@@ -233,3 +233,8 @@ string to text or present its ranking weight as an accuracy percentage. Public
 signatures and diagnostic fields are unchanged. See the
 [compound-analysis contract](../../docs/COMPOUND_ANALYSIS.md) for behavior and
 artifact integration requirements.
+
+Regular progressive verb forms with dictionary-backed infinitives are recognized
+before speculative case detachment: `खोजिरहेको` remains unchanged instead of
+becoming `खोजिरहनेको`. Rule-backed corrections retain precedence. See
+[progressive constructions](../../docs/INTEGRATION_NOTES.md#progressive-verb-constructions).

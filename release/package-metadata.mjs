@@ -66,7 +66,7 @@ const manifest = {
   ...(mobile ? {
     binding_generator: { name: 'uniffi', version: '0.28.3' },
     diagnostic_transport: 'JSON string',
-    api: ['check_text', 'check_text_with_options', 'check_text_with_all_options', 'check_word', 'classify', 'classify_with_provenance', 'transliterate'],
+    api: ['check_text', 'check_text_with_options', 'check_text_with_all_options', 'check_word', 'classify', 'classify_with_provenance', 'analyze_progressive', 'transliterate'],
     targets: platform === 'ios' ? ['aarch64-apple-ios', 'aarch64-apple-ios-sim', 'x86_64-apple-ios']
       : ['aarch64-linux-android', 'armv7-linux-androideabi', 'x86_64-linux-android'],
     ...(platform === 'ios' ? { minimum_ios: '13.0', framework: 'VarnavinyasBindingsUniFFI.xcframework', bindings: 'bindings/varnavinyas_bindings_uniffi.swift' }

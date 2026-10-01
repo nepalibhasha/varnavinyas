@@ -122,6 +122,14 @@ pub fn check_word_with_options(word: &str, options: CheckOptions) -> Option<Diag
         return Some(apply_orthography_mode(diag, options.orthography_mode));
     }
 
+    // In खोजिरहेको, -को belongs to the progressive participle, not a
+    // detachable genitive. Recognize the whole form before guessed detachment,
+    // while retaining rule-backed spelling corrections ahead of acceptance.
+    if varnavinyas_shabda::has_supported_progressive_form(word) {
+        return check_word_rules(word)
+            .map(|diag| apply_orthography_mode(diag, options.orthography_mode));
+    }
+
     if let Some(analysis) = best_analysis(word) {
         if !analysis.suffixes.is_empty() {
             let detached = word.strip_prefix(&analysis.stem).unwrap_or_default();

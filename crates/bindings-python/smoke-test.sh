@@ -50,6 +50,13 @@ assert v.shabda.decompose("संघीय").root != "घीय"
 assert "ई" not in v.shabda.decompose("हामी").suffixes
 assert v.shabda.decompose("तिनी").root == "तिन"
 assert v.sandhi.apply("अति", "अधिक").output == "अत्यधिक"
+progressive = v.shabda.analyze_progressive("खोजिरहेको")
+assert isinstance(progressive, v.shabda.ProgressiveAnalysis)
+assert (progressive.main_form, progressive.main_lemma) == ("खोजि", "खोज्नु")
+assert (progressive.auxiliary_form, progressive.auxiliary_lemma) == ("रहेको", "रहनु")
+assert progressive.surface == "खोजिरहेको" and not progressive.negative
+assert v.shabda.analyze_progressive("झझझिरहेकी") is None
+assert v.parikshak.check_word("खोजिरहेको") is None
 with open(sys.argv[1], encoding="utf-8") as fixture_file:
     cases = json.load(fixture_file)["cases"]
 for case in cases:

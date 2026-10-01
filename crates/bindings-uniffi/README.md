@@ -85,3 +85,9 @@ string to text or present its ranking weight as an accuracy percentage. Public
 signatures and diagnostic fields are unchanged. See the
 [compound-analysis contract](../../docs/COMPOUND_ANALYSIS.md) for behavior and
 artifact integration requirements.
+
+`analyze_progressive` generates Swift/Kotlin `analyzeProgressive`, returning an
+optional `ProgressiveAnalysis` with the main linking form and both verb lemmas.
+For `खोजिरहेको`, these are `खोजि`, `खोज्नु`, `रहेको`, and `रहनु`. Existing APIs
+are unchanged; regenerate bindings together with the native library. See
+[the analysis contract](../../docs/INTEGRATION_NOTES.md#progressive-verb-constructions).

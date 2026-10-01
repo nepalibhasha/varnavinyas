@@ -42,6 +42,30 @@ pub struct PyMorpheme {
     pub origin: PyOrigin,
 }
 
+/// Dictionary-backed main verb and auxiliary reading.
+#[pyclass(from_py_object, name = "ProgressiveAnalysis", get_all, frozen)]
+#[derive(Clone)]
+pub struct PyProgressiveAnalysis {
+    pub surface: String,
+    pub main_form: String,
+    pub main_lemma: String,
+    pub auxiliary_form: String,
+    pub auxiliary_lemma: String,
+    pub negative: bool,
+}
+
+#[pyfunction]
+pub fn analyze_progressive(word: &str) -> Option<PyProgressiveAnalysis> {
+    shabda_core::analyze_progressive(word).map(|analysis| PyProgressiveAnalysis {
+        surface: analysis.surface,
+        main_form: analysis.main_form,
+        main_lemma: analysis.main_lemma,
+        auxiliary_form: analysis.auxiliary_form,
+        auxiliary_lemma: analysis.auxiliary_lemma,
+        negative: analysis.negative,
+    })
+}
+
 /// Evidence source; Unknown means no origin evidence is available.
 #[pyclass(from_py_object, name = "OriginSource", eq, frozen, hash)]
 #[derive(Clone, PartialEq, Eq, Hash)]
@@ -278,8 +302,10 @@ pub fn shabda(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyAffixSegment>()?;
     m.add_class::<PyAffixAnalysis>()?;
     m.add_class::<PyMorpheme>()?;
+    m.add_class::<PyProgressiveAnalysis>()?;
     m.add_class::<PyRootCandidate>()?;
     m.add_function(wrap_pyfunction!(classify, m)?)?;
+    m.add_function(wrap_pyfunction!(analyze_progressive, m)?)?;
     m.add_function(wrap_pyfunction!(classify_with_provenance, m)?)?;
     m.add_function(wrap_pyfunction!(decompose, m)?)?;
     m.add_function(wrap_pyfunction!(lookup_root_candidates, m)?)?;

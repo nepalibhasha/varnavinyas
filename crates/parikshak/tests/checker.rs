@@ -443,6 +443,86 @@ fn productive_forms_and_known_compounds_do_not_trigger_nearby_suggestions() {
 }
 
 #[test]
+fn progressive_participles_do_not_become_genitive_near_matches() {
+    use varnavinyas_parikshak::check_word_with_options;
+    for orthography_mode in [
+        OrthographyMode::AcademyStrict,
+        OrthographyMode::CommonEditorial,
+    ] {
+        for grammar in [false, true] {
+            let options = CheckOptions {
+                grammar,
+                orthography_mode,
+                ..Default::default()
+            };
+            for word in [
+                "खोजिरहेको",
+                "खोजिरहेकी",
+                "खोजिरहेका",
+                "लेखिरहेको",
+                "लेखिरहेकी",
+                "पढिरहेका",
+                "खाइरहेकी",
+                "बनाइरहेका",
+                "नखोजिरहेको",
+                "खोजिरहेकाले",
+                "खोजिरहेकीलाई",
+                "खोजिरहेकाहरूलाई",
+                "खोजिरहेकोमा",
+                "चलिरहेको",
+                "परिरहेको",
+                "आइरहेको",
+                "गइरहेको",
+                "भइरहेको",
+                "नभइरहेका",
+                "चुहिरहेकी",
+                "रोकिइरहेका",
+                "दिइरहेकी",
+                "लिइरहेकाले",
+            ] {
+                assert!(check_word_with_options(word, options).is_none(), "{word}");
+                assert!(check_text_with_options(word, options).is_empty(), "{word}");
+            }
+            for text in ["म काम खोजिरहेको छु।", "उनी काम खोजिरहेकी छिन्।"]
+            {
+                assert!(check_text_with_options(text, options).is_empty(), "{text}");
+            }
+            // Existing rule-backed spelling corrections still precede acceptance.
+            assert_eq!(
+                check_word_with_options("मीलेको", options)
+                    .unwrap()
+                    .correction,
+                "मिलेको"
+            );
+        }
+    }
+}
+
+#[test]
+fn progressive_analysis_preserves_internal_endings_and_only_detaches_outer_affixes() {
+    for word in ["खोजिरहेको", "चलिरहेको", "परिरहेको", "भइरहेकी"]
+    {
+        let affix = varnavinyas_shabda::best_analysis(word).unwrap();
+        assert_eq!(affix.root, word);
+        assert_eq!(affix.stem, word);
+        assert!(affix.prefixes.is_empty(), "{word}: {affix:?}");
+        assert!(affix.suffixes.is_empty(), "{word}: {affix:?}");
+    }
+    for (word, stem, suffix) in [
+        ("खोजिरहेकाले", "खोजिरहेका", "ले"),
+        ("चलिरहेकोमा", "चलिरहेको", "मा"),
+        ("परिरहेकीलाई", "परिरहेकी", "लाई"),
+        ("भइरहेकामा", "भइरहेका", "मा"),
+    ] {
+        let affix = varnavinyas_shabda::best_analysis(word).unwrap();
+        assert_eq!(affix.root, stem);
+        assert_eq!(affix.stem, stem);
+        assert!(affix.prefixes.is_empty());
+        assert_eq!(affix.suffixes, [suffix]);
+    }
+}
+
+#[test]
 fn punctuation_boundaries_do_not_merge_words_into_false_suggestions() {
     let diags = check_text("नेकपा (माओवादी केन्द्र)को बैठक");
     assert!(
