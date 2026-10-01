@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { applyTextContext, morphologySupportedByAffix, originPresentation } from '../js/inspection-context.js';
-import { getRuleSummary, wrapRuleTooltip } from '../js/rules-data.js';
+import { getReferenceTargetForRule, getRuleSummary, RULES_SECTIONS, wrapRuleTooltip } from '../js/rules-data.js';
 
 const raw = { word: 'आवाजमा', is_correct: false, correction: 'आबाजमा',
   rule_notes: [{ rule: 'raw rule', explanation: 'raw explanation' }], alternate_rule_notes: [] };
@@ -85,10 +85,33 @@ test('accepted reference context has neither an error claim nor a self-correctio
 });
 
 test('reviewed semantic-class citations open the final-dirgha reference with bounded coverage', () => {
-  for (const code of ['3(क)(ऊ)-4', '3(क)(ऊ)-6', 'PS-Saisanik-ह्रस्वदीर्घ-(थ)']) {
+  for (const code of ['3(क)(ऊ)-4', '3(क)(ऊ)-6', 'PS-Saisanik-ह्रस्वदीर्घ-(थ)', 'PS-Saisanik-ह्रस्वदीर्घ-(थ)-सजीव']) {
     assert.match(wrapRuleTooltip('ह्रस्व/दीर्घ स्वर नियम', 'HrasvaDirgha', { ruleCode: code }), /data-target="ka-uu"/);
     assert.match(getRuleSummary(code, 'HrasvaDirgha'), /सूचीकृत स्त्रीलिङ्गी विशेषण र निर्जीव नाम/);
+    assert.match(getRuleSummary(code, 'HrasvaDirgha'), /सम्धी, जोगी, खसी र हात्ती/);
+    assert.match(getRuleSummary(code, 'HrasvaDirgha'), /हात्तीको, खसीलाई/);
   }
+});
+
+test('feminine predicate and converb citations open their own explanation with lexical limits', () => {
+  const section = RULES_SECTIONS.find(s => s.categoryCode === 'HrasvaDirgha');
+  for (const code of ['PS-Saisanik-ह्रस्वदीर्घ-(ब)', 'PS-Saisanik-ह्रस्वदीर्घ-(भ)', 'PS-Saisanik-ह्रस्वदीर्घ-(ब)/(भ)']) {
+    const target = getReferenceTargetForRule(code, 'HrasvaDirgha');
+    assert.equal(target.targetId, 'saishanik-final-i-verbs');
+    assert.ok(section.referenceTargets.some(t => t.id === target.targetId));
+    assert.match(wrapRuleTooltip('ह्रस्व/दीर्घ स्वर नियम', 'HrasvaDirgha', { ruleCode: code }), /data-target="saishanik-final-i-verbs"/);
+    const summary = getRuleSummary(code, 'HrasvaDirgha');
+    assert.match(summary, /स्त्रीलिङ्गी समापक क्रिया/);
+    assert.match(summary, /पढी = पढेर/);
+    for (const word of ['मिलाइ', 'पारि', 'लेखि']) assert.ok(summary.includes(word));
+    assert.match(summary, /वाक्यको सन्दर्भ चाहिन्छ/);
+    assert.match(summary, /सबै छोटा इकारान्त शब्दलाई दीर्घ बनाइँदैन/);
+  }
+  setReferenceContext({ incorrect: 'नभइ', correction: 'नभई', categoryCode: 'HrasvaDirgha',
+    targetId: 'saishanik-final-i-verbs', rule: 'PS-Saisanik-ह्रस्वदीर्घ-(ब)/(भ)' });
+  assert.match(referenceHost.innerHTML, /id="ref-HrasvaDirgha-saishanik-final-i-verbs"/);
+  assert.match(referenceHost.innerHTML, /पढी = पढेर/);
+  assert.doesNotMatch(referenceHost.innerHTML, /id="ref-HrasvaDirgha-ka-uu"/);
 });
 
 test('origin badges distinguish missing evidence, inference, and documented origin', () => {
