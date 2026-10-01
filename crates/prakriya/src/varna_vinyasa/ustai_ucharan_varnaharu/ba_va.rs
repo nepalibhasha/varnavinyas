@@ -412,6 +412,9 @@ fn supported_form(output: &str, kosha: &Kosha) -> bool {
 fn is_supported_u_initial_verb_form(input: &str, kosha: &Kosha) -> bool {
     // उड्नु/ओड्नु and उर्लनु/ओर्लनु are different verbs. An attested ओ
     // candidate alone does not justify rewriting a supported उ verb form.
+    if input.starts_with('उ') && varnavinyas_shabda::has_supported_progressive_form(input) {
+        return true;
+    }
     for ending in ["ने", "न", "े", "दै", "दा", "यो", "छन्", "छ"] {
         let Some(stem) = input.strip_suffix(ending) else {
             continue;
@@ -436,6 +439,18 @@ fn is_supported_u_initial_verb_form(input: &str, kosha: &Kosha) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn supported_u_progressives_do_not_become_different_o_verbs() {
+        for stem in ["उर्लि", "उडि"] {
+            for ending in ["रहेको", "रहेकी", "रहेका"] {
+                let word = format!("{stem}{ending}");
+                assert!(rule_ba_va(&word).is_none(), "{word}");
+            }
+        }
+        assert!(rule_ba_va("ओर्लिरहेको").is_none());
+        assert_eq!(rule_ba_va("उडार").unwrap().output, "ओडार");
+    }
 
     #[test]
     fn ps_sanskrit_va_to_ba_inventory_schema_is_valid() {

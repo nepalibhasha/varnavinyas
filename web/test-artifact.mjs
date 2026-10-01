@@ -39,6 +39,8 @@ for (const [word, main, lemma, auxiliary] of [
   ['खोजिरहेकी', 'खोजि', 'खोज्नु', 'रहेकी'],
   ['खोजिरहेका', 'खोजि', 'खोज्नु', 'रहेका'],
   ['खाइरहेको', 'खाइ', 'खानु', 'रहेको'],
+  ['उर्लिरहेको', 'उर्लि', 'उर्लनु', 'रहेको'],
+  ['ओर्लिरहेको', 'ओर्लि', 'ओर्लनु', 'रहेको'],
 ]) {
   const analysis = wasm.analyze_progressive_value(word);
   assert.equal(analysis.main_form, main);

@@ -643,6 +643,28 @@
         "punctuation_mode": "strict"
       },
       "text": "म काम खोजिरहेको छु।"
+    },
+    {
+      "expected_diagnostics": [],
+      "id": "progressive-distinct-verbs-academy-strict",
+      "options": {
+        "grammar": true,
+        "include_noop_heuristics": false,
+        "orthography_mode": "academy-strict",
+        "punctuation_mode": "strict"
+      },
+      "text": "🙂 उर्लिरहेको ओर्लिरहेको उडिरहेको"
+    },
+    {
+      "expected_diagnostics": [],
+      "id": "progressive-distinct-verbs-common-editorial",
+      "options": {
+        "grammar": true,
+        "include_noop_heuristics": false,
+        "orthography_mode": "common-editorial",
+        "punctuation_mode": "strict"
+      },
+      "text": "🙂 उर्लिरहेको ओर्लिरहेको उडिरहेको"
     }
   ],
   "diagnostic_schema_version": 1,

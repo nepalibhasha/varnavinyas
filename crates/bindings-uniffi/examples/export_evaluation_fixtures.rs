@@ -28,6 +28,11 @@ fn main() {
             false,
         ),
         ("progressive-context", "म काम खोजिरहेको छु।", true),
+        (
+            "progressive-distinct-verbs",
+            "🙂 उर्लिरहेको ओर्लिरहेको उडिरहेको",
+            true,
+        ),
     ] {
         for (mode, orthography) in [
             ("academy-strict", OrthographyMode::AcademyStrict),
