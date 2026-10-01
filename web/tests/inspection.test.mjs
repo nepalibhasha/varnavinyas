@@ -95,7 +95,7 @@ test('reviewed semantic-class citations open the final-dirgha reference with bou
 
 test('feminine predicate and converb citations open their own explanation with lexical limits', () => {
   const section = RULES_SECTIONS.find(s => s.categoryCode === 'HrasvaDirgha');
-  for (const code of ['PS-Saisanik-ह्रस्वदीर्घ-(ब)', 'PS-Saisanik-ह्रस्वदीर्घ-(भ)', 'PS-Saisanik-ह्रस्वदीर्घ-(ब)/(भ)']) {
+  for (const code of ['PS-Saisanik-ह्रस्वदीर्घ-(ब)', 'PS-Saisanik-ह्रस्वदीर्घ-(भ)', 'PS-Saisanik-ह्रस्वदीर्घ-(ब)/(भ)', 'PS-Saisanik-ह्रस्वदीर्घ-(भ)-context-कृदन्त']) {
     const target = getReferenceTargetForRule(code, 'HrasvaDirgha');
     assert.equal(target.targetId, 'saishanik-final-i-verbs');
     assert.ok(section.referenceTargets.some(t => t.id === target.targetId));
@@ -106,6 +106,9 @@ test('feminine predicate and converb citations open their own explanation with l
     for (const word of ['मिलाइ', 'पारि', 'लेखि']) assert.ok(summary.includes(word));
     assert.match(summary, /वाक्यको सन्दर्भ चाहिन्छ/);
     assert.match(summary, /सबै छोटा इकारान्त शब्दलाई दीर्घ बनाइँदैन/);
+    assert.match(summary, /खोला पारि बस्छ/);
+    assert.match(summary, /यो निश्चित त्रुटि होइन/);
+    assert.match(summary, /सबै सच्याउने कार्यले यसलाई बदल्दैन/);
   }
   setReferenceContext({ incorrect: 'नभइ', correction: 'नभई', categoryCode: 'HrasvaDirgha',
     targetId: 'saishanik-final-i-verbs', rule: 'PS-Saisanik-ह्रस्वदीर्घ-(ब)/(भ)' });

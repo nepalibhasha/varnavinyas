@@ -5,6 +5,8 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { morphologySupportedByAffix, originPresentation } from './js/inspection-context.js';
+import { applyCorrections, canBulkApplyDiagnostic } from './js/corrections.js';
+import { getReferenceTargetForRule } from './js/rules-data.js';
 
 const directory = path.resolve(process.argv[2] || 'web/dist/varnavinyas-browser-artifact');
 const manifest = JSON.parse(await readFile(path.join(directory, 'manifest.json'), 'utf8'));
@@ -17,6 +19,44 @@ assert.deepEqual(manifest.capabilities.word_analysis_origin_sources,
 
 const wasm = await import(pathToFileURL(path.join(directory, manifest.entry_js)));
 wasm.initSync({ module: await readFile(path.join(directory, manifest.entry_wasm)) });
+// Exercise contextual reading, UTF-8 spans and actual bulk policy together.
+const converbRule = 'PS-Saisanik-ह्रस्वदीर्घ-(भ)-context-कृदन्त';
+for (const mode of ['academy-strict', 'common-editorial']) {
+  for (const grammar of [false, true]) {
+    for (const [text, short, long, kind] of [
+      ['🙂 काम पूरा पारि घर फर्कियो।', 'पारि', 'पारी', 'Error'],
+      ['वृत्ताकार पारि बनाइएको चौतारो', 'पारि', 'पारी', 'Error'],
+      ['कुरा मिलाइ नाफा खाने व्यक्ति', 'मिलाइ', 'मिलाई', 'Ambiguous'],
+      ['खाना पकाइ खायो।', 'पकाइ', 'पकाई', 'Ambiguous'],
+      ['टिको लगाइ दिएर घर गयो।', 'लगाइ', 'लगाई', 'Ambiguous'],
+      ['खाना बनाइ राख्यो।', 'बनाइ', 'बनाई', 'Ambiguous'],
+      ['निश्चिन्त भइ समय बिताई बस्नु', 'भइ', 'भई', 'Ambiguous'],
+      ['🙂 चिठी लेखि पठायो।', 'लेखि', 'लेखी', 'Ambiguous'],
+    ]) {
+      const diagnostic = wasm.check_text_value_with_options(text, grammar, mode)
+        .find(d => d.incorrect === short);
+      assert.equal(diagnostic?.correction, long, text);
+      assert.equal(diagnostic.kind, kind, text);
+      assert.equal(diagnostic.rule_code, converbRule);
+      assert.equal(getReferenceTargetForRule(diagnostic.rule_code, 'HrasvaDirgha').targetId,
+        'saishanik-final-i-verbs');
+      const bytes = new TextEncoder().encode(text);
+      assert.equal(new TextDecoder().decode(bytes.slice(diagnostic.span_start, diagnostic.span_end)), short);
+      const charStart = new TextDecoder().decode(bytes.slice(0, diagnostic.span_start)).length;
+      const choice = { ...diagnostic, charStart, charEnd: charStart + short.length };
+      assert.equal(canBulkApplyDiagnostic(choice), kind === 'Error');
+      assert.equal(applyCorrections(text, text, [choice].filter(canBulkApplyDiagnostic)),
+        kind === 'Error' ? text.replace(short, long) : text);
+      assert.equal(applyCorrections(text, text, [choice]), text.replace(short, long));
+    }
+    for (const text of ['यसको मिलाइ राम्रो छ।', 'खानाको पकाइ राम्रो भयो।',
+      'तिम्रा लेखि उनी मरेबराबरै भए।', 'राम खोला पारि बस्छ।',
+      'चिठी, लेखि पठायो।', 'चिठी लेखि\nपठायो।', 'पूरा ‘पारि’ घर फर्कियो।']) {
+      assert.ok(!wasm.check_text_value_with_options(text, grammar, mode)
+        .some(d => d.rule_code === converbRule), text);
+    }
+  }
+}
 for (const name of manifest.required_exports) assert.equal(typeof wasm[name], 'function', name);
 
 const unknown = wasm.analyze_word_value('कखगघङ');

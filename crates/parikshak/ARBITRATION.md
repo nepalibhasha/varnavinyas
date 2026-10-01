@@ -38,6 +38,8 @@ Contextual final-i converb frames use the source-cited rule code
 them to the context pass. Reviewed corrective frames carry curated-inventory
 evidence and retain the pass-local overlap guard; they do not replace an
 existing whole-word or padayog diagnostic on that span.
+Competing noun/verb frames instead emit `Ambiguous` with heuristic evidence,
+do not block later diagnostics, and cannot outrank a definite correction.
 
 ## Precedence
 

@@ -100,9 +100,13 @@ fn phrase_matches(text: &str, tokens: &[AnalyzedToken], start: usize, words: &[&
 fn horizontal_gap(text: &str, left: &AnalyzedToken, right: &AnalyzedToken) -> bool {
     let gap = &text[left.end..right.start];
     !gap.is_empty()
-        && gap
-            .chars()
-            .all(|ch| ch.is_whitespace() && !matches!(ch, '\n' | '\r' | '\u{2028}' | '\u{2029}'))
+        && gap.chars().all(|ch| {
+            matches!(
+                ch,
+                ' ' | '\t' | '\u{a0}' | '\u{1680}' | '\u{2000}'
+                    ..='\u{200a}' | '\u{202f}' | '\u{205f}' | '\u{3000}'
+            )
+        })
 }
 
 pub(super) fn candidates(
@@ -143,13 +147,33 @@ pub(super) fn candidates(
             continue;
         }
         let span = tokens[idx].span();
+        let ambiguous = entry.kind == DiagnosticKind::Ambiguous;
+        let explanation = if ambiguous {
+            format!(
+                "शैक्षणिक व्याकरण (भ): यहाँ '{}' को एर-अर्थक क्रिया प्रयोग भएको हो भने '{}' लेखिन्छ। '{}' को नाम वा अव्यय अर्थमा ह्रस्व नै सही हुन्छ; अभिप्राय हेरेर मात्र सुधार गर्नुहोस्",
+                entry.infinitive, entry.long, entry.short
+            )
+        } else {
+            format!(
+                "शैक्षणिक व्याकरण (भ): यस क्रिया-निर्माणमा '{}' को एर-अर्थक रूप '{}' हुन्छ; नाम वा क्रियाविशेषणका रूपमा '{}' छुट्टै मान्य छ",
+                entry.infinitive, entry.long, entry.short
+            )
+        };
         out.push(ContextCandidate {
-            span, incorrect: text[span.0..span.1].to_owned(), correction: entry.long.to_owned(),
+            span,
+            incorrect: text[span.0..span.1].to_owned(),
+            correction: entry.long.to_owned(),
             rule: Rule::VarnaVinyasNiyam("PS-Saisanik-ह्रस्वदीर्घ-(भ)-context-कृदन्त"),
-            explanation: format!("शैक्षणिक व्याकरण (भ): यस क्रिया-निर्माणमा '{}' को एर-अर्थक रूप '{}' हुन्छ; नाम वा क्रियाविशेषणका रूपमा '{}' छुट्टै मान्य छ", entry.infinitive, entry.long, entry.short),
-            category: DiagnosticCategory::HrasvaDirgha, kind: entry.kind, confidence: 0.90,
+            explanation,
+            category: DiagnosticCategory::HrasvaDirgha,
+            kind: entry.kind,
+            confidence: if ambiguous { 0.72 } else { 0.90 },
             role_hint: ContextRoleHint::Converb,
-            evidence: DiagnosticEvidence::CuratedInventory,
+            evidence: if ambiguous {
+                DiagnosticEvidence::Heuristic
+            } else {
+                DiagnosticEvidence::CuratedInventory
+            },
         });
     }
     out

@@ -122,6 +122,15 @@ infinitive and safe correction target provide independent lexical checks.
 This behavior is shared by both orthography modes and does not require the
 optional `grammar-pass` feature or runtime grammar flag.
 
+Selected `मिलाइ`, `पकाइ`, `लगाइ`, `बनाइ`, `भइ`, and `लेखि` constructions
+instead emit `Ambiguous` suggestions with heuristic evidence. For example,
+`चिठी लेखि पठायो` offers `लेखी` if the author means “having written”. The
+explanation explicitly preserves the competing noun/adverb meaning. Clients
+must not treat these as definite errors or include them in automatic bulk
+correction. `यसको मिलाइ राम्रो छ` and `तिम्रा लेखि ...` receive no such hint.
+Unlisted contexts are left alone; this inventory is intentionally bounded,
+not a complete parser or a general gender/agreement checker.
+
 ### Section 3 `(घ)` Padayog / Padabiyog
 
 Owned by:

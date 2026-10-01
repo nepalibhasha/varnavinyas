@@ -1,5 +1,23 @@
 # Initial grammar-eval sentence set for optional grammar-pass diagnostics.
 
+# Converb reading is plausible, but the independently valid noun/adverb
+# reading requires a review suggestion rather than a blanket hard correction.
+[[sentence]]
+text = "चिठी लेखि पठायो।"
+expect_variant_or_ambiguous_min = 1
+expect_variant_or_ambiguous_max = 1
+expected_rule_codes = ["PS-Saisanik-ह्रस्वदीर्घ-(भ)-context-कृदन्त"]
+
+[[sentence]]
+text = "यसको मिलाइ राम्रो छ।"
+expect_variant_or_ambiguous_min = 0
+expect_variant_or_ambiguous_max = 0
+
+[[sentence]]
+text = "राम खोला पारि बस्छ।"
+expect_variant_or_ambiguous_min = 0
+expect_variant_or_ambiguous_max = 0
+
 [[sentence]]
 text = "सूर्योदय भयो।"
 expect_variant_or_ambiguous_min = 1
