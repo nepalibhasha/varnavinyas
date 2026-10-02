@@ -2,12 +2,13 @@
 
 ## Current release set
 
-Browser v0.1.7 and Python/CLI/iOS/Android v0.1.4 share one source commit.
-The [release notes](releases/native-v0.1.4.md) describe corrected compound,
-spacing, and progressive-verb behavior. Existing checker calls and diagnostic
-fields remain available; progressive analysis is additive, and Python/WASM
-affix-role consumers must handle the new postposition and comparison roles.
-Upgrade generated mobile bindings with their matching native libraries.
+Browser v0.1.8 and Python/CLI/iOS/Android v0.1.5 share one source commit.
+The [release notes](releases/native-v0.1.5.md) describe source-backed nasal
+spelling explanations and strict/editorial handling. Existing checker calls,
+diagnostic fields, stable category codes, and defaults remain available.
+Display reviewed `Variant` diagnostics as optional forms, count them separately
+from errors, and exclude them from bulk correction. Upgrade generated mobile
+bindings with their matching native libraries.
 
 ## Word Analysis and Explanations
 

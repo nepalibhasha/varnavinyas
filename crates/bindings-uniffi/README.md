@@ -68,7 +68,7 @@ Implemented MVP integration layer.
 
 ## Offline Evaluation Artifacts
 
-The iOS and Android v0.1.4 ZIPs include generated Swift/Kotlin bindings, native
+The iOS and Android v0.1.5 ZIPs include generated Swift/Kotlin bindings, native
 libraries, manifests with the source commit and file checksums, and identical
 diagnostic fixtures for both orthography modes plus origin evidence fixtures.
 Upgrade generated bindings and native libraries together. The iOS XCFramework includes

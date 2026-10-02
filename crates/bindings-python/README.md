@@ -88,13 +88,13 @@ Tags matching `python-artifact-v*` trigger
 `.github/workflows/release-python-artifact.yml`, which builds and uploads a
 wheel to GitHub Releases. This does not publish to PyPI.
 
-Version 0.1.4 preserves existing Python calls and adds progressive verb analysis
-and two affix roles. It fixes unsupported compound splits and spacing
-corrections. Selected `Ambiguous` suggestions can appear with
-grammar heuristics disabled; display their explanations and require individual
-review instead of bulk correction. See the [coordinated release
-notes](../../docs/releases/native-v0.1.4.md) and [Integration
-Notes](../../docs/INTEGRATION_NOTES.md).
+Version 0.1.5 preserves existing Python calls and improves dictionary-backed
+nasal spelling explanations. Reviewed forms such as संघीय, कांग्रेस, and संकेत
+remain errors in `academy-strict` and optional variants in `common-editorial`.
+Display variants separately from errors and keep them out of bulk correction.
+Selected `Ambiguous` suggestions still require individual review. See the
+[coordinated release notes](../../docs/releases/native-v0.1.5.md) and
+[Integration Notes](../../docs/INTEGRATION_NOTES.md).
 
 `shabda.classify()` retains the four-way best-effort `Origin` enum. For
 explanations, use the additive v0.1.2 API:

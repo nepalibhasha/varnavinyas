@@ -1,6 +1,6 @@
 # Offline Mobile Evaluation
 
-iOS and Android evaluation ZIPs in the v0.1.4 release set come from the same
+iOS and Android evaluation ZIPs in the v0.1.5 release set come from the same
 Git commit as the Python and CLI releases. Compare `source_commit` and
 `fixtures.sha256` and `origin_fixtures.sha256` in each `manifest.json` before evaluating. Every payload file
 has a SHA-256 checksum in the manifest. The manifest is not a signature.
