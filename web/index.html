@@ -62,19 +62,26 @@
                 <input type="checkbox" id="punctuation-strict-toggle" checked>
                 <span>कडा विरामचिह्न जाँच</span>
               </label>
-              <label class="grammar-toggle" for="orthography-strict-toggle">
-                <input type="checkbox" id="orthography-strict-toggle" checked>
-                <span>कडा वर्णविन्यास जाँच</span>
-              </label>
               <span id="punctuation-mode-note" class="mode-note">
                 कडा मोड: विरामचिह्न त्रुटि रूपमा देखाइन्छ।
-              </span>
-              <span id="orthography-mode-note" class="mode-note">
-                कडा मोड: प्रज्ञा-मानक रूप त्रुटि रूपमा देखाइन्छ।
               </span>
             </div>
             <button class="btn btn-sm" id="fix-all-btn" disabled>सबै त्रुटि सच्याउनुहोस्</button>
           </div>
+          <fieldset class="orthography-policy" aria-describedby="orthography-mode-note">
+            <legend>वर्णविन्यास जाँचको स्तर</legend>
+            <label for="orthography-academy-strict">
+              <input type="radio" name="orthography-mode" id="orthography-academy-strict" value="academy-strict" checked>
+              <span>प्रज्ञा-मानक (कडा)</span>
+            </label>
+            <label for="orthography-common-editorial">
+              <input type="radio" name="orthography-mode" id="orthography-common-editorial" value="common-editorial">
+              <span>प्रचलित लेखन</span>
+            </label>
+            <p id="orthography-mode-note" class="mode-note" aria-live="polite">
+              कडा जाँचमा संघीय, कांग्रेस र संकेतलाई त्रुटि मानी सङ्घीय, काङ्ग्रेस र सङ्केत सुझाइन्छ।
+            </p>
+          </fieldset>
           <div class="grammar-coverage" id="grammar-coverage">
             <div class="grammar-coverage-head">
               <span>Grammar Coverage</span>

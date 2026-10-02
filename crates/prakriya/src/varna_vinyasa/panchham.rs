@@ -115,13 +115,29 @@ pub fn rule_panchham_varna(input: &str) -> Option<Prakriya> {
         if !matches!(origin, Origin::Tatsam) && !kosha().contains(&result) {
             return None;
         }
-        let citation = first_panchham_citation(input).unwrap_or("3(ख)(अ)-2");
+        // 3(ख)(अ)-3: a documented loan/tadbhav target is a lexical
+        // pronunciation spelling, not evidence that the input is tatsama.
+        // For example, headwords.tsv marks काङ्ग्रेस as [अङ्.].
+        let output_origin = classify_with_provenance(&result);
+        let (citation, explanation) = if output_origin.source.is_documented()
+            && matches!(output_origin.origin, Origin::Aagantuk | Origin::Tadbhav)
+        {
+            (
+                "3(ख)(अ)-3-lex",
+                "तद्भव/आगन्तुक शब्दको शब्दकोशीय रूपमा उच्चारणअनुसार नासिक्य व्यञ्जन लेखिन्छ",
+            )
+        } else {
+            (
+                first_panchham_citation(input).unwrap_or("3(ख)(अ)-2"),
+                "तत्सम शब्दमा स्पर्श व्यञ्जन अघि पञ्चम वर्ण प्रयोग",
+            )
+        };
         return Some(Prakriya::corrected(
             input,
             &result,
             vec![Step::new(
                 Rule::VarnaVinyasNiyam(citation),
-                "तत्सम शब्दमा स्पर्श व्यञ्जन अघि पञ्चम वर्ण प्रयोग",
+                explanation,
                 input,
                 &result,
             )],

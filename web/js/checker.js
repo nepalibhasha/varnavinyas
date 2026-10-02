@@ -9,7 +9,8 @@ import { debounce, escapeHtml, CATEGORY_COLORS, CATEGORY_LABELS } from './utils.
 import { wrapRuleTooltip, getRuleSummary } from './rules-data.js';
 import { initInspector, showInspector, hideInspector, isInspectorActive } from './inspector.js';
 import { applyCorrections, canApplyDiagnostic, canBulkApplyDiagnostic } from './corrections.js';
-import { renderDiagnosticComposition } from './diagnostic-presentation.js';
+import { renderDiagnosticComposition, diagnosticDisplayState, diagnosticCountLabel } from './diagnostic-presentation.js';
+import { DEFAULT_ORTHOGRAPHY_MODE, loadOrthographyMode, saveOrthographyMode, orthographyModeNote as getOrthographyModeNote } from './orthography-policy.js';
 
 let diagnostics = [];
 let lastCheckedText = null;
@@ -30,7 +31,7 @@ const panelCol = document.getElementById('panel-col');
 const grammarToggle = document.getElementById('grammar-toggle');
 const punctuationStrictToggle = document.getElementById('punctuation-strict-toggle');
 const punctuationModeNote = document.getElementById('punctuation-mode-note');
-const orthographyStrictToggle = document.getElementById('orthography-strict-toggle');
+const orthographyModeInputs = [...document.querySelectorAll('input[name="orthography-mode"]')];
 const orthographyModeNote = document.getElementById('orthography-mode-note');
 const grammarCoverage = document.getElementById('grammar-coverage');
 const reviewPrevBtn = document.getElementById('review-prev-btn');
@@ -63,10 +64,17 @@ export function initChecker() {
     renderPunctuationModeNote();
     runCheck();
   });
-  orthographyStrictToggle?.addEventListener('change', () => {
-    renderOrthographyModeNote();
-    runCheck();
-  });
+  let savedMode = DEFAULT_ORTHOGRAPHY_MODE;
+  try { savedMode = loadOrthographyMode(window.localStorage); } catch { /* Storage may be blocked. */ }
+  for (const input of orthographyModeInputs) {
+    input.checked = input.value === savedMode;
+    input.addEventListener('change', () => {
+      try { saveOrthographyMode(window.localStorage, getOrthographyMode()); } catch { /* Keep the session choice. */ }
+      renderOrthographyModeNote();
+      if (isInspectorActive()) hideInspector();
+      runCheck();
+    });
+  }
   renderPunctuationModeNote();
   renderOrthographyModeNote();
 
@@ -131,12 +139,8 @@ function isPunctuationStrictEnabled() {
   return punctuationStrictToggle?.checked !== false;
 }
 
-function isOrthographyStrictEnabled() {
-  return orthographyStrictToggle?.checked !== false;
-}
-
 function getOrthographyMode() {
-  return isOrthographyStrictEnabled() ? "academy-strict" : "common-editorial";
+  return orthographyModeInputs.find(input => input.checked)?.value || DEFAULT_ORTHOGRAPHY_MODE;
 }
 
 function isPunctuationStyleDiagnostic(diag) {
@@ -152,10 +156,8 @@ function isApplyableDiagnostic(diag) {
 }
 
 function isHeuristicDiagnostic(diag) {
-  if (isPunctuationStyleDiagnostic(diag)) {
-    return true;
-  }
-  return !(diag.kind === "Error" && diag.confidence >= 0.8);
+  const state = diagnosticDisplayState(diag, { punctuationStrict: isPunctuationStrictEnabled() });
+  return state === 'suggestion' || state === 'info';
 }
 
 function renderPunctuationModeNote() {
@@ -167,9 +169,7 @@ function renderPunctuationModeNote() {
 
 function renderOrthographyModeNote() {
   if (!orthographyModeNote) return;
-  orthographyModeNote.textContent = isOrthographyStrictEnabled()
-    ? "कडा मोड: प्रज्ञा-मानक रूप त्रुटि रूपमा देखाइन्छ।"
-    : "शैली मोड: समीक्षा गरिएका प्रचलित रूप सुझाव मात्र हुन्।";
+  orthographyModeNote.textContent = getOrthographyModeNote(getOrthographyMode());
 }
 
 function getHeuristicRuleLabel(ruleCode) {
@@ -218,16 +218,13 @@ function primaryCategoryLabel(diag) {
 
 function diagnosticStateLabel(diag) {
   if (isInformationalDiagnostic(diag)) return "जानकारी";
+  if (diag.kind === "Variant") return "वैकल्पिक रूप";
   if (isHeuristicDiagnostic(diag)) return "सुझाव";
-  if (diag.kind === "Variant") return "वैकल्पिक";
   return null;
 }
 
 function diagnosticKindClass(diag) {
-  if (isInformationalDiagnostic(diag)) return "info";
-  if (isHeuristicDiagnostic(diag)) return "suggestion";
-  if (diag.kind === "Variant") return "variant";
-  return "error";
+  return diagnosticDisplayState(diag, { punctuationStrict: isPunctuationStrictEnabled() });
 }
 
 function normalizeCopy(text) {
@@ -238,11 +235,11 @@ function diagnosticGuidance(diag) {
   if (isInformationalDiagnostic(diag)) {
     return "यो समास/विग्रह सूचना हो; पाठमा लागू गर्ने सुधार होइन।";
   }
+  if (diag.kind === "Variant") {
+    return "यो समीक्षा गरिएको प्रचलित रूप हो। चाहनुहुन्छ भने कडा रूप रोज्नुहोस्; सबै त्रुटि सच्याउने कार्यले यसलाई बदल्दैन।";
+  }
   if (isHeuristicDiagnostic(diag)) {
     return "यो सन्दर्भअनुसार छान्ने सुझाव हो।";
-  }
-  if (diag.kind === "Variant") {
-    return "यो अनिवार्य त्रुटि होइन; मानक वैकल्पिक रूपसम्बन्धी सूचना हो।";
   }
   const summary = getRuleSummary(diag.rule_code || diag.rule, diag.category_code, diag.rule);
   if (summary && normalizeCopy(summary) !== normalizeCopy(diag.explanation)) {
@@ -570,16 +567,7 @@ function renderDiagnostics() {
   const visibleDiagnostics = diagnostics.filter(
     (d) => !hiddenCategories.has(d.category_code) && !isDismissedDiagnostic(d)
   );
-  const visibleErrorCount = visibleDiagnostics.filter(
-    (d) => !isHeuristicDiagnostic(d)
-  ).length;
-  const visibleInfoCount = visibleDiagnostics.filter(isInformationalDiagnostic).length;
-  const visibleSuggestionCount = visibleDiagnostics.length - visibleErrorCount - visibleInfoCount;
-
-  const countParts = [`${visibleErrorCount} त्रुटि`];
-  if (visibleSuggestionCount > 0) countParts.push(`${visibleSuggestionCount} शैली सुझाव`);
-  if (visibleInfoCount > 0) countParts.push(`${visibleInfoCount} जानकारी`);
-  errorCount.textContent = countParts.join(', ');
+  errorCount.textContent = diagnosticCountLabel(visibleDiagnostics, { punctuationStrict: isPunctuationStrictEnabled() });
   fixAllBtn.disabled = !visibleDiagnostics.some(isHardDiagnostic);
 
   if (diagnostics.length === 0) {
@@ -615,7 +603,7 @@ function renderDiagnostics() {
         <div class="diag-meta">
           <span class="diag-badge" data-category="${code}">${escapeHtml(label)}</span>
           ${kindLabel ? `<span class="diag-kind-chip diag-kind-${kindClass}">${escapeHtml(kindLabel)}</span>` : ""}
-          ${!isInfo && confidence < 100 ? `<span class="diag-confidence">${confidence}%</span>` : ''}
+          ${!isInfo && d.kind !== 'Variant' && confidence < 100 ? `<span class="diag-confidence">${confidence}%</span>` : ''}
         </div>
         ${correctionRow}
         ${guidanceBlock}

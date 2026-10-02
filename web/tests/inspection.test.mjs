@@ -84,6 +84,18 @@ globalThis.document = {
 };
 const { setReferenceContext } = await import('../js/reference.js');
 
+test('pancham reference explains source rules, loanword limits, and strictness choices', () => {
+  assert.equal(getReferenceTargetForRule('3(ख)-पञ्चम', 'Chandrabindu').targetId, 'kha-a');
+  const summary = getRuleSummary('3(ख)(अ)-2-ङ्', 'Chandrabindu');
+  for (const word of ['सङ्केत', 'सङ्घीय', 'झन्डा', 'इन्जिन', 'कांग्रेस', 'काङ्ग्रेस']) {
+    assert.ok(summary.includes(word));
+  }
+  assert.match(summary, /३\(ख\)\(अ\)-२/);
+  assert.match(summary, /३\(ख\)\(अ\)-३/);
+  assert.match(summary, /प्रचलित लेखन.*वैकल्पिक/);
+  assert.doesNotMatch(summary, /guard|प्रणालीगत/);
+});
+
 test('rule links use the precise citation while retaining the readable label', () => {
   const html = wrapRuleTooltip('ह्रस्व/दीर्घ स्वर नियम', null, { ruleCode: '3(क)(ऊ)-3', word: 'भाउजू' });
   assert.match(html, /data-target="ka-uu"/);

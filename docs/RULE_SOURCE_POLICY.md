@@ -66,6 +66,18 @@ Current conflict resolutions
     `common-editorial` mode, downgrade only curated reviewed cases to
     `Variant` with the strict form retained as `correction`.
   - current implementation: `crates/parikshak/src/checker.rs`
+  - source distinction: Notice `3(ख)(अ)-2` explicitly gives सङ्केत and
+    rejects संकेत; Section 4 explicitly lists संघीय → सङ्घीय. Neither
+    normative rulebook names कांग्रेस. The dictionary headword काङ्ग्रेस
+    carries `[अङ्.]`, establishing loan origin; काँग्रेस is also a headword.
+    These lexical suggestions retain the existing strict-mode preference,
+    but must not claim that कांग्रेस is a तत्सम example. Notice
+    `3(ख)(अ)-3` describes pronunciation-based loanword consonants, and
+    `3(ख)(आ)-1` describes nasalized vowels.
+  - proper-name evidence: the [party's official site](https://nepalicongress.org/)
+    uses कांग्रेस in its title and prose, and काँग्रेस in its office address
+    (reviewed 2026-10-01). This supports the curated editorial exception;
+    it is not an Academy table entry.
 
 - `जस्तो/जस्तै/जत्रो/जसरी`
   - `Notices-pages-77-99.md` treats this family under `पदयोग` joining examples.

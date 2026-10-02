@@ -34,7 +34,7 @@ pub fn rule_chandrabindu(input: &str) -> Option<Prakriya> {
             &output,
             vec![Step::new(
                 Rule::VarnaVinyasNiyam("3(ख)(आ)-lex"),
-                "तद्भव/अव्यय मानक रूपमा चन्द्रबिन्दु (ँ) प्रयोग हुन्छ",
+                "शब्दकोशीय रूपमा चन्द्रबिन्दु (ँ) प्रयोग हुन्छ",
                 input,
                 &output,
             )],

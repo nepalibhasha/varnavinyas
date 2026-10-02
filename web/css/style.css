@@ -366,6 +366,39 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 0.9rem;
+  flex-wrap: wrap;
+}
+
+.orthography-policy {
+  margin: 0 0 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.orthography-policy legend {
+  padding: 0 0.3rem;
+  font-size: 0.85rem;
+}
+
+.orthography-policy label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 3rem;
+  margin-inline-end: 1rem;
+  cursor: pointer;
+}
+
+.orthography-policy input {
+  accent-color: var(--color-primary);
+}
+
+.orthography-policy .mode-note {
+  display: block;
+  max-width: none;
+  margin: 0.25rem 0 0;
+  line-height: 1.6;
 }
 
 .grammar-toggle {

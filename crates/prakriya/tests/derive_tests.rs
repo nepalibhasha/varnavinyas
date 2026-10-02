@@ -960,6 +960,29 @@ fn o10_kha_a_2_ng_group_panchham() {
 }
 
 #[test]
+fn congress_lexical_spelling_does_not_claim_tatsam_origin() {
+    let p = rule_panchham_varna("कांग्रेस").expect("expected lexical loan spelling");
+    assert_eq!(p.output, "काङ्ग्रेस");
+    assert!(has_varna_niyam_code(&p, "3(ख)(अ)-3-lex"));
+    assert!(p.steps[0].description.contains("शब्दकोशीय"));
+    assert!(!p.steps[0].description.contains("तत्सम"));
+    assert_eq!(derive("कांग्रेस").output, "काङ्ग्रेस");
+    let hits = collect_rule_hits("कांग्रेस");
+    for output in ["काङ्ग्रेस", "काँग्रेस"] {
+        assert_eq!(
+            hits.iter()
+                .filter(|hit| hit.prakriya.output == output)
+                .count(),
+            1
+        );
+    }
+    for correct in ["काङ्ग्रेस", "काँग्रेस", "सङ्केत", "सङ्घीय"]
+    {
+        assert!(derive(correct).is_correct, "must preserve {correct}");
+    }
+}
+
+#[test]
 fn o10_kha_a_2_nya_group_panchham() {
     let p = rule_panchham_varna("संचार").expect("expected panchham correction");
     assert_eq!(p.output, "सञ्चार");

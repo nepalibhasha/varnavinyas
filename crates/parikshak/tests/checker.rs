@@ -69,6 +69,8 @@ fn flags_nepali_congress_phrase() {
     assert_eq!(diag.incorrect, "कांग्रेस");
     assert_eq!(diag.correction, "काङ्ग्रेस");
     assert_eq!(diag.category, DiagnosticCategory::Chandrabindu);
+    assert!(diag.explanation.contains("शब्दकोशीय"));
+    assert!(!diag.explanation.contains("तत्सम"));
 }
 
 #[test]

@@ -26,6 +26,14 @@ web/
 
 ## Local Run
 
+The checker exposes two orthography choices: **प्रज्ञा-मानक (कडा)**
+(`academy-strict`, the default) and **प्रचलित लेखन** (`common-editorial`).
+The choice is saved locally when browser storage is available. Editorial mode
+shows reviewed spellings such as संघीय, कांग्रेस, and संकेत as optional variants,
+with their own count and without error strike-through. Bulk correction and
+corrected-text copying leave these variants unchanged; individual corrections
+remain available. Other spelling errors still receive the same checks.
+
 From repo root:
 
 ```bash

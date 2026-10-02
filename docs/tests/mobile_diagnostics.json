@@ -861,6 +861,148 @@
         "punctuation_mode": "strict"
       },
       "text": "नेपालसरकार समाजसेवा"
+    },
+    {
+      "expected_diagnostics": [
+        {
+          "alternate_reasons": [
+            {
+              "category": "चन्द्रबिन्दु",
+              "category_code": "Chandrabindu",
+              "correction": "सङ्घीय",
+              "explanation": "तत्सम शब्दमा स्पर्श व्यञ्जन अघि पञ्चम वर्ण प्रयोग",
+              "rule": "चन्द्रबिन्दु/शिरबिन्दु नियम",
+              "rule_code": "3(ख)(अ)-2-ङ्"
+            }
+          ],
+          "category": "चन्द्रबिन्दु",
+          "category_code": "Chandrabindu",
+          "confidence": 1,
+          "correction": "सङ्घीय",
+          "explanation": "घ अघि पञ्चम वर्ण ङ अनिवार्य (शिरबिन्दु ं होइन)",
+          "incorrect": "संघीय",
+          "kind": "Error",
+          "rule": "चन्द्रबिन्दु/शिरबिन्दु नियम",
+          "rule_code": "3(ख)-पञ्चम",
+          "span_end": 15,
+          "span_start": 0
+        },
+        {
+          "alternate_reasons": [
+            {
+              "category": "चन्द्रबिन्दु",
+              "category_code": "Chandrabindu",
+              "correction": "काँग्रेस",
+              "explanation": "शब्दकोशीय रूपमा चन्द्रबिन्दु (ँ) प्रयोग हुन्छ",
+              "rule": "चन्द्रबिन्दु/शिरबिन्दु नियम",
+              "rule_code": "3(ख)(आ)-lex"
+            }
+          ],
+          "category": "चन्द्रबिन्दु",
+          "category_code": "Chandrabindu",
+          "confidence": 1,
+          "correction": "काङ्ग्रेस",
+          "explanation": "तद्भव/आगन्तुक शब्दको शब्दकोशीय रूपमा उच्चारणअनुसार नासिक्य व्यञ्जन लेखिन्छ",
+          "incorrect": "कांग्रेस",
+          "kind": "Error",
+          "rule": "चन्द्रबिन्दु/शिरबिन्दु नियम",
+          "rule_code": "3(ख)(अ)-3-lex",
+          "span_end": 40,
+          "span_start": 16
+        },
+        {
+          "category": "चन्द्रबिन्दु",
+          "category_code": "Chandrabindu",
+          "confidence": 1,
+          "correction": "सङ्केत",
+          "explanation": "तत्सम शब्दमा स्पर्श व्यञ्जन अघि पञ्चम वर्ण प्रयोग",
+          "incorrect": "संकेत",
+          "kind": "Error",
+          "rule": "चन्द्रबिन्दु/शिरबिन्दु नियम",
+          "rule_code": "3(ख)(अ)-2-ङ्",
+          "span_end": 56,
+          "span_start": 41
+        }
+      ],
+      "id": "reviewed-nasal-spellings-academy-strict",
+      "options": {
+        "grammar": false,
+        "include_noop_heuristics": false,
+        "orthography_mode": "academy-strict",
+        "punctuation_mode": "strict"
+      },
+      "text": "संघीय कांग्रेस संकेत"
+    },
+    {
+      "expected_diagnostics": [
+        {
+          "alternate_reasons": [
+            {
+              "category": "चन्द्रबिन्दु",
+              "category_code": "Chandrabindu",
+              "correction": "सङ्घीय",
+              "explanation": "तत्सम शब्दमा स्पर्श व्यञ्जन अघि पञ्चम वर्ण प्रयोग",
+              "rule": "चन्द्रबिन्दु/शिरबिन्दु नियम",
+              "rule_code": "3(ख)(अ)-2-ङ्"
+            }
+          ],
+          "category": "चन्द्रबिन्दु",
+          "category_code": "Chandrabindu",
+          "confidence": 0.7200000286102295,
+          "correction": "सङ्घीय",
+          "explanation": "प्रचलित आधुनिक लेखन; कडा प्रज्ञा रूप सङ्घीय हो। घ अघि पञ्चम वर्ण ङ अनिवार्य (शिरबिन्दु ं होइन)",
+          "incorrect": "संघीय",
+          "kind": "Variant",
+          "rule": "चन्द्रबिन्दु/शिरबिन्दु नियम",
+          "rule_code": "3(ख)-पञ्चम",
+          "span_end": 15,
+          "span_start": 0
+        },
+        {
+          "alternate_reasons": [
+            {
+              "category": "चन्द्रबिन्दु",
+              "category_code": "Chandrabindu",
+              "correction": "काँग्रेस",
+              "explanation": "शब्दकोशीय रूपमा चन्द्रबिन्दु (ँ) प्रयोग हुन्छ",
+              "rule": "चन्द्रबिन्दु/शिरबिन्दु नियम",
+              "rule_code": "3(ख)(आ)-lex"
+            }
+          ],
+          "category": "चन्द्रबिन्दु",
+          "category_code": "Chandrabindu",
+          "confidence": 0.7200000286102295,
+          "correction": "काङ्ग्रेस",
+          "explanation": "आगन्तुक/राजनीतिक नामका रूपमा प्रचलित लेखन; कडा शब्दकोशीय रूप काङ्ग्रेस हो। तद्भव/आगन्तुक शब्दको शब्दकोशीय रूपमा उच्चारणअनुसार नासिक्य व्यञ्जन लेखिन्छ",
+          "incorrect": "कांग्रेस",
+          "kind": "Variant",
+          "rule": "चन्द्रबिन्दु/शिरबिन्दु नियम",
+          "rule_code": "3(ख)(अ)-3-lex",
+          "span_end": 40,
+          "span_start": 16
+        },
+        {
+          "category": "चन्द्रबिन्दु",
+          "category_code": "Chandrabindu",
+          "confidence": 0.7200000286102295,
+          "correction": "सङ्केत",
+          "explanation": "प्रचलित आधुनिक लेखन; कडा तत्सम पञ्चमवर्ण रूप सङ्केत हो। तत्सम शब्दमा स्पर्श व्यञ्जन अघि पञ्चम वर्ण प्रयोग",
+          "incorrect": "संकेत",
+          "kind": "Variant",
+          "rule": "चन्द्रबिन्दु/शिरबिन्दु नियम",
+          "rule_code": "3(ख)(अ)-2-ङ्",
+          "span_end": 56,
+          "span_start": 41
+        }
+      ],
+      "id": "reviewed-nasal-spellings-common-editorial",
+      "options": {
+        "grammar": false,
+        "include_noop_heuristics": false,
+        "orthography_mode": "common-editorial",
+        "punctuation_mode": "strict"
+      },
+      "text": "संघीय कांग्रेस संकेत"
     }
   ],
   "diagnostic_schema_version": 1,
